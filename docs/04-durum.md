@@ -2211,3 +2211,19 @@ bağların özel olması gerekir, bir insan mekân ile evli olamaz".
   1 grup: Küçükçetmi Çiftliği.
 - Viki → "+ yeni madde": aynı adla madde varsa önce sorulur; "İptal" var
   olanı açar.
+
+## 12 Ekim — K: Dondurmacı Kızlar tasarım belgesi (uygulamada; bir kart)
+
+Kemal: "İlgili oyunun içeriği şimdilik böyle olacak, makyaj konusunda sonra
+çalışacağız." Kaynak: Word belgesi "Dondurmacı Kızlar - Oyun Tasarım Belgesi
+(GDD)" + ekran görselleri (dördüncüsü üçüncüyle aynıydı; üç görsel).
+
+- **Eksikler → Dondurmacı Kızlar: tasarım belgesini oyuna koy → Oyuna koy**
+  (`lib/dondurmaciBelgesi.ts`): belgenin metni, aynen, KKM → Oyun →
+  Dondurmacı Kızlar'ın bölümlerinin sonuna eklenir: künye (belgenin baş
+  bilgileri), tek cümlelik özet (1.1), mekanikler (1.2 sütunlar + 3. adımlar),
+  arayüz (2.1–2.4), ilerleme (4), görsel dil ve ses (5). Dolu yazıya ve
+  seçimlere dokunulmaz ("Kamera" tek seçimli; iki açı künye metninde).
+- Üç görsel `public/galeri/oyun/` altında (webp); oyunun vitrinine girer.
+- Oyunun deposuna ve vikiye hiçbir şey gitmez. Makyaj (kutular, yerleşim)
+  sonraki iş.

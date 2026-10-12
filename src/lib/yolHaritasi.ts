@@ -91,6 +91,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'stat-2d', paket: 'H', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: '2D\'de stat görünsün (3D\'deki gibi)' },
   { id: 'logo-sirasi', paket: 'M', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Markalarda logo sırası: birincil, ikincil, alternatif' },
   { id: 'bag-yakin', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ ağında bağsız maddeler daha yakın' },
+  { id: 'dondurmaci-gdd', paket: 'K', kimde: 'claude', nereden: '12 Ekim', bitti: true, ad: 'Dondurmacı Kızlar: Word tasarım belgesi ve ekran görselleri oyun sayfasına (makyaj sonra)' },
   { id: 'bag-kurali', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ türleri madde türüne özel; mükerrer maddeler birleşir (Küçükçetmi Çiftliği)' },
   { id: 'toplu-bag', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ ağında toplu seçim: birçok maddeyi tek seferde bir maddeye (mahalleye) bağla' },
   { id: 'atolye-giris', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Atölye\'de önce başlangıç ekranı, harita sonra' },
