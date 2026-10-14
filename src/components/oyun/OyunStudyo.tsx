@@ -315,7 +315,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       </div>
       <section className="space-y-3">
         <BolumBasligi baslik="Konsept" sayi={`${KONSEPT_BOLUMLERI.filter(id => bolumYapildi(kayitBul(id))).length}/${KONSEPT_BOLUMLERI.length}`} />
-        <div className="grid gap-3 lg:grid-cols-2 items-start">{KONSEPT_BOLUMLERI.map(bolum)}</div>
+        <div className="grid gap-4">{KONSEPT_BOLUMLERI.map(bolum)}</div>
       </section>
     </div>
   );
@@ -475,7 +475,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       </section>
       <section className="space-y-3">
         <BolumBasligi baslik="Oynanış ve görünüş" sayi={`${MEKANIK_BOLUMLERI.filter(id => bolumYapildi(kayitBul(id))).length}/${MEKANIK_BOLUMLERI.length}`} renk="bitti" />
-        <div className="grid gap-3 lg:grid-cols-2 items-start">{MEKANIK_BOLUMLERI.map(bolum)}</div>
+        <div className="grid gap-4">{MEKANIK_BOLUMLERI.map(bolum)}</div>
       </section>
     </div>
   );
