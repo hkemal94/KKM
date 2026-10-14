@@ -14,6 +14,7 @@ import {
 import NpcSihirbazi from './NpcSihirbazi';
 import { OyunVitrini } from './OyunVitrini';
 import { GddBolumu } from './GddBolumu';
+import { DepoBelgesi } from './DepoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
 import { ayrilmayaIzinVar } from '../../lib/kaydedilmemis';
 import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
@@ -27,13 +28,15 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
  *   Künye ve konsept   — tanıtım künyesi + kimlik bölümleri
  *   Adım adım süreç    — "Şimdi odaklan": sıradaki boş adım, sade açıklamasıyla
  *   Mekanikler ve notlar — oynanış bölümleri + kategorili fikir notları
+ *   Depodaki belge     — künyede oyunun deposu yazılıysa, oradaki tasarım
+ *                        belgesi canlı okunur (14 Ekim; yalnız gösterir)
  *
  * Her şey Kemal'in kayıtlarına yazılır (gdd_bolum, oyun_fikir, oyun_is,
  * oyun_tanitim) ve "Oyun PDF'i" ile tek belge olur. Oyunun kendisi
  * ayrı depoda; buradan oraya bir şey yazılmaz.
  */
 
-type Sekme = 'kunye' | 'surec' | 'mekanik';
+type Sekme = 'kunye' | 'surec' | 'mekanik' | 'depo';
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string };
 
 export interface OyunStudyoProps {
@@ -179,6 +182,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   const belgeler = useMemo(() => gddBolumleri(items, oyunId), [items, oyunId]);
   const fikirler = useMemo(() => oyunFikirleri(items, oyunId), [items, oyunId]);
   const oyunKaydi = items.find(i => i.id === oyunId && !i.archived);
+  const depo = String((oyunKaydi?.metadata as { depo?: string } | undefined)?.depo || '').trim();
   const gddSayim = useMemo(() => {
     let dolu = 0, toplam = 0;
     for (const [bolumId, secimler] of Object.entries(GDD_SECIMLERI)) {
@@ -491,7 +495,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
         bolumler={[
           { id: 'kunye', label: 'Künye ve konsept' },
           { id: 'surec', label: `Adım adım süreç · ${yapilan}/${ADIM_SIRASI.length}` },
-          { id: 'mekanik', label: `Mekanikler ve notlar${fikirler.length ? ` · ${fikirler.length}` : ''}` }
+          { id: 'mekanik', label: `Mekanikler ve notlar${fikirler.length ? ` · ${fikirler.length}` : ''}` },
+          ...(depo ? [{ id: 'depo', label: 'Depodaki belge' }] : [])
         ]}
         aktifId={sekme}
         onSec={id => { if (!ayrilmayaIzinVar()) return; setSekme(id as Sekme); window.scrollTo({ top: 0 }); }}
@@ -500,6 +505,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       {sekme === 'kunye' && Kunye}
       {sekme === 'surec' && Surec}
       {sekme === 'mekanik' && Mekanik}
+      {sekme === 'depo' && depo && <DepoBelgesi depo={depo} />}
 
       {fikirPenceresi && (
         <FikirNotu

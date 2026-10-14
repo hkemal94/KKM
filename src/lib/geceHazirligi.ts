@@ -57,6 +57,9 @@ export interface GeceDurumu {
   /** son hata zamanı (ms) ve kısa açıklaması */
   sonHata?: number;
   hata?: string;
+  /** Daha önce gelen drop / ürün önerilerinin başlıkları (son 40). Bir daha önerilmez
+   *  (14 Ekim, Kemal: "sürekli aynı ürün önerisi geliyor" → "ürün kalsın, tekrar etmesin") */
+  oncekiUrunler?: string[];
 }
 
 export const durumKaydi = (items: Item[]) => items.find(i => i.type === GECE_DURUM_TURU) || null;
@@ -97,6 +100,26 @@ export function vikiSirasi(items: Item[]): Item[] {
     .sort((a, b) => Number(bekleyen.has(a.id)) - Number(bekleyen.has(b.id)) || a.updatedAt - b.updatedAt);
 }
 
+const ONCEKI_URUN_SINIRI = 40;
+const sade = (s: string) => s.toLocaleLowerCase('tr').replace(/[^a-z0-9çğıöşüâîû]+/g, ' ').trim();
+
+/** Önceden önerilmiş drop / ürün başlıkları: defterdekiler + tepside duranlar */
+export function oncekiUrunOnerileri(items: Item[]): string[] {
+  const tepside = items
+    .filter(i => i.type === 'aday')
+    .map(i => (i.metadata?.aday as { gece?: { tur?: string; baslik?: string } } | undefined)?.gece)
+    .filter(g => g?.tur === 'drop' && g.baslik)
+    .map(g => g!.baslik!);
+  const hepsi = [...(geceDurumu(items).oncekiUrunler || []), ...tepside];
+  return hepsi.filter((b, n) => hepsi.findIndex(x => sade(x) === sade(b)) === n).slice(-ONCEKI_URUN_SINIRI);
+}
+
+/** Aynı ürün yeniden gelirse ayıklanır (yapay zekâ kuralı çiğnerse diye) */
+export function tekrarlariAyikla(oneriler: GeceOnerisi[], onceki: string[]): GeceOnerisi[] {
+  const bilinen = new Set(onceki.map(sade));
+  return oneriler.filter(o => o.tur !== 'drop' || !bilinen.has(sade(o.baslik)));
+}
+
 /** Yapay zekâya giden özet: yalnız adlar ve kısa notlar */
 export function geceBaglami(items: Item[]) {
   const c = canli(items);
@@ -107,7 +130,8 @@ export function geceBaglami(items: Item[]) {
     urunler: c.filter(i => i.type === 'merch_urun').slice(0, 20).map(i => ({ ad: i.title, asama: i.status })),
     gonderiler: gonderiler(c).sort(son).slice(0, 10).map(i => ({ ad: i.title, asama: i.status })),
     yazilar: c.filter(i => i.type === 'blog_post').sort(son).slice(0, 10).map(i => ({ ad: i.title, asama: i.status })),
-    notlar: c.filter(i => (i.tags || []).includes('gunluk-not')).sort(son).slice(0, 10).map(i => kisa(i.notes || i.title, 200))
+    notlar: c.filter(i => (i.tags || []).includes('gunluk-not')).sort(son).slice(0, 10).map(i => kisa(i.notes || i.title, 200)),
+    oncekiUrunler: oncekiUrunOnerileri(items)
   };
 }
 
@@ -223,9 +247,13 @@ export async function geceHazirliginiYap(items: Item[], islem: GeceIslemleri, si
       const ham = await aiCagir<unknown>('gece-onerileri', {
         gun, turler: turler.map(t => ({ id: t, ad: GECE_TURLERI.find(x => x.id === t)!.ad })), ...geceBaglami(items)
       });
-      const oneriler = onerileriAyikla(ham, turler);
-      if (!oneriler.length) throw new AiHatasi('Yapay zekâ beklenmedik bir cevap döndü.');
+      const ayiklanan = onerileriAyikla(ham, turler);
+      if (!ayiklanan.length) throw new AiHatasi('Yapay zekâ beklenmedik bir cevap döndü.');
+      const onceki = oncekiUrunOnerileri(items);
+      const oneriler = tekrarlariAyikla(ayiklanan, onceki);
       for (const o of oneriler) await islem.onAddItem(geceOneriKaydi(o, items, gun));
+      const yeniUrunler = oneriler.filter(o => o.tur === 'drop').map(o => o.baslik);
+      if (yeniUrunler.length) deg.oncekiUrunler = [...onceki, ...yeniUrunler].slice(-ONCEKI_URUN_SINIRI);
       deg.sonGun = gun;
       rapor.push(`${oneriler.length} üretim önerisi`);
     }

@@ -7,7 +7,6 @@ import { GaleriYedegiKarti } from './GaleriYedegiKarti';
 import { KanonKarti } from './KanonKarti';
 import { AdDegisikligiKarti } from './AdDegisikligiKarti';
 import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
-import { DondurmaciKarti } from './DondurmaciKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
 import { boslukDoldurma } from '../lib/boslukDoldurma';
@@ -85,7 +84,6 @@ export const Eksikler: React.FC<EksiklerProps> = ({
       {onUpdateItem && onDeleteItem && <MukerrerKarti items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />}
       <UymayanBagKarti items={items} onMaddeAc={id => onSelectArea('duzada', id)} />
       {/* Dondurmacı Kızlar tasarım belgesi (12 Ekim) */}
-      {onUpdateItem && <DondurmaciKarti items={items} onUpdateItem={onUpdateItem} onAddItem={onAddItem} />}
 
       {/* Yer kartları ve mahalle derlemesi (8 Ekim) */}
       {onUpdateItem && (

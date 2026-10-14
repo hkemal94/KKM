@@ -4,12 +4,14 @@ import { useKaydedilmemis } from '../../lib/kaydedilmemis';
 import type { Item } from '../../types';
 import { compressImageBase64 } from '../../lib/imageCompressor';
 import type { Asama } from './OyunSureci';
+import { depoAdi } from '../../lib/depoBelgesi';
 
 /**
  * Oyunun tanıtım künyesi (Paket 5). Kemal (yapısal 1. set): oyun "bir künye
- * gibi kalsın — durum, ekran görüntüleri, açıklama ve özet (depo bağlantısı
- * yok)". Durum süreçten kendiliğinden gelir; özet, açıklama ve görseller
- * Kemal'in. Boş alan boş görünür.
+ * gibi kalsın — durum, ekran görüntüleri, açıklama ve özet". Durum süreçten
+ * kendiliğinden gelir; özet, açıklama ve görseller Kemal'in. Boş alan boş görünür.
+ * Oyunun deposu (14 Ekim, Kemal: "canlı okusun"): yazılırsa "Depodaki belge"
+ * sekmesi açılır (`lib/depoBelgesi.ts`); depoya hiçbir şey yazılmaz.
  */
 
 const EN_FAZLA_GORSEL = 4;
@@ -27,11 +29,13 @@ interface Props {
 
 export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gddToplam, onAddItem, onUpdateItem }) => {
   const kayit = items.find(i => i.id === oyunId && !i.archived);
-  const meta = (kayit?.metadata || {}) as { ozet?: string; aciklama?: string; ad?: string };
+  const meta = (kayit?.metadata || {}) as { ozet?: string; aciklama?: string; ad?: string; depo?: string };
   const gorseller = kayit?.images || [];
   const [ad, setAd] = useState(meta.ad || '');
   const [ozet, setOzet] = useState(meta.ozet || '');
   const [aciklama, setAciklama] = useState(meta.aciklama || '');
+  const [depo, setDepo] = useState(meta.depo || '');
+  const depoTemiz = depo.trim() ? depoAdi(depo) : '';
   const [buyuk, setBuyuk] = useState<string | null>(null);
   const dosya = useRef<HTMLInputElement | null>(null);
 
@@ -64,14 +68,17 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
    */
   const [mesaj, setMesaj] = useState<string | null>(null);
   const [yaziliyor, setYaziliyor] = useState(false);
-  const degisti = ad.trim() !== (meta.ad || '') || ozet.trim() !== (meta.ozet || '') || aciklama.trim() !== (meta.aciklama || '');
+  const degisti = ad.trim() !== (meta.ad || '') || ozet.trim() !== (meta.ozet || '') || aciklama.trim() !== (meta.aciklama || '')
+    || (depoTemiz ?? depo.trim()) !== (meta.depo || '');
   useKaydedilmemis(degisti);
   const kaydet = async () => {
     if (!degisti || yaziliyor) return;
+    if (depoTemiz === null) { setMesaj('Depo adı "sahip/depo" biçiminde olmalı (ör. hkemal94/DondumaciKizlar) ya da GitHub adresi.'); return; }
     setYaziliyor(true);
     try {
       // Ad kaydın başlığı da olur (aramada ve listede görünsün)
-      await yaz({ title: ad.trim() || 'Oyun tanıtımı', metadata: { ...meta, ad: ad.trim(), ozet: ozet.trim(), aciklama: aciklama.trim() } });
+      await yaz({ title: ad.trim() || 'Oyun tanıtımı', metadata: { ...meta, ad: ad.trim(), ozet: ozet.trim(), aciklama: aciklama.trim(), depo: depoTemiz || '' } });
+      if (depoTemiz) setDepo(depoTemiz);
       setMesaj('Kaydedildi.');
     } catch {
       setMesaj('Kaydedilemedi; bağlantıyı kontrol edip yeniden dene.');
@@ -118,6 +125,10 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
           <div>
             <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">Açıklama</div>
             <textarea value={aciklama} onChange={e => { setAciklama(e.target.value); setMesaj(null); }} rows={4} placeholder="Tanıtım metni — sen yazıyorsun…" className={kutu} />
+          </div>
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">Oyunun deposu · GitHub</div>
+            <input value={depo} onChange={e => { setDepo(e.target.value); setMesaj(null); }} placeholder="ör. hkemal94/DondumaciKizlar" className={kutu} spellCheck={false} autoCapitalize="off" />
           </div>
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => void kaydet()} disabled={!degisti || yaziliyor}

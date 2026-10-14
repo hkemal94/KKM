@@ -280,6 +280,8 @@ Kurallar:
 - Fiyat, sayı, tarih uydurma. "Hâlâ", "şu anda", "günümüzde" yazma.
 - "Harita / viki" önerisi kurgu metni yazmaz; hangi maddede neyin eksik olduğunu ve Kemal'e sorulacak soruyu söyler.
 - "bag" alanına önerinin dayandığı kaydın adını aynen yaz (yoksa boş bırak). Drop / ürün önerisinde bag bir drop adı olsun.
+- Drop / ürün önerisi daha önce önerilenlerden biri ya da ona benzeyen bir ürün olmasın; "Ürünler" listesinde zaten olan bir ürünü de yeniden önerme. Yeni bir ürün fikri getir.
+Daha önce önerilen ürünler (bunları ve benzerlerini önerme): ${JSON.stringify(data.oncekiUrunler || [])}
 Bilinenler:
 Viki: ${JSON.stringify(data.viki || [])}
 Droplar: ${JSON.stringify(data.droplar || [])}
