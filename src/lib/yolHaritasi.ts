@@ -94,7 +94,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'dondurmaci-gdd', paket: 'K', kimde: 'claude', nereden: '12 Ekim', bitti: true, ad: 'Dondurmacı Kızlar: Word tasarım belgesi ve ekran görselleri oyun sayfasına (makyaj sonra)' },
   { id: 'oyun-depo-belgesi', paket: 'K', kimde: 'claude', nereden: '14 Ekim', bitti: true, ad: 'Oyunun deposundaki tasarım belgesi oyun sayfasında canlı okunur; Dondurmacı kartı kalktı' },
   { id: 'gece-urun-tekrar', paket: 'K', kimde: 'claude', nereden: '14 Ekim', bitti: true, ad: 'Gece önerilerinde aynı ürün bir daha önerilmez' },
-  { id: 'oyun-makyaj', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, ad: 'Oyun sayfasının makyajı: küçük kutular, sıkışan yazılar' },
+  { id: 'oyun-makyaj', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, bitti: true, ad: 'Oyun sayfasının makyajı: küçük kutular, sıkışan yazılar' },
   { id: 'liman-plaj', paket: 'H', kimde: 'claude', nereden: '8 Ekim', gece: 4, ad: 'Liman kıyısına kumsal şeridi' },
   { id: 'bag-kurali', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ türleri madde türüne özel; mükerrer maddeler birleşir (Küçükçetmi Çiftliği)' },
   { id: 'toplu-bag', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ ağında toplu seçim: birçok maddeyi tek seferde bir maddeye (mahalleye) bağla' },

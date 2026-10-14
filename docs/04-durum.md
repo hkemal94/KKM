@@ -2250,3 +2250,14 @@ kalksın" (içeriği Kemal elle koydu).
   birlikte yapay zekâya "bunları ve benzerlerini önerme" diye gider, aynı
   başlık yine gelirse tepsiye düşmez. Ek yazma yok: defter zaten her gece
   yazılıyordu.
+
+## 14 Ekim — K: Oyun sayfasının makyajı (uygulamada)
+
+Kemal (12 Ekim): yazılar küçük kutularda sıkışıyordu.
+
+- Tasarım belgesi bölümleri (Künye ve konsept, Mekanikler ve notlar, Adım
+  adım süreç) iki sütun yerine tek sütunda, tam genişlikte.
+- Bölümün yazı kutusu içindeki yazı kadar uzar (en az 3 satır); kaydırma
+  çubuğu çıkmaz. Üstünde "Notlar" (seçimli bölümde) ya da "Metin" etiketi.
+- Yazı 12 → 14 px; bölüm başlığı 16 px, soru 13 px, seçim düğmeleri 13 px.
+- Kayıtlara dokunmaz; yalnız görünüş (`oyun/GddBolumu.tsx`).
