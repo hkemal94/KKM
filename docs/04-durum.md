@@ -2227,3 +2227,26 @@ Kemal: "İlgili oyunun içeriği şimdilik böyle olacak, makyaj konusunda sonra
 - Üç görsel `public/galeri/oyun/` altında (webp); oyunun vitrinine girer.
 - Oyunun deposuna ve vikiye hiçbir şey gitmez. Makyaj (kutular, yerleşim)
   sonraki iş.
+
+## 14 Ekim — K: Oyunun deposu canlı okunur, ürün önerisi tekrar etmez (uygulamada)
+
+Kemal: "Dondurmacı Kızlar konusunda farklı bir repoda çok yol aldım, içeride
+nasıl güncellerim?" → "Canlı okusun". "Sürekli aynı ürün önerisi geliyor" →
+"Ürün kalsın, tekrar etmesin". Dondurmacı kartı için: "O işi çözdüm, butonu
+kalksın" (içeriği Kemal elle koydu).
+
+- **Oyun → oyun → Künye ve konsept → "Oyunun deposu · GitHub"** kutusu.
+  Depo yazılıp Kaydet'e basılınca dördüncü sekme **Depodaki belge** açılır:
+  `docs/tasarim-belgesi.md` (yoksa README.md) her açılışta depodan okunur,
+  başlık başlık gösterilir; tablolar, maddeler, taslak görseller dahil
+  (`lib/depoBelgesi.ts`, `oyun/DepoBelgesi.tsx`). Yalnız okur: KKM
+  kayıtlarına bir şey yazmaz, oyunun deposuna da hiçbir şey yazmaz.
+  Dondurmacı Kızlar'ın deposu: `hkemal94/DondumaciKizlar`.
+- Dondurmacı tek seferlik kartı ve kodu (`dondurmaciBelgesi.ts`,
+  `DondurmaciKarti.tsx`) silindi. Üç webp (`public/galeri/oyun/`) duruyor:
+  karta basıldığında oyunun vitrinine girmiş olabilirler.
+- Gece önerileri: drop / ürün önerilerinin başlıkları gece defterine
+  (`gece_hazirlik` → `oncekiUrunler`, son 40) yazılır; tepside duranlarla
+  birlikte yapay zekâya "bunları ve benzerlerini önerme" diye gider, aynı
+  başlık yine gelirse tepsiye düşmez. Ek yazma yok: defter zaten her gece
+  yazılıyordu.
