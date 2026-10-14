@@ -15,6 +15,7 @@ import NpcSihirbazi from './NpcSihirbazi';
 import { OyunVitrini } from './OyunVitrini';
 import { GddBolumu } from './GddBolumu';
 import { DepoBelgesi } from './DepoBelgesi';
+import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
 import { ayrilmayaIzinVar } from '../../lib/kaydedilmemis';
 import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
@@ -30,13 +31,15 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
  *   Mekanikler ve notlar — oynanış bölümleri + kategorili fikir notları
  *   Depodaki belge     — künyede oyunun deposu yazılıysa, oradaki tasarım
  *                        belgesi canlı okunur (14 Ekim; yalnız gösterir)
+ *   Yol haritası       — aynı depodan docs/yol-haritasi.md: neredeyiz,
+ *                        paketler, bitenler, sırada olanlar (14 Ekim gece)
  *
  * Her şey Kemal'in kayıtlarına yazılır (gdd_bolum, oyun_fikir, oyun_is,
  * oyun_tanitim) ve "Oyun PDF'i" ile tek belge olur. Oyunun kendisi
  * ayrı depoda; buradan oraya bir şey yazılmaz.
  */
 
-type Sekme = 'kunye' | 'surec' | 'mekanik' | 'depo';
+type Sekme = 'kunye' | 'surec' | 'mekanik' | 'depo' | 'yol';
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string };
 
 export interface OyunStudyoProps {
@@ -496,7 +499,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
           { id: 'kunye', label: 'Künye ve konsept' },
           { id: 'surec', label: `Adım adım süreç · ${yapilan}/${ADIM_SIRASI.length}` },
           { id: 'mekanik', label: `Mekanikler ve notlar${fikirler.length ? ` · ${fikirler.length}` : ''}` },
-          ...(depo ? [{ id: 'depo', label: 'Depodaki belge' }] : [])
+          ...(depo ? [{ id: 'depo', label: 'Depodaki belge' }, { id: 'yol', label: 'Yol haritası' }] : [])
         ]}
         aktifId={sekme}
         onSec={id => { if (!ayrilmayaIzinVar()) return; setSekme(id as Sekme); window.scrollTo({ top: 0 }); }}
@@ -505,7 +508,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       {sekme === 'kunye' && Kunye}
       {sekme === 'surec' && Surec}
       {sekme === 'mekanik' && Mekanik}
-      {sekme === 'depo' && depo && <DepoBelgesi depo={depo} />}
+      {sekme === 'depo' && depo && <DepoBelgesi key="depo" depo={depo} />}
+      {sekme === 'yol' && depo && <DepoBelgesi key="yol" depo={depo} yollar={YOL_HARITASI_YOLLARI} />}
 
       {fikirPenceresi && (
         <FikirNotu

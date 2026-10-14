@@ -13,6 +13,8 @@
  */
 
 export const BELGE_YOLLARI = ['docs/tasarim-belgesi.md', 'README.md'];
+/** Oyunun yol haritası (14 Ekim gece, Kemal: "bir şirketmiş gibi yerimizi, noktamızı ve yolumuzu bilmek isterim") */
+export const YOL_HARITASI_YOLLARI = ['docs/yol-haritasi.md'];
 
 /** "hkemal94/DondumaciKizlar" ya da GitHub adresi → "sahip/depo"; uymuyorsa null */
 export function depoAdi(girdi: string): string | null {
@@ -129,9 +131,9 @@ export function satirIci(metin: string): Parca[] {
 }
 
 /** Depodaki belgeyi okur; ilk bulunan yol döner */
-export async function belgeyiOku(depo: string): Promise<{ yol: string; metin: string }> {
+export async function belgeyiOku(depo: string, yollar: string[] = BELGE_YOLLARI): Promise<{ yol: string; metin: string }> {
   let sonHata = '';
-  for (const yol of BELGE_YOLLARI) {
+  for (const yol of yollar) {
     try {
       const r = await fetch(hamAdres(depo, yol), { cache: 'no-cache' });
       if (r.ok) return { yol, metin: await r.text() };
