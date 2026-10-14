@@ -2261,3 +2261,16 @@ Kemal (12 Ekim): yazılar küçük kutularda sıkışıyordu.
   çubuğu çıkmaz. Üstünde "Notlar" (seçimli bölümde) ya da "Metin" etiketi.
 - Yazı 12 → 14 px; bölüm başlığı 16 px, soru 13 px, seçim düğmeleri 13 px.
 - Kayıtlara dokunmaz; yalnız görünüş (`oyun/GddBolumu.tsx`).
+
+## 14 Ekim — K: Yol haritası yeniden sıralandı (uygulamada)
+
+Kemal: "Büyük bir liste olsun, ayarla onları. Benim yapmam gerekenler çok
+uzak şeyler artık, başka şeyleri önceledik."
+
+- **4. gece:** Liman kumsal şeridi (H), kayıt uyarısı (K, 12 Ekim'deki
+  sessiz kayıp), Galeri görselleri kayıtların dışına (K, önce plan).
+- **Sırası belli değil:** yardımcı erişimi, sitenin İngilizcesi, Shopify mağaza.
+- **Uzak · şimdilik değil** (yeni, kapalı bölüm, `uzak: true`): Kemal'in 10
+  işi: teknik föy, Buffer, kendi adres, ikinci drop, sokak adları, kitap,
+  mahalle metinleri, Dirlik forması, Çiftlik yeri, ibareler. Silinmedi;
+  Durum'daki "Sıradaki 3 iş"e girmez.

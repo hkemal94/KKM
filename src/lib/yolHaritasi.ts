@@ -11,13 +11,16 @@ import type { Item } from '../types';
  * `paket`: H harita · W viki · M marka · K küçük işler.
  * `kimde`: 'claude' → kodla yapılacak; 'kemal' → Kemal'in kararı ya da işi.
  * `gece`: 7 Ekim planındaki sıra; yoksa "sırası belli değil".
+ * `uzak`: şimdilik değil (14 Ekim, Kemal: "benim yapmam gerekenler çok uzak
+ * şeyler artık, başka şeyleri önceledik"). Listenin sonunda, kapalı bölümde;
+ * "Sıradaki 3 iş"e girmez. Silinmez.
  */
 export type PaketKodu = 'H' | 'W' | 'M' | 'K';
 export const PAKET_ADLARI: Record<PaketKodu, string> = { H: 'Harita', W: 'Viki', M: 'Marka', K: 'Küçük işler' };
 
 export interface YolIsi {
   id: string; ad: string; paket: PaketKodu; kimde: 'claude' | 'kemal';
-  nereden: string; gece?: number; not?: string; bitti?: boolean;
+  nereden: string; gece?: number; not?: string; bitti?: boolean; uzak?: boolean;
   /** Kemal'in ekrandan eklediği iş */
   kendi?: boolean;
 }
@@ -96,6 +99,8 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'gece-urun-tekrar', paket: 'K', kimde: 'claude', nereden: '14 Ekim', bitti: true, ad: 'Gece önerilerinde aynı ürün bir daha önerilmez' },
   { id: 'oyun-makyaj', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, bitti: true, ad: 'Oyun sayfasının makyajı: küçük kutular, sıkışan yazılar' },
   { id: 'liman-plaj', paket: 'H', kimde: 'claude', nereden: '8 Ekim', gece: 4, ad: 'Liman kıyısına kumsal şeridi' },
+  { id: 'kayit-uyarisi', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, ad: 'Kayıt sunucuya ulaşmazsa ekranda uyarı; kartlar "Yazılıyor…"da takılı kalmasın', not: '12 Ekim\'de Dondurmacı kartının yazısı uyarısız kayboldu (yazma sınırı).' },
+  { id: 'galeri-disari', paket: 'K', kimde: 'claude', nereden: '8 Ekim', gece: 4, ad: 'Galeri görselleri kayıtların dışına: kayıtlar küçülür, yazma sınırı geç dolar', not: 'Büyük iş; önce plan gösterilir.' },
   { id: 'bag-kurali', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ türleri madde türüne özel; mükerrer maddeler birleşir (Küçükçetmi Çiftliği)' },
   { id: 'toplu-bag', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ ağında toplu seçim: birçok maddeyi tek seferde bir maddeye (mahalleye) bağla' },
   { id: 'atolye-giris', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Atölye\'de önce başlangıç ekranı, harita sonra' },
@@ -108,19 +113,19 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'mahalle-derleme-elle', paket: 'W', kimde: 'claude', nereden: '8 Ekim', bitti: true,
     ad: 'Mahalle derlemesi (Claude, 8 Ekim yedeğinden): Merkez, Liman, İskele, Çiftlik — Eksikler kartı' },
   // sırası belli değil
-  { id: 'teknik-foy', paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
+  { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
-  { id: 'buffer', paket: 'M', ad: 'Sosyal medyada Buffer bağlantısı (ücretli plan)', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal planı alınca bağlantı kurulur.' },
+  { id: 'buffer', uzak: true, paket: 'M', ad: 'Sosyal medyada Buffer bağlantısı (ücretli plan)', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal planı alınca bağlantı kurulur.' },
   { id: 'site-ingilizce', paket: 'K', ad: 'Sitenin İngilizcesi', nereden: 'yapisal-4, 19', kimde: 'claude', not: 'Yayından sonra.' },
-  { id: 'site-adres', paket: 'K', ad: 'Kendi adrese taşıma (kems.company)', nereden: 'yapisal-2, 1', kimde: 'kemal', not: 'Şimdilik Google\'da (1 Ekim).' },
+  { id: 'site-adres', uzak: true, paket: 'K', ad: 'Kendi adrese taşıma (kems.company)', nereden: 'yapisal-2, 1', kimde: 'kemal', not: 'Şimdilik Google\'da (1 Ekim).' },
   { id: 'magaza', paket: 'M', ad: 'Mağaza: Shopify (sitedeki Dükkân bağlanır)', nereden: '1 Ekim', kimde: 'claude', not: 'Karar verildi; sırası gelince.' },
-  { id: 'ikinci-drop', paket: 'M', ad: 'İkinci drop', nereden: 'yapisal-2, 9', kimde: 'kemal', not: 'Henüz erken (1 Ekim).' },
-  { id: 'sokak-adlari', paket: 'H', ad: 'Sokak adları (şimdilik numara)', nereden: 'yapisal-2, 21', kimde: 'kemal' },
-  { id: 'kitap', paket: 'W', ad: 'Kitap', nereden: 'yapisal-2, 29', kimde: 'kemal', not: 'Bekliyor (1 Ekim).' },
-  { id: 'metin-soru-turu', paket: 'W', ad: 'Mahalle Tarihçeleri, Merkez Çarşı, Liman Deniz Feneri, Stadyum Dirlik Stadı: iskeletten stüdyo taslağı', nereden: '1 Ekim', kimde: 'kemal', not: 'Yapay zekâ → Mahalle metinleri: tek basışta 8 öneri; Kemal düzeltip ekler.' },
-  { id: 'dirlik-forma', paket: 'M', ad: 'Dirlik forması: Merch\'te Dirlik kurumu altında Konsept ürün', nereden: '1 Ekim', kimde: 'kemal' },
-  { id: 'ciftlik-yeri', paket: 'H', ad: 'Küçükçetmi Çiftliği\'ni Kurucuda yerleştirmek (yol temizliğinden sonra)', nereden: '1 Ekim', kimde: 'kemal' },
-  { id: 'ibareler', paket: 'M', ad: 'İngilizce / Türkçe ibareler', nereden: 'yapisal-2, 14', kimde: 'kemal', not: 'Sonra (1 Ekim).' },
+  { id: 'ikinci-drop', uzak: true, paket: 'M', ad: 'İkinci drop', nereden: 'yapisal-2, 9', kimde: 'kemal', not: 'Henüz erken (1 Ekim).' },
+  { id: 'sokak-adlari', uzak: true, paket: 'H', ad: 'Sokak adları (şimdilik numara)', nereden: 'yapisal-2, 21', kimde: 'kemal' },
+  { id: 'kitap', uzak: true, paket: 'W', ad: 'Kitap', nereden: 'yapisal-2, 29', kimde: 'kemal', not: 'Bekliyor (1 Ekim).' },
+  { id: 'metin-soru-turu', uzak: true, paket: 'W', ad: 'Mahalle Tarihçeleri, Merkez Çarşı, Liman Deniz Feneri, Stadyum Dirlik Stadı: iskeletten stüdyo taslağı', nereden: '1 Ekim', kimde: 'kemal', not: 'Yapay zekâ → Mahalle metinleri: tek basışta 8 öneri; Kemal düzeltip ekler.' },
+  { id: 'dirlik-forma', uzak: true, paket: 'M', ad: 'Dirlik forması: Merch\'te Dirlik kurumu altında Konsept ürün', nereden: '1 Ekim', kimde: 'kemal' },
+  { id: 'ciftlik-yeri', uzak: true, paket: 'H', ad: 'Küçükçetmi Çiftliği\'ni Kurucuda yerleştirmek (yol temizliğinden sonra)', nereden: '1 Ekim', kimde: 'kemal' },
+  { id: 'ibareler', uzak: true, paket: 'M', ad: 'İngilizce / Türkçe ibareler', nereden: 'yapisal-2, 14', kimde: 'kemal', not: 'Sonra (1 Ekim).' },
 ];
 
 /** Kemal'in ekrandan eklediği iş (kkm_ayar → isler) */
@@ -136,10 +141,11 @@ export function butunIsler(a: KkmAyari): YolIsi[] {
   return [...YOL_HARITASI, ...kendi].map(i => (a.bitenler.includes(i.id) ? { ...i, bitti: true } : i));
 }
 
-/** Açık işler, sırayla: önce gecesi olanlar, sonra gerisi */
+/** Açık işler, sırayla: önce gecesi olanlar, sonra gerisi, en sonda uzaklar */
 export const acikIsler = (a: KkmAyari) => {
   const acik = butunIsler(a).filter(i => !i.bitti);
-  return [...acik.filter(i => i.gece).sort((x, y) => x.gece! - y.gece!), ...acik.filter(i => !i.gece)];
+  const yakin = acik.filter(i => !i.uzak);
+  return [...yakin.filter(i => i.gece).sort((x, y) => x.gece! - y.gece!), ...yakin.filter(i => !i.gece), ...acik.filter(i => i.uzak)];
 };
 
 // ---------------------------------------------------------------- KKM ayarı

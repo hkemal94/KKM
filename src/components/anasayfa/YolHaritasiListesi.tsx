@@ -29,6 +29,7 @@ export const YolHaritasiListesi: React.FC<Props> = ({ ayar, yaz }) => {
   const [paket, setPaket] = useState<PaketKodu | null>(null);
   const [kim, setKim] = useState<Kim>('hepsi');
   const [bitenlerAcik, setBitenlerAcik] = useState(false);
+  const [uzakAcik, setUzakAcik] = useState(false);
   const [yeniAd, setYeniAd] = useState('');
   const [yeniPaket, setYeniPaket] = useState<PaketKodu>('K');
   const [yeniKim, setYeniKim] = useState<'kemal' | 'claude'>('kemal');
@@ -41,10 +42,10 @@ export const YolHaritasiListesi: React.FC<Props> = ({ ayar, yaz }) => {
   const gorunen = acik.filter(uyar);
   const bitenler = hepsi.filter(i => i.bitti && uyar(i));
 
-  // Gece grupları: 1…7, sonra "sırası belli değil", en sonda Kemal'in ekledikleri
+  // Gece grupları: 1…7, sonra "sırası belli değil", Kemal'in ekledikleri, en sonda uzaklar (kapalı)
   const gruplar: { baslik: string; isler: YolIsi[] }[] = [];
   for (const i of gorunen) {
-    const baslik = i.kendi ? 'Senin eklediklerin' : i.gece ? `${i.gece}. gece` : 'Sırası belli değil';
+    const baslik = i.uzak ? UZAK : i.kendi ? 'Senin eklediklerin' : i.gece ? `${i.gece}. gece` : 'Sırası belli değil';
     const g = gruplar.find(x => x.baslik === baslik);
     if (g) g.isler.push(i); else gruplar.push({ baslik, isler: [i] });
   }
@@ -95,8 +96,14 @@ export const YolHaritasiListesi: React.FC<Props> = ({ ayar, yaz }) => {
 
       {gruplar.map(g => (
         <div key={g.baslik}>
-          <div className={`text-[11px] font-semibold uppercase tracking-wider ${IKINCIL}`}>{g.baslik}</div>
-          <ul className="mt-1 divide-y divide-[#E4DCCD] dark:divide-[#2C3C72]">
+          {g.baslik === UZAK
+            ? (
+              <button type="button" onClick={() => setUzakAcik(a => !a)} className={`flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider cursor-pointer ${IKINCIL}`}>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${uzakAcik ? '' : '-rotate-90'}`} /> {g.baslik} ({g.isler.length})
+              </button>
+            )
+            : <div className={`text-[11px] font-semibold uppercase tracking-wider ${IKINCIL}`}>{g.baslik}</div>}
+          {(g.baslik !== UZAK || uzakAcik) && <ul className="mt-1 divide-y divide-[#E4DCCD] dark:divide-[#2C3C72]">
             {g.isler.map(i => (
               <li key={i.id} className="py-2 flex items-start gap-2.5">
                 <span className={`mt-0.5 shrink-0 w-6 text-center py-0.5 rounded text-[10px] font-mono font-bold ${PAKET_RENGI[i.paket]}`} title={PAKET_ADLARI[i.paket]}>{i.paket}</span>
@@ -117,7 +124,7 @@ export const YolHaritasiListesi: React.FC<Props> = ({ ayar, yaz }) => {
                 </button>
               </li>
             ))}
-          </ul>
+          </ul>}
         </div>
       ))}
       {gorunen.length === 0 && <p className={`text-[12px] ${IKINCIL}`}>Bu süzgeçte açık iş yok.</p>}
@@ -164,10 +171,12 @@ export const YolHaritasiListesi: React.FC<Props> = ({ ayar, yaz }) => {
   );
 };
 
+const UZAK = 'Uzak · şimdilik değil';
+
 function sira(baslik: string): number {
   const n = parseInt(baslik, 10);
   if (!Number.isNaN(n)) return n;
-  return baslik === 'Sırası belli değil' ? 100 : 200;
+  return baslik === 'Sırası belli değil' ? 100 : baslik === UZAK ? 300 : 200;
 }
 
 const Cip: React.FC<{ secili: boolean; onClick: () => void; children: React.ReactNode }> = ({ secili, onClick, children }) => (
