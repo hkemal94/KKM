@@ -2274,3 +2274,20 @@ uzak şeyler artık, başka şeyleri önceledik."
   işi: teknik föy, Buffer, kendi adres, ikinci drop, sokak adları, kitap,
   mahalle metinleri, Dirlik forması, Çiftlik yeri, ibareler. Silinmedi;
   Durum'daki "Sıradaki 3 iş"e girmez.
+
+## 14 Ekim gece — K: Oyun sayfasında Yol haritası (uygulamada)
+
+Kemal: "Oyun için pek bir acelemiz yok, o yüzden bir şirketmiş gibi yerimizi,
+noktamızı ve yolumuzu bilmek isterim. KKM'de bulunan bu oyunun sayfasını
+güncellemen çok işime yarar." Bölüm oyunun sayfasında (soru turunda seçildi).
+
+- **Oyun → oyun → Yol haritası** sekmesi: künyede depo yazılıysa "Depodaki
+  belge"nin yanında açılır. Oyunun deposundaki `docs/yol-haritasi.md` her
+  açılışta canlı okunur (neredeyiz, paketler, bitenler, sona kalanlar,
+  yayından önce yapılacaklar, Kemal'in kararını bekleyenler).
+- Okuma `lib/depoBelgesi.ts` ile aynı; yalnız okunacak dosya seçilebilir oldu
+  (`YOL_HARITASI_YOLLARI`). KKM kayıtlarına bir şey yazmaz, oyunun deposuna
+  da yazmaz; yazma sınırı yemez.
+- Oyunun deposunda kural: her PR yol haritası sayfasını günceller; bu sekme
+  hep güncel kalır. Dondurmacı Kızlar deposunda sayfa PR #29 ile geliyor;
+  o birleşmeden sekme "bulunamadı" der.

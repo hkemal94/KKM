@@ -26,7 +26,8 @@ const Satir: React.FC<{ metin: string }> = ({ metin }) => (
   </>
 );
 
-export const DepoBelgesi: React.FC<{ depo: string }> = ({ depo }) => {
+/** `yollar`: okunacak dosyalar, sırayla denenir (yoksa tasarım belgesi) */
+export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[] }> = ({ depo, yollar }) => {
   const [durum, setDurum] = useState<{ yol: string; metin: string } | 'yukleniyor' | { hata: string }>('yukleniyor');
   const [tur, setTur] = useState(0);
   const [buyuk, setBuyuk] = useState<string | null>(null);
@@ -34,11 +35,11 @@ export const DepoBelgesi: React.FC<{ depo: string }> = ({ depo }) => {
   useEffect(() => {
     let iptal = false;
     setDurum('yukleniyor');
-    belgeyiOku(depo)
+    belgeyiOku(depo, yollar)
       .then(b => { if (!iptal) setDurum(b); })
       .catch(e => { if (!iptal) setDurum({ hata: e instanceof Error ? e.message : String(e) }); });
     return () => { iptal = true; };
-  }, [depo, tur]);
+  }, [depo, tur, yollar]);
 
   const bloklar = useMemo<Blok[]>(() => (typeof durum === 'object' && 'metin' in durum ? markdownuAyir(durum.metin) : []), [durum]);
   const icindekiler = bloklar.filter((b): b is Extract<Blok, { tur: 'baslik' }> => b.tur === 'baslik' && b.seviye === 2);
