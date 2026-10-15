@@ -2312,3 +2312,23 @@ kopyadan gönderdiği için:
 **Kural (Kemal için):** AI Studio'da değişiklik yapmadan ya da göndermeden
 önce GitHub'daki son hâli çek (eşitle). AI Studio yalnız önizleme; tek doğru
 kaynak GitHub deposu.
+
+## 15 Ekim — K: Oyun sayfasında Ayarlar sekmesi
+
+Dondurmacı Kızlar'ın bütün fiyat, süre ve oranları oyunun deposunda tek
+dosyada toplandı (`src/oyun/ayarlar.json`, oyunun 7. adımı). Oyun → depo
+yazılı oyunda **Ayarlar** sekmesi (`components/oyun/OyunAyarlari.tsx`,
+`lib/oyunAyarlari.ts`):
+
+- Dosya her açılışta oyunun deposundan canlı okunur; bölüm bölüm, Türkçe
+  adı ve birimiyle gösterilir. Arama kutusu var.
+- Kemal sayıyı değiştirir (değişen satır renklenir, eski değer yazar),
+  **Oyuna gönder**'e basar: oyunun deposunda yeni dalda dosya güncellenir ve
+  değişiklik tablosuyla PR açılır. Birleştirme GitHub'da Kemal'in.
+- Yazma yolu (Kemal, 15 Ekim): **GitHub anahtarı.** İnce ayarlı anahtar,
+  yalnız oyunun deposu, Contents ve Pull requests: Read and write. Anahtar
+  yalnız o tarayıcıda (localStorage) durur; **KKM kayıtlarına yazılmaz.**
+  Başka cihazda yeniden girilir.
+- Okuduktan sonra depoda dosya değiştiyse gönderim durur, "Yenile" ister
+  (üstüne yazılmasın).
+- KKM kayıtlarına hiçbir şey yazmaz; yazma sınırı yemez.
