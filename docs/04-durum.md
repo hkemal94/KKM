@@ -2332,3 +2332,15 @@ yazılı oyunda **Ayarlar** sekmesi (`components/oyun/OyunAyarlari.tsx`,
 - Okuduktan sonra depoda dosya değiştiyse gönderim durur, "Yenile" ister
   (üstüne yazılmasın).
 - KKM kayıtlarına hiçbir şey yazmaz; yazma sınırı yemez.
+
+## 15 Ekim — K: AI Studio paket kilidini yine düşürdü
+
+AI Studio'dan ana dala bir gönderi daha geldi (`4ffe636`, "remove unused
+dependencies"). Yalnız `package-lock.json`'dan harita motoru (maplibre-gl) ve
+PDF (jspdf) çıkarılmış; ikisi de `package.json`'da duruyor ve kullanılıyor
+(`components/harita/`, `lib/pdfYazici.ts`, `lib/kitapCiktisi.ts`). Bu hâliyle
+temiz kurulum (`npm ci`) "kilit dosyası eşit değil" diye duruyordu. Kilit
+`44a1998`'deki hâline döndü. Başka dosyaya dokunulmamıştı.
+
+**Kural (Kemal için):** AI Studio "kullanılmayan paket" diye bunları önerirse
+kabul etme; harita ve PDF bunlarla çalışıyor. İkinci kez oldu.
