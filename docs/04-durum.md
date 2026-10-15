@@ -2291,3 +2291,24 @@ güncellemen çok işime yarar." Bölüm oyunun sayfasında (soru turunda seçil
 - Oyunun deposunda kural: her PR yol haritası sayfasını günceller; bu sekme
   hep güncel kalır. Dondurmacı Kızlar deposunda sayfa PR #29 ile geliyor;
   o birleşmeden sekme "bulunamadı" der.
+
+## 15 Ekim — K: AI Studio'dan gelen gönderinin düzeltmesi
+
+AI Studio'dan ana dala doğrudan bir gönderi geldi (`41cc935`, "migration and
+logo management cards"). AI Studio GitHub'daki son hâlle eşit değildi; eski
+kopyadan gönderdiği için:
+
+- **Kalan:** altı dosyadaki React "aynı anahtar" düzeltmeleri (YerKartlari,
+  AdaKarti, PinterestPanolari, OyunVitrini, WikiArticle, YazimPaneli). Görselin
+  silinmesi artık sıra numarasıyla; aynı görsel iki kez eklenmişse yalnız
+  dokunulan kalkar.
+- **Yeniden silinen:** `HaritaGocuKarti`, `LogoKarti`, `haritaOnarim`,
+  `logoPaketi`, `merkezGocu`. "Büyük denetim"de işi bittiği için silinmişlerdi;
+  hiçbir yerden çağrılmıyorlardı (kural: kullanılmayan kod silinir).
+- **Geri gelen:** `package-lock.json`. Gönderide harita motoru (maplibre-gl),
+  PDF (jspdf) dahil 48 paket kilitten düşmüştü; temiz kurulumda harita ve PDF
+  bozulabilirdi.
+
+**Kural (Kemal için):** AI Studio'da değişiklik yapmadan ya da göndermeden
+önce GitHub'daki son hâli çek (eşitle). AI Studio yalnız önizleme; tek doğru
+kaynak GitHub deposu.
