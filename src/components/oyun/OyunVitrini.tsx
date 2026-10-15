@@ -97,7 +97,7 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
     if (yeni.length) await yaz({ images: [...gorseller, ...yeni] });
   };
 
-  const gorselKaldir = (g: string) => void yaz({ images: gorseller.filter(x => x !== g) });
+  const gorselKaldir = (idx: number) => void yaz({ images: gorseller.filter((_, i) => i !== idx) });
 
   const kutu = 'w-full text-[13px] bg-white dark:bg-[#17345A] text-[#0E1C4F] dark:text-[#F3EFE8] border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg p-2.5 focus:outline-hidden focus:border-[#F26B6F]';
 
@@ -141,10 +141,10 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
         <div className="min-w-0">
           <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">Ekran görüntüleri · en fazla {EN_FAZLA_GORSEL}</div>
           <div className="grid grid-cols-2 gap-2">
-            {gorseller.map(g => (
-              <div key={g.slice(-40)} className="relative group rounded-lg overflow-hidden bg-white/10 aspect-video">
+            {gorseller.map((g, idx) => (
+              <div key={`${idx}-${g.slice(-40)}`} className="relative group rounded-lg overflow-hidden bg-white/10 aspect-video">
                 <button type="button" onClick={() => setBuyuk(g)} className="block w-full h-full cursor-zoom-in"><img src={g} alt="" className="w-full h-full object-cover" /></button>
-                <button type="button" onClick={() => gorselKaldir(g)} title="Kaldır" className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 cursor-pointer"><X className="w-3 h-3" /></button>
+                <button type="button" onClick={() => gorselKaldir(idx)} title="Kaldır" className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 cursor-pointer"><X className="w-3 h-3" /></button>
               </div>
             ))}
             {gorseller.length < EN_FAZLA_GORSEL && (

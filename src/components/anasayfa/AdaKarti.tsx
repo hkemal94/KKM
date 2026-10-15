@@ -73,8 +73,8 @@ export const AdaKarti: React.FC<Props> = ({ items, onMadde, onTepsi, className =
               <div className="text-[11px] text-[#A6B0C9]">{madde.id === ADA_KIMLIGI ? 'Ada' : TYPE_LABELS[madde.type] || madde.type}</div>
               {kunye.length > 0 && (
                 <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
-                  {kunye.map(k => (
-                    <React.Fragment key={k.id}>
+                  {kunye.map((k, idx) => (
+                    <React.Fragment key={`${k.id}-${idx}`}>
                       <dt className="text-[#A6B0C9]">{k.label}</dt>
                       <dd className="text-[#F3EFE8] min-w-0 truncate">{k.value}</dd>
                     </React.Fragment>

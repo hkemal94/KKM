@@ -129,10 +129,10 @@ export const PinterestPanolari: React.FC<Props> = ({ items, onAddItem, onDeleteI
               ? <p className={`text-[12px] ${IKINCIL}`}>Bu panoda pin gelmedi (pano gizli olabilir).</p>
               : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {p.map(pin => {
+                  {p.map((pin, idx) => {
                     const alindi = galeridekiler.has(pin.image);
                     return (
-                      <div key={pin.image} className={`rounded-lg overflow-hidden border ${CIZGI} bg-[#F3EFE8] dark:bg-[#17345A]`}>
+                      <div key={`${pin.link || pin.image}-${idx}`} className={`rounded-lg overflow-hidden border ${CIZGI} bg-[#F3EFE8] dark:bg-[#17345A]`}>
                         <a href={pin.link} target="_blank" rel="noreferrer" title={pin.title}>
                           <img src={pin.image} alt="" loading="lazy" referrerPolicy="no-referrer" className="w-full aspect-[3/4] object-cover" />
                         </a>

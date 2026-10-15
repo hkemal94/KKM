@@ -499,8 +499,8 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
             <section className="mb-7">
               <h2 className="font-sans text-xl text-lacivert dark:text-krem mb-3 tracking-tight">Bilgiler</h2>
               <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
-                {ekBilgiler.map(f => (
-                  <div key={f.id} className="min-w-0">
+                {ekBilgiler.map((f, idx) => (
+                  <div key={`${f.id}-${idx}`} className="min-w-0">
                     <dt className="text-[10px] font-mono uppercase tracking-wide text-gri dark:text-bej/85 mb-0.5">
                       {f.label}
                     </dt>
@@ -687,9 +687,9 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                     : 'grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-bej/30 dark:bg-lacivert-600/30'
                 }
               >
-                {kunye.map(f => (
+                {kunye.map((f, idx) => (
                   <div
-                    key={f.id}
+                    key={`${f.id}-${idx}`}
                     className={
                       govdeVar
                         ? 'px-4 py-2.5'

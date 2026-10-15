@@ -119,8 +119,8 @@ export const YazimPaneli: React.FC<Props> = ({ metin, items, onMaddeAc, onAddIte
                 const kunye = getKunyeFields(madde);
                 return kunye.length ? (
                   <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px]">
-                    {kunye.map(f => (
-                      <React.Fragment key={f.id}>
+                    {kunye.map((f, idx) => (
+                      <React.Fragment key={`${f.id}-${idx}`}>
                         <dt className="font-mono text-[9px] uppercase pt-0.5 text-[#6A5E4C] dark:text-[#A6B0C9]">{f.label}</dt>
                         <dd className="text-[#0E1C4F] dark:text-[#F3EFE8] leading-snug min-w-0"><KunyeDegeri value={f.value} /></dd>
                       </React.Fragment>

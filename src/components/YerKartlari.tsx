@@ -193,8 +193,8 @@ export const MaddeSoruTuruKarti: React.FC<{
       </div>
       {acik && (
         <ul className="mt-2.5 space-y-1 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
-          {yeniler.map(y => <li key={y.title}>＋ {y.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {turAdi(y.type)}</span></li>)}
-          {duzelt.map(x => <li key={x.item.id}>✎ {x.item.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {x.neler.join(' · ')}</span></li>)}
+          {yeniler.map((y, idx) => <li key={`yeni-${y.title}-${idx}`}>＋ {y.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {turAdi(y.type)}</span></li>)}
+          {duzelt.map((x, idx) => <li key={`duzelt-${x.item.id}-${idx}`}>✎ {x.item.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {x.neler.join(' · ')}</span></li>)}
         </ul>
       )}
     </div>
@@ -254,7 +254,7 @@ export const ClaudeDerlemeKarti: React.FC<{ items: Item[]; onUpdateItem: (item: 
             .filter(b => b.status === 'öneri' && String(b.content || '').trim());
           const buAcik = acik === x.item.id;
           return (
-            <li key={x.item.id} className="py-2">
+            <li key={`liste-${x.item.id}`} className="py-2">
               <button type="button" onClick={() => setAcik(buAcik ? null : x.item.id)} className="w-full flex items-center gap-2 text-left cursor-pointer">
                 <span className="flex-1 text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">{x.item.title}</span>
                 <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{eski.length} öneri bölümü → {x.bolumler.length}</span>
@@ -275,8 +275,8 @@ export const ClaudeDerlemeKarti: React.FC<{ items: Item[]; onUpdateItem: (item: 
             </li>
           );
         })}
-        {ekler.map(e => (
-          <li key={e.item.id} className="py-2 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">✎ {e.item.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {e.ne}</span></li>
+        {ekler.map((e, idx) => (
+          <li key={`ek-${e.item.id}-${idx}`} className="py-2 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">✎ {e.item.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {e.ne}</span></li>
         ))}
       </ul>
     </div>
