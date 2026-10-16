@@ -129,7 +129,7 @@ export const OyunAyarlari: React.FC<{ depo: string }> = ({ depo }) => {
         <input value={ara} onChange={e => setAra(e.target.value)} placeholder="Ayar ara (ör. kup, yevmiye, çilek)" className={`${kutu} pl-9`} />
       </label>
       {(Object.entries(dosya.bolumler) as [string, AyarBolumu][]).map(([bolumId, b]) => {
-        const ayarlar = (Object.entries(b.ayarlar) as [string, Ayar][]).filter(([, a]) => !arama || a.ad.toLocaleLowerCase('tr').includes(arama) || b.ad.toLocaleLowerCase('tr').includes(arama));
+        const ayarlar = (Object.entries(b.ayarlar || {}) as [string, Ayar][]).filter(([, a]) => !arama || a.ad.toLocaleLowerCase('tr').includes(arama) || b.ad.toLocaleLowerCase('tr').includes(arama));
         if (!ayarlar.length) return null;
         return (
           <section key={bolumId} className={`${KART} p-4 space-y-2`}>
@@ -140,7 +140,7 @@ export const OyunAyarlari: React.FC<{ depo: string }> = ({ depo }) => {
             <div className="divide-y divide-[#E4DCCD] dark:divide-[#2C3C72]">
               {ayarlar.map(([anahtarAdi, a]) => {
                 const k = `${bolumId}.${anahtarAdi}`;
-                const yazi = yazilar[k] ?? String(a.deger).replace('.', ',');
+                const yazi = yazilar[k] ?? (a.deger !== undefined ? String(a.deger).replace('.', ',') : '');
                 const yeni = degisiklikler[k];
                 const degisti = yeni !== undefined && yeni !== a.deger;
                 const hatali = hatalilar.has(k);
@@ -150,7 +150,7 @@ export const OyunAyarlari: React.FC<{ depo: string }> = ({ depo }) => {
                       <div className={`text-[14px] ${YAZI}`}>{a.ad}</div>
                       {(a.not || degisti) && (
                         <div className={`text-[12px] ${IKINCIL}`}>
-                          {degisti && <span className="font-semibold text-[#D6484C] dark:text-[#F26B6F]">eski: {String(a.deger).replace('.', ',')}</span>}
+                          {degisti && <span className="font-semibold text-[#D6484C] dark:text-[#F26B6F]">eski: {a.deger !== undefined ? String(a.deger).replace('.', ',') : ''}</span>}
                           {degisti && a.not ? ' · ' : ''}{a.not}
                         </div>
                       )}
@@ -180,7 +180,7 @@ export const OyunAyarlari: React.FC<{ depo: string }> = ({ depo }) => {
         );
       })}
       {(satirlar.length > 0 || hatalilar.size > 0 || gonderim === 'gidiyor' || (typeof gonderim === 'object' && 'hata' in gonderim)) && (
-        <div className="fixed bottom-0 inset-x-0 z-40 p-3 lg:pl-72">
+        <div className="fixed bottom-0 inset-x-0 z-40 p-3 lg:pl-16">
           <div className={`${KART} p-3 shadow-lg flex flex-wrap items-center gap-2 max-w-3xl mx-auto`}>
             <span className={`${ETIKET} flex-1 min-w-0`}>
               {hatalilar.size > 0 ? `${hatalilar.size} kutuda sayı yok` : `${satirlar.length} değişiklik`}

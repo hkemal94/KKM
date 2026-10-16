@@ -35,29 +35,35 @@ export interface DegisiklikSatiri { bolum: string; anahtar: string; ad: string; 
 
 export function degisiklikListesi(dosya: AyarDosyasi, d: Degisiklikler): DegisiklikSatiri[] {
   const liste: DegisiklikSatiri[] = [];
-  for (const [bolum, b] of Object.entries(dosya.bolumler))
+  if (!dosya?.bolumler) return liste;
+  for (const [bolum, b] of Object.entries(dosya.bolumler)) {
+    if (!b?.ayarlar) continue;
     for (const [anahtar, a] of Object.entries(b.ayarlar)) {
       const yeni = d[`${bolum}.${anahtar}`];
       if (yeni !== undefined && yeni !== a.deger) liste.push({ bolum: b.ad, anahtar, ad: a.ad, eski: a.deger, yeni, birim: a.birim });
     }
+  }
   return liste;
 }
 
 /** Yeni dosya metni: yalnız değerler değişir; biçim oyunun deposundakiyle aynı (2 boşluk girinti) */
 export function yeniDosya(dosya: AyarDosyasi, d: Degisiklikler): string {
   const kopya = JSON.parse(JSON.stringify(dosya)) as AyarDosyasi;
-  for (const [bolum, b] of Object.entries(kopya.bolumler))
+  if (!kopya?.bolumler) return JSON.stringify(kopya, null, 2) + '\n';
+  for (const [bolum, b] of Object.entries(kopya.bolumler)) {
+    if (!b?.ayarlar) continue;
     for (const [anahtar, a] of Object.entries(b.ayarlar)) {
       const yeni = d[`${bolum}.${anahtar}`];
       if (yeni !== undefined) a.deger = yeni;
     }
+  }
   return JSON.stringify(kopya, null, 2) + '\n';
 }
 
 /** Kutudaki yazı → sayı; virgül de olur (4,5). Geçersizse null */
 export function sayiyaCevir(yazi: string): number | null {
   const s = yazi.trim().replace(',', '.');
-  if (!/^\d+(\.\d+)?$/.test(s)) return null;
+  if (!/^-?(\d+(\.\d*)?|\.\d+)$/.test(s)) return null;
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }
@@ -104,7 +110,7 @@ function base64(metin: string): string {
   return btoa(ikili);
 }
 function base64Coz(b64: string): string {
-  const ikili = atob(b64.replace(/\n/g, ''));
+  const ikili = atob(b64.replace(/\s+/g, ''));
   return new TextDecoder().decode(Uint8Array.from(ikili, c => c.charCodeAt(0)));
 }
 
@@ -116,7 +122,9 @@ export async function oyunaGonder(anahtar: string, depo: string, okunanHam: stri
   const bilgi = await github<{ default_branch: string }>(anahtar, `/repos/${depo}`);
   const ana = bilgi.default_branch;
   const dosya = await github<{ sha: string; content: string }>(anahtar, `/repos/${depo}/contents/${AYAR_YOLU}?ref=${encodeURIComponent(ana)}`);
-  if (base64Coz(dosya.content) !== okunanHam) throw new Error('Ayar dosyası sen okuduktan sonra depoda değişmiş. Yenile, sonra yeniden dene.');
+  const depodaki = base64Coz(dosya.content).replace(/\r\n/g, '\n').trim();
+  const okunan = okunanHam.replace(/\r\n/g, '\n').trim();
+  if (depodaki !== okunan) throw new Error('Ayar dosyası sen okuduktan sonra depoda değişmiş. Yenile, sonra yeniden dene.');
   const ref = await github<{ object: { sha: string } }>(anahtar, `/repos/${depo}/git/ref/heads/${encodeURIComponent(ana)}`);
   const zaman = new Date();
   const iki = (n: number) => String(n).padStart(2, '0');

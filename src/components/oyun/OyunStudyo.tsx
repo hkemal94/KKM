@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { BolumBasligi, BosSatir, IlerlemeHalkasi, Rozet } from '../kabuk/Parcalar';
 import {
@@ -199,6 +199,12 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   }, [belgeler]);
 
   const [sekme, setSekme] = useState<Sekme>('kunye');
+
+  useEffect(() => {
+    if (!depo && (sekme === 'depo' || sekme === 'yol' || sekme === 'ayar')) {
+      setSekme('kunye');
+    }
+  }, [depo, sekme]);
   const [pdfDurumu, setPdfDurumu] = useState<'' | 'hazirlaniyor' | 'hata'>('');
   const [yeniIs, setYeniIs] = useState<string | null>(null);
   const [yeniBaslik, setYeniBaslik] = useState('');
