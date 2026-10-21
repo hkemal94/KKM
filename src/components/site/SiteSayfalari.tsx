@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ArrowRight, ArrowUpRight, AtSign, Mail } from 'lucide-react';
 import type { Item } from '../../types';
+import { GorselImg } from '../GorselImg';
 import { DuzadaHarita } from '../harita/DuzadaHarita';
 import type { HaritaDuzeni } from '../harita/duzenTipi';
 import { ATMOSFER_ACIK } from '../harita/atmosferAyari';
@@ -57,7 +58,7 @@ export const SayfaKabugu: React.FC<{
         <h1 className="mt-2 text-[40px] sm:text-[64px] leading-[0.95] font-extrabold tracking-tight">{baslik}</h1>
         {alt && <p className={`mt-4 max-w-xl text-[15px] sm:text-[17px] ${t.ikincil}`}>{alt}</p>}
         {kapak
-          ? <img src={kapak} alt="" className="mt-8 sm:mt-10 w-full aspect-[21/9] object-cover rounded-2xl" />
+          ? <GorselImg src={kapak} alt="" className="mt-8 sm:mt-10 w-full aspect-[21/9] object-cover rounded-2xl" />
           : <div className={`mt-8 sm:mt-10 border-t ${t.cizgi}`} />}
       </div>
       <div className={`${genis ? 'max-w-6xl' : 'max-w-5xl'} w-full flex-1 mx-auto px-4 sm:px-10 pb-28`}>{children}</div>

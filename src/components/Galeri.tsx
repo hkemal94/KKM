@@ -8,6 +8,8 @@ import {
 import { SayfaRayi, type RayBolumu } from './SayfaRayi';
 import { CanvaAynasi } from './galeri/CanvaAynasi';
 import { PinterestPanolari } from './galeri/PinterestPanolari';
+import { GorselImg } from './GorselImg';
+import { gorselYaz, gorselOku, gorselSil, useGorsel } from '../lib/gorselDeposu';
 
 /**
  * Galeri.
@@ -26,9 +28,12 @@ import { PinterestPanolari } from './galeri/PinterestPanolari';
  *    JPEG'e çevirip saydam zemini beyaza boyuyordu; logo için bu, kiremit
  *    zeminin üstünde beyaz kutu demek. Logolar PNG yolundan geçiyor.
  *
- * 2. Görseller kayıt olarak tutuluyor (type: 'ilham_gorsel'), ayrı bir
- *    depolama yok. Böylece yedekleme, arama ve arşiv kuralları bu
- *    görsellere de kendiliğinden işliyor.
+ * 2. Görseller kayıt olarak tutuluyor (type: 'ilham_gorsel'); böylece
+ *    arama ve arşiv kuralları bu görsellere de işliyor. Görselin kendisi
+ *    (21 Ekim) kaydın içinde değil, `users/{uid}/gorseller` belgesinde
+ *    durur; kayıtta `gorsel:<id>` başvurusu kalır. Belge yazılamazsa
+ *    (kural yayımlanmamışsa) görsel eskisi gibi kaydın içine konur —
+ *    yükleme asla kaybolmaz.
  */
 
 const RAY_BOLUMLERI: RayBolumu[] = [
@@ -78,14 +83,16 @@ export const Galeri: React.FC<GaleriProps> = ({
   const [bagliyor, setBagliyor] = useState<string | null>(null);
   /** Büyük görünümdeki görselin gerçek boyutu */
   const [boyut, setBoyut] = useState<{ en: number; boy: number } | null>(null);
+  /** Büyük görünümdeki görselin gösterilecek adresi (başvuru çözülmüş) */
+  const buyukAdres = useGorsel(buyuk?.images?.[0]);
   useEffect(() => {
     setBoyut(null);
-    const kaynak = buyuk?.images?.[0];
+    const kaynak = buyukAdres;
     if (!kaynak) return;
     const img = new Image();
     img.onload = () => setBoyut({ en: img.naturalWidth, boy: img.naturalHeight });
     img.src = kaynak;
-  }, [buyuk]);
+  }, [buyuk, buyukAdres]);
 
   const gorseller = useMemo(
     () => items
@@ -145,7 +152,18 @@ export const Galeri: React.FC<GaleriProps> = ({
           }
         }
 
-        await onAddItem({
+        // Görselin kendisi önce görsel belgesine; olmazsa eski yol (kaydın içine)
+        let gorselDegeri = kucuk;
+        let belgeRef: string | null = null;
+        try {
+          belgeRef = await gorselYaz(kucuk);
+          gorselDegeri = belgeRef;
+        } catch (e) {
+          console.warn('Görsel belgesi yazılamadı, görsel kaydın içine konuyor (firestore.rules yayımlanmamış olabilir):', e);
+        }
+
+        try {
+          await onAddItem({
           title: dosya.name.replace(/\.[a-z0-9]+$/i, ''),
           area: 'ilham',
           type: 'ilham_gorsel',
@@ -154,11 +172,16 @@ export const Galeri: React.FC<GaleriProps> = ({
           tags: ['galeri', yeniTur],
           links: [],
           notes: '',
-          images: [kucuk],
+          images: [gorselDegeri],
           isProposal: false,
           archived: false,
           metadata: { gorselTuru: yeniTur, kaynakDosya: dosya.name }
-        });
+          });
+        } catch (e) {
+          // Kayıt yazılamadıysa az önce yazılan görsel belgesi sahipsiz kalmasın
+          if (belgeRef) void gorselSil([belgeRef]).catch(() => {});
+          throw e;
+        }
         eklenen++;
       }
       setRapor(
@@ -177,8 +200,12 @@ export const Galeri: React.FC<GaleriProps> = ({
   const bagla = async (gorsel: Item, hedefId: string) => {
     const hedef = items.find(i => i.id === hedefId);
     if (!hedef) return;
-    const kare = gorsel.images?.[0];
-    if (!kare) return;
+    const kareRef = gorsel.images?.[0];
+    if (!kareRef) return;
+    // Hedef kayda görselin kendisi girer (başvuru değil): hedefi okuyan her
+    // ekran (künye, logo, merch…) görseli doğrudan gösterebilsin
+    const kare = await gorselOku(kareRef);
+    if (!kare) { setRapor('Görsel okunamadı, bağlanmadı. Biraz sonra yeniden dene.'); return; }
     const mevcut = hedef.images || [];
     if (!mevcut.includes(kare)) {
       await onUpdateItem({ ...hedef, images: [kare, ...mevcut], updatedAt: Date.now() });
@@ -321,7 +348,7 @@ export const Galeri: React.FC<GaleriProps> = ({
                       background: '#F3EFE8'
                     }}
                   >
-                    <img
+                    <GorselImg
                       src={g.images![0]}
                       alt={g.title}
                       loading="lazy"
@@ -401,7 +428,7 @@ export const Galeri: React.FC<GaleriProps> = ({
                 <p className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">
                   {TUR_ADI[((buyuk.metadata as any)?.gorselTuru as GorselTuru) || 'diger']}
                   {' · '}
-                  {Math.round(kabaBoyut(buyuk.images![0]) / 1024)} KB
+                  {buyukAdres ? `${Math.round(kabaBoyut(buyukAdres) / 1024)} KB` : '…'}
                   {boyut ? ` · ${boyut.en}×${boyut.boy} piksel` : ''}
                   {boyut && Math.max(boyut.en, boyut.boy) < 800 ? ' · küçük dosya, büyütünce bulanık görünür' : ''}
                 </p>
@@ -415,7 +442,7 @@ export const Galeri: React.FC<GaleriProps> = ({
             </div>
             <div style={{ background: '#F3EFE8', borderRadius: 6, padding: 16 }}>
               {/* Ekranı dolduracak kadar büyür (küçük görseller de) */}
-              <img
+              <GorselImg
                 src={buyuk.images![0]}
                 alt={buyuk.title}
                 className="block mx-auto w-full object-contain"

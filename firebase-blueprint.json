@@ -24,6 +24,18 @@
       },
       "required": ["id", "title", "area", "type", "status", "priority", "archived", "isProposal", "userId"]
     },
+    "Gorsel": {
+      "title": "Gorsel",
+      "description": "Gallery image kept outside item records; items reference it as gorsel:<id>. Written once, never updated",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "veri": { "type": "string" },
+        "userId": { "type": "string" },
+        "olusturma": { "type": "number" }
+      },
+      "required": ["id", "veri", "userId", "olusturma"]
+    },
     "UserSettings": {
       "title": "UserSettings",
       "description": "User profile settings like theme preference",
@@ -55,6 +67,10 @@
     "/users/{userId}/items/{itemId}": {
       "schema": "Item",
       "description": "Creative universe items owned by a user"
+    },
+    "/users/{userId}/gorseller/{gorselId}": {
+      "schema": "Gorsel",
+      "description": "Gallery images stored outside item records (create/read/delete only)"
     },
     "/users/{userId}/settings/general": {
       "schema": "UserSettings",

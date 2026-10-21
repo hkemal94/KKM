@@ -3,6 +3,7 @@ import { Download, Upload, Archive, X } from 'lucide-react';
 import type { Item, UserSettings } from '../types';
 import { driveYedekYukle, YEDEK_KLASORU } from '../lib/googleApi';
 import { driveIzniniYenile, getCachedAccessToken, izinEksikMi, signInWithGoogle } from '../lib/firebase';
+import { gorselYedegi, gorselleriGeriYaz } from '../lib/gorselDeposu';
 import {
   haritaDuzeniniYedekIcinOku, haritaDuzeniniYedektenYaz
 } from '../lib/haritaDuzeni';
@@ -41,6 +42,8 @@ interface YedekDosyasi {
   sayilar: { madde: number };
   settings: UserSettings;
   items: Item[];
+  /** Galeri görselleri (21 Ekim): { görsel kimliği: data adresi }; kayıtlarda yalnız başvuru durur */
+  gorseller?: Record<string, string>;
   haritaDuzeni: unknown;
 }
 
@@ -85,13 +88,14 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
     return () => window.removeEventListener('keydown', tus);
   }, [acik]);
 
-  const yedekVerisi = (): YedekDosyasi => ({
+  const yedekVerisi = async (): Promise<YedekDosyasi> => ({
     uygulama: 'Kems Komuta Merkezi',
     surum: SURUM,
     tarih: new Date().toISOString(),
     sayilar: { madde: items.length },
     settings,
     items,
+    gorseller: await gorselYedegi(items),
     haritaDuzeni: haritaDuzeniniYedekIcinOku()
   });
 
@@ -102,7 +106,7 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
     try {
       if (!getCachedAccessToken()) await signInWithGoogle();
       const bugun = new Date().toISOString().slice(0, 10);
-      await driveYedekYukle(`kems-yedek-${bugun}.json`, JSON.stringify(yedekVerisi()));
+      await driveYedekYukle(`kems-yedek-${bugun}.json`, JSON.stringify(await yedekVerisi()));
       const simdi = Date.now();
       try { localStorage.setItem(SON_YEDEK_ANAHTARI, String(simdi)); } catch { /* yok */ }
       setSonYedek(simdi);
@@ -132,16 +136,17 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
     }
   };
 
-  const indir = () => {
-    const yedek: YedekDosyasi = {
-      uygulama: 'Kems Komuta Merkezi',
-      surum: SURUM,
-      tarih: new Date().toISOString(),
-      sayilar: { madde: items.length },
-      settings,
-      items,
-      haritaDuzeni: haritaDuzeniniYedekIcinOku()
-    };
+  const indir = async () => {
+    setCalisiyor(true);
+    let yedek: YedekDosyasi;
+    try {
+      yedek = await yedekVerisi();
+    } catch (e) {
+      setDurum(`Yedek hazırlanamadı: ${e instanceof Error ? e.message : 'bilinmeyen hata'}`);
+      return;
+    } finally {
+      setCalisiyor(false);
+    }
     const bugun = new Date().toISOString().slice(0, 10);
     const bag = document.createElement('a');
     bag.href = URL.createObjectURL(
@@ -181,7 +186,9 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
       if (veri.haritaDuzeni) {
         await haritaDuzeniniYedektenYaz(veri.haritaDuzeni);
       }
-      setDurum(`${yazilan} kayıt geri yüklendi.`);
+      // Galeri görselleri (21 Ekim): olmayan görsel belgeleri yazılır
+      const gorselSayisi = veri.gorseller ? await gorselleriGeriYaz(veri.gorseller) : 0;
+      setDurum(`${yazilan} kayıt geri yüklendi${gorselSayisi ? `, ${gorselSayisi} galeri görseli yazıldı` : ''}.`);
     } catch (e) {
       setDurum(`Okunamadı: ${e instanceof Error ? e.message : 'bilinmeyen hata'}`);
     } finally {
@@ -263,7 +270,7 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
 
             <div className="mt-4 flex flex-col gap-2">
               <button
-                onClick={indir}
+                onClick={() => void indir()}
                 disabled={calisiyor}
                 className="flex items-center justify-center gap-2 py-2.5 rounded-lg
                            bg-[#0E1C4F] dark:bg-[#F26B6F] text-[#F3EFE8] text-xs
