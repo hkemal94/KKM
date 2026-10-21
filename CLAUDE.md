@@ -135,7 +135,7 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   kanal açılıp kapanır (`kkm_ayar` → `oneriKanallari`, `src/lib/oneriKanallari.ts`).
   Günün üç yuvasının çoğu vikiye gider. Viki yazıları Vikipedi gibi genel,
   nesnel, süssüz yazılır (`server.ts` → `VIKI_USLUBU`). Dondurmacı Kızlar
-  deposu (`hkemal94/DondumaciKizlar`, public) yalnız evren bilgisini ve taslak
+  deposu (`hkemal94/DondurmaciKizlar`, public; 21 Ekim'de adı düzeldi) yalnız evren bilgisini ve taslak
   görselleri **öneri olarak** besler; oyun ayarları (fiyat, süre, oran)
   hiçbir zaman.
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz

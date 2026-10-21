@@ -2556,3 +2556,23 @@ kayıtlar eskisi gibi büyük kalır.
 zemin görseli (`public/ada-fiziki.webp`) değişmedi; o görselde Liman kıyısı
 zaten kum rengindeydi, fark çokgen zeminde görünür. Uygulama ekranında
 (2D/3D) görsel kontrol yapılmadı.
+
+## 21 Ekim akşam — K: Durum → Ajans (uygulamada; kart yok, düğme yok)
+
+Kemal: "KKM'ye yazabilirsin, sizleri bu konuda entegre etmek en çok istediğim
+şey." Kems Ajans (`hkemal94/Kems-Ajans`) artık KKM yol haritasını yönetiyor;
+KKM'deki her işi ayrı dalda PR olarak getiriyor, Kemal birleştiriyor. Bu,
+ajansın KKM'deki ilk işi (Kemal seçti).
+
+- **Durum → Ajans** sekmesi: ajansın deposundaki dört klasör (Pano notları,
+  Öneriler, Videolar, Raporlar) yeniden eskiye listelenir; dosyaya basınca
+  depodan okunup gösterilir (oyun sayfasındaki "Depodaki belge" ile aynı
+  parça). Altta ajansın belgeleri: KKM yol haritası, devir notu, sonra
+  sorulacaklar. `lib/ajansDeposu.ts`, `anasayfa/AjansSayfasi.tsx`.
+- Yalnız okur: KKM kayıtlarına bir şey yazmaz, ajansın deposuna da yazmaz;
+  yazma sınırı yemez. Ana dal okunur: ajansın işi Kemal birleştirince görünür.
+- Yol haritası: ajansı bağlayan üç iş eklendi (Ajansa gönder, viki dışa
+  aktarımı, blog ve kitap taslakları). Shopify mağazası "uzak"a geçti
+  (Kemal, 21 Ekim: mağaza yok, ileriye).
+- Dondurmacı Kızlar deposunun adı `hkemal94/DondurmaciKizlar` oldu; eski ad
+  GitHub'da yönlendiriliyor, oyun künyesindeki depo yazısı değişmeden çalışır.

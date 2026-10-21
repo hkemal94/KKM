@@ -9,8 +9,9 @@ import { Eksikler } from './Eksikler';
 import { SayfaRayi } from './SayfaRayi';
 import { DurumListesi, LISTELI_HEDEFLER } from './anasayfa/DurumListesi';
 import { BoyutHiz } from './anasayfa/BoyutHiz';
+import { AjansSayfasi } from './anasayfa/AjansSayfasi';
 
-export type DurumSekmesi = 'yuzdeler' | 'eksikler' | 'bosluklar' | 'takvim' | 'yolharitasi' | 'boyut';
+export type DurumSekmesi = 'yuzdeler' | 'eksikler' | 'bosluklar' | 'takvim' | 'yolharitasi' | 'ajans' | 'boyut';
 
 /**
  * Durum (29 Eylül; 1 Ekim'de Neyin Eksik de buraya katıldı). Kemal:
@@ -22,6 +23,8 @@ export type DurumSekmesi = 'yuzdeler' | 'eksikler' | 'bosluklar' | 'takvim' | 'y
  * haritası da Durum'un sekmesi. Yüzdeye basınca o yüzdenin maddeleri
  * listelenir, eksikler önde (Kemal: "haritaya değil maddelerin listesine
  * gitmem lazım").
+ *
+ * 21 Ekim: Ajans sekmesi, Kems Ajans'ın dosyaları (`lib/ajansDeposu.ts`).
  */
 export const Durum: React.FC<{
   items: Item[];
@@ -56,6 +59,8 @@ export const Durum: React.FC<{
     { id: 'bosluklar', label: 'Boşluklar' },
     { id: 'takvim', label: 'Takvim' },
     { id: 'yolharitasi', label: 'Yol haritası' },
+    // 21 Ekim: Kems Ajans'ın dosyaları, depodan okunur
+    { id: 'ajans', label: 'Ajans' },
     // 3. gece: kayıt boyutları, uygulama parçaları, açılış hızı
     { id: 'boyut', label: 'Boyut ve hız' }
   ];
@@ -82,6 +87,7 @@ export const Durum: React.FC<{
       )}
       {sekme === 'bosluklar' && <Bosluklar items={items} onUpdateItem={onUpdateItem} gomulu />}
       {sekme === 'boyut' && <BoyutHiz items={items} />}
+      {sekme === 'ajans' && <AjansSayfasi />}
       <GomuluSayfa.Provider value={true}>
         {sekme === 'takvim' && takvim}
         {sekme === 'yolharitasi' && yolHaritasi}
