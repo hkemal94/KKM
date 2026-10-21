@@ -277,26 +277,17 @@ export default function App() {
           photoURL: currentUser.photoURL
         });
       } else {
-        // Açık erişim modu: Kullanıcı oturum açmamışsa da doğrudan erişim sağlanır
+        // Açık erişim modu: Google girişi zorunlu değil, doğrudan ortak alan (kems_public) açılır
         let storedUid: string | null = null;
         try {
           storedUid = localStorage.getItem('kems_last_uid');
         } catch (_) {}
-        /*
-         * Ortak alan kalktı (yapisal-2, 26; Kemal: "hep Google ile gireyim").
-         * Tarayıcı Kemal'i hatırlıyorsa kendi alanı açılır; hiç tanımıyorsa
-         * ortak alan (kems_public) yerine "Google ile bağlan" ekranı çıkar.
-         */
-        if (!storedUid) {
-          setGirisGerekli(true);
-          setLoading(false);
-          return;
-        }
+        
         setGirisGerekli(false);
-        const publicUid = storedUid;
-        await setupWorkspaceForUser(publicUid, {
-          displayName: 'Açık Erişim',
-          email: 'acik@kems.local',
+        const activeUid = storedUid || 'kems_public';
+        await setupWorkspaceForUser(activeUid, {
+          displayName: 'Kemal',
+          email: 'kemal@kems.company',
           photoURL: null
         });
       }
@@ -1116,19 +1107,7 @@ export default function App() {
           <div id={SAYFA_RAYI_YUVASI} className="lg:w-48 lg:shrink-0 lg:sticky lg:top-6 lg:self-start empty:hidden min-w-0" />
 
           <main className="flex-1 min-w-0 overflow-x-clip">
-            {/* Ortak alandaysa: veriler Google hesabının alanında (29 Eylül) */}
-            {!girisli && (
-              <div className="mb-4 flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl border border-[#0E1C4F]/25 dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A]">
-                <UserRound className="w-4 h-4 shrink-0 text-[#D6484C] dark:text-[#F26B6F]" />
-                <p className="flex-1 min-w-[220px] text-[12px] leading-snug text-[#0E1C4F] dark:text-[#F3EFE8]">
-                  <b>Google'a bağlı değilsin.</b> Bu tarayıcı seni hatırlıyor, kayıtların açık; Drive'a yedek ve Gmail özeti için bağlan.
-                  {baglanmaHatasi && <span className="block mt-1 text-[#B23A40] dark:text-[#F26B6F]">{baglanmaHatasi}</span>}
-                </p>
-                <button type="button" onClick={googleIleBaglan} className="shrink-0 px-3.5 py-2 rounded-lg bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] text-[12px] font-semibold hover:opacity-90 cursor-pointer">
-                  Google ile bağlan
-                </button>
-              </div>
-            )}
+            {/* Google girişi şimdilik kapatıldı */}
 
             {activeTab === 'komuta' && (
               <Anasayfa
@@ -1400,7 +1379,9 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <button type="button" onClick={googleIleBaglan} className="w-full py-3 rounded-xl bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] text-[13px] font-semibold cursor-pointer">Google ile bağlan</button>
+              <div className="w-full py-2.5 rounded-xl bg-[#0E1C4F]/5 dark:bg-[#2C3C72]/20 text-[#6A5E4C] dark:text-[#A6B0C9] text-[12px] font-medium text-center">
+                Açık Erişim Modu
+              </div>
             )}
             <p className="text-center text-[10px] font-mono text-[#6A5E4C] dark:text-[#A6B0C9]">
               {varlikSayisi} kayıtlı varlık · {girisli ? `Google: ${user?.email || ''}` : 'tarayıcı hatırlıyor'}
