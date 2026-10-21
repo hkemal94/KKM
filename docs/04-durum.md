@@ -2483,6 +2483,51 @@ Ekim'deki kırmızı uyarı çıkmıyor, kartlar "Yazılıyor…"da takılı kal
 **Basılacak düğme yok.** **Test:** zaman aşımı, geç ulaşma ve geç ret betikle
 denendi; gerçek kota dolması önizleme ortamında denenemedi.
 
+## 21 Ekim — K: Galeri görselleri kayıtların dışında (uygulamada; bir kart)
+
+Galeri görselleri madde kayıtlarının içinde duruyordu (toplam ~3,7 MB'ın
+yarısı). Bir galeri kaydında etiket ya da bağ değişse görselin kendisi de
+baştan yazılıyor, günlük yazma sınırı çabuk doluyordu. Artık görselin kendisi
+ayrı bir belgede (`users/{uid}/gorseller/{id}`, bir kez yazılır, değişmez),
+kayıtta yalnız `gorsel:<id>` başvurusu kalır.
+
+**Ekranda ne değişti:** hiçbir şey, görünüşte. Galeri, Markalar logoları,
+viki künyesi, Merch kapakları, Atölye tuvali, Sosyal medya gönderisinin
+"Galeriden seç"i ve Site yönetimindeki sayfa görselleri aynı görünür; görsel
+belgeden okunur. Galeri'ye yeni yüklenen görsel doğrudan ayrı belgeye yazılır.
+Bir galeri kaydı silinince kendi görsel belgeleri de silinir. Yedek dosyası
+(Yedekleme ve Temizlik'in "Yedek indir"i) artık `gorseller` alanını da taşır,
+yedekten geri yükleme eksik görsel belgelerini yazar.
+
+**Basılacak düğme:** Durum → Eksikler → **"Galeri görsellerini kayıtların
+dışına taşı"** → Taşı (ana sayfada Bekleyen işler listesinde de aynı iş
+var). Kart kaç görsel ve kaç KB küçüleceğini gerçek veriden gösterir. Sıra:
+önce görseller belgelere yazılır, her biri sunucudan okunup doğrulanır, ancak
+sonra kayıt başvurularla güncellenir; yarıda kesilirse kayıtlarda görseller
+durur, bir şey kaybolmaz. İkinci basışta iş kalmaz, kart kaybolur ve hiçbir
+şey yazılmaz.
+
+**Kemal'in elle yapması gereken:** `firestore.rules` dosyasında yeni bir
+`gorseller` kuralı var. Bu kural **yayımlanmadan** kart çalışmaz: AI Studio'da
+(ya da Firebase konsolunda → Firestore → Kurallar) güncel `firestore.rules`
+metnini yapıştırıp **Yayımla**. Yayımlanmadan karta basılırsa kart "Veritabanı
+kuralı henüz yayımlanmamış" der ve hiçbir kayda dokunmaz. Yayımlanmadan
+Galeri'ye yeni görsel yüklenirse de bir şey kaybolmaz: görsel eskisi gibi
+kaydın içine konur (konsola not düşülür); sonra kart onu da taşır.
+
+**Test edildi:** hangi kayıtların taşınacağı, başvuru biçimi, kazanılan
+boyut hesabı, eskiden yeniye sıra, kayıtta kalan eski adreslere (`/galeri/…`,
+`http`) dokunulmaması ve ikinci basışta iş çıkmaması betikle denendi;
+`npm run lint` ve `vite build` temiz. **Test edilemedi:** gerçek Firestore'a
+yazma/okuma, kuralın kendisi ve yayımlanmamış kuralda kartın durması
+(önizleme ortamında veritabanı yok); ekranlarda görseller gözle denenmedi.
+
+**Eksik kalan:** KanonKarti, Mükerrer ve Eski alan kartlarının "öncesi yedek"
+dosyaları kayıtları indirir ama görsel belgelerini içermez (bu kartlar galeri
+kaydı silmez; görsel kaybı olmaz). Bir kayda bağlanan ya da gönderiye alınan
+görsel, hedef kayda görselin kendisiyle kopyalanır (başvuruyla değil); bu
+kayıtlar eskisi gibi büyük kalır.
+
 ## 21 Ekim — H: Liman kumsal şeridi (uygulamada; kart yok)
 
 8 Ekim'de İskele'ye yapılan kum şeridi şimdi Liman kasabasının önüne de geldi

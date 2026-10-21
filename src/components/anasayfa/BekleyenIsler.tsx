@@ -6,6 +6,8 @@ import { silinecekler, eskiAlanlar, silmeOzeti } from '../../lib/temizlik';
 import { mahalleAdDuzeltmeleri } from '../../lib/vikiTemizligi';
 import { boslukDoldurma } from '../../lib/boslukDoldurma';
 import { GaleriYedegiKarti, galeridenEksikler } from '../GaleriYedegiKarti';
+import { gocIsleri, gocOzeti, kbYaz } from '../../lib/galeriGocu';
+import { galeriyiTasi, gocRaporuYaz } from '../../lib/galeriGocuCalistir';
 
 /**
  * Bekleyen işler (3 Ekim, Kemal: "hepsi, işte onlara buton ver, aratma
@@ -37,6 +39,7 @@ export const BekleyenIsler: React.FC<Props> = ({ items, onUpdateItem, onAddItem,
   const bosluk = useMemo(() => boslukDoldurma(items), [items]);
   const adDuzeltme = useMemo(() => mahalleAdDuzeltmeleri(items), [items]);
   const galeri = useMemo(() => galeridenEksikler(items), [items]);
+  const goc = useMemo(() => gocIsleri(items), [items]);
 
   const [calisan, setCalisan] = useState<string | null>(null);
   const [raporlar, setRaporlar] = useState<Record<string, string>>({});
@@ -101,6 +104,21 @@ export const BekleyenIsler: React.FC<Props> = ({ items, onUpdateItem, onAddItem,
       calistir: async () => {
         for (const b of bosluk) await onUpdateItem(b.item);
         return `${bosluk.length} madde güncellendi.`;
+      }
+    });
+  }
+
+  if (goc.length) {
+    const o = gocOzeti(goc);
+    isler.push({
+      id: 'galeri-disari',
+      ad: 'Galeri görsellerini kayıtların dışına taşı',
+      aciklama: `${o.gorsel} görsel (${o.kayit} kayıt) ayrı belgelere geçer, kayıtlar yaklaşık ${kbYaz(o.kazanilanBayt)} küçülür. Önce görseller yazılıp doğrulanır, sonra kayıt güncellenir. Önce firestore.rules yayımlanmış olmalı.`,
+      calistir: async () => {
+        const r = await galeriyiTasi(items, onUpdateItem);
+        // Kural ya da bağlantı sorunuysa iş bitmedi: satır kalsın, sebebi görünsün
+        if (r.durdu) throw new Error(gocRaporuYaz(r));
+        return gocRaporuYaz(r);
       }
     });
   }

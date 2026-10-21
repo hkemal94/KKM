@@ -8,6 +8,7 @@ import { KanonKarti } from './KanonKarti';
 import { AdDegisikligiKarti } from './AdDegisikligiKarti';
 import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
+import { GaleriDisariKarti } from './GaleriDisariKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
 import { boslukDoldurma } from '../lib/boslukDoldurma';
 import { kisiAdlariniAyir } from '../lib/kisiAdi';
@@ -78,6 +79,9 @@ export const Eksikler: React.FC<EksiklerProps> = ({
 
       {/* Galeri (29 Eylül): kullanılan görseller galeriye */}
       {onAddItem && <GaleriYedegiKarti items={items} onAddItem={onAddItem} />}
+
+      {/* Galeri görselleri kayıtların dışına (21 Ekim) */}
+      {onUpdateItem && <GaleriDisariKarti items={items} onUpdateItem={onUpdateItem} />}
 
       {onUpdateItem && <BuyukKayitKarti items={items} onUpdateItem={onUpdateItem} />}
       {onUpdateItem && <AdDegisikligiKarti items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />}

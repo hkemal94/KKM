@@ -81,6 +81,24 @@ service cloud.firestore {
           && isValidItem(incoming());
       }
 
+      // Galeri görselleri (21 Ekim): görselin kendisi kayıttan ayrı durur,
+      // kayıtta `gorsel:<id>` başvurusu kalır. Bir kez yazılır, değişmez.
+      match /gorseller/{gorselId} {
+        allow read, delete: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+          && isValidId(gorselId)
+          && incoming().keys().hasAll(['id', 'veri', 'userId', 'olusturma'])
+          && incoming().keys().hasOnly(['id', 'veri', 'userId', 'olusturma'])
+          && incoming().id == gorselId
+          && incoming().userId == userId
+          && incoming().veri is string
+          && incoming().veri.size() <= 990000
+          && incoming().olusturma is number;
+
+        allow update: if false;
+      }
+
       // Settings subcollection
       match /settings/{docId} {
         allow read: if isOwner(userId);

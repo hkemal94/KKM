@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Download, Trash2 } from 'lucide-react';
 import type { Item } from '../types';
 import { silinecekler, silmeOzeti, eskiAlanlar, eskiAlanOzeti } from '../lib/temizlik';
+import { gorselYedegi } from '../lib/gorselDeposu';
 
 /**
  * Temizlik kartı (29 Eylül). Kemal: "Arka tarafta kullanmadığımız ne varsa
@@ -25,12 +26,15 @@ export const TemizlikKarti: React.FC<Props> = ({ items, onDeleteItem }) => {
   const [rapor, setRapor] = useState<string | null>(null);
   const [acik, setAcik] = useState(false);
 
-  const yedekIndir = () => {
+  const yedekIndir = async () => {
+    // Galeri görselleri kayıtların dışında durur (21 Ekim): yedeğe onlar da girer
+    const gorseller = await gorselYedegi(items);
     const dosya = new Blob([JSON.stringify({
       uygulama: 'Kems Komuta Merkezi',
       tur: 'temizlik-oncesi-yedek',
       tarih: new Date().toISOString(),
-      items
+      items,
+      gorseller
     }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(dosya);
@@ -105,7 +109,7 @@ export const TemizlikKarti: React.FC<Props> = ({ items, onDeleteItem }) => {
           </button>
         )}
         {/* Yedek isteğe bağlı (Kemal, 30 Eylül: "sürekli veriyi indirmek istemiyorum") */}
-        <button type="button" onClick={yedekIndir} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer">
+        <button type="button" onClick={() => void yedekIndir()} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer">
           <Download className="w-3.5 h-3.5" /> {yedeklendi ? 'Yedek indi ✓' : 'Yedek indir · isteğe bağlı'}
         </button>
       </div>

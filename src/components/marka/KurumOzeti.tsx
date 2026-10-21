@@ -4,6 +4,7 @@ import type { Item } from '../../types';
 import { getKunyeFields, getEkBilgiler, getArticleBody } from '../wiki/wikiSchema';
 import { KunyeDegeri } from '../wiki/KunyeDegeri';
 import { maddeGorseli } from '../../lib/maddeGorseli';
+import { useGorselSurumu } from '../../lib/gorselOnbellek';
 
 /**
  * Markalar ekranında bir kurumun (ya da markanın) viki özeti.
@@ -23,6 +24,7 @@ interface KurumOzetiProps {
 }
 
 export const KurumOzeti: React.FC<KurumOzetiProps> = ({ item, items = [], onVikideAc }) => {
+  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   const kunye = useMemo(() => getKunyeFields(item), [item]);
   const ekler = useMemo(() => getEkBilgiler(item), [item]);
   const govde = useMemo(() => getArticleBody(item), [item]);

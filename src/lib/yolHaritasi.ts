@@ -103,7 +103,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'oyun-makyaj', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, bitti: true, ad: 'Oyun sayfasının makyajı: küçük kutular, sıkışan yazılar' },
   { id: 'liman-plaj', paket: 'H', kimde: 'claude', nereden: '8 Ekim', gece: 4, bitti: true, ad: 'Liman kıyısına kumsal şeridi' },
   { id: 'kayit-uyarisi', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, bitti: true, ad: 'Kayıt sunucuya ulaşmazsa ekranda uyarı; kartlar "Yazılıyor…"da takılı kalmasın', not: '12 Ekim\'de Dondurmacı kartının yazısı uyarısız kayboldu (yazma sınırı).' },
-  { id: 'galeri-disari', paket: 'K', kimde: 'claude', nereden: '8 Ekim', gece: 4, ad: 'Galeri görselleri kayıtların dışına: kayıtlar küçülür, yazma sınırı geç dolar', not: 'Büyük iş; önce plan gösterilir.' },
+  { id: 'galeri-disari', paket: 'K', kimde: 'claude', nereden: '8 Ekim', gece: 4, bitti: true, ad: 'Galeri görselleri kayıtların dışına: kayıtlar küçülür, yazma sınırı geç dolar' },
   { id: 'bag-kurali', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ türleri madde türüne özel; mükerrer maddeler birleşir (Küçükçetmi Çiftliği)' },
   { id: 'toplu-bag', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ ağında toplu seçim: birçok maddeyi tek seferde bir maddeye (mahalleye) bağla' },
   { id: 'atolye-giris', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Atölye\'de önce başlangıç ekranı, harita sonra' },

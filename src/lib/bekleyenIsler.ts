@@ -3,6 +3,7 @@ import { boslukDoldurma } from './boslukDoldurma';
 import { silinecekler } from './temizlik';
 import { mahalleAdDuzeltmeleri } from './vikiTemizligi';
 import { galeridenEksikler } from '../components/GaleriYedegiKarti';
+import { gocIsleri } from './galeriGocu';
 import { maddeSoruTuruIsVar } from './maddeSoruTuru';
 import { derlenecekler, ekDuzeltmeler } from './mahalleDerlemesi';
 import { adaMaddesiEksik, cevreYoluVar, mahalleTekrarlari, tasinacaklar } from './yerTurleri';
@@ -23,6 +24,7 @@ export function bekleyenDugmeler(items: Item[], haritaEskiKoordinatta = false): 
   if (mahalleAdDuzeltmeleri(items).length) is.push('mahalle adlarındaki parantez');
   if (silinecekler(items).length) is.push('temizlik');
   if (galeridenEksikler(items).length) is.push('galeriye görseller');
+  if (gocIsleri(items).length) is.push('galeri görselleri kayıtların dışına');
   if (haritaEskiKoordinatta) is.push('harita düzeni yeni koordinata');
   if (boslukDoldurma(items).length) is.push('boşlukları künyeden doldur');
   // 8 Ekim: yer kartları ve mahalle derlemesi

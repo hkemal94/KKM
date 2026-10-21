@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { Globe, ExternalLink, X, Eye, EyeOff, Send, Save, Image as ImageIcon } from 'lucide-react';
 import type { Item } from '../../types';
+import { GorselImg } from '../GorselImg';
 import { sitedekiMaddeler } from './Site';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
@@ -162,7 +163,7 @@ export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, 
                 <li key={sf.id} className="py-2.5">
                   <div className="flex items-center gap-3">
                     <span className={`w-14 h-10 rounded-md overflow-hidden shrink-0 border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#F3EFE8] dark:bg-[#17345A] flex items-center justify-center`}>
-                      {gorsel ? <img src={gorsel} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-4 h-4 text-[#A99C87]" />}
+                      {gorsel ? <GorselImg src={gorsel} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-4 h-4 text-[#A99C87]" />}
                     </span>
                     <span className={`flex-1 min-w-0 ${acik ? '' : 'opacity-45'}`}>
                       <span className={`block text-[14px] font-semibold ${YAZI}`}>{sf.ad}</span>
@@ -181,7 +182,7 @@ export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, 
                       {galeri.map(g => (
                         <button key={g.id} type="button" title={g.title} onClick={() => gorselSec(sf.id, g.id)}
                           className={`aspect-square rounded-md overflow-hidden border ${g.id === gorselId ? 'border-[#F26B6F] border-2' : 'border-[#CFC5B4] dark:border-[#2C3C72]'} bg-[#F3EFE8]`}>
-                          <img src={g.images![0]} alt={g.title} className="w-full h-full object-cover" />
+                          <GorselImg src={g.images![0]} alt={g.title} className="w-full h-full object-cover" />
                         </button>
                       ))}
                       {galeri.length === 0 && <p className={`col-span-4 text-[11px] ${IKINCIL}`}>Galeri'de görsel yok.</p>}
