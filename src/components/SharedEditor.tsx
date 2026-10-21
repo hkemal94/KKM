@@ -35,6 +35,8 @@ export default function SharedEditor({
 }: SharedEditorProps) {
   const [localText, setLocalText] = useState(initialValue);
   const [isSaved, setIsSaved] = useState(true);
+  // Kayıt sunucuya ulaşmazsa "Yazılıyor..."da takılı kalmasın (12 Ekim)
+  const [kayitHatasi, setKayitHatasi] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [streak, setStreak] = useState(0);
   
@@ -95,6 +97,7 @@ export default function SharedEditor({
     if (!hasChanged.current) return;
 
     setIsSaved(false);
+    setKayitHatasi(false);
     const delayDebounce = setTimeout(async () => {
       try {
         await onSave(localText);
@@ -102,6 +105,7 @@ export default function SharedEditor({
         updateStreak();
       } catch (err) {
         console.error("Autosave error:", err);
+        setKayitHatasi(true);
       }
     }, 1200); // 1.2 second debounce delay
 
@@ -380,6 +384,8 @@ export default function SharedEditor({
                 <Check className="w-3.5 h-3.5 text-[#3E8E5E]" />
                 <span className="text-[#3E8E5E] text-[10px] font-bold uppercase tracking-wider">Kaydedildi</span>
               </>
+            ) : kayitHatasi ? (
+              <span className="text-[#B23A40] dark:text-[#F26B6F] text-[10px] font-bold uppercase tracking-wider">Kaydedilemedi</span>
             ) : (
               <>
                 <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />

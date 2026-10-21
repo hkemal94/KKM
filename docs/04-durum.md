@@ -2461,3 +2461,24 @@ yeni düzenle çalışır. Eski, maddeye bağlanmamış gece önerileri tepside
 sınırı, ayar yazımı ve `kkmAyariniYaz`'ın yeni anahtarı koruması, depo
 süzgeci) betikle denendi. Yapay zekâ sunucusu ve Vikipedi önizleme ortamında
 yok; gerçek cevaplar denenmedi.
+
+## 21 Ekim — K: Kayıt sunucuya ulaşmazsa uyarı (uygulamada)
+
+12 Ekim'de Dondurmacı kartının yazısı uyarısız kayboldu. Sebep: günlük yazma
+sınırı dolunca (ya da bağlantı kopunca) veritabanı yazıyı reddetmiyor,
+kuyrukta tutup sonsuza dek yeniden deniyor. Yazma hiç "bitmediği" için 2
+Ekim'deki kırmızı uyarı çıkmıyor, kartlar "Yazılıyor…"da takılı kalıyordu.
+
+- Kayıt, alan silme, madde silme ve ayar yazısı 15 sn içinde sunucuya
+  ulaşmazsa ekranın üstünde kiremit uyarı çıkar: "Kayıt 15 saniyedir
+  sunucuya ulaşmadı… sayfayı yenileme, sekmeyi kapatma". Tarayıcı
+  göndermeyi sürdürür; bekleyen bütün yazılar ulaşınca uyarı kendiliğinden
+  kalkar. Geç reddedilirse asıl sebep (yazma sınırı, 1 MB) yazılır.
+- Kartların düğmeleri ("Yazılıyor…", "İşleniyor…") 15 sn sonra eski hâline
+  döner, yeniden basılabilir.
+- Kitap / Blog metin düzenleyicisi: kayıt olmazsa "Yazılıyor…" yerine kırmızı
+  "Kaydedilemedi" yazar; bir sonraki harfte yeniden dener.
+- Kurucu'nun harita kaydı zaten 8 sn'de "yerelde" diyordu (30 Eylül); değişmedi.
+
+**Basılacak düğme yok.** **Test:** zaman aşımı, geç ulaşma ve geç ret betikle
+denendi; gerçek kota dolması önizleme ortamında denenemedi.

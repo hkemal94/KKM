@@ -190,6 +190,46 @@ function cleanUndefined(obj: any): any {
   return obj;
 }
 
+/**
+ * Sunucuya ulaşmayan yazma (12 Ekim, Dondurmacı kartının yazısı uyarısız
+ * kayboldu). Günlük yazma sınırı dolunca ya da bağlantı kopunca Firestore
+ * yazıyı reddetmiyor, kuyrukta tutup sonsuza dek yeniden deniyor; söz hiç
+ * bitmediği için kartlar "Yazılıyor…"da takılı kalıyor, uyarı çıkmıyordu.
+ * 15 sn içinde ulaşmayan yazı `zaman-asimi` hatasıyla döner; kuyruk yine
+ * de işler. Geç ulaşan ya da geç reddedilen yazı dinleyicilere bildirilir.
+ */
+export const YAZMA_SURESI_MS = 15000;
+let askidakiYazilar = 0;
+type YaziDinleyici = (askida: number, gecHata?: unknown) => void;
+const yaziDinleyicileri = new Set<YaziDinleyici>();
+export const askidakiYazilariDinle = (fn: YaziDinleyici) => {
+  yaziDinleyicileri.add(fn);
+  return () => { yaziDinleyicileri.delete(fn); };
+};
+const bildir = (gecHata?: unknown) => yaziDinleyicileri.forEach(fn => fn(askidakiYazilar, gecHata));
+
+async function sunucuyaUlas<T>(yazi: Promise<T>): Promise<T> {
+  let zaman: ReturnType<typeof setTimeout> | undefined;
+  let gecikti = false;
+  const bekle = new Promise<never>((_, ret) => {
+    zaman = setTimeout(() => {
+      gecikti = true;
+      askidakiYazilar++;
+      bildir();
+      ret(new Error('zaman-asimi'));
+    }, YAZMA_SURESI_MS);
+  });
+  yazi.then(
+    () => { if (gecikti) { askidakiYazilar--; bildir(); } },
+    (e) => { if (gecikti) { askidakiYazilar--; bildir(e); } }
+  );
+  try {
+    return await Promise.race([yazi, bekle]);
+  } finally {
+    clearTimeout(zaman);
+  }
+}
+
 export const saveItem = async (userId: string, item: Omit<Item, 'userId'>) => {
   const path = `users/${userId}/items/${item.id}`;
   const docRef = doc(db, "users", userId, "items", item.id);
@@ -199,7 +239,7 @@ export const saveItem = async (userId: string, item: Omit<Item, 'userId'>) => {
     updatedAt: Date.now()
   });
   try {
-    await setDoc(docRef, data, { merge: true });
+    await sunucuyaUlas(setDoc(docRef, data, { merge: true }));
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -214,7 +254,7 @@ export const alanlariSil = async (userId: string, itemId: string, yollar: string
   const path = `users/${userId}/items/${itemId}`;
   const docRef = doc(db, "users", userId, "items", itemId);
   try {
-    await updateDoc(docRef, { ...Object.fromEntries(yollar.map(y => [y, deleteField()])), updatedAt: Date.now() });
+    await sunucuyaUlas(updateDoc(docRef, { ...Object.fromEntries(yollar.map(y => [y, deleteField()])), updatedAt: Date.now() }));
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -224,7 +264,7 @@ export const deleteItemDoc = async (userId: string, itemId: string) => {
   const path = `users/${userId}/items/${itemId}`;
   const docRef = doc(db, "users", userId, "items", itemId);
   try {
-    await deleteDoc(docRef);
+    await sunucuyaUlas(deleteDoc(docRef));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -250,7 +290,7 @@ export const saveSettings = async (userId: string, settings: UserSettings) => {
   const path = `users/${userId}/settings/general`;
   const docRef = doc(db, "users", userId, "settings", "general");
   try {
-    await setDoc(docRef, settings, { merge: true });
+    await sunucuyaUlas(setDoc(docRef, settings, { merge: true }));
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
