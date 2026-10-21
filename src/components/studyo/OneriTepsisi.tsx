@@ -108,9 +108,10 @@ export const OneriTepsisi: React.FC<Props> = ({
   const eklenebilir = (o: YapayZekaOnerisi) => {
     if (o.arac !== 'gece-oneri') return true;
     const t = geceTuru(o);
+    if ((t === 'viki' || t === 'depo') && o.bolumler?.length && items.some(i => i.id === o.hedefId)) return true;
     return t === 'sosyal' || t === 'yazi' || (t === 'drop' && items.find(i => i.id === o.hedefId)?.type === 'drop');
   };
-  const geceDugmesi = (o: YapayZekaOnerisi) => ({ sosyal: 'Gönderi taslağı aç', yazi: 'Yazı taslağı aç', drop: "Drop'a ürün olarak ekle" } as Record<string, string>)[geceTuru(o) || ''] || 'Ekle';
+  const geceDugmesi = (o: YapayZekaOnerisi) => ({ sosyal: 'Gönderi taslağı aç', yazi: 'Yazı taslağı aç', drop: "Drop'a ürün olarak ekle", viki: 'Maddeye öneri bölümü olarak ekle', depo: 'Maddeye öneri bölümü olarak ekle' } as Record<string, string>)[geceTuru(o) || ''] || 'Ekle';
 
   const hedefiAc = (id: string) => { const h = items.find(i => i.id === id); if (h) onMaddeyiAc(h); };
 
@@ -128,6 +129,18 @@ export const OneriTepsisi: React.FC<Props> = ({
                 {l} <span className={`text-[10px] ${IKINCIL}`}>· başlık yap</span>
               </button>
             ))}
+          </div>
+        )}
+        {o.arac === 'gece-oneri' && !o.hedefId && ['viki', 'wikipedia', 'depo'].includes(geceTuru(o) || '') && (
+          <p className={`text-[11px] ${IKINCIL}`}>Bu öneri hiçbir maddeye bağlanmamış (eski gece önerisi). Okuyup silebilirsin; yeni gece önerileri maddesine bağlı gelir.</p>
+        )}
+        {o.kaynak && (
+          <p className={`text-[11px] ${IKINCIL}`}>Kaynak: <a href={o.kaynak.adres} target="_blank" rel="noreferrer" className="underline">{o.kaynak.ad}</a> · yalnız örnek, kopyalanmadı</p>
+        )}
+        {o.gorseller && o.gorseller.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {o.gorseller.map(g => <img key={g} src={g} alt="Oyun deposundan taslak görsel" loading="lazy" className="h-20 rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] object-cover" />)}
+            <span className={`basis-full text-[10px] ${IKINCIL}`}>Oyunun deposundan taslak görsel; kanon değil, kayda eklenmez.</span>
           </div>
         )}
         {o.bolumler && (

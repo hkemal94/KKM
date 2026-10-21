@@ -295,6 +295,10 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
 
   const unlinked = useMemo(() => isEntityUnlinked(item, allItems), [item, allItems]);
   const stub = useMemo(() => isStub(item), [item]);
+  // Bu maddeye bağlı bekleyen öneriler (21 Ekim): gece önerileri ilgili maddede de görünsün
+  const bekleyenOneri = useMemo(() => allItems.filter(a => a.type === 'aday' && !a.archived
+    && (a.metadata?.aday as { hedefId?: string; durum?: string } | undefined)?.hedefId === item.id
+    && (a.metadata?.aday as { durum?: string } | undefined)?.durum === 'bekliyor').length, [allItems, item.id]);
 
   return (
     <article className="max-w-none">
@@ -322,6 +326,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
             <StudyodaAc
               grup="viki"
               hedefId={item.id}
+              etiket={bekleyenOneri > 0 ? `Stüdyoda aç · ${bekleyenOneri} bekleyen öneri` : undefined}
               className="ml-auto flex items-center gap-1.5 text-[11px] font-mono text-gri hover:text-kiremit dark:text-bej/85 transition-colors cursor-pointer"
             />
           )}

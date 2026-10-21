@@ -2344,3 +2344,80 @@ temiz kurulum (`npm ci`) "kilit dosyası eşit değil" diye duruyordu. Kilit
 
 **Kural (Kemal için):** AI Studio "kullanılmayan paket" diye bunları önerirse
 kabul etme; harita ve PDF bunlarla çalışıyor. İkinci kez oldu.
+
+## 21 Ekim — Öneriler yeniden (uygulamada; kart yok, düğme yok)
+
+Kemal: "Öneri kısmında sürekli aynı önerilerden çok sıkıldım ve bir yere
+varmıyor … Ne ilgili yere ulaşıyor ne de gerçek bir çeşitlilik var. Öneri
+kanalları da açılır kapanır olabileceği bir nokta olsun." · "Daha çok viki
+için öneri versin … gerçek örnekler, çalışılmış örnekler versin." · "Viki
+önerilerinde inanılmaz şairane yazıyor. Viki'de yazılar genel olmalı."
+
+**Neden tekrar ediyor, neden bir yere varmıyordu**
+- Viki gece önerisinin "Ekle" düğmesi yoktu (yalnız sosyal, yazı, drop
+  vardı). Öneri tepside yalnız okunuyor, hiçbir yere işlenemiyordu; silinene
+  kadar duruyordu.
+- Öneri maddeye yalnız maddenin adı **tam** tutarsa bağlanıyordu ("Merkez" ≠
+  "Merkez Mahallesi"). Yapay zekâ adı biraz farklı yazınca öneri hiçbir
+  maddeye bağlanmıyor; maddenin sayfasında görünmüyordu. Bağlanmayan öneri
+  "bekleyen önerisi var" sayılmadığı için aynı maddeye ertesi gece yine öneri
+  geliyordu.
+- Yapay zekâya her gece "en uzun süredir dokunulmamış 40 madde" gidiyordu;
+  öneri bağlanmayınca liste hiç değişmiyordu. Tekrar önleme yalnız ürün
+  başlıkları içindi (14 Ekim); sosyal, yazı, viki önerileri kendini tekrar
+  edebiliyordu.
+- Şairane dil: bütün görevlerin ortak yönergesi "edebi, bilgece, zengin"
+  idi; viki bölüm önerisinin örneği de "gizemli başlangıcı…" diyordu.
+
+**Ekranda ne değişti**
+- **Stüdyo → Öneri ayarları** (dişli düğme, sayfanın başında): yedi kanal
+  anahtar olarak açılıp kapanır: Viki / harita, Wikipedia örneği, Dondurmacı
+  Kızlar deposu, Sosyal medya, Drop / ürün, Yazı / fanzin, Aylık fanzin.
+  **Kaydet**'e basılınca `kkm_ayar` kaydına yazılır; basmadan hiçbir şey
+  değişmez. Kapalı kanaldan gece öneri gelmez. Hiç kayıt yoksa hepsi açık.
+- **Viki ağırlıklı:** günün üç yuvasından biri her gün viki, ikincisi viki
+  ailesinden sırayla (viki, Wikipedia örneği, viki, Dondurmacı deposu),
+  üçüncüsü sosyal / drop / yazı sırayla. 28 günde 84 yuvanın 56'sı viki
+  ailesinde, 42'si düz viki. Bir kanal kapalıysa yuvası açık olana kayar.
+- **Çeşitlilik:** yapay zekâya giden viki listesi artık bekleyen önerisi
+  olan ve son 60 öneride yer alan maddeleri dışarıda bırakır, türleri karıştırır
+  (mahalle, mekân, kişi, kurum…), her türde en boş madde önce gelir.
+  Her kanal için önceki başlıklar "bunları önerme" diye gider ve aynı başlık
+  gelirse tepsiye düşmez (`oncekiUrunler` → `oncekiBasliklar`, son 90, aynı
+  gece defteri; ek yazma yok).
+- **Önerinin maddeye ulaşması:** bağ önce madde kimliğiyle (liste artık kimlik
+  taşıyor), sonra tam ad, sonra tek eşleşen kısmi adla kurulur. Maddeye
+  bağlanamayan viki önerisi tepsiye hiç düşmez. Viki ve depo önerisi
+  "Maddeye öneri bölümü olarak ekle" düğmesi taşır (bölüm "öneri" durumunda
+  girer; dolu bölümün üstüne yazılmaz, altında bekler). Maddenin sayfasında
+  "Stüdyoda aç · N bekleyen öneri" yazar; açılan panelde o maddenin önerileri
+  en üstte.
+- **Üslup:** viki görevleri (bölüm önerisi, devam et, künye, gece viki) Vikipedi
+  gibi genel, nesnel, kısa ve olgusal yazar; şiirsel sözcük, "hâlâ / şu anda /
+  günümüzde" yok; somut örnek cümle kalıbı ister. Marka, yazı ve fanzin
+  görevlerinin sıcak tonu değişmedi.
+- **Wikipedia örneği kanalı:** Türkçe Vikipedi'nin kısa özet ucundan gerçek bir
+  madde okunur (tarayıcıdan, KKM kaydı yok); yapay zekâ "Düzada'daki benzer
+  maddede hangi başlık ve sorular olabilir" der, örnekteki ad ve sayıları
+  taşımaz. Bağlantı tepside "kaynak" olarak görünür. Kaynaklar sırayla
+  kullanılır. Adı Kemal'in verdiği maddeler: **"Küçükkuyu, Ayvacık"** ve
+  **"Küçükçetmi, Ayvacık"** (Vikipedi'deki gerçek başlıklar; "Küçükkuyu" ve
+  "Küçükçetmi" yalnız yönlendirme / ayrı sayfa). **"Küçükkuyu Gençlerbirliği"
+  adıyla Türkçe Vikipedi'de madde bulunamadı**; listede duruyor, bulunamazsa
+  atlanır. Listede değişiklik: `WIKIPEDIA_KAYNAKLARI` (`lib/oneriKanallari.ts`).
+- **Dondurmacı Kızlar deposu kanalı:** `hkemal94/DondumaciKizlar` →
+  `docs/tasarim-belgesi.md` canlı okunur; yalnız "Oyunun özeti", "Dünya ve
+  kurgu" bölümleri ve karar tablosundaki Kanon / Dönem satırları süzülür,
+  sayı + birim (₺, sn, %, adet…) içeren her satır atılır. Öneri yalnız vikideki
+  "Dondurmacı Kızlar" mekânına bağlanır; cevapta oyun ayarı sızarsa düşer.
+  Belgedeki taslak görseller bulunursa tepside küçük resim olarak görünür
+  (kayda eklenmez). Oyunun deposuna hiçbir şey yazılmaz.
+
+**Basılacak düğme yok.** Ayar yoksa her şey açık başlar; ilk gece kendiliğinden
+yeni düzenle çalışır. Eski, maddeye bağlanmamış gece önerileri tepside
+"hiçbir maddeye bağlanmamış" notuyla durur; Kemal siler.
+
+**Test:** saf işler (yuva dağılımı, tekrar ayıklama, bağ çözümleme, defter
+sınırı, ayar yazımı ve `kkmAyariniYaz`'ın yeni anahtarı koruması, depo
+süzgeci) betikle denendi. Yapay zekâ sunucusu ve Vikipedi önizleme ortamında
+yok; gerçek cevaplar denenmedi.
