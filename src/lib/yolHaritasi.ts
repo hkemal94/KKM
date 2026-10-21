@@ -98,6 +98,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'oyun-depo-belgesi', paket: 'K', kimde: 'claude', nereden: '14 Ekim', bitti: true, ad: 'Oyunun deposundaki tasarım belgesi oyun sayfasında canlı okunur; Dondurmacı kartı kalktı' },
   { id: 'oyun-yol-haritasi', paket: 'K', kimde: 'claude', nereden: '14 Ekim', bitti: true, ad: 'Oyun sayfasında Yol haritası sekmesi: oyunun deposundaki yol haritası canlı okunur' },
   { id: 'oyun-ayarlar', paket: 'K', kimde: 'claude', nereden: '15 Ekim', bitti: true, ad: 'Oyun sayfasında Ayarlar sekmesi: oyunun bütün fiyat, süre ve oranları; "Oyuna gönder" oyunun deposunda PR açar' },
+  { id: 'oneriler-yeniden', paket: 'K', kimde: 'claude', nereden: '21 Ekim', bitti: true, ad: 'Öneriler yeniden: kanallar açılır kapanır (Öneri ayarları), viki ağırlıklı ve çeşitli, Wikipedia örneği ve Dondurmacı deposu kanalları, viki yazıları ansiklopedik' },
   { id: 'gece-urun-tekrar', paket: 'K', kimde: 'claude', nereden: '14 Ekim', bitti: true, ad: 'Gece önerilerinde aynı ürün bir daha önerilmez' },
   { id: 'oyun-makyaj', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, bitti: true, ad: 'Oyun sayfasının makyajı: küçük kutular, sıkışan yazılar' },
   { id: 'liman-plaj', paket: 'H', kimde: 'claude', nereden: '8 Ekim', gece: 4, ad: 'Liman kıyısına kumsal şeridi' },
