@@ -3251,9 +3251,20 @@ _r_ara = LineString([ada.exterior.interpolate(_kiyi_s + RIHTIM_ARA[0] + (RIHTIM_
 _r_yapilar = unary_union([b["geom"] for b in binalar
                           if b["mahalle"] == "yer_liman" and b["id"].startswith("bina_liman")]).buffer(LIMAN_PAY)
 _rihtim_bolgesi = unary_union([_r_ara, _r_yapilar])
-_liman_kum = (_plaj.intersection(mahalle_geom["yer_liman"][2]).intersection(ada)
-              .difference(_rihtim_bolgesi))
-_liman_kum_parca = [q for q in _parcala(_liman_kum) if q.area > 40]
+# Kum yalnız kasabanın önünde: Liman evlerinin KASABA_TAMPON m çevresiyle kesişen
+# kıyı. Deniz Feneri ve çevresi (FENER_PAY m) kum olmaz; yol alanı şeritten çıkar.
+KASABA_TAMPON = 280.0
+FENER_PAY = 150.0
+_kasaba = unary_union([b["geom"] for b in binalar if b["mahalle"] == "yer_liman"
+                       and b["tur"] != "iskele" and not b["id"].startswith(("bina_liman", "bina_fener"))
+                       and b["geom"].distance(Point(*LIMAN_KASABA)) < 900]).buffer(KASABA_TAMPON)
+_fener_bina = [b["geom"] for b in binalar if b["id"] == "bina_fener"]
+_fener_alani = unary_union(_fener_bina).buffer(FENER_PAY) if _fener_bina else Polygon()
+_liman_ham = (_plaj.intersection(mahalle_geom["yer_liman"][2]).intersection(ada)
+              .intersection(_kasaba).difference(_rihtim_bolgesi).difference(_fener_alani))
+_liman_yol_kesisim = _liman_ham.intersection(_yol_alani).area
+_liman_kum = _liman_ham.difference(_yol_alani)
+_liman_kum_parca = [q for q in _parcala(_liman_kum) if q.area > 400]
 for _qi, _q in enumerate(_liman_kum_parca):
     zemin.append({"id": "zemin_liman_kum" + ("" if _qi == 0 else f"_{_qi}"), "ad": "",
                   "tur": "kumsal", "geom": _q,
@@ -3275,7 +3286,7 @@ zemin[:] = _lz
 _dv_kirpilan = sum(1 for _i, _g, _e in duvarlar if "yer_liman" in _i and _g.intersects(_liman_kum))
 duvarlar[:] = [(_i, (_g.difference(_liman_kum) if "yer_liman" in _i else _g), _e) for _i, _g, _e in duvarlar]
 print(f"Plaj (Liman)   : {PLAJ_BANDI:.0f} m kum şeridi, ~{_liman_kum.area / PLAJ_BANDI:.0f} m kıyı boyunca "
-      f"({len(_liman_kum_parca)} parça), rıhtım önü kum değil; {_lz_kirpilan} bahçe kırpıldı, "
+      f"({len(_liman_kum_parca)} parça, kasabanın önü), rıhtım önü ve fener kum değil, yol kesişimi {_liman_yol_kesisim:.0f} m² çıkarıldı; {_lz_kirpilan} bahçe kırpıldı, "
       f"{_lz_tumden} bahçe tümden kum oldu, {_dv_kirpilan} duvar kırpıldı")
 
 # ---------------------------------------------------------------- GeoJSON
