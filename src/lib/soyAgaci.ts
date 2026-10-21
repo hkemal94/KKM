@@ -32,6 +32,8 @@ export interface SoyKisi {
   id: string;
   ad: string;
   aileId?: string;
+  /** Evlenip başka aileye geçtiyse doğduğu aile (21 Ekim) */
+  dogumAileId?: string;
   /** Yaşam yılları; bit null → yaşıyor/açık uçlu, yoksa bilinmiyor */
   yasam?: { bas: number; bit: number | null };
   yasamMetni?: string;
@@ -52,13 +54,16 @@ export function soyVerisi(items: Item[], degerOku: (i: Item, alanId: string) => 
   const var_ = new Set(kisiKayitlari.map(i => i.id));
 
   const kisiler: SoyKisi[] = kisiKayitlari.map(i => {
-    const aileAdi = degerOku(i, 'aile');
+    const aileAdi = degerOku(i, 'aile') || degerOku(i, 'soyadi');
     const aile = aileAdi ? adiCoz(aileAdi, aileKayitlari) : null;
+    const dogumAdi = degerOku(i, 'dogumAilesi') || degerOku(i, 'dogumSoyadi');
+    const dogumAile = dogumAdi ? adiCoz(dogumAdi, aileKayitlari) : null;
     const yasamMetni = degerOku(i, 'yasam').trim();
     const t = yasamMetni ? tarihiOku(yasamMetni) : null;
     return {
       id: i.id, ad: i.title.trim(),
       ...(aile ? { aileId: aile.id } : {}),
+      ...(dogumAile ? { dogumAileId: dogumAile.id } : {}),
       // Tek yıl doğum sayılır: o yıldan sonrası açık uçlu
       ...(t ? { yasam: { bas: t.bas, bit: t.bit === undefined ? null : t.bit } } : {}),
       ...(yasamMetni ? { yasamMetni } : {})
@@ -103,7 +108,7 @@ export function suz(v: SoyVerisi, s: SoySuzgeci): { kisiler: SoyKisi[]; baglar: 
     && (!s.aralik || aralikta(b.bas, b.bit, s.aralik[0], s.aralik[1])));
   if (s.aileId) {
     // Ailenin kişileri ve onlara aile bağıyla bağlı olanlar (gelinler, damatlar)
-    const uye = new Set(kisiler.filter(k => k.aileId === s.aileId).map(k => k.id));
+    const uye = new Set(kisiler.filter(k => k.aileId === s.aileId || k.dogumAileId === s.aileId).map(k => k.id));
     const yakin = new Set(uye);
     for (const b of baglar) {
       if (!AILE.includes(b.tur as AileBagi)) continue;

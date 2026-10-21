@@ -6,7 +6,9 @@ import { parseKunye, kendiMetniYaz } from './kunyeParser';
 import { useKaydedilmemis } from '../../lib/kaydedilmemis';
 import { BAG_GRUPLARI, BAG_GRUP_SIRASI, bagAdaylari, etkinSablon, ozelAlanKimligi, semaAlanlari, takmaAdlar, type BagGrubu, type SablonAlani, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
 import { TYPE_LABELS, WIKI_TYPES, schemaKeyFor, getKunyeFields } from './wikiSchema';
-import { BAG_TURLERI, type BagTuru } from '../../utils/relations';
+import { BAG_TURLERI, getRelationLabels, resolveAllRelations, type BagTuru } from '../../utils/relations';
+import { aileUyeleri, type AileUyeligi } from '../../lib/aileUyeligi';
+import { tamAd } from '../../lib/kisiAdi';
 import { bagUygun, kaynakTurleri, uygunTurler } from '../../lib/bagKurallari';
 
 /**
@@ -90,6 +92,11 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
   const kurumTikiVar = item.type !== 'marka' && item.type !== 'kulüp';
   const [kurum, setKurum] = useState<boolean>(item.metadata?.[KURUM_TIKI] === true);
   const [yeniHedef, setYeniHedef] = useState('');
+  /** Öbür maddelerin kaydında bu maddeye yazılmış bağlar (21 Ekim): yalnız gösterilir, buradan değişmez */
+  const gelenBaglar = useMemo(() => resolveAllRelations(item, allItems)
+    .filter(r => r.originItemId !== item.id && !r.isProposal && (r.type !== 'genel bağlantı') && r.sourceId !== item.id)
+    // Bu maddenin kendi kaydında aynı kişiyle aynı tür bağ zaten varsa tekrar yazılmaz
+    .filter(r => !baglar.some(b => b.targetId === r.sourceId && b.type === r.type)), [item, allItems, baglar]);
   // Bağ türü madde türüne özel (8 Ekim, `lib/bagKurallari.ts`): bu maddenin
   // kurabileceği türler; hedef listesi seçilen türe uyan maddeler
   const izinliTurler = useMemo(() => kaynakTurleri(item.type), [item.type]);
@@ -290,6 +297,20 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
             );
           })}
         </ul>
+        {gelenBaglar.length > 0 && (
+          <div className="mb-2 rounded border border-dashed border-bej/70 dark:border-lacivert-600 px-3 py-2">
+            <p className="text-[11px] font-mono text-gri dark:text-bej/80 mb-1">Öbür maddelerin kaydından gelen bağlar (burada değişmez; orada değişir)</p>
+            <ul className="space-y-0.5 text-[13px]">
+              {gelenBaglar.map(r => (
+                <li key={r.id}>
+                  <span className="text-gri dark:text-bej/80">{getRelationLabels(r.type, r.sourceType, r.targetType).inverse}: </span>
+                  {r.sourceTitle}
+                  <span className="text-[11px] text-gri dark:text-bej/70"> · {r.sourceTitle} kaydında yazılı</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <select value={yeniTur} onChange={e => { setYeniTur(e.target.value as BagTuru); setYeniHedef(''); }} className={secim}>
             {BAG_TURLERI.filter(t => izinliTurler.includes(t.id)).map(t => <option key={t.id} value={t.id}>{t.ad}</option>)}
@@ -330,38 +351,51 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
   );
 };
 
-/** Aile sayfası: üyeler (kişilerin "Aile" alanından) ve basit aile ağacı */
+/**
+ * Aile sayfası: üyeler ve basit aile ağacı. Üyeler kişilerin "Aile", "Soyadı"
+ * ve "Doğduğu aile" alanlarından ve eşlerinden hesaplanır (21 Ekim,
+ * `lib/aileUyeligi.ts`): evlenip geçen kişi iki ailede de görünür.
+ */
 export const AileUyeleri: React.FC<{ aile: Item; allItems: Item[]; onNavigate: (id: string) => void }> = ({ aile, allItems, onNavigate }) => {
-  const ad = aile.title.trim().toLocaleLowerCase('tr');
-  const uyeler = allItems
-    .filter(i => !i.archived && !i.isProposal && (i.type === 'kisi' || i.type === 'karakter'))
-    .filter(i => {
-      const v = String((i.metadata?.profile as Record<string, unknown> | undefined)?.aile || '').trim().toLocaleLowerCase('tr');
-      return v && (v === ad || v === aile.id.toLocaleLowerCase('tr') || v.replace(/\s+ailesi$/, '') === ad.replace(/\s+ailesi$/, ''));
-    })
-    .sort((a, b) => a.title.localeCompare(b.title, 'tr'));
+  const uyeler = useMemo(() => aileUyeleri(aile, allItems), [aile, allItems]);
+  const kutu = (u: AileUyeligi) => {
+    const rol = (u.kisi.metadata?.profile as Record<string, string> | undefined)?.profession;
+    const tam = tamAd(u.kisi);
+    const not = u.yol === 'dogum' ? 'doğduğu aile' : u.yol === 'evlilik' && u.es ? `eşi: ${u.es.title}` : '';
+    return (
+      <div key={u.kisi.id} className="relative flex flex-col items-center">
+        <span className="absolute -top-5 h-5 w-px bg-bej dark:bg-lacivert-600" />
+        <button type="button" onClick={() => onNavigate(u.kisi.id)} className="px-3 py-1.5 rounded border border-bej/80 dark:border-lacivert-600 bg-white/70 dark:bg-lacivert-800/40 text-[13px] hover:border-kiremit">
+          {tam || u.kisi.title}
+          {rol && <span className="block text-[10px] text-gri dark:text-bej/70">{rol}</span>}
+          {not && <span className="block text-[10px] text-gri dark:text-bej/70">{not}</span>}
+        </button>
+      </div>
+    );
+  };
+  const kendi = uyeler.filter(u => u.yol !== 'evlilik');
+  const evlilikle = uyeler.filter(u => u.yol === 'evlilik');
+  const sira = (liste: AileUyeligi[]) => (
+    <div className="relative flex flex-wrap justify-center gap-x-3 gap-y-4 pt-5 border-t border-bej dark:border-lacivert-600" style={{ minWidth: liste.length > 1 ? '60%' : undefined }}>
+      {liste.map(kutu)}
+    </div>
+  );
   return (
     <section className="mb-8">
       <h2 className="font-sans text-[20px] mb-3">Üyeler</h2>
       {uyeler.length === 0 ? (
-        <p className="text-[13px] text-gri dark:text-bej/80">Henüz üye yok. Bir kişinin künyesinde "Aile" alanına bu ailenin adı yazılınca burada görünür.</p>
+        <p className="text-[13px] text-gri dark:text-bej/80">Henüz üye yok. Bir kişinin künyesinde "Aile" ya da "Soyadı" alanına bu ailenin adı yazılınca burada görünür.</p>
       ) : (
         <div className="flex flex-col items-center">
           <div className="px-4 py-2 rounded-lg bg-lacivert text-krem dark:bg-[#2C3C72] text-[14px] font-semibold">{aile.title}</div>
           <div className="w-px h-5 bg-bej dark:bg-lacivert-600" />
-          <div className="relative flex flex-wrap justify-center gap-x-3 gap-y-4 pt-5 border-t border-bej dark:border-lacivert-600" style={{ minWidth: uyeler.length > 1 ? '60%' : undefined }}>
-            {uyeler.map(u => (
-              <div key={u.id} className="relative flex flex-col items-center">
-                <span className="absolute -top-5 h-5 w-px bg-bej dark:bg-lacivert-600" />
-                <button type="button" onClick={() => onNavigate(u.id)} className="px-3 py-1.5 rounded border border-bej/80 dark:border-lacivert-600 bg-white/70 dark:bg-lacivert-800/40 text-[13px] hover:border-kiremit">
-                  {u.title}
-                  {(u.metadata?.profile as Record<string, string> | undefined)?.profession && (
-                    <span className="block text-[10px] text-gri dark:text-bej/70">{(u.metadata!.profile as Record<string, string>).profession}</span>
-                  )}
-                </button>
-              </div>
-            ))}
-          </div>
+          {kendi.length > 0 && sira(kendi)}
+          {evlilikle.length > 0 && (
+            <>
+              <p className="mt-5 mb-1 text-[11px] font-mono uppercase tracking-wide text-gri dark:text-bej/80">Evlilikle bağlı olanlar</p>
+              {sira(evlilikle)}
+            </>
+          )}
         </div>
       )}
     </section>

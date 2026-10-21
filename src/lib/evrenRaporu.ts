@@ -3,6 +3,7 @@ import {
   WIKI_TYPES, TYPE_LABELS, isStub, bolgeAdi, getKunyeFields, getEkBilgiler,
   getArticleBody, mahalleEslesir, eslesmeBasligi, type KunyeField
 } from '../components/wiki/wikiSchema';
+import { faaliyetiSuz } from './zamanCizgisi';
 
 /**
  * Düzada Evren Raporu (7 Ekim, Kemal: "kayıtlardan üret").
@@ -127,7 +128,7 @@ export function evrenRaporu(items: Item[]): EvrenRaporu {
 
   const tarihce: TarihSatiri[] = [];
   for (const i of viki) {
-    for (const f of kunyesi(i)) {
+    for (const f of faaliyetiSuz(kunyesi(i))) {
       if (TARIH_ALANI.test(f.label) && TARIH_DEGERI.test(f.value)) {
         // "12 Mayıs 1957; köy döneminde…" → tarih "12 Mayıs 1957"; açıklama maddede
         const kisa = f.value.split(';')[0].trim();

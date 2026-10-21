@@ -62,7 +62,7 @@ export const SABLON_TURLERI: Array<{ anahtar: string; ad: string }> = [
 
 /** Kemal'in seçtiği başlangıç bağ alanları (7 Ekim) */
 const VARSAYILAN_BAGLAR: Record<string, Record<string, { bag: BagGrubu[]; coklu?: boolean }>> = {
-  kisi: { aile: { bag: ['aile'] }, workplace: { bag: ['mekan', 'kurum'] }, evi: { bag: ['yol'] } },
+  kisi: { aile: { bag: ['aile'] }, dogumAilesi: { bag: ['aile'] }, workplace: { bag: ['mekan', 'kurum'] }, evi: { bag: ['yol'] } },
   mekan: { manager: { bag: ['kisi', 'aile', 'kurum'], coklu: true } },
   aile: { mekanlar: { bag: ['mekan'], coklu: true }, kisiler: { bag: ['kisi'], coklu: true } },
   marka: { leader: { bag: ['kisi', 'aile'], coklu: true } },

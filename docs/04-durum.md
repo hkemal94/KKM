@@ -2344,3 +2344,44 @@ temiz kurulum (`npm ci`) "kilit dosyası eşit değil" diye duruyordu. Kilit
 
 **Kural (Kemal için):** AI Studio "kullanılmayan paket" diye bunları önerirse
 kabul etme; harita ve PDF bunlarla çalışıyor. İkinci kez oldu.
+
+## 21 Ekim — W: Kişi künyesi ve aile (PR bekliyor)
+
+Kemal'in notları: "Yılmaz ailesinde Zeynep gözükmüyor; evlenince geçiyor
+olmalı, iki yerde de görünebilmeli." · "İnsanları isim ve soyisim diye
+künyelendirebilmeliyiz. Evli kadınlar için soyisim durumunu anlaşılır hale
+getirmelisin." · "İnsanın eşi olarak seçildiğinde eşinde de eşi olarak sen
+görülmelisin." · Dondurmacı Kızlar zaman çizgisi (beğenmedi).
+
+**Kararlar (Kemal):** iki soyadı yan yana ("Zeynep Kaya Yılmaz"); zaman
+çizgisinde yalnız açılış.
+
+- **Kişi künyesi:** yeni alanlar Adı, Soyadı (şimdi kullandığı), Doğumdaki
+  soyadı (yalnız soyadı değişenlerde; Boşluklar'da sorulmaz, doluluğa
+  girmez), Doğduğu aile (aynı şekilde isteğe bağlı). Ad ve soyadı doluysa
+  künyenin başına **Tam adı** satırı gelir: doğumdaki soyadı önce, şimdiki
+  sonra. Başlık olduğu gibi kalır, kendiliğinden değişmez.
+- **Aile sayfası, Üyeler:** kişi şu yollardan görünür: Aile alanı, Soyadı
+  (aile adıyla aynıysa), "üyesi" bağı. Doğduğu aile (Doğduğu aile ya da
+  Doğumdaki soyadı) "doğduğu aile" notuyla, üyenin eşi "Evlilikle bağlı
+  olanlar" altında "eşi: …" notuyla görünür. Zeynep böylece hem Kaya hem
+  Yılmaz ailesinde çıkar. Hepsi ekranda hesaplanır, kayda yazılmaz. Doğduğu
+  aile olarak anılan kişinin eşi o ailede görünmez.
+- **Soy ağacı:** ailenin süzgecinde doğduğu aile de sayılır; Soyadı alanı da
+  aile eşleşmesine girer.
+- **Eşi iki yönde:** sayfadaki bağ listesi zaten iki yönlüydü (kardeşi, iş
+  ortağı, arkadaşı, akrabası, rakibi, ebeveyni ↔ çocukları da). Eksik olan
+  künyeydi: kişi künyesine hesaplanan **Eşi** satırı eklendi (bağlantılı).
+  Düzenleyicide "Bağlar"ın altına, öbür maddelerin kaydından gelen bağlar
+  yalnız gösterilir (silinmez, orada değişir). Kayda hiçbir şey yazılmaz.
+- **Zaman çizgisi ve Evren Raporu tarihçesi:** bir maddede **Açılış** tarihi
+  varsa "Faaliyette" satırı atılır (her madde için geçerli; açılışı olmayan
+  maddenin faaliyet satırı kalır). Dondurmacı Kızlar: yalnız "2000 sonrası ·
+  açılış".
+- **Tek seferlik kart (Durum → Eksikler): "kişilerin adı ve soyadı künyeye
+  ayrılacak".** Başlığı tam iki sözcük olan kişide Adı ve Soyadı boşsa
+  başlıktan doldurur; üç sözcüklü, tek sözcüklü, Hanım / Efendi gibi
+  ünvanlı adlar ve "Eylül Hanım" atlanır. Yalnız boş alana yazar, başlığa
+  dokunmaz; ikinci basışta iş kalmaz. Yedek isteğe bağlı.
+- **Kemal'in elle yapacağı:** evlenip soyadı değişenlerde Doğumdaki soyadını
+  (ve gerekirse Doğduğu aileyi) künyeden yazmak. Kart bunu tahmin etmez.
