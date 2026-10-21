@@ -13,6 +13,7 @@ import {
   saveItem, 
   deleteItemDoc,
   alanlariSil,
+  askidakiYazilariDinle,
 } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { geceHazirliginiYap, yapilacaklar } from './lib/geceHazirligi';
@@ -363,14 +364,27 @@ export default function App() {
    * demiyordu; o gün veritabanının günlük yazma kotası dolmuştu.
    */
   const [kayitHatasi, setKayitHatasi] = useState<string | null>(null);
+  // Uyarı "sunucuya ulaşmadı" türündeyse kuyruktaki yazılar ulaşınca kendiliğinden kalkar
+  const [kayitAskida, setKayitAskida] = useState(false);
   const kayitHatasiGoster = (e: unknown) => {
     const metin = e instanceof Error ? e.message : String(e);
-    setKayitHatasi(/quota|resource.?exhausted/i.test(metin)
+    const askida = /zaman-asimi/.test(metin);
+    setKayitAskida(askida);
+    setKayitHatasi(askida
+      ? 'Kayıt 15 saniyedir sunucuya ulaşmadı: bağlantı kopmuş ya da veritabanının günlük yazma sınırı dolmuş olabilir. Değişiklik bu ekranda duruyor, tarayıcı göndermeyi deniyor; ulaşınca bu uyarı kendiliğinden kalkar. O zamana kadar sayfayı yenileme, sekmeyi kapatma; yoksa değişiklik kaybolur.'
+      : /quota|resource.?exhausted/i.test(metin)
       ? 'Kaydedilemedi: veritabanının günlük yazma sınırı doldu. Değişiklik bu ekranda duruyor ama sayfayı yenilersen kaybolur. Sınır her gün Türkiye saatiyle 10:00\'da sıfırlanır.'
       : /maximum allowed size|exceeds the maximum|too large|1 ?MB|1048576|cok-buyuk/i.test(metin)
         ? 'Kaydedilemedi: bu madde 1 MB sınırını aşıyor (içindeki görseller büyük). Durum → Eksikler → "Büyük kayıtlar" kartıyla görselleri küçült, sonra yeniden kaydet. Değişiklik bu ekranda duruyor ama sayfayı yenilersen kaybolur.'
         : 'Kaydedilemedi: sunucu yazmayı kabul etmedi. Değişiklik bu ekranda duruyor ama sayfayı yenilersen kaybolur.');
   };
+
+  const kayitAskidaRef = useRef(false);
+  kayitAskidaRef.current = kayitAskida;
+  useEffect(() => askidakiYazilariDinle((askida, gecHata) => {
+    if (gecHata) kayitHatasiGoster(gecHata);
+    else if (askida === 0 && kayitAskidaRef.current) { setKayitHatasi(null); setKayitAskida(false); }
+  }), []);
 
   const handleAddItem = async (itemData: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => {
     if (!user) return;
@@ -469,7 +483,12 @@ export default function App() {
   const handleDeleteItem = async (itemId: string) => {
     if (!user) return;
     setItems(prev => prev.filter(i => i.id !== itemId));
-    await deleteItemDoc(user.uid, itemId);
+    try {
+      await deleteItemDoc(user.uid, itemId);
+    } catch (e) {
+      kayitHatasiGoster(e);
+      throw e;
+    }
     for (const k of items) {
       if (k.id !== itemId && (k.links || []).includes(itemId)) {
         await handleUpdateItem({ ...k, links: k.links.filter(l => l !== itemId) });
@@ -997,7 +1016,7 @@ export default function App() {
       {kayitHatasi && (
         <div role="alert" className="fixed z-[60] top-3 left-3 right-3 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:max-w-xl flex items-start gap-2 rounded-xl bg-[#F26B6F] text-white px-4 py-3 text-[13px] font-medium shadow-[0_10px_26px_-10px_rgba(0,0,0,0.5)]">
           <span className="flex-1">{kayitHatasi}</span>
-          <button type="button" onClick={() => setKayitHatasi(null)} aria-label="Kapat" className="shrink-0 px-1 font-bold cursor-pointer">×</button>
+          <button type="button" onClick={() => { setKayitHatasi(null); setKayitAskida(false); }} aria-label="Kapat" className="shrink-0 px-1 font-bold cursor-pointer">×</button>
         </div>
       )}
 
