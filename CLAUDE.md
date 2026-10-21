@@ -87,7 +87,9 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 **Kanon**
 - Vikinin bir "şimdi"si yoktur. "Hâlâ", "şu anda", "günümüzde" yazılmaz;
   tarihler aralık olarak yazılır ("Faaliyette: 1954–").
-- **Oyun verisi vikiye girmez.** Oyun ayrı bir depoda:
+- **Oyun verisi vikiye girmez.** İstisna (Kemal, 21 Ekim): Dondurmacı Kızlar
+  deposundaki kanon bilgisi ve taslak görseller **yalnız öneri olarak** öneri
+  tepsisine gelebilir; oyunun ayarları (fiyat, süre) hiç gelmez. Oyun ayrı bir depoda:
   `hkemal94/TheImperialKemskoy`. **Bu depodan oraya, oradan buraya
   yazılmaz.** Buradaki eski otel simülasyonu 29 Eylül'de silindi; oyunun
   kaynağı hiçbir zaman o değildi.
@@ -133,6 +135,12 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 - Her iş sonunda `npm run lint` ve `vite build` temiz geçmeli.
 
 ## Çalışma şekli
+
+0. **Token tasarrufu, ajanlarla çalış** (Kemal, 21 Ekim: "CEO gibi senin
+   yönettiğin, bana raporladığın bir evren"). Ana oturum planlar, işi alt
+   ajanlara (daha ucuz model: sonnet / haiku) dağıtır, sonucu denetler ve
+   Kemal'e raporlar. Gecede üç paket sınırı kalktı. Paralel işler ayrı
+   dallarda (`claude/nifty-goodall-nl52ue-<paket>`), her biri kendi PR'ı.
 
 1. **Önce dinle.** Kemal bütün isteklerini ve itirazlarını sıralamayı
    sever. Yarısını duyup başlama; "başka var mı?" diye sor.
