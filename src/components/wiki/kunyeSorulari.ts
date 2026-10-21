@@ -20,6 +20,8 @@ export interface KunyeSorusu {
   label: string;
   question: string;
   fieldPath: string;
+  /** Çoğu maddede boş kalır (ör. kızlık soyadı): Boşluklar'da sorulmaz, doluluk yüzdesine girmez */
+  istegeBagli?: boolean;
   /** Künye satırlarında bu alanın başka adları ("Branşlar" → Faaliyet) */
   esAdlar?: string[];
 }
@@ -28,6 +30,10 @@ export const DEFAULT_QUESTIONS_BY_CAT: Record<string, KunyeSorusu[]> = {
   kisi: [
     { id: 'title', label: 'Ad', question: 'Kişinin adı.', fieldPath: 'title' },
     { id: 'notes', label: 'Hayatı', question: 'Kişinin hayatı (sayfa metni).', fieldPath: 'notes' },
+    // Ad ve soyadı (21 Ekim): evli kadında iki soyadı yan yana, "Zeynep Kaya Yılmaz"
+    { id: 'adi', label: 'Adı', question: 'Kişinin adı (soyadsız).', fieldPath: 'metadata.profile.adi' },
+    { id: 'soyadi', label: 'Soyadı', question: 'Kişinin soyadı. Evli kadında şimdi kullandığı soyadı.', fieldPath: 'metadata.profile.soyadi' },
+    { id: 'dogumSoyadi', label: 'Doğumdaki soyadı', question: 'Evlenip soyadı değiştiyse doğumdaki (kızlık) soyadı. Değişmediyse boş kalır.', fieldPath: 'metadata.profile.dogumSoyadi', istegeBagli: true },
     { id: 'profession', label: 'Rol', question: 'Adada ne iş yapar?', fieldPath: 'metadata.profile.profession', esAdlar: ['Meslek', 'Görev'] },
     { id: 'region', label: 'Mahalle', question: 'Hangi mahallede yaşar?', fieldPath: 'metadata.region' },
     { id: 'workplace', label: 'Çalıştığı yer', question: 'Hangi mekânda ya da kurumda çalışır?', fieldPath: 'metadata.profile.workplace' },
@@ -36,6 +42,8 @@ export const DEFAULT_QUESTIONS_BY_CAT: Record<string, KunyeSorusu[]> = {
     { id: 'yasam', label: 'Yaşam', question: 'Hangi yıllar arasında yaşadı? (aralık olarak: 1920–1987)', fieldPath: 'metadata.profile.yasam' },
     // Kişi ↔ Aile (yapisal-4, 26): aile sayfasında üyeler buradan listelenir
     { id: 'aile', label: 'Aile', question: 'Hangi aileden?', fieldPath: 'metadata.profile.aile' },
+    // Evlenip başka aileye geçen kişi iki ailenin sayfasında da görünür (21 Ekim)
+    { id: 'dogumAilesi', label: 'Doğduğu aile', question: 'Evlenerek başka aileye geçtiyse doğduğu aile.', fieldPath: 'metadata.profile.dogumAilesi', istegeBagli: true },
     // Soru turu (8 Ekim): evi bir cadde ya da meydana bağlanabilir
     { id: 'evi', label: 'Evi', question: 'Hangi evde, hangi sokakta oturur?', fieldPath: 'metadata.profile.evi' }
   ],

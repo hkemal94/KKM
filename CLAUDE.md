@@ -101,6 +101,11 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   `meydan`, yer adı (tepe, koy…) `yer_adi`, adanın kendisi `ada`
   (`src/lib/yerTurleri.ts`). Aynı başlıkta dolu bölüme gelen öneri yeni
   bölüm açmaz, `bekleyenOneri` olarak bekler.
+- **Kişi adı** (21 Ekim): künyede Adı, Soyadı (şimdi kullandığı) ve yalnız
+  soyadı değişenlerde Doğumdaki soyadı; "Zeynep Kaya Yılmaz" gibi iki soyadı
+  yan yana hesaplanır (`src/lib/kisiAdi.ts`), başlık otomatik değişmez.
+  Evlenen kişi iki ailenin sayfasında görünür (`src/lib/aileUyeligi.ts`);
+  "eşi" bağı bir kişinin kaydında yazılır, öbür tarafta ekranda tersten okunur.
 
 **Marka**
 - **Kems Company tek markadır.** Dirlik Spor Kulübü ve Küçükçetmi Sürek

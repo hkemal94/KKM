@@ -15,6 +15,21 @@ import { getArticleBody, getKunyeFields, getEkBilgiler, WIKI_TYPES } from '../co
 /** Tarih alanı sayılan künye etiketleri (Evren Raporu'nun tarihçesiyle aynı) */
 const TARIH_ALANI = /kuruluş|kurulus|açılış|acilis|yapım|yapim|inşa|insa|faaliyet|oluşum|olusum|sayılma|kapan|dönüşüm|donusum|köken|koken|tarih|dönem|donem/i;
 
+const ACILIS_ALANI = /açılış|acilis/i;
+const FAALIYET_ALANI = /faaliyet/i;
+
+/**
+ * Açılışı yazılı maddede "Faaliyette" satırı çizgiye ve tarihçeye girmez
+ * (21 Ekim, Kemal: Dondurmacı Kızlar'da "2000 sonrası · açılış" ile "2000– ·
+ * faaliyette" iki satır çıkıyordu, beğenmedi: "yalnız açılış"). Genel kural:
+ * hangi maddede olursa olsun, açılış tarihi varsa faaliyet satırı atılır;
+ * açılışı olmayan maddenin faaliyet satırı (kuruluş, yapım…) kalır.
+ */
+export function faaliyetiSuz<T extends { label: string; value: string }>(alanlar: T[]): T[] {
+  const acilisVar = alanlar.some(f => ACILIS_ALANI.test(f.label) && f.value.trim());
+  return acilisVar ? alanlar.filter(f => !FAALIYET_ALANI.test(f.label)) : alanlar;
+}
+
 export interface ZamanKaydi {
   maddeId: string;
   madde: string;
@@ -60,7 +75,7 @@ export function zamanKayitlari(items: Item[]): { kayitlar: ZamanKaydi[]; okunama
   const kayitlar: ZamanKaydi[] = [];
   const okunamayanlar: OkunamayanTarih[] = [];
   for (const i of vikiMaddeleri(items)) {
-    for (const f of [...getKunyeFields(i), ...getEkBilgiler(i)]) {
+    for (const f of faaliyetiSuz([...getKunyeFields(i), ...getEkBilgiler(i)])) {
       if (!TARIH_ALANI.test(f.label) || !f.value.trim()) continue;
       const metin = f.value.split(';')[0].trim();
       const t = tarihiOku(f.value);

@@ -115,6 +115,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Otel: Sahil Merdiveni, kum cebi ve tahta iskele haritada (görsel: Galeri → The Imperial Kemskoy)' },
   { id: 'mahalle-derleme-elle', paket: 'W', kimde: 'claude', nereden: '8 Ekim', bitti: true,
     ad: 'Mahalle derlemesi (Claude, 8 Ekim yedeğinden): Merkez, Liman, İskele, Çiftlik — Eksikler kartı' },
+  { id: 'kisi-aile', paket: 'W', kimde: 'claude', nereden: '21 Ekim', bitti: true,
+    ad: 'Kişi künyesi ve aile: Adı / Soyadı / Doğumdaki soyadı, evlenen kişi iki ailede görünür, eşi iki yönde, zaman çizgisinde yalnız açılış' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },

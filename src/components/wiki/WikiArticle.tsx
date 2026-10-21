@@ -6,6 +6,7 @@ import { StudyodaAc } from '../studyo/StudyodaAc';
 import { Item, WikiSection } from '../../types';
 import { MaddeDuzenleyici, AileUyeleri } from './MaddeDuzenleyici';
 import { maddeyiAnanNotlar } from '../../lib/notBaglari';
+import { esleri } from '../../lib/aileUyeligi';
 import { resolveAllRelations, getRelationLabels, isEntityUnlinked } from '../../utils/relations';
 import { AutoLinkedText, LinkIndexEntry } from './autoLink';
 import { WikiRooms } from './WikiRooms';
@@ -100,6 +101,9 @@ const KunyeAlani: React.FC<{ value: string; alan?: SemaAlani; allItems: Item[]; 
     </>
   );
 };
+
+/** Hesaplanan "Eşi" satırı kişi adlarına bağlantı olur */
+const ES_ALANI: SemaAlani = { id: 'es_hesap', label: 'Eşi', question: '', fieldPath: '', bag: ['kisi'], coklu: true };
 
 interface WikiArticleProps {
   item: Item;
@@ -214,6 +218,18 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
    * sadece okunabilir başlıklar altında gruplanıyor.
    */
   const isPerson = item.type === 'kisi' || item.type === 'karakter';
+
+  /**
+   * Künyeye hesaplanan "Eşi" satırı (21 Ekim, Kemal: "eşi olarak seçildiğinde
+   * eşinde de eşi olarak sen görülmelisin"). Bağ yalnız bir kişinin kaydında
+   * yazılıdır; öbür kişinin künyesinde burada ters yönden okunur. Kayda yazılmaz.
+   */
+  const kunyeSatirlari = useMemo(() => {
+    if (!isPerson) return kunye;
+    const es = esleri(item, allItems);
+    if (!es.length) return kunye;
+    return [...kunye, { id: 'es_hesap', label: 'Eşi', value: es.map(e => e.title).join(', ') }];
+  }, [isPerson, kunye, item, allItems]);
 
   /**
    * Bir mekâna bağlı kişiler ayrı bir bloğa çıkar. Otelin 94 misafiri
@@ -663,7 +679,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
         </div>
 
         {/* --- Künye + Haritada --- */}
-        {(kunye.length > 0 || haritada || gorsel) && (
+        {(kunyeSatirlari.length > 0 || haritada || gorsel) && (
           <aside
             className={
               govdeVar
@@ -671,7 +687,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                 : 'order-2 mt-2'
             }
           >
-            {(kunye.length > 0 || gorsel) && (
+            {(kunyeSatirlari.length > 0 || gorsel) && (
             <div className="border border-bej/50 dark:border-lacivert-600/50 rounded-lg overflow-hidden bg-krem-acik/70 dark:bg-lacivert-800/40 archive-shadow">
               <h2 className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-gri dark:text-bej/85 border-b border-bej/40 dark:border-lacivert-600/40 bg-bej/12 dark:bg-lacivert-600/25">
                 Künye
@@ -692,7 +708,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                     : 'grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-bej/30 dark:bg-lacivert-600/30'
                 }
               >
-                {kunye.map((f, idx) => (
+                {kunyeSatirlari.map((f, idx) => (
                   <div
                     key={`${f.id}-${idx}`}
                     className={
@@ -705,7 +721,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                       {f.label}
                     </dt>
                     <dd className="text-[13px] text-lacivert dark:text-krem/90 leading-snug">
-                      <KunyeAlani value={f.value} alan={semaAlani.get(f.id)} allItems={allItems} selfId={item.id} admin={admin} onNavigate={onNavigate} />
+                      <KunyeAlani value={f.value} alan={semaAlani.get(f.id) ?? (f.id === 'es_hesap' ? ES_ALANI : undefined)} allItems={allItems} selfId={item.id} admin={admin} onNavigate={onNavigate} />
                     </dd>
                   </div>
                 ))}

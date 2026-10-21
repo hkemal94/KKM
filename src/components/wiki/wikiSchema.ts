@@ -2,6 +2,7 @@ import { Item, ItemType } from '../../types';
 import { ESKI_ALAN_ADLARI } from './kunyeSorulari';
 import { semaAlanlari, takmaAdlar } from '../../lib/alanSablonu';
 import { parseKunye } from './kunyeParser';
+import { tamAd } from '../../lib/kisiAdi';
 
 /**
  * ItemType değerleri ile künye şemasının anahtarları birebir aynı değil
@@ -251,6 +252,12 @@ function kunyeyiCoz(item: Item, includeSecrets: boolean): KunyeCozumu | null {
     alanlar.unshift({ id: 'ek_faaliyet', label: 'Faaliyette', value: faaliyet.trim() });
   }
 
+  // Kişide ad ve soyadı yazılmışsa tam ad (21 Ekim): "Zeynep Kaya Yılmaz". Hesaplanır, kayda yazılmaz.
+  if (key === 'kisi') {
+    const tam = tamAd(item);
+    if (tam) alanlar.unshift({ id: 'tam_ad', label: 'Tam adı', value: tam });
+  }
+
   return { alanlar, ekler };
 }
 
@@ -287,7 +294,7 @@ export function kunyeCompleteness(item: Item): { filled: number; total: number; 
 
   const schemaIds = new Set(
     semaAlanlari(key)
-      .filter(f => f.fieldPath !== 'title' && f.fieldPath !== 'notes')
+      .filter(f => f.fieldPath !== 'title' && f.fieldPath !== 'notes' && !f.istegeBagli)
       .map(f => f.id)
   );
 

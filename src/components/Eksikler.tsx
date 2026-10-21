@@ -10,6 +10,7 @@ import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
 import { boslukDoldurma } from '../lib/boslukDoldurma';
+import { kisiAdlariniAyir } from '../lib/kisiAdi';
 import { haritadaAra, maddeTohumu } from '../lib/haritaMaddesi';
 import { eksikleriCikar, type Cozum } from '../lib/eksikler';
 
@@ -106,6 +107,18 @@ export const Eksikler: React.FC<EksiklerProps> = ({
           baslik="boşluklar künyedeki cevaplarla dolacak"
           aciklama="Künyede cevabı yazılı olan boş alanlar dolar (tür, mahalle, yıllar, sahibi, sezon, simgeler, sakinler). Dolu alana ve tarihçe metnine dokunulmaz."
           yedekAdi="bosluk-oncesi"
+        />
+      )}
+
+      {/* Kişi adı ve soyadı (21 Ekim): iki sözcüklü başlıklar Adı / Soyadı alanlarına ayrılır */}
+      {onUpdateItem && (
+        <KanonKarti
+          items={items}
+          onUpdateItem={onUpdateItem}
+          hesapla={kisiAdlariniAyir}
+          baslik="kişilerin adı ve soyadı künyeye ayrılacak"
+          aciklama="Başlığı tam iki sözcük olan kişilerde (ör. Ahmet Karahan) Adı ve Soyadı alanları başlıktan dolar. Yalnız boş alanlara yazılır; başlık değişmez. Üç sözcüklü, tek sözcüklü ve Hanım / Efendi gibi ünvanlı adlara dokunulmaz; onları sen yazarsın. Evlenip soyadı değişenler için Doğumdaki soyadı alanını sen doldurursun."
+          yedekAdi="kisi-adlari-oncesi"
         />
       )}
 

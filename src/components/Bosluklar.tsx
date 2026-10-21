@@ -122,7 +122,7 @@ export function bosluklariCikar(items: Item[]): Bosluk[] {
     const kunye = new Map(getKunyeFields(item, { includeEmpty: true, includeSecrets: true }).map(f => [f.id, f.value]));
     const govdeDolu = getArticleBody(item).length > 0;
     for (const s of sorular) {
-      if (ATLANAN_ALAN.has(s.id)) continue;
+      if (ATLANAN_ALAN.has(s.id) || s.istegeBagli) continue;
       // Mahalle yazılı ama hiçbir mahalleyle eşleşmiyorsa boş sayılır (2 Ekim)
       if (s.id === 'region' && MAHALLELI.has(item.type as ItemType) && mahalleler.length) {
         const yazili = yazilanMahalle(item);
@@ -165,7 +165,7 @@ export function boslukOrani(items: Item[]): { toplam: number; bos: number } {
     if (item.id === ADA_KIMLIGI) continue;
     const anahtar = schemaKeyFor(item.type as ItemType);
     if (!anahtar) continue;
-    toplam += semaAlanlari(anahtar).filter(s => !ATLANAN_ALAN.has(s.id)).length;
+    toplam += semaAlanlari(anahtar).filter(s => !ATLANAN_ALAN.has(s.id) && !s.istegeBagli).length;
     toplam += ((item.metadata?.wikiSections as WikiSection[] | undefined) || []).filter(b => b?.title?.trim()).length;
   }
   return { toplam, bos: bosluklariCikar(items).length };
