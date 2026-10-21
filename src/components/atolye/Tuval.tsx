@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, ExternalLink, Frame, Image as ImageIcon, Link2, Minus, Plus, StickyNote, Trash2, X } from 'lucide-react';
 import type { Item } from '../../types';
+import { GorselImg } from '../GorselImg';
 import { TYPE_LABELS, WIKI_TYPES } from '../wiki/wikiSchema';
 import {
   KART_OLCUSU, NOT_RENKLERI, TUVAL_TURLERI, icerikOku, tuvalGuncel, tuvalTuru, tuvaller, yeniTuval,
@@ -347,7 +348,7 @@ export const Tuval: React.FC<Props> = ({ items, onAddItem, onUpdateItem, onDelet
                         <li key={i.id}>
                           <button type="button" onClick={() => { kartEkle('gorsel', { gorselId: i.id }); setSecici(null); }} title={i.title}
                             className="block w-full aspect-square rounded-lg overflow-hidden border border-[#CFC5B4] dark:border-[#2C3C72] hover:border-[#F26B6F] cursor-pointer">
-                            <img src={i.images![0]} alt={i.title} className="w-full h-full object-cover" loading="lazy" />
+                            <GorselImg src={i.images![0]} alt={i.title} className="w-full h-full object-cover" loading="lazy" />
                           </button>
                         </li>
                       ))}
@@ -428,7 +429,7 @@ export const Tuval: React.FC<Props> = ({ items, onAddItem, onUpdateItem, onDelet
                       )}
                       {k.tur === 'gorsel' && (
                         <div className="w-full h-full rounded-xl overflow-hidden bg-white dark:bg-[#13204A] border border-[#CFC5B4] dark:border-[#2C3C72]">
-                          {g?.images?.[0] ? <img src={g.images[0]} alt={g.title} draggable={false} className="w-full h-full object-cover pointer-events-none" />
+                          {g?.images?.[0] ? <GorselImg src={g.images[0]} alt={g.title} draggable={false} className="w-full h-full object-cover pointer-events-none" />
                             : <div className={`w-full h-full flex items-center justify-center text-[11px] ${IKINCIL}`}>görsel bulunamadı</div>}
                         </div>
                       )}

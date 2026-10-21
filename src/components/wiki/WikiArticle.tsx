@@ -15,6 +15,7 @@ import { WikiHarita, haritaKarsiligiVar } from './WikiHarita';
 import { KunyeDegeri } from './KunyeDegeri';
 import { BAG_GRUPLARI, adiCoz, bagParcalari, kunyeBaglari, semaAlanlari, takmaAdlar, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
 import { maddeGorseli } from '../../lib/maddeGorseli';
+import { useGorselSurumu } from '../../lib/gorselOnbellek';
 import {
   getKunyeFields,
   getEkBilgiler,
@@ -138,6 +139,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
   onUpdateItem,
   onSablonYaz
 }) => {
+  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   const admin = mode === 'yonetim';
   const [duzenle, setDuzenle] = useState(false);
   // Başka maddeye geçince düzenleyici kapanır
@@ -202,7 +204,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
    * verisindeki görseller (galeriden bağlanan ya da yüklenen); eski
    * tohumlardaki hazır internet fotoğrafları gösterilmez.
    */
-  const gorsel = useMemo(() => maddeGorseli(item, allItems), [item, allItems]);
+  const gorsel = useMemo(() => maddeGorseli(item, allItems), [item, allItems, gorselSurumu]);
 
   /** Bu mekâna bağlı odalar — ayrı ve katlanmış gösterilir */
   const rooms = useMemo(

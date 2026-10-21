@@ -3,6 +3,7 @@ import { ShoppingBag, Sparkles, FolderDot, ChevronRight, ChevronLeft, ChevronDow
 import { StudyodaAc } from './studyo/StudyodaAc';
 import { Item, ItemType, AreaType } from '../types';
 import { hazirFotosuz, merchYedekGorseli } from '../lib/gorselSecimi';
+import { useGorselSurumu } from '../lib/gorselOnbellek';
 import { compressImageBase64 } from '../lib/imageCompressor';
 import { SayfaBasi } from './kabuk/SayfaBasi';
 import { tuvaldeAc } from '../lib/tuval';
@@ -46,6 +47,7 @@ export default function Merch({
   onAddItem,
   onSelectArea
 }: MerchProps) {
+  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   // Hazır internet fotoğrafları gösterilmez (29 Eylül); görseli olmayan
   // drop/ürüne kurumun arması konur (merchYedekGorseli).
   const items = useMemo(() => hamItems.map(hazirFotosuz), [hamItems]);

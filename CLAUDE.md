@@ -48,6 +48,14 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   "arşive kalkar" kuralı kalktı. Toplu silme Durum → Eksikler'deki Temizlik
   kartıyla yapılır; önce bütün kayıtların yedeği iner (`src/lib/temizlik.ts`).
   Kişi bilgileri için `src/lib/adaSakini.ts` duruyor.
+- **Galeri görselleri kayıtların dışında** (21 Ekim): görselin kendisi
+  `users/{uid}/gorseller/{id}` belgesinde (bir kez yazılır, değişmez; kural
+  `firestore.rules`'ta), kayıtta `images` içinde `gorsel:<id>` başvurusu
+  kalır. Yazma/okuma `src/lib/gorselDeposu.ts`; görseli gösteren ekran
+  `GorselImg` / `useGorsel` kullanır, `maddeGorseli` önbellekten okur. Bir
+  kayda bağlanan ya da gönderiye alınan görsel başvuru değil, görselin
+  kendisiyle kopyalanır. Galeri kaydı silinince kendi belgeleri de silinir;
+  yedeğe `gorseller` alanıyla girer. Firebase Storage kullanılmaz.
 - **İstisna: Merch arşivi kalır** (Kemal, 1 Ekim: "hazırlanmış ve satılmış
   droplar arşive geçer işleri bittiklerinde, belki bir gün o dropun devamını
   getiririz"). Merch'te Arşiv sekmesi ve Arşivle düğmesi durur; Temizlik

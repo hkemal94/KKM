@@ -1,6 +1,8 @@
 import type { Item } from '../types';
 import { ANA_MARKA_KIMLIKLERI, kurumMu } from './markaYapisi';
 import { W5_GORSELLERI, w5GorselAdresi } from './w5Gorselleri';
+import { basvuruMu } from './gorselBasvuru';
+import { gorselAnlik } from './gorselOnbellek';
 
 /**
  * Bir maddenin görseli — viki künyesi, Markalar ve kanon kutuları için.
@@ -11,7 +13,10 @@ import { W5_GORSELLERI, w5GorselAdresi } from './w5Gorselleri';
  * kalıyordu. Sıra:
  *   1. maddenin kendi yüklenmiş görseli (images, data:)
  *   2. marka kitine yüklenmiş logo (data:)
- *   3. galeride bu maddeye bağlanmış görsel (metadata.bagliId)
+ *   3. galeride bu maddeye bağlanmış görsel (metadata.bagliId); görsel
+ *      belgesinde duruyorsa (`gorsel:<id>`, 21 Ekim) bellek önbelleğinden
+ *      okunur — App bağlı görselleri önceden yükler, yüklenene kadar bu adım
+ *      atlanır. Çağıran ekranlar `useGorselSurumu()` ile yenilenir.
  *   4. depodaki Canva yedeği (public/galeri/canva) — W5 eşleşmesiyle
  *   5. marka kitindeki internet adresi (en son: adres ölmüş olabilir)
  * Eski tohumlardaki hazır internet fotoğrafları (images içindeki http)
@@ -45,7 +50,11 @@ export function maddeGorseli(item: Item, items: Item[] = []): string | undefined
     g.type === 'ilham_gorsel' && !g.archived
     && (g.metadata as Record<string, unknown> | undefined)?.bagliId === item.id
     && (g.images || []).length);
-  if (galeride) return galeride.images[0];
+  if (galeride) {
+    const g = galeride.images[0];
+    const adres = basvuruMu(g) ? gorselAnlik(g) : g;
+    if (adres) return adres;
+  }
 
   // 4. Depodaki Canva yedeği
   const yedek = W5_GORSELLERI.find(g => {

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Copy, Download, Trash2, Image as ImageIcon, Link2 } from 'lucide-react';
 import type { Item } from '../../types';
+import { GorselImg } from '../GorselImg';
+import { gorselOku } from '../../lib/gorselDeposu';
 import {
   ASAMALAR, BAG_TURLERI, BICIMLER, KANALLAR, TURLER, asamasi, gonderiBilgisi, gonderiGuncelle,
   kanalHesabi, seriler, type GonderiBilgisi
@@ -135,8 +137,8 @@ export const GonderiKarti: React.FC<Props> = ({ item, items, onUpdateItem, onDel
             <div className="mt-2 grid grid-cols-4 gap-1.5 max-h-56 overflow-y-auto">
               {galeri.length === 0 && <p className={`col-span-4 text-[12px] ${IKINCIL}`}>Galeride görsel yok.</p>}
               {galeri.map(g => (
-                <button key={g.id} type="button" title={g.title} onClick={() => { setTaslak(t => ({ ...t, images: [g.images[0]], updatedAt: Date.now() })); setGaleriAcik(false); }} className="aspect-square rounded-md overflow-hidden border border-[#CFC5B4] hover:border-[#F26B6F] cursor-pointer">
-                  <img src={g.images[0]} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <button key={g.id} type="button" title={g.title} onClick={() => { void gorselOku(g.images[0]).then(v => { if (v) setTaslak(t => ({ ...t, images: [v], updatedAt: Date.now() })); }); setGaleriAcik(false); }} className="aspect-square rounded-md overflow-hidden border border-[#CFC5B4] hover:border-[#F26B6F] cursor-pointer">
+                  <GorselImg src={g.images[0]} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
             </div>

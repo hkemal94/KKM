@@ -31,6 +31,7 @@ import { KurumOzeti } from './marka/KurumOzeti';
 import { Kanallar } from './marka/Kanallar';
 import { ANA_MARKA_KIMLIKLERI } from '../lib/markaYapisi';
 import { maddeGorseli } from '../lib/maddeGorseli';
+import { useGorselSurumu } from '../lib/gorselOnbellek';
 
 interface MarkalarProps {
   items: Item[];
@@ -59,6 +60,7 @@ export default function Markalar({
   galeriAcik = false,
   onGaleri
 }: MarkalarProps) {
+  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 

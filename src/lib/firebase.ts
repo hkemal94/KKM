@@ -208,7 +208,7 @@ export const askidakiYazilariDinle = (fn: YaziDinleyici) => {
 };
 const bildir = (gecHata?: unknown) => yaziDinleyicileri.forEach(fn => fn(askidakiYazilar, gecHata));
 
-async function sunucuyaUlas<T>(yazi: Promise<T>): Promise<T> {
+export async function sunucuyaUlas<T>(yazi: Promise<T>): Promise<T> {
   let zaman: ReturnType<typeof setTimeout> | undefined;
   let gecikti = false;
   const bekle = new Promise<never>((_, ret) => {

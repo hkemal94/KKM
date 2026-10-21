@@ -19,6 +19,9 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { geceHazirliginiYap, yapilacaklar } from './lib/geceHazirligi';
 import { Item, UserSettings, AreaType, ItemType } from './types';
 import { maddeGorseli } from './lib/maddeGorseli';
+import { gorselUidAyarla, bagliGorselleriYukle, gorselSil } from './lib/gorselDeposu';
+import { basvurulari } from './lib/gorselBasvuru';
+import { useGorselSurumu } from './lib/gorselOnbellek';
 import {
   ShoppingBag,
   Search,
@@ -132,6 +135,10 @@ export default function App() {
   const [user, setUser] = useState<WorkspaceUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
+  // Galeri görselleri kayıtların dışında (21 Ekim): bağlı görseller önceden yüklenir,
+  // yüklenince ekran yenilenir (maddeGorseli bellek önbelleğinden okur)
+  useGorselSurumu();
+  useEffect(() => { bagliGorselleriYukle(items); }, [items]);
   const [settings, setSettings] = useState<UserSettings>({ theme: 'arşiv' });
   
   // A ref lock to prevent infinite loops of room de-duplication on items real-time updates
@@ -216,6 +223,7 @@ export default function App() {
     let unsubSettings: (() => void) | null = null;
 
     const setupWorkspaceForUser = async (activeUid: string, profile?: { displayName?: string | null; email?: string | null; photoURL?: string | null }) => {
+      gorselUidAyarla(activeUid);
       setUser({
         uid: activeUid,
         displayName: profile?.displayName || 'Açık Arşiv',
@@ -473,12 +481,22 @@ export default function App() {
    */
   const handleDeleteItem = async (itemId: string) => {
     if (!user) return;
+    const silinen = items.find(i => i.id === itemId);
     setItems(prev => prev.filter(i => i.id !== itemId));
     try {
       await deleteItemDoc(user.uid, itemId);
     } catch (e) {
       kayitHatasiGoster(e);
       throw e;
+    }
+    // Galeri kaydı silinince kendi görsel belgeleri de silinir (21 Ekim);
+    // başka bir kayıt aynı görseli kullanıyorsa o belge kalır
+    if (silinen?.type === 'ilham_gorsel') {
+      const baskalari = new Set(items.filter(i => i.id !== itemId).flatMap(i => basvurulari(i.images)));
+      const silinecek = basvurulari(silinen.images).filter(r => !baskalari.has(r));
+      if (silinecek.length) {
+        try { await gorselSil(silinecek, user.uid); } catch (e) { console.warn('Görsel belgesi silinemedi:', e); }
+      }
     }
     for (const k of items) {
       if (k.id !== itemId && (k.links || []).includes(itemId)) {
