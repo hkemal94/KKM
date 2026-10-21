@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { BolumBasligi, BosSatir, IlerlemeHalkasi, Rozet } from '../kabuk/Parcalar';
 import {
-  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, Gamepad2, ArrowRight
+  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, Gamepad2, ArrowRight, Send
 } from 'lucide-react';
 import type { Item, AreaType } from '../../types';
 import {
@@ -16,6 +16,7 @@ import { OyunVitrini } from './OyunVitrini';
 import { GddBolumu } from './GddBolumu';
 import { DepoBelgesi } from './DepoBelgesi';
 import { OyunAyarlari } from './OyunAyarlari';
+import { AjansaGonder } from './AjansaGonder';
 import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
 import { ayrilmayaIzinVar } from '../../lib/kaydedilmemis';
@@ -209,6 +210,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   const [yeniIs, setYeniIs] = useState<string | null>(null);
   const [yeniBaslik, setYeniBaslik] = useState('');
   const [npcAcik, setNpcAcik] = useState(false);
+  /** 21 Ekim: oyunun dosyası Kems Ajans'a */
+  const [ajansAcik, setAjansAcik] = useState(false);
   const [belgeYaziliyor, setBelgeYaziliyor] = useState<string | null>(null);
   /** Süreçte elle seçilen adım; yoksa sıradaki boş adım */
   const [seciliAdim, setSeciliAdim] = useState<string | null>(null);
@@ -500,7 +503,9 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
           <Download className="w-3.5 h-3.5" /> {pdfDurumu === 'hazirlaniyor' ? 'Hazırlanıyor…' : 'Oyun PDF\'i'}
         </button>
         <button type="button" onClick={() => setNpcAcik(true)} className={DUGME_BOS}><UserPlus className="w-3.5 h-3.5" /> NPC yarat</button>
+        <button type="button" onClick={() => setAjansAcik(a => !a)} className={DUGME_BOS} title="Oyunun dosyası ve notun Kems Ajans'a gider"><Send className="w-3.5 h-3.5" /> Ajansa gönder</button>
       </SayfaBasi>
+      {ajansAcik && <AjansaGonder items={items} oyunId={oyunId} oyunAdi={oyunAdi(oyunKaydi) || 'Adsız oyun'} onKapat={() => setAjansAcik(false)} />}
 
       <SayfaRayi
         baslik={oyunAdi(oyunKaydi) || 'Oyun'}

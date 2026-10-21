@@ -80,7 +80,8 @@ export function anahtariYaz(anahtar: string) {
   } catch { /* tarayıcı izin vermezse yalnız bu açılışta */ }
 }
 
-async function github<T>(anahtar: string, yol: string, secenek: { method?: string; govde?: unknown } = {}): Promise<T> {
+/** GitHub'a anahtarla istek (Ajansa gönder de kullanır, `lib/ajansaGonder.ts`) */
+export async function github<T>(anahtar: string, yol: string, secenek: { method?: string; govde?: unknown } = {}): Promise<T> {
   const r = await fetch(`https://api.github.com${yol}`, {
     method: secenek.method || 'GET',
     headers: {
@@ -103,7 +104,7 @@ async function github<T>(anahtar: string, yol: string, secenek: { method?: strin
 }
 
 /** UTF-8 metni base64'e (Türkçe harfler bozulmasın) */
-function base64(metin: string): string {
+export function base64(metin: string): string {
   const baytlar = new TextEncoder().encode(metin);
   let ikili = '';
   for (const b of baytlar) ikili += String.fromCharCode(b);

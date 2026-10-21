@@ -120,6 +120,8 @@ export const YOL_HARITASI: YolIsi[] = [
   // 21 Ekim: Kems Ajans KKM'ye bağlanıyor (Kemal: "sizleri bu konuda entegre etmek en çok istediğim şey")
   { id: 'ajans-sayfasi', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: 'Durum → Ajans: Kems Ajans\'ın öneri, rapor ve video dosyaları depodan canlı okunur' },
+  { id: 'ajansa-gonder-oyun', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
+    ad: 'Oyun → Ajansa gönder: oyunun dosyası ve Kemal\'in notu ajansın deposuna gider' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans',
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır', not: 'Nasıl iletileceği önce Kemal\'le konuşulacak.' },
   { id: 'viki-disa-aktarim', paket: 'W', kimde: 'claude', nereden: '21 Ekim · ajans',
