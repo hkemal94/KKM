@@ -692,6 +692,7 @@ export default function App() {
       case 'fanzin': setYaziIstek({ sekme: 'fanzin', n }); setActiveTab('yazi'); break;
       case 'takvim': setDurumSekme('takvim'); setActiveTab('durum'); break;
       case 'yolharitasi': setDurumSekme('yolharitasi'); setActiveTab('durum'); break;
+      case 'ajans': setDurumSekme('ajans'); setActiveTab('durum'); break;
       case 'galeri': setMarkaGaleri(true); setActiveTab('markalar'); break;
       case 'markalar': setMarkaGaleri(false); setActiveTab('markalar'); break;
       case 'durum-kunye': case 'durum-kitap': case 'durum-harita':
