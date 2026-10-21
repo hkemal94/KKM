@@ -2482,3 +2482,28 @@ Ekim'deki kırmızı uyarı çıkmıyor, kartlar "Yazılıyor…"da takılı kal
 
 **Basılacak düğme yok.** **Test:** zaman aşımı, geç ulaşma ve geç ret betikle
 denendi; gerçek kota dolması önizleme ortamında denenemedi.
+
+## 21 Ekim — H: Liman kumsal şeridi (uygulamada; kart yok)
+
+8 Ekim'de İskele'ye yapılan kum şeridi şimdi Liman Mahallesi'nin kıyısına da
+geldi (yol haritası `liman-plaj`).
+
+- **Ekranda ne değişti.** Haritada (Atölye → Harita ve Kurucu, 2D ve 3D)
+  Liman kıyısı boyunca ~20 m genişliğinde kum renkli şerit görünür
+  (`zemin_liman_kum`, üç parça, adı boş). Adanın fiziki zemin görseli de aynı
+  şeritte kum rengi (`gen/ada_fiziki.py`).
+- **Kum olmayan kısım.** Rıhtımın önü taş kalır: rıhtım noktasından kıyı
+  boyunca yaklaşık 110 m geri / 120 m ileri, ayrıca Liman Deposu, İdare
+  Binası, Dondurmacı Kızlar, Mendirek ve Liman İskelesi'nin 18 m çevresi
+  şeritten çıkarıldı (`RIHTIM_ARA`, `LIMAN_PAY`, `gen/duzada.py`).
+- **Dokunulmayanlar.** Hiçbir ev, bina ya da kimlik değişmedi. Liman'ın evleri
+  kıyıdan yüzlerce metre içeride olduğu için hiçbir bahçe ya da duvar
+  kırpılmadı (üreteç özeti: "0 bahçe kırpıldı, 0 duvar kırpıldı").
+- **Görseller.** `docs/gorseller/liman-kumsal-once.png` ve
+  `liman-kumsal-sonra.png` (üretilen haritadan çizilmiş yakın görünüm).
+- **Basılacak düğme yok.**
+
+**Test:** üreteç çalıştırıldı, `npm run lint` ve `vite build` geçti. Not:
+fiziki zemin görseli (`public/ada-fiziki.webp`) piksel piksel aynı çıktı;
+Liman kıyısı o görselde zaten kum renginde, yani yeni şerit orada ek fark
+yaratmadı, fark çokgen zeminde görünür.

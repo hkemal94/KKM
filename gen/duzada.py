@@ -3239,6 +3239,45 @@ zemin[:] = _plaj_kalan
 duvarlar[:] = [(_i, (_g.difference(_plaj) if "yer_iskele" in _i else _g), _e) for _i, _g, _e in duvarlar]
 print(f"Plaj (İskele)  : {PLAJ_BANDI:.0f} m kum şeridi, {_plaj_silinen} bahçe tümden kum oldu")
 
+# Liman kumsalı (21 Ekim, yol haritası `liman-plaj`): Liman Mahallesi'nin
+# kıyısında aynı PLAJ_BANDI genişliğinde kum şeridi. Taş rıhtımın önü kum
+# olmaz: kıyı boyunca RIHTIM_ARA aralığı, liman binaları, mendirek ve iskele
+# (etraflarında LIMAN_PAY m) şeritten çıkarılır. Ev, bina ve kimlik değişmez;
+# yalnız bahçe ve duvarın kıyıya yakın kısmı kuma kalır. Kum alanın adı boştur.
+RIHTIM_ARA = (-110.0, 120.0)     # rıhtımdan kıyı boyunca, m (binalar -68..+84)
+LIMAN_PAY = 18.0
+_r_ara = LineString([ada.exterior.interpolate(_kiyi_s + RIHTIM_ARA[0] + (RIHTIM_ARA[1] - RIHTIM_ARA[0]) * _i / 40)
+                     for _i in range(41)]).buffer(60, cap_style=2)
+_r_yapilar = unary_union([b["geom"] for b in binalar
+                          if b["mahalle"] == "yer_liman" and b["id"].startswith("bina_liman")]).buffer(LIMAN_PAY)
+_rihtim_bolgesi = unary_union([_r_ara, _r_yapilar])
+_liman_kum = (_plaj.intersection(mahalle_geom["yer_liman"][2]).intersection(ada)
+              .difference(_rihtim_bolgesi))
+_liman_kum_parca = [q for q in _parcala(_liman_kum) if q.area > 40]
+for _qi, _q in enumerate(_liman_kum_parca):
+    zemin.append({"id": "zemin_liman_kum" + ("" if _qi == 0 else f"_{_qi}"), "ad": "",
+                  "tur": "kumsal", "geom": _q,
+                  "taban": round(float(yukselti(_q.centroid.x, _q.centroid.y)), 1)})
+_liman_kum = unary_union(_liman_kum_parca)
+_lz = []
+_lz_kirpilan = 0
+for z in zemin:
+    if "yer_liman" in z["id"] and z["tur"] == "bahçe" and z["geom"].intersects(_liman_kum):
+        _k = z["geom"].difference(_liman_kum)
+        _k = max(_parcala(_k), key=lambda p: p.area, default=None) if not _k.is_empty else None
+        if _k is None or _k.area < 8:
+            continue
+        z = {**z, "geom": _k}
+        _lz_kirpilan += 1
+    _lz.append(z)
+_lz_tumden = len(zemin) - len(_lz)
+zemin[:] = _lz
+_dv_kirpilan = sum(1 for _i, _g, _e in duvarlar if "yer_liman" in _i and _g.intersects(_liman_kum))
+duvarlar[:] = [(_i, (_g.difference(_liman_kum) if "yer_liman" in _i else _g), _e) for _i, _g, _e in duvarlar]
+print(f"Plaj (Liman)   : {PLAJ_BANDI:.0f} m kum şeridi, ~{_liman_kum.area / PLAJ_BANDI:.0f} m kıyı boyunca "
+      f"({len(_liman_kum_parca)} parça), rıhtım önü kum değil; {_lz_kirpilan} bahçe kırpıldı, "
+      f"{_lz_tumden} bahçe tümden kum oldu, {_dv_kirpilan} duvar kırpıldı")
+
 # ---------------------------------------------------------------- GeoJSON
 def feature(geom_json, props):
     return {"type": "Feature", "geometry": geom_json, "properties": props}
