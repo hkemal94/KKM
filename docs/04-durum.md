@@ -2527,3 +2527,32 @@ dosyaları kayıtları indirir ama görsel belgelerini içermez (bu kartlar gale
 kaydı silmez; görsel kaybı olmaz). Bir kayda bağlanan ya da gönderiye alınan
 görsel, hedef kayda görselin kendisiyle kopyalanır (başvuruyla değil); bu
 kayıtlar eskisi gibi büyük kalır.
+
+## 21 Ekim — H: Liman kumsal şeridi (uygulamada; kart yok)
+
+8 Ekim'de İskele'ye yapılan kum şeridi şimdi Liman kasabasının önüne de geldi
+(yol haritası `liman-plaj`).
+
+- **Ekranda ne değişti.** Haritada (Atölye → Harita ve Kurucu, 2D ve 3D)
+  Liman kasabasının baktığı kıyıda ~20 m genişliğinde, toplam ~660 m'lik kum
+  renkli şerit görünür (`zemin_liman_kum`, üç parça, adı boş). Şerit yalnız
+  Liman evlerinin 280 m çevresiyle kesişen kıyıda; mahallenin geri kalan
+  kıyısı (Deniz Feneri dahil) dokunulmadı. Genel görünüm:
+  `docs/gorseller/liman-kumsal-genel.png`.
+- **Kum olmayan kısım.** Rıhtımın önü taş kalır: rıhtım noktasından kıyı
+  boyunca yaklaşık 110 m geri / 120 m ileri, ayrıca Liman Deposu, İdare
+  Binası, Dondurmacı Kızlar, Mendirek ve Liman İskelesi'nin 18 m çevresi.
+  Deniz Feneri'nin 150 m çevresi de kum değil (`RIHTIM_ARA`, `LIMAN_PAY`,
+  `KASABA_TAMPON`, `FENER_PAY`, `gen/duzada.py`).
+- **Yollar.** Şerit hiçbir yolu ya da meydanı kesmiyor (kesişim 0 m²; kod yine
+  de yol alanını şeritten çıkarır).
+- **Dokunulmayanlar.** Hiçbir ev, bina ya da kimlik değişmedi; hiçbir bahçe ya
+  da duvar kırpılmadı (evler kıyıdan yüzlerce metre içeride).
+- **Görseller.** `docs/gorseller/liman-kumsal-once.png`, `-sonra.png` ve
+  `-genel.png` (üretilen haritadan çizilmiş).
+- **Basılacak düğme yok.**
+
+**Test:** üreteç çalıştırıldı, `npm run lint` ve `vite build` geçti. Fiziki
+zemin görseli (`public/ada-fiziki.webp`) değişmedi; o görselde Liman kıyısı
+zaten kum rengindeydi, fark çokgen zeminde görünür. Uygulama ekranında
+(2D/3D) görsel kontrol yapılmadı.

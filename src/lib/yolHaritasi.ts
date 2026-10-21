@@ -101,7 +101,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'oneriler-yeniden', paket: 'K', kimde: 'claude', nereden: '21 Ekim', bitti: true, ad: 'Öneriler yeniden: kanallar açılır kapanır (Öneri ayarları), viki ağırlıklı ve çeşitli, Wikipedia örneği ve Dondurmacı deposu kanalları, viki yazıları ansiklopedik' },
   { id: 'gece-urun-tekrar', paket: 'K', kimde: 'claude', nereden: '14 Ekim', bitti: true, ad: 'Gece önerilerinde aynı ürün bir daha önerilmez' },
   { id: 'oyun-makyaj', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, bitti: true, ad: 'Oyun sayfasının makyajı: küçük kutular, sıkışan yazılar' },
-  { id: 'liman-plaj', paket: 'H', kimde: 'claude', nereden: '8 Ekim', gece: 4, ad: 'Liman kıyısına kumsal şeridi' },
+  { id: 'liman-plaj', paket: 'H', kimde: 'claude', nereden: '8 Ekim', gece: 4, bitti: true, ad: 'Liman kıyısına kumsal şeridi' },
   { id: 'kayit-uyarisi', paket: 'K', kimde: 'claude', nereden: '12 Ekim', gece: 4, bitti: true, ad: 'Kayıt sunucuya ulaşmazsa ekranda uyarı; kartlar "Yazılıyor…"da takılı kalmasın', not: '12 Ekim\'de Dondurmacı kartının yazısı uyarısız kayboldu (yazma sınırı).' },
   { id: 'galeri-disari', paket: 'K', kimde: 'claude', nereden: '8 Ekim', gece: 4, bitti: true, ad: 'Galeri görselleri kayıtların dışına: kayıtlar küçülür, yazma sınırı geç dolar' },
   { id: 'bag-kurali', paket: 'K', kimde: 'claude', nereden: '8 Ekim', bitti: true, ad: 'Bağ türleri madde türüne özel; mükerrer maddeler birleşir (Küçükçetmi Çiftliği)' },

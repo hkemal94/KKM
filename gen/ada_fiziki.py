@@ -62,8 +62,16 @@ for _f in _geo['features']:
     if _p.get('katman')=='mahalle' and _p.get('id') in ('yer_iskele',) and _f['geometry']['type']=='Polygon':
         _ciz.polygon([((x-_w0)/(_e0-_w0)*W,(_n0-y)/(_n0-_s0)*H) for x,y in _f['geometry']['coordinates'][0]], fill=255)
 _yasam=np.array(_maske.filter(ImageFilter.MaxFilter(9)))>0
+# Liman kumsalı (21 Ekim): üretecin yazdığı `zemin_liman_kum*` çokgenleri
+# (rıhtım önü bunların dışında kalır, orası taş). Mahalle maskesi değil, doğrudan çokgen.
+_mk2=Image.new('L',(W,H),0); _ciz2=ImageDraw.Draw(_mk2)
+for _f in _geo['features']:
+    _p=_f['properties']
+    if _p.get('katman')=='zemin' and str(_p.get('id','')).startswith('zemin_liman_kum') and _f['geometry']['type']=='Polygon':
+        _ciz2.polygon([((x-_w0)/(_e0-_w0)*W,(_n0-y)/(_n0-_s0)*H) for x,y in _f['geometry']['coordinates'][0]], fill=255)
+_liman_kum=np.array(_mk2)>0
 _kiyidan=distance_transform_edt(kara0)*(20.0/KAT)          # metre
-kum=kum|(_yasam&kara0&(_kiyidan<22)&(slope<0.55))
+kum=kum|(_yasam&kara0&(_kiyidan<22)&(slope<0.55))|(_liman_kum&kara0&(slope<0.55))
 land=np.where(kum[...,None], c('#EFDFAE'), land)
 shade=0.5+0.68*hs
 rgb=np.where((z>0)[...,None], land*shade[...,None], deniz)
