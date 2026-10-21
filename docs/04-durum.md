@@ -2576,3 +2576,22 @@ ajansın KKM'deki ilk işi (Kemal seçti).
   (Kemal, 21 Ekim: mağaza yok, ileriye).
 - Dondurmacı Kızlar deposunun adı `hkemal94/DondurmaciKizlar` oldu; eski ad
   GitHub'da yönlendiriliyor, oyun künyesindeki depo yazısı değişmeden çalışır.
+
+## 21 Ekim gece — K: Oyun → Ajansa gönder (uygulamada; kart yok)
+
+Kemal: "Ben KKM'de oyun tasarım sayfası oluşturmak için bir taslak
+hazırlamıştım, oyunu oradan hazırlasam çekebilir mi ajan?" → "Düğmeyi bir
+sonraki iş olarak düşünebiliriz."
+
+- Oyunun sayfasında **Ajansa gönder** düğmesi (Oyun PDF'i ve NPC yarat'ın
+  yanında). Açılan kutuda isteğe bağlı bir not yazılır, **Ajansa gönder**'e
+  basılır: oyunun dosyası (PDF'teki bilgiler, Markdown olarak) ve not Kems
+  Ajans'ın deposuna `isler/gelen/GG-AA-YYYY-oyunun-adi.md` olarak yazılır.
+  Ajansın sabah planı oradan okur, işi oyun departmanına verir.
+- Yazma yolu "Oyuna gönder" ile aynı GitHub anahtarı (yalnız bu tarayıcıda).
+  Anahtarın **Kems-Ajans** deposuna da Contents: Read and write izni olmalı;
+  yoksa kutu ne yapılacağını yazar. Kemal bastığı için ajansın ana dalına
+  doğrudan yazılır, PR açılmaz.
+- KKM kayıtlarına hiçbir şey yazmaz; yazma sınırı yemez.
+  `lib/ajansaGonder.ts`, `oyun/AjansaGonder.tsx`.
+- Fikir kutusundan "Ajansa gönder" (yol haritasında `ajansa-gonder`) sonra.

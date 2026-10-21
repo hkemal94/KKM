@@ -18,7 +18,7 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/s
 const kutu = 'w-full text-[14px] bg-[#F3EFE8] dark:bg-[#0B132B] text-[#0E1C4F] dark:text-[#F3EFE8] rounded-xl px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-[#F26B6F]/50';
 
 /** GitHub anahtarı: yoksa nasıl alınacağı ve kutu; varsa kaldırma düğmesi */
-const AnahtarKarti: React.FC<{ anahtar: string; onDegis: (a: string) => void }> = ({ anahtar, onDegis }) => {
+export const AnahtarKarti: React.FC<{ anahtar: string; onDegis: (a: string) => void; baslik?: string; depoNotu?: string }> = ({ anahtar, onDegis, baslik = 'Oyuna göndermek için GitHub anahtarı', depoNotu = 'yalnız oyunun deposu' }) => {
   const [yazi, setYazi] = useState('');
   if (anahtar)
     return (
@@ -32,11 +32,11 @@ const AnahtarKarti: React.FC<{ anahtar: string; onDegis: (a: string) => void }> 
     <div className={`${KART} p-4 space-y-3`}>
       <div className="flex items-center gap-2">
         <KeyRound className="w-4 h-4 text-[#D6484C] dark:text-[#F26B6F]" />
-        <h3 className={`text-[15px] font-bold ${YAZI}`}>Oyuna göndermek için GitHub anahtarı</h3>
+        <h3 className={`text-[15px] font-bold ${YAZI}`}>{baslik}</h3>
       </div>
       <ol className={`text-[13px] ${IKINCIL} list-decimal pl-5 space-y-1`}>
         <li>GitHub → sağ üstte resmin → <b>Settings</b> → en altta <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
-        <li>Ad ver (ör. "KKM ayarlar"), süreyi seç. <b>Repository access</b>: <b>Only select repositories</b> → yalnız oyunun deposu.</li>
+        <li>Ad ver (ör. "KKM ayarlar"), süreyi seç. <b>Repository access</b>: <b>Only select repositories</b> → {depoNotu}.</li>
         <li><b>Permissions</b> → <b>Contents</b>: Read and write, <b>Pull requests</b>: Read and write. <b>Generate token</b>.</li>
         <li>Çıkan anahtarı kopyala, aşağıya yapıştır.</li>
       </ol>
