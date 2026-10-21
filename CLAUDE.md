@@ -118,6 +118,13 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 - **Tek istisna** (Kemal, 30 Eylül, `docs/soru-cevap/yapisal-4.md`): stüdyo
   geceleri günde bir kez 3 üretim önerisi, ayın ilk günü fanzin taslağı
   hazırlar — **yalnız öneri tepsisine**. Kanona / kayda hiçbir şey yazmaz.
+- **Öneri kanalları** (Kemal, 21 Ekim): Stüdyo → "Öneri ayarları"nda her
+  kanal açılıp kapanır (`kkm_ayar` → `oneriKanallari`, `src/lib/oneriKanallari.ts`).
+  Günün üç yuvasının çoğu vikiye gider. Viki yazıları Vikipedi gibi genel,
+  nesnel, süssüz yazılır (`server.ts` → `VIKI_USLUBU`). Dondurmacı Kızlar
+  deposu (`hkemal94/DondumaciKizlar`, public) yalnız evren bilgisini ve taslak
+  görselleri **öneri olarak** besler; oyun ayarları (fiyat, süre, oran)
+  hiçbir zaman.
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz
   yok" diye açıkça söylenir (30 Eylül'de karışmıştı).
 

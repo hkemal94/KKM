@@ -5,6 +5,9 @@ import { GRUP_ADLARI, STUDYO_ARACLARI, aracBul, kotaHali, type KotaHali, type St
 import { ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 import { AracCalistirici } from './AracCalistirici';
 import { OneriTepsisi } from './OneriTepsisi';
+import { OneriAyarlari } from './OneriAyarlari';
+import { bekleyenAdaylar } from '../../lib/adaylar';
+import { adayBilgisiHedefi } from '../../lib/studyo';
 import { SoruSecenekleri } from './SoruSecenekleri';
 import { useStudyo, type StudyoIslemleri } from './StudyoBaglami';
 import ConsistencyChecker from '../ConsistencyChecker';
@@ -93,6 +96,7 @@ export const Studyo: React.FC<StudyoIslemleri & { onTemizlik?: () => void }> = (
     <div className="space-y-4 animate-in fade-in duration-300">
       <SayfaBasi baslik="Yapay zekâ" />
       <KotaSatiri hal={hal} />
+      <OneriAyarlari items={islemler.items} onAddItem={islemler.onAddItem} onUpdateItem={islemler.onUpdateItem} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr] items-start [&>*]:min-w-0">
         <section className={`${KART} p-4 space-y-4`}>
           <AracKartlari secili={secili} onSec={id => setSecili(s => (s === id ? null : id))} />
@@ -163,6 +167,10 @@ export const StudyoPaneli: React.FC<StudyoIslemleri> = (islemler) => {
           </button>
         </div>
         <KotaSatiri hal={hal} />
+        {/* Madde için bekleyen öneriler en üstte: öneri ilgili yerde de görünsün (21 Ekim) */}
+        {istek.hedefId && bekleyenAdaylar(islemler.items).some(a => adayBilgisiHedefi(a) === istek.hedefId) && (
+          <OneriTepsisi {...islemler} hedefId={istek.hedefId} baslik={`${islemler.items.find(i => i.id === istek.hedefId)?.title || 'Madde'} için öneriler`} />
+        )}
         <AracKartlari grup={grup} hedefTuru={islemler.items.find(i => i.id === istek.hedefId)?.type} secili={secili} onSec={id => setSecili(id)} />
         {secili === SORU_ARACI && (
           <div className="pt-4 border-t border-[#CFC5B4] dark:border-[#2C3C72]">

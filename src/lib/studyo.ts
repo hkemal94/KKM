@@ -124,7 +124,7 @@ export const STUDYO_ARACLARI: StudyoAraci[] = [
     id: 'viki-devam', grup: 'viki', ad: 'Devam et', kurgu: true,
     aciklama: 'Madde metnine bir paragraf ekler.',
     hedefTurleri: VIKI, sonuc: 'metin', uygulama: 'notlara-ekle', task: 'devam-et',
-    veri: h => ({ text: h?.notes || '', notes: `Varlık: ${h?.title}, türü: ${h?.type}` })
+    veri: h => ({ text: h?.notes || '', notes: `Varlık: ${h?.title}, türü: ${h?.type}`, viki: true })
   },
   {
     // Metin soru turu (1 Ekim gece): 8 bölüm tek basışta; her biri kendi
@@ -294,12 +294,20 @@ export interface YapayZekaOnerisi extends StudyoSonucu {
   hedefId: string;
   hedefAdi: string;
   tarih: string;
+  /** Dış kaynak (Vikipedi maddesi, oyunun tasarım belgesi): tepside bağlantı olarak görünür */
+  kaynak?: { ad: string; adres: string };
+  /** Oyun deposundaki taslak görsellerin adresleri: yalnız gösterilir, kayda eklenmez */
+  gorseller?: string[];
 }
 
 export const yapayZekaOnerisi = (i: Item): YapayZekaOnerisi | undefined => {
   const a = i.type === 'aday' ? (i.metadata?.aday as YapayZekaOnerisi | undefined) : undefined;
   return a?.tur === 'yapay_zeka' ? a : undefined;
 };
+
+/** Bir öneri kaydının bağlı olduğu maddenin kimliği (yapay zekâ önerisi ya da günün sorusu cevabı) */
+export const adayBilgisiHedefi = (i: Item): string | undefined =>
+  i.type === 'aday' ? ((i.metadata?.aday as { hedefId?: string } | undefined)?.hedefId || undefined) : undefined;
 
 function jsonAyikla(ham: unknown): unknown {
   if (typeof ham !== 'string') return ham;
@@ -425,6 +433,8 @@ export function oneriyiUygula(
   if (arac?.uygulama === 'gece-oneri-ekle') {
     const g = (oneri as YapayZekaOnerisi & { gece?: { tur: string; baslik: string } }).gece;
     if (!g) return null;
+    // Viki ailesi (21 Ekim): taslak bölümler maddeye "öneri" bölümü olarak girer; bölüm yoksa yalnız okunur
+    if ((g.tur === 'viki' || g.tur === 'depo') && hedef && oneri.bolumler?.length) return { guncel: bolumleriEkle(hedef, oneri.bolumler, simdi) };
     if (g.tur === 'sosyal') return { yeni: { ...yeniGonderi({}, g.baslik), notes: oneri.metin || '', links: hedef ? [hedef.id] : [] } };
     if (g.tur === 'yazi') {
       return {

@@ -2,12 +2,21 @@ import type { Item } from '../types';
 import { aiCagir, AiHatasi } from './aiCagir';
 import { hatayiNotEt, kotaNotunuSil, type YapayZekaOnerisi } from './studyo';
 import { gonderiler } from './sosyal';
+import {
+  GECE_TURLERI, ONCEKI_HEDEF_SINIRI, ONCEKI_SINIRI, WIKIPEDIA_KAYNAKLARI, acikGeceTurleri, bekleyenHedefler, defterSatiri,
+  gununYuvalari, hedefiBul, kanalAcikMi, kanalAyari, kaynakSec, oncekiOneriler, oncekiTurlereGore, sade, vikiAdaylari,
+  vikiAilesiMi, vikiOzeti, type GeceTuru
+} from './oneriKanallari';
+import {
+  DONDURMACI_MADDESI, ayarMi, depoKaynagi, vikipediOzeti, type DepoKaynagi, type VikipediKaynagi
+} from './oneriKaynaklari';
 
 /**
  * Gece hazırlığı — kural istisnası (Kemal, 30 Eylül; docs/soru-cevap/yapisal-4.md, 17).
  *
- *   - Günde bir kez 3 üretim önerisi. Dört türden (sosyal medya, drop / ürün,
- *     yazı / fanzin, harita / viki) her gün biri dinlenir, üçü gelir.
+ *   - Günde bir kez 3 üretim önerisi. Yuvaların çoğu vikiye gider (21 Ekim):
+ *     viki, Wikipedia örneği ve Dondurmacı deposu; kalanı sosyal, drop, yazı.
+ *     Hangi kanalların açık olduğunu Kemal "Öneri ayarları"ndan seçer.
  *   - Ayın ilk günü o ayın fanzin taslağı.
  *   - Hepsi YALNIZ öneri tepsisine düşer. Kanona, vikiye, Merch'e bir şey
  *     yazılmaz; Kemal "Ekle" demeden hiçbir kayda girmez.
@@ -27,13 +36,8 @@ export const GECE_DURUM_TURU = 'gece_hazirlik' as const;
 export const GECE_ARACI = 'gece-oneri';
 export const FANZIN_ARACI = 'fanzin';
 
-export const GECE_TURLERI = [
-  { id: 'sosyal', ad: 'Sosyal medya' },
-  { id: 'drop', ad: 'Drop / ürün' },
-  { id: 'yazi', ad: 'Yazı / fanzin' },
-  { id: 'viki', ad: 'Harita / viki' }
-] as const;
-export type GeceTuru = typeof GECE_TURLERI[number]['id'];
+export { GECE_TURLERI };
+export type { GeceTuru };
 
 /** Hata sonrası yeniden deneme aralığı */
 const YENIDEN_DENEME_MS = 60 * 60 * 1000;
@@ -44,22 +48,20 @@ const FANZIN_PENCERESI = 10;
 export const istanbulGunu = (d = new Date()) =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 
-/** O gün gelecek üç tür (dördüncüsü dinlenir; sırayla değişir) */
-export function gununTurleri(gun: string): GeceTuru[] {
-  const n = Math.floor(Date.parse(`${gun}T00:00:00Z`) / 86_400_000);
-  const dinlenen = ((n % 4) + 4) % 4;
-  return GECE_TURLERI.filter((_, i) => i !== dinlenen).map(t => t.id);
-}
-
 export interface GeceDurumu {
   sonGun?: string;
   sonFanzinAy?: string;
   /** son hata zamanı (ms) ve kısa açıklaması */
   sonHata?: number;
   hata?: string;
-  /** Daha önce gelen drop / ürün önerilerinin başlıkları (son 40). Bir daha önerilmez
-   *  (14 Ekim, Kemal: "sürekli aynı ürün önerisi geliyor" → "ürün kalsın, tekrar etmesin") */
+  /** Eski alan: yalnız drop başlıkları. Okunur; bir sonraki gece `oncekiBasliklar`a katılıp silinir */
   oncekiUrunler?: string[];
+  /** Daha önce gelen BÜTÜN önerilerin "tür|başlık" satırları (son 90). Aynısı bir daha önerilmez
+   *  (14 Ekim ürün için, 21 Ekim bütün kanallar için). "wikipedia-kaynak|<madde>" satırı hangi
+   *  Vikipedi maddesinin kullanıldığını tutar. */
+  oncekiBasliklar?: string[];
+  /** Son öneri alan viki maddelerinin kimlikleri (son 60); sıradaki gecelerde başka maddelere sıra gelir */
+  oncekiHedefler?: string[];
 }
 
 export const durumKaydi = (items: Item[]) => items.find(i => i.type === GECE_DURUM_TURU) || null;
@@ -71,9 +73,11 @@ export function yapilacaklar(items: Item[], simdi = new Date()): { oneriler: boo
   const ay = gun.slice(0, 7);
   const bekle = d.sonHata && simdi.getTime() - d.sonHata < YENIDEN_DENEME_MS;
   if (bekle) return { oneriler: false, fanzin: false };
+  // Kapatılan kanallar çalışmaz (Öneri ayarları); hiçbiri açık değilse yapay zekâya sorulmaz
+  const fanzinAcik = kanalAcikMi(kanalAyari(items), 'fanzin');
   return {
-    oneriler: d.sonGun !== gun,
-    fanzin: d.sonFanzinAy !== ay && Number(gun.slice(8, 10)) <= FANZIN_PENCERESI
+    oneriler: d.sonGun !== gun && acikGeceTurleri(items).length > 0,
+    fanzin: fanzinAcik && d.sonFanzinAy !== ay && Number(gun.slice(8, 10)) <= FANZIN_PENCERESI
   };
 }
 
@@ -81,57 +85,21 @@ export function yapilacaklar(items: Item[], simdi = new Date()): { oneriler: boo
 
 const canli = (items: Item[]) => items.filter(i => !i.archived && !i.isProposal);
 const kisa = (s = '', n = 240) => (s.length > n ? s.slice(0, n) + '…' : s);
-const VIKI = ['yer', 'cadde', 'meydan', 'yer_adi', 'ada', 'mekân', 'dükkân', 'kulüp', 'marka', 'kisi', 'karakter', 'aile', 'olay'];
 
-/**
- * Gece önerilerine giden viki maddeleri (8 Ekim, Kemal: "sürekli aynı yerlere
- * öneri verdiği için Merkez'de bir sürü tarihçe oldu"). Eskiden en son
- * dokunulan 40 madde gidiyordu; öneri eklenince madde yine en son dokunulan
- * oluyor, ertesi gece yine seçiliyordu. Artık tepside bekleyen önerisi olan
- * maddeler sona, uzun süredir dokunulmamışlar öne gelir.
- */
-export function vikiSirasi(items: Item[]): Item[] {
-  const bekleyen = new Set(items
-    .filter(i => i.type === 'aday' && !i.archived)
-    .map(i => (i.metadata?.aday as { hedefId?: string } | undefined)?.hedefId)
-    .filter((x): x is string => !!x));
-  return canli(items)
-    .filter(i => VIKI.includes(i.type))
-    .sort((a, b) => Number(bekleyen.has(a.id)) - Number(bekleyen.has(b.id)) || a.updatedAt - b.updatedAt);
-}
-
-const ONCEKI_URUN_SINIRI = 40;
-const sade = (s: string) => s.toLocaleLowerCase('tr').replace(/[^a-z0-9çğıöşüâîû]+/g, ' ').trim();
-
-/** Önceden önerilmiş drop / ürün başlıkları: defterdekiler + tepside duranlar */
-export function oncekiUrunOnerileri(items: Item[]): string[] {
-  const tepside = items
-    .filter(i => i.type === 'aday')
-    .map(i => (i.metadata?.aday as { gece?: { tur?: string; baslik?: string } } | undefined)?.gece)
-    .filter(g => g?.tur === 'drop' && g.baslik)
-    .map(g => g!.baslik!);
-  const hepsi = [...(geceDurumu(items).oncekiUrunler || []), ...tepside];
-  return hepsi.filter((b, n) => hepsi.findIndex(x => sade(x) === sade(b)) === n).slice(-ONCEKI_URUN_SINIRI);
-}
-
-/** Aynı ürün yeniden gelirse ayıklanır (yapay zekâ kuralı çiğnerse diye) */
-export function tekrarlariAyikla(oneriler: GeceOnerisi[], onceki: string[]): GeceOnerisi[] {
-  const bilinen = new Set(onceki.map(sade));
-  return oneriler.filter(o => o.tur !== 'drop' || !bilinen.has(sade(o.baslik)));
-}
-
-/** Yapay zekâya giden özet: yalnız adlar ve kısa notlar */
+/** Yapay zekâya giden özet: yalnız adlar, kimlikler ve kısa notlar */
 export function geceBaglami(items: Item[]) {
   const c = canli(items);
   const son = (a: Item, b: Item) => b.updatedAt - a.updatedAt;
+  const d = geceDurumu(items);
   return {
-    viki: vikiSirasi(items).slice(0, 40).map(i => ({ ad: i.title, tur: i.type, not: kisa(i.notes) })),
+    viki: vikiAdaylari(items, d.oncekiHedefler).map(vikiOzeti),
     droplar: c.filter(i => i.type === 'drop').map(i => ({ ad: i.title, asama: i.status, not: kisa(i.notes, 160) })),
     urunler: c.filter(i => i.type === 'merch_urun').slice(0, 20).map(i => ({ ad: i.title, asama: i.status })),
     gonderiler: gonderiler(c).sort(son).slice(0, 10).map(i => ({ ad: i.title, asama: i.status })),
     yazilar: c.filter(i => i.type === 'blog_post').sort(son).slice(0, 10).map(i => ({ ad: i.title, asama: i.status })),
     notlar: c.filter(i => (i.tags || []).includes('gunluk-not')).sort(son).slice(0, 10).map(i => kisa(i.notes || i.title, 200)),
-    oncekiUrunler: oncekiUrunOnerileri(items)
+    /** Tür başına daha önce önerilen başlıklar: "bunları ve benzerlerini önerme" */
+    onceki: oncekiTurlereGore(oncekiOneriler(items, d))
   };
 }
 
@@ -152,31 +120,100 @@ export function fanzinBaglami(items: Item[], istek = '') {
 
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>;
 
-export interface GeceOnerisi { tur: GeceTuru; baslik: string; metin: string; bag?: string }
-
-/** Sunucunun cevabından öneriler (bozuksa boş) */
-export function onerileriAyikla(ham: unknown, turler: GeceTuru[]): GeceOnerisi[] {
-  let v: unknown = ham;
-  if (typeof v === 'string') { try { v = JSON.parse(v.replace(/^```(json)?|```$/gm, '').trim()); } catch { v = null; } }
-  if (!Array.isArray(v)) return [];
-  return v
-    .filter(x => x && typeof x.baslik === 'string' && typeof x.metin === 'string')
-    .map(x => ({
-      tur: (turler.includes(x.tur) ? x.tur : turler[0]) as GeceTuru,
-      baslik: String(x.baslik).trim().slice(0, 120),
-      metin: String(x.metin).trim().slice(0, 1200),
-      ...(typeof x.bag === 'string' && x.bag.trim() ? { bag: x.bag.trim() } : {})
-    }))
-    .slice(0, 3);
+export interface GeceBolumu { title: string; content: string }
+export interface GeceOnerisi {
+  tur: GeceTuru; baslik: string; metin: string;
+  /** Önerinin bağlandığı maddenin kimliği (tercih edilen) ve adı */
+  bagId?: string; bag?: string;
+  /** Viki ailesinde: "Ekle" deyince maddeye öneri bölümü olarak giden kısa taslak */
+  bolumler?: GeceBolumu[];
 }
 
-export function geceOneriKaydi(o: GeceOnerisi, items: Item[], gun: string): YeniKayit {
-  const hedef = o.bag ? canli(items).find(i => i.title.toLocaleLowerCase('tr') === o.bag!.toLocaleLowerCase('tr')) : undefined;
+/** Dış kaynaktan gelen ek bilgi: öneri kaydına yazılır, tepside gösterilir */
+export interface GeceKaynagi { kaynak?: { ad: string; adres: string }; gorseller?: string[] }
+
+/** Sunucunun cevabından öneriler (bozuksa boş). Bir türden, yuva sayısından fazlası kabul edilmez. */
+export function onerileriAyikla(ham: unknown, yuvalar: GeceTuru[]): GeceOnerisi[] {
+  let v: unknown = ham;
+  if (typeof v === 'string') { try { v = JSON.parse(v.replace(/^```(json)?|```$/gm, '').trim()); } catch { v = null; } }
+  if (!Array.isArray(v) || !yuvalar.length) return [];
+  const kalan = [...yuvalar];
+  const cikti: GeceOnerisi[] = [];
+  for (const x of v) {
+    if (!x || typeof x.baslik !== 'string' || typeof x.metin !== 'string') continue;
+    const tur = (yuvalar.includes(x.tur) ? x.tur : kalan[0]) as GeceTuru;
+    const n = kalan.indexOf(tur);
+    if (n < 0) continue; // bu türün yuvası bitti
+    kalan.splice(n, 1);
+    const bolumler = Array.isArray(x.bolumler)
+      ? x.bolumler
+        .filter((b: unknown): b is GeceBolumu => !!b && typeof (b as GeceBolumu).title === 'string' && typeof (b as GeceBolumu).content === 'string' && !!(b as GeceBolumu).content.trim())
+        .map((b: GeceBolumu) => ({ title: b.title.trim().slice(0, 80), content: b.content.trim().slice(0, 900) }))
+        .slice(0, 3)
+      : [];
+    cikti.push({
+      tur,
+      baslik: String(x.baslik).trim().slice(0, 120),
+      metin: String(x.metin).trim().slice(0, 1200),
+      ...(typeof x.bagId === 'string' && x.bagId.trim() ? { bagId: x.bagId.trim() } : {}),
+      ...(typeof x.bag === 'string' && x.bag.trim() ? { bag: x.bag.trim() } : {}),
+      ...(bolumler.length ? { bolumler } : {})
+    });
+    if (cikti.length >= 3) break;
+  }
+  return cikti;
+}
+
+export interface SuzulmusOneri { o: GeceOnerisi; hedef?: Item }
+
+/**
+ * Tekrarları ve bağsızları ayıklar (21 Ekim):
+ *   - aynı türde aynı başlık daha önce önerildiyse (defter + tepside duranlar) düşer,
+ *   - viki ailesinde maddeye bağlanamayan öneri düşer (ilgili yere ulaşmayan öneri tepside takılıp kalıyordu),
+ *   - bekleyen önerisi olan ya da son gecelerde öneri almış maddeye ikinci öneri gelmez,
+ *   - aynı gece aynı maddeye iki öneri gelmez,
+ *   - Dondurmacı deposu önerisi her zaman "Dondurmacı Kızlar" maddesine bağlanır ve
+ *     içinde oyun ayarı (sayı + birim) sızmışsa düşer.
+ */
+export function oneriSuz(oneriler: GeceOnerisi[], items: Item[], durum: GeceDurumu = geceDurumu(items)): SuzulmusOneri[] {
+  const onceki = oncekiOneriler(items, durum);
+  const bilinen = new Set(onceki.map(b => `${b.tur}|${sade(b.baslik)}`));
+  const bekleyen = bekleyenHedefler(items);
+  const son = new Set(durum.oncekiHedefler || []);
+  const bu = new Set<string>();
+  const sonuc: SuzulmusOneri[] = [];
+  for (const o of oneriler) {
+    if (bilinen.has(`${o.tur}|${sade(o.baslik)}`)) continue;
+    if (o.tur === 'drop' || !vikiAilesiMi(o.tur)) {
+      const hedef = hedefiBul(items, o.bagId, o.bag);
+      sonuc.push({ o, ...(hedef ? { hedef } : {}) });
+      continue;
+    }
+    const hedef = o.tur === 'depo' ? depoHedefi(items) : hedefiBul(items, o.bagId, o.bag);
+    if (!hedef) continue;
+    if (bekleyen.has(hedef.id) || bu.has(hedef.id)) continue;
+    if (o.tur !== 'depo' && son.has(hedef.id)) continue;
+    if (o.tur === 'depo' && [o.baslik, o.metin, ...(o.bolumler || []).map(b => b.content)].some(ayarMi)) continue;
+    bu.add(hedef.id);
+    sonuc.push({ o, hedef });
+  }
+  return sonuc;
+}
+
+/** Dondurmacı deposunun önerisi yalnız vikideki "Dondurmacı Kızlar" mekânına bağlanır */
+export const depoHedefi = (items: Item[]) =>
+  canli(items).find(i => i.type === 'mekân' && sade(i.title) === sade(DONDURMACI_MADDESI));
+
+export function geceOneriKaydi(s: SuzulmusOneri, gun: string, ek: GeceKaynagi = {}): YeniKayit {
+  const { o, hedef } = s;
   const turAdi = GECE_TURLERI.find(t => t.id === o.tur)?.ad || o.tur;
   const bilgi: YapayZekaOnerisi & { gece: { gun: string; tur: GeceTuru; baslik: string } } = {
     tur: 'yapay_zeka', durum: 'bekliyor', arac: GECE_ARACI,
     hedefId: hedef?.id || '', hedefAdi: hedef?.title || '',
     tarih: gun, metin: o.metin,
+    ...(o.bolumler?.length ? { bolumler: o.bolumler } : {}),
+    ...(ek.kaynak ? { kaynak: ek.kaynak } : {}),
+    ...(ek.gorseller?.length ? { gorseller: ek.gorseller } : {}),
     gece: { gun, tur: o.tur, baslik: o.baslik }
   };
   return {
@@ -207,6 +244,25 @@ export function fanzinOneriKaydi(bolumler: Array<{ title: string; content: strin
   };
 }
 
+/** Deftere eklenecek satırlar; sınırlar aşılırsa en eskiler düşer. Saf fonksiyon. */
+export function defteriGuncelle(
+  eski: GeceDurumu, yeniOneriler: SuzulmusOneri[], kullanilanKaynak?: string
+): Pick<GeceDurumu, 'oncekiBasliklar' | 'oncekiHedefler' | 'oncekiUrunler'> {
+  const satirlar = [
+    ...(eski.oncekiUrunler || []).map(b => defterSatiri('drop', b)),
+    ...(eski.oncekiBasliklar || []),
+    ...yeniOneriler.map(s => defterSatiri(s.o.tur, s.o.baslik)),
+    ...(kullanilanKaynak ? [defterSatiri('wikipedia-kaynak', kullanilanKaynak)] : [])
+  ];
+  // "wikipedia-kaynak" satırları kaynak seçimi için; sınır aşılınca en eskiden düşer
+  const hedefler = [...(eski.oncekiHedefler || []), ...yeniOneriler.filter(s => s.hedef && vikiAilesiMi(s.o.tur)).map(s => s.hedef!.id)];
+  return {
+    oncekiBasliklar: satirlar.slice(-ONCEKI_SINIRI),
+    oncekiHedefler: hedefler.filter((x, n) => hedefler.lastIndexOf(x) === n).slice(-ONCEKI_HEDEF_SINIRI),
+    oncekiUrunler: undefined // eski alan artık oncekiBasliklar içinde; undefined → kayıttan çıkar
+  };
+}
+
 function durumYaz(items: Item[], deg: GeceDurumu): { guncel?: Item; yeni?: YeniKayit } {
   const k = durumKaydi(items);
   const eski = geceDurumu(items);
@@ -230,6 +286,16 @@ export interface GeceIslemleri {
   onUpdateItem: (item: Item) => Promise<void>;
 }
 
+/** Kaynağı alınamayan yuvanın yerine (Vikipedi'ye ulaşılamadı gibi) açık bir viki yuvası ya da hiçbiri */
+const yuvaDegistir = (yuvalar: GeceTuru[], eski: GeceTuru, acik: GeceTuru[]): GeceTuru[] => {
+  const yerine = acik.includes('viki') ? 'viki' : undefined;
+  const n = yuvalar.indexOf(eski);
+  if (n < 0) return yuvalar;
+  const kopya = [...yuvalar];
+  if (yerine) kopya[n] = yerine; else kopya.splice(n, 1);
+  return kopya;
+};
+
 /**
  * Yapılacak ne varsa yapar. Dönen metin kısa rapor (bildirim için).
  * Hata olursa durum kaydına yazılır, bir saat sonra yeniden denenir.
@@ -243,19 +309,46 @@ export async function geceHazirliginiYap(items: Item[], islem: GeceIslemleri, si
   const deg: GeceDurumu = {};
   try {
     if (is.oneriler) {
-      const turler = gununTurleri(gun);
+      const acik = acikGeceTurleri(items);
+      const durum = geceDurumu(items);
+      let yuvalar = gununYuvalari(gun, acik);
+
+      // Dış kaynaklar (yalnız okunur). Alınamazsa yuva vikiye kayar.
+      let wiki: VikipediKaynagi | null = null;
+      let depo: DepoKaynagi | null = null;
+      if (yuvalar.includes('wikipedia')) {
+        const sirali = [...WIKIPEDIA_KAYNAKLARI];
+        const secilen = kaynakSec(sirali, durum.oncekiBasliklar || []);
+        const deneme = secilen ? [secilen, ...sirali.filter(x => x !== secilen)] : sirali;
+        for (const baslik of deneme) { wiki = await vikipediOzeti(baslik); if (wiki) break; }
+        if (!wiki) yuvalar = yuvaDegistir(yuvalar, 'wikipedia', acik);
+      }
+      if (yuvalar.includes('depo')) {
+        depo = depoHedefi(items) ? await depoKaynagi() : null;
+        if (!depo) yuvalar = yuvaDegistir(yuvalar, 'depo', acik);
+      }
+      if (!yuvalar.length) throw new AiHatasi('Bugün için açık bir öneri kanalı kalmadı.');
+
       const ham = await aiCagir<unknown>('gece-onerileri', {
-        gun, turler: turler.map(t => ({ id: t, ad: GECE_TURLERI.find(x => x.id === t)!.ad })), ...geceBaglami(items)
+        gun,
+        yuvalar: yuvalar.map((t, n) => ({ no: n + 1, tur: t, ad: GECE_TURLERI.find(x => x.id === t)!.ad })),
+        ...(wiki ? { wikipedia: wiki } : {}),
+        ...(depo ? { depo: { metin: depo.metin, madde: DONDURMACI_MADDESI } } : {}),
+        ...geceBaglami(items)
       });
-      const ayiklanan = onerileriAyikla(ham, turler);
+      const ayiklanan = onerileriAyikla(ham, yuvalar);
       if (!ayiklanan.length) throw new AiHatasi('Yapay zekâ beklenmedik bir cevap döndü.');
-      const onceki = oncekiUrunOnerileri(items);
-      const oneriler = tekrarlariAyikla(ayiklanan, onceki);
-      for (const o of oneriler) await islem.onAddItem(geceOneriKaydi(o, items, gun));
-      const yeniUrunler = oneriler.filter(o => o.tur === 'drop').map(o => o.baslik);
-      if (yeniUrunler.length) deg.oncekiUrunler = [...onceki, ...yeniUrunler].slice(-ONCEKI_URUN_SINIRI);
+      const suzulen = oneriSuz(ayiklanan, items, durum);
+      for (const s of suzulen) {
+        const ek: GeceKaynagi = s.o.tur === 'wikipedia' && wiki ? { kaynak: { ad: wiki.baslik, adres: wiki.adres } }
+          : s.o.tur === 'depo' && depo ? { kaynak: { ad: 'Dondurmacı Kızlar · tasarım belgesi', adres: depo.adres }, gorseller: depo.gorseller }
+            : {};
+        await islem.onAddItem(geceOneriKaydi(s, gun, ek));
+      }
+      // Defter: ek yazma yok, aynı gece kaydı içinde
+      Object.assign(deg, defteriGuncelle(durum, suzulen, suzulen.some(s => s.o.tur === 'wikipedia') ? wiki?.baslik : undefined));
       deg.sonGun = gun;
-      rapor.push(`${oneriler.length} üretim önerisi`);
+      if (suzulen.length) rapor.push(`${suzulen.length} üretim önerisi`);
     }
     if (is.fanzin) {
       const ham = await aiCagir<unknown>('fanzin-taslak', { ay: ayYazisi(ay), ...fanzinBaglami(items) });

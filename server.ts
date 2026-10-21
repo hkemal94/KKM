@@ -163,6 +163,15 @@ app.get("/api/pinterest", async (req, res) => {
   }
 });
 
+/**
+ * Viki metinlerinin üslubu (21 Ekim, Kemal: "Viki önerilerinde inanılmaz
+ * şairane yazıyor. Viki'de yazılar genel olmalı."). Eskiden bütün görevlerin
+ * ortak yönergesi "edebi, bilgece, zengin" idi; viki önerileri de oradan
+ * şiirsel çıkıyordu. Viki görevleri bu yönergeyi kullanır.
+ */
+const VIKI_USLUBU = `Üslup: Vikipedi gibi genel, nesnel ve ansiklopedik Türkçe. Kısa, olgusal cümleler; etken ve açık fiiller. Şiirsel ya da süslü anlatım, benzetme, abartı, duygusal sıfat, "gizemli", "büyülü", "kadim", "efsunlu" gibi sözcükler yok. Vikinin bir "şimdi"si yoktur: "hâlâ", "şu anda", "günümüzde", "bugün", "artık" yazma; tarihleri aralık olarak yaz ("1954–"). Verilen bilgide olmayan özel ad (kişi, yer, kurum, ürün), sayı ya da tarih uydurma; bilinmeyeni yazma, soru olarak bırak. Kemsköy yazımını koru.`;
+const VIKI_SISTEMI = "Bir ada vikisinin titiz, tarafsız editörüsün. Ansiklopedik, sade, kısa ve olgusal Türkçe yazıyorsun; şiirsel dil kullanmıyorsun.";
+
 // Gemini AI Proxy Endpoint
 app.post("/api/ai", async (req, res) => {
   const { task, data } = req.body;
@@ -177,6 +186,16 @@ app.post("/api/ai", async (req, res) => {
 
     switch (task) {
       case "devam-et":
+        if (data.viki) {
+          prompt = `Aşağıdaki viki maddesinin metnine bir paragraf ekle: mevcut metindeki bilgileri düzenle ve tamamla; yeni olgu icat etme. Sadece eklenecek paragrafı döndür (mevcut kısmı tekrar etme).
+${VIKI_USLUBU}
+Mevcut Metin/Konu:
+"${data.text || ""}"
+Önceki Bağlam/Notlar:
+"${data.notes || ""}"`;
+          systemInstruction = VIKI_SISTEMI;
+          break;
+        }
         prompt = `Aşağıdaki metni (veya konuyu) devam ettir. Edebi, sıcak, arşivsel tonda bir paragraf ekle. Sadece devam eden ek metni döndür (mevcut kısmı tekrar etme).
 Mevcut Metin/Konu:
 "${data.text || ""}"
@@ -199,7 +218,7 @@ Mevcut Metin:
         break;
 
       case "lore-bagi":
-        prompt = `Mevcut metin ile adadaki diğer varlıklar arasında gizemli, lore-uygun bağlantılar (lore bağı) kur. Aşağıdaki varlıkları incele ve bu metinle nasıl ilişkilendirilebileceğine dair 2-3 adet öneri ver.
+        prompt = `Mevcut metin ile adadaki diğer varlıklar arasında kanona uygun, somut ve sade bağlantılar (lore bağı) kur; şiirsel anlatım kullanma. Aşağıdaki varlıkları incele ve bu metinle nasıl ilişkilendirilebileceğine dair 2-3 adet öneri ver.
 Mevcut Metin/Yazı:
 "${data.text || ""}"
 Kullanılabilir Varlıklar:
@@ -215,14 +234,20 @@ Açıklama:
         break;
 
       case "wiki-section-oner":
-        prompt = `Aşağıdaki ${data.type} türündeki varlık için lore-rich wiki başlıkları ve kısa öneri içerikleri üret. En az 3 adet başlık öner. Yanıtı JSON dizisi olarak döndür. Örnek format: [{"title": "Kökeni", "content": "Adadaki gizemli başlangıcı..."}, {"title": "Sırrı", "content": "Kimsenin bilmediği..."}]
+        prompt = `Aşağıdaki ${data.type} türündeki varlığın viki maddesi için en az 3 bölüm başlığı ve kısa içerik öner. Yanıtı JSON dizisi olarak döndür.
+${VIKI_USLUBU}
+Kurallar:
+- Başlıklar ansiklopedik olsun (Tarihçe, Konum, Yapı, Faaliyet, Çevre, Ünlü kişiler…); türüne uygun olanları seç.
+- İçerik 1-3 kısa cümle; yalnız aşağıdaki varlık notlarındaki bilgiyi kullan. Not yetersizse içeriği boş bırak ("content": "") ve başlığı Kemal'e soru olarak değil, boş bölüm olarak bırak.
+- Somut, çalışılmış örnek ver: bölüm bilgi verecekse hangi cümle kalıbıyla yazılacağı belli olsun (örnek: "X, Y mahallesinde yer alan bir mekândır. 1954'ten beri faaliyettedir.") — ama örnekteki bilgi notlarda yoksa yazma.
+Örnek format: [{"title": "Konum", "content": "… mahallesinde yer alır."}, {"title": "Tarihçe", "content": ""}]
 Varlık Adı: "${data.title}"
 Varlık Notları: "${data.notes || ""}"`;
-        systemInstruction += " Sadece saf bir JSON dizisi döndür.";
+        systemInstruction = VIKI_SISTEMI + " Sadece saf bir JSON dizisi döndür.";
         break;
 
       case "kunya-cikar":
-        prompt = `Aşağıdaki ${data.type} türündeki varlık için lore-rich künye kartı (profile) bilgilerini metinden çıkar. Metinde olmayan bilgiyi uydurma; yeni özel ad ya da sayı yazma, o alanı yazma.
+        prompt = `Aşağıdaki ${data.type} türündeki varlık için künye kartı (profile) bilgilerini metinden çıkar. Değerler kısa, nesnel ve ansiklopedik olsun; şiirsel anlatım yok. Metinde olmayan bilgiyi uydurma; yeni özel ad ya da sayı yazma, o alanı yazma.
 Varlık Adı: "${data.title}"
 Varlık Açıklaması/Notları: "${data.notes || ""}"
 
@@ -253,7 +278,7 @@ Yanıtı mutlaka ve sadece aşağıdaki saf JSON formatında döndür, başka hi
     "[alan_adi_2]": "önerilen değer 2"
   }
 }`;
-        systemInstruction += " Sadece saf bir JSON nesnesi döndür.";
+        systemInstruction = VIKI_SISTEMI + " Sadece saf bir JSON nesnesi döndür.";
         break;
 
       // Stüdyo (29 Eylül akşamı): kitap bölümü özeti ve sonraki bölüm için fikir
@@ -273,24 +298,32 @@ Bölüm:
       // Gece hazırlığı (kural istisnası, yapisal-4): günde 3 üretim önerisi.
       // Yalnız öneri tepsisine düşer; Kemal "Ekle" demeden kayda girmez.
       case "gece-onerileri":
-        prompt = `Kems Company ve kurgusal Düzada adası için bugünün ${(data.turler || []).length} üretim önerisini hazırla. Her tür için bir öneri: ${JSON.stringify(data.turler || [])}.
-Öneri bir iş fikridir: bugün ne üretilebilir (bir gönderi, bir ürün, bir yazı, vikide doldurulacak bir yer). Kısa ve uygulanabilir olsun; ada kanonundan bir bilgiye dayansın.
-Kurallar:
+        prompt = `Kems Company ve kurgusal Düzada adası için bugünün ${(data.yuvalar || []).length} önerisini hazırla. Her yuva için bir öneri; yuvalar: ${JSON.stringify(data.yuvalar || [])}. Cevaptaki "tur" alanı yuvanın "tur" değeri olsun.
+Öneri bir iş fikridir. Kısa ve uygulanabilir olsun; ada kanonundan bir bilgiye dayansın.
+Genel kurallar:
 - Yeni özel ad (kişi, yer, kurum, ürün, drop adı) uydurma; yalnız aşağıda geçen adları kullan.
 - Fiyat, sayı, tarih uydurma. "Hâlâ", "şu anda", "günümüzde" yazma.
-- "Harita / viki" önerisi kurgu metni yazmaz; hangi maddede neyin eksik olduğunu ve Kemal'e sorulacak soruyu söyler.
-- "bag" alanına önerinin dayandığı kaydın adını aynen yaz (yoksa boş bırak). Drop / ürün önerisinde bag bir drop adı olsun.
-- Drop / ürün önerisi daha önce önerilenlerden biri ya da ona benzeyen bir ürün olmasın; "Ürünler" listesinde zaten olan bir ürünü de yeniden önerme. Yeni bir ürün fikri getir.
-Daha önce önerilen ürünler (bunları ve benzerlerini önerme): ${JSON.stringify(data.oncekiUrunler || [])}
-Bilinenler:
+- Her yuva türü için "Daha önce önerilenler" listesindeki başlıkları ve benzerlerini önerme; her gün farklı bir konu getir.
+Tür kuralları:
+- "viki": Aşağıdaki "Viki" listesinden BİR maddeyi seç (listenin başındakiler en boş olanlardır; sırayla farklı türlerden madde seç, hep aynı türe gitme). "bagId" alanına o maddenin "id" değerini AYNEN yaz, "bag" alanına adını yaz. "metin": maddede neyin eksik olduğunu (dolu ve boş bölümlere bak) ve Kemal'e sorulacak tek somut soruyu söyler. "bolumler": o maddenin notlarındaki bilgiyle yazılabilen en çok 2 kısa örnek bölüm [{"title","content"}]; bilgi yetmiyorsa boş dizi. Bölüm metni ansiklopedik olsun.
+- "wikipedia": Aşağıdaki "Vikipedi örneği" gerçek dünyadan bir maddedir, KOPYALANMAYACAK; yalnız yapısı için örnektir. Düzada'da ona benzeyen BİR viki maddesini "Viki" listesinden seç (kulüp, köy, mahalle gibi türüne uygun), "bagId"ine id'sini yaz. "metin": örnek maddede hangi başlıklar ve hangi bilgi türleri var (konum, tarihçe, yapı, faaliyet vb.), Düzada'daki maddede hangilerinin boş olduğu ve Kemal'e sorulacak sorular. Örnekteki özel adları, sayıları, tarihleri Düzada'ya taşıma. "bolumler": boş dizi.
+- "depo": Aşağıdaki "Oyun deposu" metni Dondurmacı Kızlar oyununun evren bilgisidir. "bagId" boş bırak (madde sabit: "${data.depo?.madde || ""}"). "metin": depodaki hangi evren bilgisinin (yer, dönem, sahip) vikide eksik olduğunu söyle. "bolumler": yalnız o metinde yazan bilgiyle en çok 2 kısa ansiklopedik bölüm. Oyun ayarı (fiyat, süre, oran, sayı) ASLA; oyun mekaniğinden de söz etme.
+- "sosyal": gönderi fikri; "bag" bir viki ya da drop adı olabilir.
+- "drop": yeni bir ürün fikri; "Ürünler" listesinde olanı yeniden önerme. "bag" bir drop adı olsun.
+- "yazi": blog ya da lore yazısı fikri; "bag" ilgili viki maddesi olabilir.
+${VIKI_USLUBU}
+(Bu üslup viki, wikipedia ve depo yuvalarının "metin" ve "bolumler" alanları için geçerlidir; viki metni kurgu yazmaz, eksik ve sorudur.)
+Daha önce önerilenler (tür: başlıklar): ${JSON.stringify(data.onceki || {})}
 Viki: ${JSON.stringify(data.viki || [])}
+Vikipedi örneği: ${JSON.stringify(data.wikipedia || null)}
+Oyun deposu (yalnız evren bilgisi): ${JSON.stringify(data.depo || null)}
 Droplar: ${JSON.stringify(data.droplar || [])}
 Ürünler: ${JSON.stringify(data.urunler || [])}
 Sosyal medya gönderileri: ${JSON.stringify(data.gonderiler || [])}
 Yazılar: ${JSON.stringify(data.yazilar || [])}
 Not defteri: ${JSON.stringify(data.notlar || [])}
-Yanıtı saf JSON dizisi olarak döndür: [{"tur": "sosyal", "baslik": "kısa başlık", "metin": "2-4 cümle", "bag": "kayıt adı"}]`;
-        systemInstruction = "Bir markanın sessiz asistanısın; sade, kısa, kanona bağlı üretim önerileri veriyorsun. Sadece saf bir JSON dizisi döndür.";
+Yanıtı saf JSON dizisi olarak döndür: [{"tur": "viki", "baslik": "kısa başlık", "metin": "2-4 kısa cümle", "bagId": "madde id", "bag": "madde adı", "bolumler": [{"title": "Konum", "content": "…"}]}]`;
+        systemInstruction = "Bir markanın ve bir ada vikisinin sessiz asistanısın; sade, kısa, kanona bağlı öneriler veriyorsun. Viki ile ilgili metinleri ansiklopedik ve nesnel yazarsın, şiirsel dil kullanmazsın. Sadece saf bir JSON dizisi döndür.";
         break;
 
       // Aylık fanzin taslağı (yapisal-2, 31; yapisal-4, 29-32). Adı yok; bölümler serbest.
