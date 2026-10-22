@@ -10,6 +10,7 @@ import { Item, ItemType } from '../types';
 import { getCachedAccessToken } from '../lib/firebase';
 import { createGoogleDoc } from '../lib/googleApi';
 import SharedEditor from './SharedEditor';
+import { YaziEditorunuGonder } from './YaziEditorunuGonder';
 
 interface BlogProps {
   items: Item[];
@@ -501,6 +502,8 @@ export default function Blog({
                   <BookOpen className="w-3.5 h-3.5" />
                   <span>Kitaba Gönder</span>
                 </button>
+
+                <YaziEditorunuGonder yazi={activePost} onUpdateItem={onUpdateItem} />
 
                 <button
                   type="button"
