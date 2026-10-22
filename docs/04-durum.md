@@ -2703,3 +2703,15 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   metinler kısaltılır ve kartta söylenir.
 - KKM kayıtlarına bir şey yazılmaz; yalnız Kemal düğmeye basınca gider. Ajans
   bağlantısı (GitHub anahtarı) kurulu değilse kart "önce ajans bağlantısını kur" der.
+
+## 22 Ekim gece — yazıyı Yazı Editörü'ne gönder (ajans)
+
+- Blog yazısının ve kitap bölümünün editöründe "Yazı Editörü'ne gönder" düğmesi
+  geldi (Docs'a Aktar'ın yanında). Basınca o tek yazı ajansın gizli deposuna
+  `yazilar/GG-AA-YYYY-<kisa-konu>.md` olarak yazılır (başlık, tür, durum, KKM
+  kimliği, zaman, ardından metin aynen); aynı ad varsa sonuna -2, -3 gelir.
+  `isler/gelen/` altına da küçük bir iş notu düşer; sabah planı işi Yazı
+  Editörü'ne atar. Ajans metni yeniden yazmaz, yalnız yazım/akış notu bırakır.
+- Gönderilince yazının kaydına gönderim zamanı yazılır (Kemal bastığı için);
+  düğme "Gönderildi · tarih · Yeniden gönder" olur, metin değişince tekrar gidebilir.
+- Ajans bağlantısı (GitHub anahtarı) yoksa düğme "önce ajans bağlantısını kur" der.

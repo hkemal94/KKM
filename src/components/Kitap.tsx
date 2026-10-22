@@ -11,6 +11,7 @@ import { Item, ItemType } from '../types';
 import { getCachedAccessToken } from '../lib/firebase';
 import { createGoogleDoc } from '../lib/googleApi';
 import SharedEditor from './SharedEditor';
+import { YaziEditorunuGonder } from './YaziEditorunuGonder';
 
 interface KitapProps {
   items: Item[];
@@ -588,6 +589,8 @@ export default function Kitap({
 
               {/* Status Chapter selector */}
               <div className="shrink-0 flex items-center gap-2 font-mono flex-wrap">
+                <YaziEditorunuGonder yazi={activeChapter} onUpdateItem={onUpdateItem} />
+
                 <button
                   type="button"
                   onClick={handleExportChapterToDoc}
