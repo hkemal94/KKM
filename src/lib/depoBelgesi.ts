@@ -1,3 +1,5 @@
+import { anahtariOku } from './oyunAyarlari';
+
 /**
  * Oyunun deposundaki tasarım belgesi, canlı okunur (14 Ekim, Kemal:
  * "Dondurmacı Kızlar konusunda farklı bir repoda çok yol aldım, içeride
@@ -130,12 +132,24 @@ export function satirIci(metin: string): Parca[] {
   return cikti;
 }
 
+/**
+ * Gizli depo (22 Ekim, Kems-Ajans gizlendi): bu tarayıcıda GitHub anahtarı
+ * varsa okuma GitHub'ın kendisinden anahtarla yapılır; yoksa açık adresten.
+ */
+export const anahtarBasligi = (): Record<string, string> => {
+  const a = anahtariOku();
+  return a ? { Authorization: `Bearer ${a}` } : {};
+};
+const okumaIstegi = (depo: string, yol: string) => anahtariOku()
+  ? fetch(`https://api.github.com/repos/${depo}/contents/${yol}`, { cache: 'no-cache', headers: { Accept: 'application/vnd.github.raw+json', ...anahtarBasligi() } })
+  : fetch(hamAdres(depo, yol), { cache: 'no-cache' });
+
 /** Depodaki belgeyi okur; ilk bulunan yol döner */
 export async function belgeyiOku(depo: string, yollar: string[] = BELGE_YOLLARI): Promise<{ yol: string; metin: string }> {
   let sonHata = '';
   for (const yol of yollar) {
     try {
-      const r = await fetch(hamAdres(depo, yol), { cache: 'no-cache' });
+      const r = await okumaIstegi(depo, yol);
       if (r.ok) return { yol, metin: await r.text() };
       sonHata = `${r.status}`;
     } catch (e) {

@@ -2595,3 +2595,27 @@ sonraki iş olarak düşünebiliriz."
 - KKM kayıtlarına hiçbir şey yazmaz; yazma sınırı yemez.
   `lib/ajansaGonder.ts`, `oyun/AjansaGonder.tsx`.
 - Fikir kutusundan "Ajansa gönder" (yol haritasında `ajansa-gonder`) sonra.
+
+## 22 Ekim — K: Tepsiyi ajansa gönder (uygulamada; kart yok)
+
+Kemal: "ilgili ajan bunu kendi üzerine alsın ve o tepsiyi de pano yönetsin…
+mantıksızları elesin, basitleri yavaş yavaş Haiku ile bitirsin, sorulacak
+soruları kendi deposuna alsın". Ajansın Firebase'e doğrudan girmesi denendi;
+Google kuruluş kuralı servis anahtarı indirmeye izin vermedi. Kemal köprü
+olarak GitHub'ı seçti.
+
+- **Kems-Ajans deposu gizli** (Kemal yaptı). Tepside onaylanmamış taslaklar ve
+  Kemal'in cevapları olduğu için tepsi yalnız gizli depoya gider; depo açıksa
+  kod hiçbir şey göndermez.
+- **Durum → Ajans** artık ajansın dosyalarını bu tarayıcıdaki GitHub
+  anahtarıyla okur (Oyun → Ajansa gönder'deki anahtar). Anahtar yoksa sayfanın
+  başında anahtar kartı çıkar. Gizli depodaki belgelerin içindeki görseller
+  görünmeyebilir.
+- Aynı sayfada **Öneri tepsisi → ajans** kartı: tepsideki öneri ve günün
+  sorusu sayısı, **Tepsiyi ajansa gönder** düğmesi. Basınca tepsinin o anki
+  hâli ajansın deposunda `kkm/tepsi.json`'a yazılır (öncekinin yerine).
+  `lib/tepsiAjansa.ts`, `anasayfa/TepsiAjansaKarti.tsx`.
+- KKM kayıtlarına hiçbir şey yazılmaz; tepsi olduğu gibi kalır.
+- Sıradaki iş (yol haritasında `tepsi-kararlari`): ajansın kararları KKM'ye
+  geri gelir, **Ajansın kararlarını uygula** tek düğmesiyle işlenir. Kemal
+  ayrıca Stüdyo → Öneri ayarları'ndan gece önerilerini kapatır.

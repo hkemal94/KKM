@@ -8,7 +8,11 @@
  * - Yalnız okur: KKM kayıtlarına bir şey yazılmaz (yazma sınırı yemez),
  *   ajansın deposuna da hiçbir şey yazılmaz.
  * - Ana daldaki hâl okunur: ajansın işi Kemal birleştirince görünür.
+ * - Depo gizli (22 Ekim): okuma bu tarayıcıdaki GitHub anahtarıyla yapılır
+ *   (`lib/depoBelgesi.ts` → `anahtarBasligi`); anahtar yoksa dosyalar görünmez.
  */
+
+import { anahtarBasligi } from './depoBelgesi';
 
 export const AJANS_DEPOSU = 'hkemal94/Kems-Ajans';
 
@@ -51,7 +55,8 @@ export function dosyaBasligi(ad: string): string {
 
 /** Klasördeki Markdown dosyaları, yeniden eskiye; README sayılmaz */
 export async function klasoruOku(klasor: string): Promise<AjansDosyasi[]> {
-  const r = await fetch(`https://api.github.com/repos/${AJANS_DEPOSU}/contents/${klasor}`, { cache: 'no-cache' });
+  const r = await fetch(`https://api.github.com/repos/${AJANS_DEPOSU}/contents/${klasor}`, { cache: 'no-cache', headers: anahtarBasligi() });
+  if (r.status === 404 && !Object.keys(anahtarBasligi()).length) throw new Error('depo gizli; Oyun → Ajansa gönder\'deki GitHub anahtarını bu tarayıcıya kaydet');
   if (r.status === 404) return [];
   if (!r.ok) throw new Error(r.status === 403 ? 'GitHub okuma sınırı doldu, biraz sonra yenile' : `${r.status}`);
   const liste: { name: string; path: string; type: string }[] = await r.json();

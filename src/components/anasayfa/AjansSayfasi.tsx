@@ -3,19 +3,26 @@ import { ArrowLeft, ExternalLink, FileText, RefreshCw } from 'lucide-react';
 import { AJANS_BELGELERI, AJANS_DEPOSU, AJANS_KLASORLERI, dosyaBasligi, klasoruOku, type AjansDosyasi } from '../../lib/ajansDeposu';
 import { depoSayfasi } from '../../lib/depoBelgesi';
 import { DepoBelgesi } from '../oyun/DepoBelgesi';
+import { AnahtarKarti } from '../oyun/OyunAyarlari';
+import { anahtariOku } from '../../lib/oyunAyarlari';
+import type { Item } from '../../types';
+import { TepsiAjansaKarti } from './TepsiAjansaKarti';
 import { DUGME_BOS, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
 /**
  * Durum → Ajans (21 Ekim, `lib/ajansDeposu.ts`). Kems Ajans'ın bıraktığı
  * dosyalar klasör klasör listelenir; dosyaya basınca depodan okunup
- * gösterilir. Yalnız okur, hiçbir yere yazmaz.
+ * gösterilir. Depo gizli (22 Ekim): okumak için bu tarayıcıda GitHub
+ * anahtarı gerekir. Tek yazan kart "Tepsiyi ajansa gönder"dir
+ * (`TepsiAjansaKarti`); KKM kayıtlarına bir şey yazılmaz.
  */
 
 type KlasorDurumu = AjansDosyasi[] | 'yukleniyor' | { hata: string };
 
 const tarihYazisi = (t: Date) => t.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-export const AjansSayfasi: React.FC = () => {
+export const AjansSayfasi: React.FC<{ items: Item[] }> = ({ items }) => {
+  const [anahtar, setAnahtar] = useState(anahtariOku);
   const [klasorler, setKlasorler] = useState<Record<string, KlasorDurumu>>({});
   const [tur, setTur] = useState(0);
   const [acik, setAcik] = useState<{ yol: string; ad: string } | null>(null);
@@ -29,7 +36,7 @@ export const AjansSayfasi: React.FC = () => {
         .catch(e => { if (!iptal) setKlasorler(o => ({ ...o, [k.yol]: { hata: e instanceof Error ? e.message : String(e) } })); });
     }
     return () => { iptal = true; };
-  }, [tur]);
+  }, [tur, anahtar]);
 
   if (acik) return (
     <div className="space-y-4">
@@ -63,6 +70,11 @@ export const AjansSayfasi: React.FC = () => {
         <button type="button" onClick={() => setTur(t => t + 1)} className={DUGME_BOS}><RefreshCw className="w-3.5 h-3.5" /> Yenile</button>
         <a href={depoSayfasi(AJANS_DEPOSU)} target="_blank" rel="noreferrer" className={DUGME_BOS}><ExternalLink className="w-3.5 h-3.5" /> Depoda aç</a>
       </div>
+
+      {!anahtar && <AnahtarKarti anahtar={anahtar} onDegis={setAnahtar}
+        baslik="Ajansın gizli deposunu okumak için GitHub anahtarı" depoNotu="Kems-Ajans deposu (oyuna da göndereceksen oyunun deposu da)" />}
+
+      <TepsiAjansaKarti items={items} anahtar={anahtar} />
 
       <div className="grid gap-4 md:grid-cols-2">
         {AJANS_KLASORLERI.map(k => {
