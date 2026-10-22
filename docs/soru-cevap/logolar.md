@@ -8,7 +8,7 @@ Birlik Birası, çizgi köpek figürü, 12. sayfa (önizlemesi açılmadı).
 
 | Soru | Cevap |
 |---|---|
-| Etiketlerdeki "Düzada Ziraat İşletmeleri Kurumu · Kuruluş 1994" ile kanondaki kooperatif | **Aynı kurum, yıl farklı anlamda.** Kanon kalır: Kemsköy Ziraat İşletmeleri Kurumu (1950–1970). 1994 Birlik markasının çıktığı yıl. |
+| Etiketlerdeki "Düzada Ziraat İşletmeleri Kurumu · Kuruluş 1994" ile kanondaki kooperatif | **Aynı kurum, yıl farklı anlamda.** Kanon kalır: Kemsköy Ziraat İşletmeleri Kurumu (1950–1970). 1994 Birlik markasının çıktığı yıl. *(Not, 22 Ekim: ad 8 Ekim'de "Düzada Ziraat İşletmeleri Kurumu" oldu; geçerli olan künyedeki.)* |
 | Birlik Zeytin ve Birlik Birası nerede | **Kurumun ürünleri (viki).** Kurumun ve ürünlerin maddelerine; Kems Company'nin satış markası değiller. |
 | Köpek figürü kimin | **Küçükçetmi Sürek Kulübü.** Kurum maddesine ve Markalar'daki kurum sayfasına. |
 | PNG'ler nasıl gelecek | Kemal ortamın ağ iznini açacak (`export-download.canva.com`). |
