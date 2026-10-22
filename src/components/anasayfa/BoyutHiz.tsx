@@ -3,6 +3,7 @@ import { RefreshCw } from 'lucide-react';
 import type { Item } from '../../types';
 import { useHaritaDuzeni } from '../../lib/haritaDuzeni';
 import { KAYIT_SINIRI, acilisOlcumu, boyut, indirilenParcalar, kayitBoyutlari, kb, sn } from '../../lib/olcumler';
+import { sayaciOku, sayaciSifirla, siraliSayilar } from '../../lib/sayfaSayaci';
 import { DUGME_BOS, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
 /**
@@ -35,6 +36,9 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
   const [an, setAn] = useState(0);
   const parca = useMemo(() => indirilenParcalar(), [an]);
   const acilis = useMemo(() => acilisOlcumu(), [an]);
+  const [sayac, setSayac] = useState(sayaciOku);
+  const sayacSirali = useMemo(() => siraliSayilar(sayac), [sayac]);
+  const enCokAcilan = sayacSirali[0]?.sayi || 1;
   const enBuyukTur = kayit.turler[0]?.bayt || 1;
   const enBuyukParca = parca.parcalar[0]?.bayt || 1;
   const enYavas = Math.max(1, ...acilis.gecmis.flatMap(g => [g.kayitlar || 0, g.harita || 0]));
@@ -45,8 +49,39 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
         <p className={`text-[13px] ${IKINCIL} flex-1 min-w-[16rem]`}>
           Bu tarayıcıda ölçülür; hiçbir şey kayda yazılmaz. Bir kaydın sınırı 1 MB (veritabanının kuralı).
         </p>
-        <button type="button" onClick={() => setAn(n => n + 1)} className={DUGME_BOS}><RefreshCw className="w-3.5 h-3.5" /> Yenile</button>
+        <button type="button" onClick={() => { setAn(n => n + 1); setSayac(sayaciOku()); }} className={DUGME_BOS}><RefreshCw className="w-3.5 h-3.5" /> Yenile</button>
       </div>
+
+      {/* Sayfa açılışları (22 Ekim): yalnız bu tarayıcıda sayılır, kayda yazılmaz */}
+      <section className={`${KART} p-4 space-y-3`}>
+        <div className="flex flex-wrap items-baseline gap-2">
+          <div className={ETIKET}>Sayfa açılışları</div>
+          <span className={`ml-auto text-[12px] ${IKINCIL}`}>
+            {sayac.ilk ? `İlk sayım ${new Date(sayac.ilk).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}` : 'Henüz sayım yok'}
+          </span>
+        </div>
+        {sayacSirali.length === 0 ? (
+          <p className={`text-[12px] ${IKINCIL}`}>Veri yok. Sayfalar açıldıkça burada sıralanır.</p>
+        ) : (
+          <ul className="space-y-2">
+            {sayacSirali.map(s => (
+              <li key={s.ad}>
+                <div className="flex items-baseline gap-2 text-[12px]">
+                  <span className={`flex-1 min-w-0 truncate ${YAZI}`}>{s.ad}</span>
+                  <span className={`tabular-nums ${YAZI}`}>{s.sayi.toLocaleString('tr-TR')}</span>
+                </div>
+                <Cubuk oran={s.sayi / enCokAcilan} />
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <p className={`text-[11px] flex-1 min-w-[14rem] ${IKINCIL}`}>Yalnız bu tarayıcıda tutulur; veritabanına yazılmaz. Başka cihazın sayımı ayrıdır.</p>
+          <button type="button" disabled={!sayac.ilk}
+            onClick={() => { if (window.confirm('Sayfa açılış sayımı sıfırlansın mı?')) { sayaciSifirla(); setSayac(sayaciOku()); } }}
+            className={DUGME_BOS}>Sıfırla</button>
+        </div>
+      </section>
 
       {/* Kayıt boyutları */}
       <section className={`${KART} p-4 space-y-3`}>

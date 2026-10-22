@@ -53,7 +53,8 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 
 - **Merkez / Düzada Köyü** — antik kökenli; Ada Tepesi'nde kalıntı var.
 - **Kemsköy** — otelden (1954) önce köyün iskelesi ve birkaç balıkçı evi.
-- **The Imperial Kemsköy** — 1954.
+- **The Imperial Kemsköy** — bina 1954'te devlet misafirhanesi olarak açıldı;
+  1960'larda özelleştirilip otel oldu (Kemal, 22 Ekim).
 - **Deniz Feneri** — 19. yüzyıl.
 - **Dirlik Spor Kulübü** — 12 Mayıs 1957, köy döneminde; toprak sahada
   oynayan amatör çocuklar. Stat 1980'lerde. Su sporları İskele'nin koyunda.
@@ -62,7 +63,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 - **Liman Mahallesi** — 1980–1990'lar; öncesinde fener ve koyun çevresi
   zeytinlik. Feribot İskele'den yeni limana taşındı; İskele otel, eğlence
   ve küçük teknelerin yeri olarak kaldı.
-- **Otelin etkisi** — 1954 ile adada yaz turizmi başladı; İskele'ye
+- **Otelin etkisi** — 1954'te misafirhaneyle adada yaz turizmi başladı; İskele'ye
   otelciler ve varlıklı yazlıkçılar yerleşti. Otel yıl boyu açık; kışın az
   misafir ve az personelle.
 - **Kemsköy'ün mahalleliği** — halk 1954 sonrası "mahalle" dedi; resmî
@@ -73,9 +74,9 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 - **Stadyum Mahallesi** — statın çevresinde büyüdü; kulüp çevresi ve adaya
   sonradan yerleşen aileler.
 - **Zeytinyağı** — eski fabrika İskele tarafında (19. yy sonu – 1920'ler
-  kuruldu, 1950–1970'lerde kapandı); taş binası bugün Sade Meyhane. Aynı
-  dönemde Tariş benzeri bir kooperatif Çiftlik'e modern, küçük bir fabrika
-  kurdu (adsız).
+  kuruldu, 1950–1970'lerde kapandı); taş binası bugün Sade Meyhane. 1950–
+  1970'lerde Tariş benzeri bir kooperatif Çiftlik'e modern, küçük bir fabrika
+  kurdu (adsız). İki ayrı fabrika (Kemal, 22 Ekim).
 - **Çiftlik Mahallesi** — hep dağınık küçük çiftliklerin bölgesi.
 - **Fener bekçiliği** — bekçi fenerin yanındaki evde yaşardı; 1970'lerde fener
   otomatiğe geçti (W3 64. tur; eskiden "1980–1990'lar" yazıyordu).
@@ -209,7 +210,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   `#0E1C4F`, kiremit `#F26B6F`, krem `#F3EFE8`. Logodaki yelkenli ada
   kimliği (futbol ana branş). Rakibi anakaradan, Küçükkuyu tarafından bir
   kulüp (adı yok). Su sporları için İskele koyunda yalnız bir iskele.
-  Forma sonra.
+  Forma: Kemal'in 22 Ekim kararları (açık sorular).
 - **Kooperatif** — Çiftlik'teki zeytinyağı fabrikasının sahibi **Düzada
   Ziraat İşletmeleri Kurumu** (Kemal 8 Ekim; eski kanonda "Kemsköy Ziraat
   İşletmeleri Kurumu"). Kuruluş 1950–1970'ler. Etiketlerdeki "1994" Birlik
@@ -259,7 +260,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   tepeye yakın, kıyıdan uzak.
 - **Dirlik'in rakibi** — Küçükkuyu tarafından bir kulüp (adı yok); rekabet
   sevgi–nefret ilişkisi.
-- **Kooperatifin fabrikası** — zeytinyağı. Çalışma yılları açık.
+- **Kooperatifin fabrikası** — zeytinyağı. Kuruluş 1950–1970'ler (Kemal, 22 Ekim).
 - **Fener** — eskiden bekçili, 1970'lerde otomatiğe geçti; bekçiye kişi
   kaydı açılmaz.
 - **Yangın gözetleme kulesi** — belediyede çalışan orman memurları nöbet
@@ -350,6 +351,7 @@ Bunlar kanon, kullanılabilir:
 - **Küçükçetmi Sürek Kulübü** — Çiftlik Mahallesi
 - **The Imperial Kemsköy** — İskele Mahallesi
 - **Kuzey Sırtı** (386 m), **Çetmi Sırtı** (254 m), **Fener Burnu** (118 m) — zirveler
+- **Güney Burnu** (96 m) — zirve, İskele Mahallesi
 - **Liman İdare Binası** — Liman Mahallesi
 - **Belediye Binası** — Merkez Mahallesi
 - Yollar: **Sahil Yolu** (adayı dolanan halka), **Kemsköy Caddesi**,

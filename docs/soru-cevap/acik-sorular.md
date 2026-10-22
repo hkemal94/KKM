@@ -5,12 +5,12 @@ sorular. Cevaplanınca buradan ilgili tur dosyasına taşınır.
 Ad sorularında Claude aday önerebilir; karar Kemal'in.
 
 ## Adlar (Kemal koyacak)
-- ~~Kooperatif fabrikası~~ — özel adı yok, "Yağ Fabrikası"; kuruluş 1950–1970 arası, kapanış belirsiz (29 Eylül). Canva etiketindeki 2025 düzelecek.
+- ~~Kooperatif fabrikası~~ — özel adı yok, "Yağ Fabrikası"; kuruluş 1950–1970 arası, kapanış belirsiz (29 Eylül). İskele'deki eski fabrikadan ayrı (Kemal, 22 Ekim). Canva etiketindeki 2025 düzelecek.
 - ~~Birlik Zeytin~~ — kurgu, bizim (29 Eylül).
 - ~~Sade Meyhane ve Dondurmacı Kızlar'ın sahibi~~ — Eylül Hanım = Eylül Alimyeri; Alimyeri Ailesi'nin meyhanesi ve dondurmacısı (Kemal, 22 Ekim). "Hakkında yazılmaz" kuralı kalktı.
 - ~~Küçükçetmi ailesinin soyadı~~ — Eskibey Ailesi (29 Eylül).
 - ~~Dirlik'in rakibi~~ — gerçek Küçükkuyu Gençlerbirliği, easter egg olarak (29 Eylül).
-- Dirlik forması — merch'le birlikte düşünülecek (8 Ekim: "sonra").
+- ~~Dirlik forması~~ — evrende Dirlik'in maç forması, gerçekte Kems Company'nin sattığı ürün (drop: satan Kems Company, kurum Dirlik); lacivert ana, krem ikincil, kiremit yalnız küçük detay (yaka, şerit); arma göğüste solda, küçük nakış; dönem: günümüzden başlanır, geriye doğru gidilir (Kemal, 22 Ekim).
 - ~~"Kemsköy" adı~~ — yerel söyleyiş, kökeni bilinmiyor (29 Eylül).
 - ~~Sokak adları~~ — numaralı kalır (29 Eylül).
 - ~~Geçici yapı adları~~ — altısı da kesin (29 Eylül).
@@ -27,7 +27,7 @@ Ad sorularında Claude aday önerebilir; karar Kemal'in.
 - ~~Kems Company dükkânının yeri~~ — Kemsköy Caddesi (Kemal, 29 Eylül). Adı açık.
 - Küçükçetmi Çiftliği: Çiftlik'in iç tarafında, tepeye yakın (W3 62. tur) — tam yerini Kemal kurucuda seçecek.
 
-- Zirvelerin (Kuzey Sırtı, Çetmi Sırtı, Fener Burnu) mahallesi — Kemal Kurucu'da bakacak (8 Ekim).
+- ~~Zirvelerin (Kuzey Sırtı, Çetmi Sırtı, Fener Burnu) mahallesi~~ — haritadaki sınıra göre: Ada Tepesi, Kuzey Sırtı, Çetmi Sırtı Merkez; Fener Burnu Liman; Güney Burnu İskele (Kemal, 8 Ekim; künye "Boşluk soru turu").
 - Kems Company dükkânının maddesi ve adı — açılmadı (8 Ekim).
 
 ## Metin (Kemal yazacak)

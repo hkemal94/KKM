@@ -52,7 +52,9 @@ const ayarOku = (ham: unknown): SiteAyari => {
     gizli: Array.isArray(h.gizli) ? h.gizli.filter(x => typeof x === 'string') : [],
     hakkinda: typeof h.hakkinda === 'string' ? h.hakkinda : '',
     eposta: typeof h.eposta === 'string' ? h.eposta : '',
-    gorseller: h.gorseller && typeof h.gorseller === 'object' ? { ...h.gorseller } : {}
+    // Boş değer "kaldırıldı" demek (aşağıda `silinenGorseller`); okurken düşer
+    gorseller: h.gorseller && typeof h.gorseller === 'object'
+      ? Object.fromEntries(Object.entries(h.gorseller).filter(([, v]) => typeof v === 'string' && v)) : {}
   };
 };
 
@@ -78,6 +80,18 @@ export const temizAyar = (a: SiteAyari): SiteAyari => {
   return { gizli: [...new Set(a.gizli)], hakkinda: a.hakkinda.trim(), eposta: a.eposta.trim(), gorseller };
 };
 
+/**
+ * Kayıt birleştirilerek yazılıyor (setDoc merge), bu yüzden kaldırılan bir
+ * sayfa görseli sunucuda silinmez, eskisi geri gelirdi. Kaldırılanlar boş
+ * metinle yazılır; `ayarOku` boşu düşürür.
+ */
+const silinenGorselleriIsle = (onceki: unknown, yeni: SiteAyari): SiteAyari => {
+  const eski = ((onceki as Partial<SiteAyari> | undefined)?.gorseller) || {};
+  const gorseller: Record<string, string> = { ...yeni.gorseller };
+  for (const k of Object.keys(eski)) if (!gorseller[k]) gorseller[k] = '';
+  return { ...yeni, gorseller };
+};
+
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>;
 
 /**
@@ -91,8 +105,8 @@ export function siteAyariniYaz(
   const simdi = Date.now();
   const k = siteKaydi(items);
   if (k) {
-    const metadata = { ...(k.metadata || {}), taslak: temiz } as Item['metadata'];
-    if (yayinla) Object.assign(metadata as object, { yayinda: temiz, yayinTarihi: simdi });
+    const metadata = { ...(k.metadata || {}), taslak: silinenGorselleriIsle(k.metadata?.taslak, temiz) } as Item['metadata'];
+    if (yayinla) Object.assign(metadata as object, { yayinda: silinenGorselleriIsle(k.metadata?.yayinda, temiz), yayinTarihi: simdi });
     return { guncel: { ...k, metadata, updatedAt: simdi } };
   }
   return {
