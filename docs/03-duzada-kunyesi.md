@@ -350,6 +350,7 @@ Bunlar kanon, kullanılabilir:
 - **Küçükçetmi Sürek Kulübü** — Çiftlik Mahallesi
 - **The Imperial Kemsköy** — İskele Mahallesi
 - **Kuzey Sırtı** (386 m), **Çetmi Sırtı** (254 m), **Fener Burnu** (118 m) — zirveler
+- **Güney Burnu** (96 m) — zirve, İskele Mahallesi
 - **Liman İdare Binası** — Liman Mahallesi
 - **Belediye Binası** — Merkez Mahallesi
 - Yollar: **Sahil Yolu** (adayı dolanan halka), **Kemsköy Caddesi**,

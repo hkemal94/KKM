@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Menu, X, Globe, UserRound, Search, ShoppingBag, ArrowLeft, ArrowUpRight } from 'lucide-react';
 import type { Item } from '../../types';
 import { DuzadaHarita } from '../harita/DuzadaHarita';
@@ -6,7 +6,7 @@ import { useHaritaDuzeni } from '../../lib/haritaDuzeni';
 import { ATMOSFER_ACIK } from '../harita/atmosferAyari';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { SITE_SAYFALARI, sayfaGorseli, yayindakiAyar, BOS_AYAR, type SiteAyari } from '../../lib/siteAyari';
-import { TASLAK_ONIZLEME_ANAHTARI } from './SiteYonetimi';
+import { TASLAK_ONIZLEME_ANAHTARI, sitedekiMaddeler, maddeninSayfasi } from './siteOrtak';
 import {
   DuzadaSayfasi, VikiSayfasi, MaddeSayfasi, UrunlerSayfasi, HaberlerSayfasi, ProjelerSayfasi,
   HakkindaSayfasi, IletisimSayfasi, SayfaKabugu, YaziSayfasi
@@ -47,10 +47,6 @@ const sayfayaGit = (s: SiteSayfasi, madde?: string) => {
 /** Koyu zeminli sayfalar: üst çubuk açık renk alır */
 const KOYU: SiteSayfasi[] = ['urunler', 'projeler', 'hakkinda', 'duzada'];
 
-/** Sitede gösterilen maddeler: yalnız Kemal'in işaretledikleri */
-export const sitedekiMaddeler = (items: Item[]) =>
-  items.filter(i => i.metadata?.sitede === true && !i.archived && !i.isProposal);
-
 const trKucuk = (s: string) => s.toLocaleLowerCase('tr');
 
 interface Props {
@@ -80,6 +76,9 @@ export const Site: React.FC<Props> = ({ items, onKapat }) => {
   const kesfet = KESFET.filter(k => !ayar.gizli.includes(k.id));
   const kapak = (sf: string) => sayfaGorseli(items, ayar, sf);
 
+  /* Site kapanınca taslak önizleme anahtarı kalmasın (geri tuşuyla çıkılırsa eski taslak açılırdı) */
+  useEffect(() => () => { try { sessionStorage.removeItem(TASLAK_ONIZLEME_ANAHTARI); } catch { /* yok */ } }, []);
+
   useEffect(() => {
     const degisti = () => { setSayfa(hashtenSayfa()); setMaddeId(hashtenMadde()); setMenuAcik(false); };
     window.addEventListener('hashchange', degisti);
@@ -93,6 +92,22 @@ export const Site: React.FC<Props> = ({ items, onKapat }) => {
     return () => window.removeEventListener('keydown', tus);
   }, [menuAcik]);
 
+  /* Sayfa değişince ekran başa döner; sekme başlığı sayfa adını gösterir (22 Ekim) */
+  const icSayfaRef = useRef<HTMLElement | null>(null);
+  const gorunenSayfa: SiteSayfasi = ayar.gizli.includes(sayfa) ? 'ana' : sayfa;
+  useEffect(() => {
+    try { icSayfaRef.current?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); } catch { /* yok */ }
+  }, [gorunenSayfa, maddeId]);
+  const eskiBaslik = useRef(typeof document !== 'undefined' ? document.title : '');
+  useEffect(() => {
+    const onceki = eskiBaslik.current;
+    return () => { document.title = onceki; };
+  }, []);
+  useEffect(() => {
+    const ad = gorunenSayfa === 'ana' ? null : gorunenSayfa === 'ara' ? 'Ara' : KESFET.find(k => k.id === gorunenSayfa)?.ad ?? null;
+    document.title = ad ? `${ad} · Kems Company` : 'Kems Company';
+  }, [gorunenSayfa]);
+
   const droplar = useMemo(() => items.filter(i => i.type === 'drop' && !i.archived && !i.isProposal)
     .sort((a, b) => a.title.localeCompare(b.title, 'tr')), [items]);
   const sitedekiler = useMemo(() => sitedekiMaddeler(items), [items]);
@@ -105,7 +120,9 @@ export const Site: React.FC<Props> = ({ items, onKapat }) => {
   const sitedeTur = (t: string) => sitedekiler.filter(i => i.type === t).sort((a, b) => b.updatedAt - a.updatedAt);
   const vikiMaddeleri = useMemo(() => sitedekiler.filter(i => TYPE_LABELS[i.type]), [sitedekiler]);
   /** Arama: sitede görünen viki maddeleri, droplar, ürünler ve yazılar (yapisal-2, 8) */
-  const aranabilir = useMemo(() => sitedekiler.filter(i => TYPE_LABELS[i.type] || ['drop', 'merch_urun', 'blog_post'].includes(i.type)), [sitedekiler]);
+  // Gizlenen sayfanın maddeleri aramada çıkmaz (tıklanınca anasayfaya düşerdi)
+  const aranabilir = useMemo(() => sitedekiler.filter(i => (TYPE_LABELS[i.type] || ['drop', 'merch_urun', 'blog_post'].includes(i.type))
+    && !ayar.gizli.includes(maddeninSayfasi(i))), [sitedekiler, ayar]);
   const sonucaGit = (i: Item) => {
     if (i.type === 'drop' || i.type === 'merch_urun') sayfayaGit('urunler');
     else if (i.type === 'blog_post') sayfayaGit('haberler', i.id);
@@ -116,8 +133,9 @@ export const Site: React.FC<Props> = ({ items, onKapat }) => {
     const q = trKucuk(aranan.trim());
     return aranabilir.filter(i => !q || trKucuk(i.title).includes(q) || trKucuk(i.notes || '').includes(q)).slice(0, 30);
   }, [aranabilir, aranan]);
-  const haritaMaddeleri = useMemo(() => vikiMaddeleri.filter(i => ['yer', 'cadde', 'meydan', 'yer_adi', 'mekân', 'dükkân', 'kulüp'].includes(i.type))
-    .sort((a, b) => a.title.localeCompare(b.title, 'tr')), [vikiMaddeleri]);
+  // Haritadaki madde Viki sayfasına gider; Viki gizliyse haritada da görünmez
+  const haritaMaddeleri = useMemo(() => ayar.gizli.includes('viki') ? [] : vikiMaddeleri.filter(i => ['yer', 'cadde', 'meydan', 'yer_adi', 'mekân', 'dükkân', 'kulüp'].includes(i.type))
+    .sort((a, b) => a.title.localeCompare(b.title, 'tr')), [vikiMaddeleri, ayar]);
 
   const simge = `w-10 h-10 sm:w-[42px] sm:h-[42px] rounded-full flex items-center justify-center border backdrop-blur-md ${saydam ? 'bg-[#0E1C4F]/35 border-[#F3EFE8]/25 text-[#F3EFE8]' : koyu ? 'bg-[#F3EFE8]/10 border-[#F3EFE8]/20 text-[#F3EFE8]' : 'bg-[#0E1C4F] border-transparent text-[#F3EFE8]'}`;
 
@@ -144,7 +162,7 @@ export const Site: React.FC<Props> = ({ items, onKapat }) => {
 
       {/* ---- iç sayfalar ---- */}
       {!saydam && sayfa !== 'duzada' && (
-        <main className="absolute inset-0 overflow-y-auto bg-[#F3EFE8] text-[#0E1C4F]">
+        <main ref={icSayfaRef} className="absolute inset-0 overflow-y-auto bg-[#F3EFE8] text-[#0E1C4F]">
           {sayfa === 'viki' && (madde
             ? <MaddeSayfasi madde={madde} onViki={() => sayfayaGit('viki')} />
             : <VikiSayfasi items={vikiMaddeleri} onMadde={id => sayfayaGit('viki', id)} kapak={kapak('viki')} />)}

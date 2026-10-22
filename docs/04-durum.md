@@ -2645,3 +2645,30 @@ Kemal: "Eylül'ün yasaklarını kaldırabilirsin." Eylül Hanım = Eylül Alimy
 (Kemal, 22 Ekim, ajans panosu). CLAUDE.md'deki "hakkında hiçbir şey yazma"
 kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
 (`lib/kisiAdi.ts`) artık onu atlamıyor.
+
+## 22 Ekim — K: Ajansın toplu işi (uygulamada; kart yok)
+
+- **Ana sayfa (masaüstü):** kısayol sırasına **Ajans** (Durum'u Ajans sekmesinde
+  açar) ve **Oyun** eklendi; sıra yedi kısayol oldu. Telefonda kısayol satırı
+  yine yok.
+- **Telefon alt çubuğu:** Merch yerine **Oyun**. Merch artık "Diğer" listesinde
+  (Marka grubu).
+- **Sayfa açılış sayacı:** Durum → Boyut ve hız'ın en üstünde "Sayfa
+  açılışları" kartı: hangi sayfa kaç kez açıldı (en çoktan aza), ilk sayım
+  tarihi, **Sıfırla** düğmesi. Yalnız bu tarayıcıda tutulur; veritabanına
+  yazılmaz, kota harcamaz. Başka cihazın sayımı ayrıdır.
+- **Site yönetimi, Yayınla:** kayıt gerçekten yazılmadıysa (Google'la bağlı
+  değilsen, bağlantı yoksa, günlük yazma sınırı dolduysa, kayıt çok büyükse)
+  artık "Yayınlandı" demez; "Yayınlanmadı: ..." ve sebebi sade Türkçeyle yazar.
+  Ayrıca bir sayfadan kaldırdığın görsel sunucuda silinmiyordu, yayında eski
+  hâli geri geliyordu; düzeldi.
+- **Site, gizli sayfa:** gizlediğin sayfanın maddeleri sitedeki aramada ve
+  haritada artık çıkmaz (tıklayınca anasayfaya atıyordu).
+- **Site, sayfa değişimi:** başka sayfaya geçince ekran başa döner; sekme
+  başlığı sayfa adını gösterir ("Viki · Kems Company"), site kapanınca eski
+  başlık döner. Taslak önizlemesi geri tuşuyla kapatılınca bir sonraki açılışta
+  eski taslağın görünmesi de giderildi.
+- **Site, iç düzen:** Site ile Site yönetimi birbirini içe çekiyordu; ortak
+  parçalar `components/site/siteOrtak.ts`'e alındı. Ekranda değişen yok.
+- **Künye ve açık sorular:** Güney Burnu "Konmuş adlar" listesine eklendi
+  (künyedeki bilgiyle); "Zirvelerin mahallesi" sorusu açık sorulardan kapandı.

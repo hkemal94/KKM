@@ -27,7 +27,7 @@ Ad sorularında Claude aday önerebilir; karar Kemal'in.
 - ~~Kems Company dükkânının yeri~~ — Kemsköy Caddesi (Kemal, 29 Eylül). Adı açık.
 - Küçükçetmi Çiftliği: Çiftlik'in iç tarafında, tepeye yakın (W3 62. tur) — tam yerini Kemal kurucuda seçecek.
 
-- Zirvelerin (Kuzey Sırtı, Çetmi Sırtı, Fener Burnu) mahallesi — Kemal Kurucu'da bakacak (8 Ekim).
+- ~~Zirvelerin (Kuzey Sırtı, Çetmi Sırtı, Fener Burnu) mahallesi~~ — haritadaki sınıra göre: Ada Tepesi, Kuzey Sırtı, Çetmi Sırtı Merkez; Fener Burnu Liman; Güney Burnu İskele (Kemal, 8 Ekim; künye "Boşluk soru turu").
 - Kems Company dükkânının maddesi ve adı — açılmadı (8 Ekim).
 
 ## Metin (Kemal yazacak)

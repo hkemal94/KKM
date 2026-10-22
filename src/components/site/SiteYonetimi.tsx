@@ -3,16 +3,14 @@ import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { Globe, ExternalLink, X, Eye, EyeOff, Send, Save, Image as ImageIcon } from 'lucide-react';
 import type { Item } from '../../types';
 import { GorselImg } from '../GorselImg';
-import { sitedekiMaddeler } from './Site';
+import { sitedekiMaddeler, TASLAK_ONIZLEME_ANAHTARI } from './siteOrtak';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
+import { siteHatasiniSadelestir } from '../../lib/siteHatasi';
 import { StudyodaAc } from '../studyo/StudyodaAc';
 import {
   SITE_SAYFALARI, ayniMi, siteAyariniYaz, siteKaydi, taslakAyar, yayindakiAyar, type SiteAyari
 } from '../../lib/siteAyari';
-
-/** "Taslağı önizle" ile açılan sitede taslak gösterilir (yalnız bu sekmede) */
-export const TASLAK_ONIZLEME_ANAHTARI = 'kems_site_taslak_onizleme';
 
 type Sekme = 'sayfalar' | 'hakkinda' | 'iletisim' | 'maddeler';
 const SEKMELER: { id: Sekme; ad: string }[] = [
@@ -38,9 +36,11 @@ interface Props {
   onAddItem: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<void>;
   onOnizleme: () => void;
   onMaddeyiAc: (item: Item) => void;
+  /** Google ile bağlı mı; değilse kayıt yazılamaz ve "Yayınlandı" denmez */
+  oturumVar: boolean;
 }
 
-export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onOnizleme, onMaddeyiAc }) => {
+export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onOnizleme, onMaddeyiAc, oturumVar }) => {
   const [kaldiriliyor, setKaldiriliyor] = useState<string | null>(null);
   const [sekme, setSekme] = useState<Sekme>('sayfalar');
   const kayit = siteKaydi(items);
@@ -63,12 +63,13 @@ export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, 
   const yaz = async (yayinla: boolean) => {
     setYaziliyor(true); setMesaj(null);
     try {
+      if (!oturumVar) throw new Error('oturum-yok');
       const s = siteAyariniYaz(items, ayar, yayinla);
       if (s.guncel) await onUpdateItem(s.guncel);
       if (s.yeni) await onAddItem(s.yeni);
       setMesaj(yayinla ? 'Yayınlandı: site bu hâliyle görünüyor.' : 'Taslak kaydedildi. Sitede henüz görünmüyor.');
     } catch (e) {
-      setMesaj(`Kaydedilemedi: ${e instanceof Error ? e.message : 'bilinmeyen'}`);
+      setMesaj(`${yayinla ? 'Yayınlanmadı' : 'Kaydedilemedi'}: ${siteHatasiniSadelestir(e)}`);
     } finally {
       setYaziliyor(false);
     }

@@ -1,6 +1,6 @@
 import { BekleyenIsler } from './BekleyenIsler';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { CalendarDays, ChevronDown, Globe, Milestone, Newspaper, Search, Sparkles } from 'lucide-react';
+import { CalendarDays, ChevronDown, Gamepad2, Globe, Milestone, Newspaper, Search, Sparkles, Users } from 'lucide-react';
 import { useMasaustu } from '../kabuk/KatlanirBolum';
 import type { Item } from '../../types';
 import { durumOranlari } from '../../lib/durumOranlari';
@@ -23,12 +23,14 @@ import { ETIKET, KART, IKINCIL, YAZI } from './stil';
  * saklanmış"). 7 Ekim: "Bütün araçlar" ekranı kalktı; Fanzin Yazı'da,
  * Takvim ve Yol haritası Durum'da açılır.
  */
-const KISAYOLLAR: Array<{ id: 'fanzin' | 'takvim' | 'yolharitasi' | 'studyo' | 'site'; ad: string; simge: React.ElementType }> = [
+const KISAYOLLAR: Array<{ id: 'fanzin' | 'takvim' | 'yolharitasi' | 'studyo' | 'site' | 'ajans' | 'oyun'; ad: string; simge: React.ElementType }> = [
   { id: 'fanzin', ad: 'Fanzin', simge: Newspaper },
   { id: 'takvim', ad: 'Takvim', simge: CalendarDays },
   { id: 'yolharitasi', ad: 'Yol haritası', simge: Milestone },
   { id: 'studyo', ad: 'Yapay zekâ', simge: Sparkles },
-  { id: 'site', ad: 'Site', simge: Globe }
+  { id: 'site', ad: 'Site', simge: Globe },
+  { id: 'ajans', ad: 'Ajans', simge: Users },
+  { id: 'oyun', ad: 'Oyun', simge: Gamepad2 }
 ];
 /** Listesi olan yüzdeler Durum'da maddelerin listesini açar (7 Ekim) */
 const seritHedefi = (h: SeritHedefi): Hedef => (h === 'kunye' || h === 'kitap' || h === 'harita' ? `durum-${h}` : h);
@@ -49,7 +51,7 @@ const seritHedefi = (h: SeritHedefi): Hedef => (h === 'kunye' || h === 'kitap' |
 
 export type TelSekmesi = 'bugun' | 'atolye' | 'notlar' | 'durum';
 
-type Hedef = SeritHedefi | 'eksikler' | 'harita' | 'fanzin' | 'takvim' | 'yolharitasi' | 'studyo' | 'site' | `durum-${'kunye' | 'kitap' | 'harita'}`;
+type Hedef = SeritHedefi | 'eksikler' | 'harita' | 'fanzin' | 'takvim' | 'yolharitasi' | 'studyo' | 'site' | 'ajans' | 'oyun' | `durum-${'kunye' | 'kitap' | 'harita'}`;
 
 interface Props {
   items: Item[];
@@ -214,7 +216,7 @@ export const Anasayfa: React.FC<Props> = ({
         Kısayollar (30 Eylül, Kemal: "büyük şeyler çok derinlere saklanmış"):
         büyük araçlar ana sayfadan tek dokunuşla. Yalnız masaüstünde.
       */}
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-7 gap-2">
           {KISAYOLLAR.map(a => (
             <button key={a.id} type="button" onClick={() => onGit(a.id)}
               className={`${KART} p-3 text-left hover:border-[#F26B6F] cursor-pointer`}>

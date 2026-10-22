@@ -89,6 +89,7 @@ function lazyYukle<T extends React.ComponentType<any>>(
  */
 const Durum = lazyYukle(() => import('./components/Durum'));
 import type { DurumSekmesi } from './components/Durum';
+import { DURUM_SEKME_ADLARI, SAYFA_ADLARI, sayfaAcildi } from './lib/sayfaSayaci';
 import type { SeritHedefi } from './components/anasayfa/YuzdeSeridi';
 const Duzada = lazyYukle(() => import('./components/Duzada'));
 import type { DuzadaSekmesi } from './components/Duzada';
@@ -705,6 +706,15 @@ export default function App() {
 
   const maddeyiAc = (item: Item) => { handleSelectResult(item); };
 
+  /* Sayfa açılış sayacı (22 Ekim): yalnız bu tarayıcıda, kayda yazmaz. Sayfa değişince artar. */
+  const sonSayilanSayfa = useRef<string | null>(null);
+  useEffect(() => {
+    const ad = (SAYFA_ADLARI[activeTab] ?? activeTab) + (activeTab === 'durum' ? ` · ${DURUM_SEKME_ADLARI[durumSekme] ?? durumSekme}` : '');
+    if (sonSayilanSayfa.current === ad) return;
+    sonSayilanSayfa.current = ad;
+    sayfaAcildi(ad);
+  }, [activeTab, durumSekme]);
+
   /** Bir maddenin "Tuvalde aç"ı (6. gece): lib/tuval → tuvaldeAc olayı */
   const gitRef = useRef(git);
   gitRef.current = git;
@@ -978,7 +988,8 @@ export default function App() {
       { hedef: 'durum', ad: 'Durum', alt: 'yüzdeler, eksikler, takvim, yol haritası', simge: Percent, nokta: bildirimVar('dugme') }
     ] },
     { grup: 'Marka', satirlar: [
-      { hedef: 'markalar', ad: 'Markalar', alt: 'markalar ve galeri', simge: Shield }
+      { hedef: 'markalar', ad: 'Markalar', alt: 'markalar ve galeri', simge: Shield },
+      { hedef: 'merch', ad: 'Merch', alt: 'droplar ve ürünler', simge: ShoppingBag }
     ] }
   ];
   /** Diğer'deki arama kutusu (1 Ekim): yazınca gruplar süzülür; alt yazı da aranır */
@@ -991,8 +1002,8 @@ export default function App() {
   const ALT: Array<{ id: string; ad: string; simge: React.ElementType; aktif: boolean; nokta?: boolean }> = [
     { id: 'komuta', ad: 'Ana sayfa', simge: Home, aktif: activeTab === 'komuta', nokta: bildirimVar('aday') || bildirimVar('soru') },
     { id: 'viki', ad: 'Viki', simge: Compass, aktif: activeTab === 'duzada' && !haritada, nokta: bildirimVar('kanon') },
-    { id: 'merch', ad: 'Merch', simge: ShoppingBag, aktif: activeTab === 'merch' },
-    { id: 'diger', ad: 'Diğer', simge: Menu, aktif: digerAcik || haritada || !['komuta', 'duzada', 'merch'].includes(activeTab), nokta: bildirimVar('dugme') || bildirimVar('aday') }
+    { id: 'oyun', ad: 'Oyun', simge: Gamepad2, aktif: activeTab === 'oyun' },
+    { id: 'diger', ad: 'Diğer', simge: Menu, aktif: digerAcik || haritada || !['komuta', 'duzada', 'oyun'].includes(activeTab), nokta: bildirimVar('dugme') || bildirimVar('aday') }
   ];
 
   const SAYFA_ADI: Record<Sayfa, string> = {
@@ -1286,7 +1297,7 @@ export default function App() {
             )}
 
             {activeTab === 'site' && (
-              <SiteYonetimi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onOnizleme={() => git('site-onizleme')} onMaddeyiAc={maddeyiAc} />
+              <SiteYonetimi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onOnizleme={() => git('site-onizleme')} onMaddeyiAc={maddeyiAc} oturumVar={!!user} />
             )}
 
 
