@@ -16,7 +16,7 @@ import { AJANS_DEPOSU } from './ajansDeposu';
  *   - `sil`: tepsideki öneri silinir (ajans eledi, departmana taşıdı ya da
  *     soru kutusuna aldı).
  *   - `alanaYaz`: Kemal'in panoda verdiği cevap, sorunun boş alanına yazılır.
- *     Alan bu arada dolduysa üstüne yazılmaz (günün sorusundaki "İşle" gibi).
+ *     Alan bu arada dolduysa üstüne yazılmaz (tepsideki "İşle" gibi).
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.

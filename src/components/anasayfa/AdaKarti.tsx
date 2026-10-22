@@ -15,7 +15,7 @@ import { yapayZekaOnerisi } from '../../lib/studyo';
  *     yok; maddenin kendi künyesi ve metninden kısa bir parça.
  *   - Bugünün önerileri: stüdyonun gece hazırladığı 3 üretim önerisi (kural
  *     istisnası). Ayrıntı ve "Ekle" öneri tepsisinde.
- * Atölyedeki üç kanon sorusu kalktı; günün sorusu tek soru olarak duruyor.
+ * Atölyedeki üç kanon sorusu kalktı; günün sorusu da kalktı (22 Ekim).
  */
 
 const VIKI = ['yer', 'cadde', 'meydan', 'yer_adi', 'ada', 'mekân', 'dükkân', 'kulüp', 'marka', 'kisi', 'karakter', 'aile', 'olay'];

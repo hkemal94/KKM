@@ -305,7 +305,7 @@ export const yapayZekaOnerisi = (i: Item): YapayZekaOnerisi | undefined => {
   return a?.tur === 'yapay_zeka' ? a : undefined;
 };
 
-/** Bir öneri kaydının bağlı olduğu maddenin kimliği (yapay zekâ önerisi ya da günün sorusu cevabı) */
+/** Bir öneri kaydının bağlı olduğu maddenin kimliği (yapay zekâ önerisi ya da atölye sorusu cevabı) */
 export const adayBilgisiHedefi = (i: Item): string | undefined =>
   i.type === 'aday' ? ((i.metadata?.aday as { hedefId?: string } | undefined)?.hedefId || undefined) : undefined;
 

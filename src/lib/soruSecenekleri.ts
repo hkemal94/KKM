@@ -5,7 +5,7 @@ import { ADA_KIMLIGI } from './vikiSifirlama';
 import { aiCagir, AiHatasi } from './aiCagir';
 
 /**
- * Günün sorusu / atölye sorusu için yapay zekâ seçenekleri (Paket 4).
+ * Atölye sorusu için yapay zekâ seçenekleri (Paket 4).
  * 29 Eylül akşamı stüdyoya taşındı: ana sayfa artık kendiliğinden yapay
  * zekâya sormuyor (kota oradan doluyordu). Seçenekler stüdyoda getirilir,
  * bu önbelleğe yazılır; soru kartı önbellekten okur.

@@ -10,7 +10,7 @@ import type { StudyoIslemleri } from './StudyoBaglami';
 /**
  * Öneri tepsisi (29 Eylül akşamı) — Adaylar ile yapay zekâ önerileri tek
  * yerde (Kemal: "tek tepsi").
- *   - CEVAP: günün sorusuna / atölyeye verdiğin cevap. "İşle" maddenin
+ *   - CEVAP: atölyeye verdiğin cevap. "İşle" maddenin
  *     alanına yazar.
  *   - YAPAY ZEKÂ: stüdyonun ürettiği öneri. "Ekle" hedef kayda yazar ve
  *     öneriyi siler; "Sil" yalnız öneriyi siler. Hiçbiri sen basmadan
@@ -47,7 +47,7 @@ export const OneriTepsisi: React.FC<Props> = ({
 
   const gorunen = sinir ? hepsi.slice(0, sinir) : hepsi;
 
-  // ---- günün sorusu cevabı
+  // ---- soru cevabı
   const isle = async (a: Item) => {
     const b = adayBilgisi(a)!;
     const cevap = (duzenleme[a.id] ?? b.cevap).trim();
@@ -223,7 +223,7 @@ export const OneriTepsisi: React.FC<Props> = ({
 
       {hepsi.length === 0 ? (
         <p className={`mt-2 text-[12px] ${IKINCIL}`}>
-          {hedefId ? 'Bu kayıt için bekleyen öneri yok.' : 'Bekleyen öneri yok. Günün sorusuna verdiğin cevaplar ve stüdyonun ürettikleri burada onayını bekler.'}
+          {hedefId ? 'Bu kayıt için bekleyen öneri yok.' : 'Bekleyen öneri yok. Atölyede verdiğin cevaplar ve stüdyonun ürettikleri burada onayını bekler.'}
         </p>
       ) : (
         <ul className="mt-1">
