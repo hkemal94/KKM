@@ -2619,3 +2619,22 @@ olarak GitHub'ı seçti.
 - Sıradaki iş (yol haritasında `tepsi-kararlari`): ajansın kararları KKM'ye
   geri gelir, **Ajansın kararlarını uygula** tek düğmesiyle işlenir. Kemal
   ayrıca Stüdyo → Öneri ayarları'ndan gece önerilerini kapatır.
+
+## 22 Ekim — K: Ajansın kararlarını uygula, günün sorusu kapanabilir (uygulamada; kart yok)
+
+- **Durum → Ajans → Ajansın kararları** kartı: ajansın gizli deposundaki
+  `kkm/kararlar.json` okunur, hâlâ geçerli işler sayılır ("34 öneri tepsiden
+  silinecek, 2 cevap vikiye yazılacak"), **Listeyi göster** ile tek tek
+  görülür. **Ajansın kararlarını uygula**'ya basınca işlenir; basılmadan kayıt
+  değişmez. İkinci basışta yapılacak iş kalmaz.
+  - `sil`: ajansın elediği, departmanına taşıdığı ya da soru kutusuna aldığı
+    öneri tepsiden silinir. Tepsinin silinmeden önceki kopyası ajansın
+    deposunda (`kkm/tepsi.json`).
+  - `alanaYaz`: Kemal'in ajans panosunda verdiği cevap, vikideki boş alana
+    yazılır; alan bu arada dolduysa üstüne yazılmaz.
+  - Uygulanınca ajansın deposuna `kkm/uygulananlar/` altında makbuz yazılır;
+    ajansın sabah / akşam raporu neyin işlendiğini oradan listeler.
+  - `lib/ajansKararlari.ts`, `anasayfa/AjansKararlariKarti.tsx`.
+- **Günün sorusu** artık Stüdyo → Öneri ayarları'nda bir kanal. Kapalıyken ana
+  sayfada günün sorusu kartı ve bildirimi çıkmaz; sorular ajansın panosundaki
+  soru kutusundan gelir (Kemal: "KKM'de kapansın"). Kemal kendi kapatır.

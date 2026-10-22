@@ -63,7 +63,7 @@ export const OneriAyarlari: React.FC<Props> = ({ items, onAddItem, onUpdateItem 
             <div className="flex-1 min-w-0">
               <div className={ETIKET}>Öneri kanalları</div>
               <p className={`mt-1 text-[12px] leading-snug ${IKINCIL}`}>
-                Kapattığın kanaldan gece öneri gelmez. Günün üç önerisinin çoğu vikiye gider; viki kanalları açıksa öncelik onlardadır.
+                Kapattığın kanaldan gece öneri gelmez; günün sorusu kapalıysa ana sayfada soru ve bildirimi çıkmaz. Günün üç önerisinin çoğu vikiye gider; viki kanalları açıksa öncelik onlardadır.
                 Hiçbir öneri sen "Ekle" demeden kayda yazılmaz.
               </p>
             </div>

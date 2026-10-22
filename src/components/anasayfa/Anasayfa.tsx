@@ -6,6 +6,7 @@ import type { Item } from '../../types';
 import { durumOranlari } from '../../lib/durumOranlari';
 import { adayKaydi, soruyuErtele, sorulacaklar } from '../../lib/adaylar';
 import { gununSorusuBitti } from '../../lib/bildirimler';
+import { gununSorusuAcik } from '../../lib/oneriKanallari';
 import { eksikleriCikar } from '../../lib/eksikler';
 import { YuzdeSeridi, type SeritHedefi } from './YuzdeSeridi';
 import { SoruKarti } from './SoruKarti';
@@ -128,7 +129,8 @@ export const Anasayfa: React.FC<Props> = ({
     { id: 'durum', ad: 'Durum' }
   ], [adaySayisi]);
 
-  const gununSorusuKarti = (
+  const soruAcik = useMemo(() => gununSorusuAcik(items), [items]);
+  const gununSorusuKarti = soruAcik && (
     <section className={`${KART} p-4`}>
       <div className={ETIKET}>Günün sorusu</div>
       <div className="mt-2">

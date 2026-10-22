@@ -7,21 +7,27 @@ import { AnahtarKarti } from '../oyun/OyunAyarlari';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import type { Item } from '../../types';
 import { TepsiAjansaKarti } from './TepsiAjansaKarti';
+import { AjansKararlariKarti } from './AjansKararlariKarti';
 import { DUGME_BOS, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
 /**
  * Durum → Ajans (21 Ekim, `lib/ajansDeposu.ts`). Kems Ajans'ın bıraktığı
  * dosyalar klasör klasör listelenir; dosyaya basınca depodan okunup
  * gösterilir. Depo gizli (22 Ekim): okumak için bu tarayıcıda GitHub
- * anahtarı gerekir. Tek yazan kart "Tepsiyi ajansa gönder"dir
- * (`TepsiAjansaKarti`); KKM kayıtlarına bir şey yazılmaz.
+ * anahtarı gerekir. Ajansın deposuna "Tepsiyi ajansa gönder" yazar
+ * (`TepsiAjansaKarti`); KKM kayıtlarını yalnız "Ajansın kararlarını uygula"
+ * değiştirir (`AjansKararlariKarti`, Kemal basınca).
  */
 
 type KlasorDurumu = AjansDosyasi[] | 'yukleniyor' | { hata: string };
 
 const tarihYazisi = (t: Date) => t.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-export const AjansSayfasi: React.FC<{ items: Item[] }> = ({ items }) => {
+export const AjansSayfasi: React.FC<{
+  items: Item[];
+  onUpdateItem: (item: Item) => Promise<void>;
+  onDeleteItem: (id: string) => Promise<void>;
+}> = ({ items, onUpdateItem, onDeleteItem }) => {
   const [anahtar, setAnahtar] = useState(anahtariOku);
   const [klasorler, setKlasorler] = useState<Record<string, KlasorDurumu>>({});
   const [tur, setTur] = useState(0);
@@ -75,6 +81,7 @@ export const AjansSayfasi: React.FC<{ items: Item[] }> = ({ items }) => {
         baslik="Ajansın gizli deposunu okumak için GitHub anahtarı" depoNotu="Kems-Ajans deposu (oyuna da göndereceksen oyunun deposu da)" />}
 
       <TepsiAjansaKarti items={items} anahtar={anahtar} />
+      <AjansKararlariKarti items={items} anahtar={anahtar} tur={tur} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />
 
       <div className="grid gap-4 md:grid-cols-2">
         {AJANS_KLASORLERI.map(k => {
