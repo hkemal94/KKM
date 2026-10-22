@@ -75,22 +75,29 @@ export function tepsiDosyasi(items: Item[], zaman = new Date()) {
 
 export type TepsiDosyasi = ReturnType<typeof tepsiDosyasi>;
 
-/** Dosyayı ajansın ana dalına yazar (varsa yerine); GitHub adresini döner */
-export async function tepsiyiGonder(anahtar: string, dosya: TepsiDosyasi): Promise<string> {
+/**
+ * Ajansın gizli deposunun ana dalına bir dosya yazar (varsa yerine); GitHub
+ * adresini döner. Depo açıksa hiçbir şey yazılmaz. Tepsi ve viki aktarımı
+ * (`lib/vikiAjansa.ts`) bunu paylaşır.
+ */
+export async function ajansaDosyaYaz(anahtar: string, yol: string, icerik: string, mesaj: string, ad: string): Promise<string> {
   const bilgi = await github<{ default_branch: string; private: boolean }>(anahtar, `/repos/${AJANS_DEPOSU}`);
-  if (!bilgi.private) throw new Error('Kems-Ajans deposu herkese açık; tepsi gönderilmedi. Önce depoyu GitHub\'da gizli (Private) yap.');
+  if (!bilgi.private) throw new Error(`Kems-Ajans deposu herkese açık; ${ad} gönderilmedi. Önce depoyu GitHub'da gizli (Private) yap.`);
   const dal = bilgi.default_branch;
   let sha: string | undefined;
   try {
-    sha = (await github<{ sha: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${TEPSI_YOLU}?ref=${encodeURIComponent(dal)}`)).sha;
+    sha = (await github<{ sha: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}?ref=${encodeURIComponent(dal)}`)).sha;
   } catch { /* ilk gönderim: dosya yok */ }
-  const s = dosya.sayilar;
-  const sonuc = await github<{ content: { html_url: string } }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${TEPSI_YOLU}`, {
+  const sonuc = await github<{ content: { html_url: string } }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}`, {
     method: 'PUT',
-    govde: {
-      message: `KKM tepsisi: ${s.oneri} öneri, ${s.eski} eski öneri, ${s.soru} soru`,
-      content: base64(`${JSON.stringify(dosya, null, 2)}\n`), branch: dal, ...(sha ? { sha } : {}),
-    },
+    govde: { message: mesaj, content: base64(icerik), branch: dal, ...(sha ? { sha } : {}) },
   });
   return sonuc.content.html_url;
+}
+
+/** Tepsi dosyasını ajansın ana dalına yazar; GitHub adresini döner */
+export function tepsiyiGonder(anahtar: string, dosya: TepsiDosyasi): Promise<string> {
+  const s = dosya.sayilar;
+  return ajansaDosyaYaz(anahtar, TEPSI_YOLU, `${JSON.stringify(dosya, null, 2)}\n`,
+    `KKM tepsisi: ${s.oneri} öneri, ${s.eski} eski öneri, ${s.soru} soru`, 'tepsi');
 }

@@ -2691,3 +2691,15 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   alanını okuyup yazabiliyordu; artık yalnız alanın sahibi. Harita düzeni de
   Google'a bağlı olmayı ister. Eski ortak alan yalnız okunur (taşıma kartı için).
   *Kural, Firebase'e yüklenince geçerli olur.*
+
+## 22 Ekim gece — vikiyi ajansa gönder (ajans)
+
+- Durum → Ajans'a "Vikiyi ajansa gönder" kartı geldi. Basınca vikideki maddeler
+  (arşivdekiler ve öneriler hariç) ajansın gizli deposuna `kkm/viki.json` olarak
+  yazılır; ajansın Viki Editörü vikiyi böylece okuyabilir. Önceki dosyanın yerine
+  yenisi yazılır.
+- Dosyada her maddenin başlığı, türü, takma adları, metni, düz alanları ve
+  bağları var; görseller ve harita verisi yok. Dosya 1 MB'ı geçerse en uzun
+  metinler kısaltılır ve kartta söylenir.
+- KKM kayıtlarına bir şey yazılmaz; yalnız Kemal düğmeye basınca gider. Ajans
+  bağlantısı (GitHub anahtarı) kurulu değilse kart "önce ajans bağlantısını kur" der.
