@@ -87,7 +87,7 @@ export const Durum: React.FC<{
       )}
       {sekme === 'bosluklar' && <Bosluklar items={items} onUpdateItem={onUpdateItem} gomulu />}
       {sekme === 'boyut' && <BoyutHiz items={items} />}
-      {sekme === 'ajans' && <AjansSayfasi />}
+      {sekme === 'ajans' && <AjansSayfasi items={items} />}
       <GomuluSayfa.Provider value={true}>
         {sekme === 'takvim' && takvim}
         {sekme === 'yolharitasi' && yolHaritasi}
