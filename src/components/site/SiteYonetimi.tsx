@@ -40,6 +40,9 @@ interface Props {
   oturumVar: boolean;
 }
 
+/** Yayınla yalnız KKM içindeki siteyi günceller; dışarıdan açılan adres ayrı iş (22 Ekim) */
+const DIS_ADRES_YOK = 'Dışarıdan açılan bir site adresi henüz yok; ajans bunun yolunu araştırıyor.';
+
 export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onOnizleme, onMaddeyiAc, oturumVar }) => {
   const [kaldiriliyor, setKaldiriliyor] = useState<string | null>(null);
   const [sekme, setSekme] = useState<Sekme>('sayfalar');
@@ -76,7 +79,7 @@ export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, 
       if (s.yeni) await onAddItem(s.yeni);
       // Yayından sonra eski taslak kopyası önizlemede takılı kalmasın (22 Ekim, site-6)
       if (yayinla) { try { sessionStorage.removeItem(TASLAK_ONIZLEME_ANAHTARI); } catch { /* yok */ } }
-      setMesaj(yayinla ? 'Yayınlandı: site bu hâliyle görünüyor.' : 'Taslak kaydedildi. Sitede henüz görünmüyor.');
+      setMesaj(yayinla ? `Yayınlandı: KKM'deki site önizlemesi bu hâliyle görünüyor. ${DIS_ADRES_YOK}` : 'Taslak kaydedildi. Sitede henüz görünmüyor.');
     } catch (e) {
       setMesaj(`${yayinla ? 'Yayınlanmadı' : 'Kaydedilemedi'}: ${siteHatasiniSadelestir(e)}`);
     } finally {
@@ -144,7 +147,12 @@ export const SiteYonetimi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, 
         <button type="button" disabled={yaziliyor || !kaydedilmemis} onClick={() => void yaz(false)} className={`${DUGME_BOS} inline-flex items-center gap-1.5`}>
           <Save className="w-3.5 h-3.5" /> Taslağı kaydet
         </button>
-        <button type="button" disabled={yaziliyor || (!kaydedilmemis && !yayinlanmamis)} onClick={() => void yaz(true)} className={`${DUGME_LAC} inline-flex items-center gap-1.5`}>
+        {/* 22 Ekim, Kemal: "Yayınla'ya basınca hiçbir şey olmuyor". Değişiklik yokken düğme
+            sessizce kapalıydı; artık basılır ve nedenini söyler */}
+        <button type="button" disabled={yaziliyor} onClick={() => {
+          if (!kaydedilmemis && !yayinlanmamis) setMesaj(`Değişiklik yok: yayındaki zaten bu hâli. ${DIS_ADRES_YOK}`);
+          else void yaz(true);
+        }} className={`${DUGME_LAC} inline-flex items-center gap-1.5`}>
           <Send className="w-3.5 h-3.5" /> Yayınla
         </button>
         {mesaj && <span className={`w-full text-[11px] ${IKINCIL}`}>{mesaj}</span>}

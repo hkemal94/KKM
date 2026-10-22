@@ -2691,3 +2691,10 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   alanını okuyup yazabiliyordu; artık yalnız alanın sahibi. Harita düzeni de
   Google'a bağlı olmayı ister. Eski ortak alan yalnız okunur (taşıma kartı için).
   *Kural, Firebase'e yüklenince geçerli olur.*
+
+## 22 Ekim gece — "Yayınla" sessiz kalıyordu (ajans)
+
+- Site yönetiminde "Yayınla", taslak yayındakiyle aynıyken kapalı duruyordu;
+  basınca hiçbir şey olmuyordu (Kemal). Artık her zaman basılır: değişiklik
+  yoksa "yayındaki zaten bu hâli" der. Yayınla yalnız KKM içindeki siteyi
+  günceller; dışarıdan açılan bir site adresi henüz yok, bunu da yazar.
