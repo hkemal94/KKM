@@ -110,7 +110,7 @@ export function base64(metin: string): string {
   for (const b of baytlar) ikili += String.fromCharCode(b);
   return btoa(ikili);
 }
-function base64Coz(b64: string): string {
+export function base64Coz(b64: string): string {
   const ikili = atob(b64.replace(/\s+/g, ''));
   return new TextDecoder().decode(Uint8Array.from(ikili, c => c.charCodeAt(0)));
 }

@@ -20,14 +20,16 @@ export const ONERI_KANALLARI = [
   { id: 'sosyal', ad: 'Sosyal medya', aciklama: 'Gönderi fikri.' },
   { id: 'drop', ad: 'Drop / ürün', aciklama: 'Yeni ürün fikri; daha önce önerilenler tekrar gelmez.' },
   { id: 'yazi', ad: 'Yazı / fanzin', aciklama: 'Blog ya da lore yazısı fikri.' },
-  { id: 'fanzin', ad: 'Aylık fanzin taslağı', aciklama: 'Ayın ilk günlerinde o ayın fanzin taslağı.' }
+  { id: 'fanzin', ad: 'Aylık fanzin taslağı', aciklama: 'Ayın ilk günlerinde o ayın fanzin taslağı.' },
+  // 22 Ekim, Kemal: "KKM'de kapansın"; sorular ajansın panosundaki soru kutusundan gelir
+  { id: 'gununSorusu', ad: 'Günün sorusu', aciklama: 'Ana sayfada her gün vikideki bir boşluğu sorar ve bildirim verir. Kapalıyken sorular Kems Ajans\'ın panosundaki soru kutusundan gelir.' }
 ] as const;
 
 export type KanalKodu = typeof ONERI_KANALLARI[number]['id'];
 
-/** Gece yuvalarına girenler (fanzin ayrı, ayda bir) */
-export type GeceTuru = Exclude<KanalKodu, 'fanzin'>;
-export const GECE_TURLERI = ONERI_KANALLARI.filter(k => k.id !== 'fanzin') as unknown as ReadonlyArray<{ id: GeceTuru; ad: string; aciklama: string }>;
+/** Gece yuvalarına girenler (fanzin ayrı, ayda bir; günün sorusu gece üretimi değil) */
+export type GeceTuru = Exclude<KanalKodu, 'fanzin' | 'gununSorusu'>;
+export const GECE_TURLERI = ONERI_KANALLARI.filter(k => k.id !== 'fanzin' && k.id !== 'gununSorusu') as unknown as ReadonlyArray<{ id: GeceTuru; ad: string; aciklama: string }>;
 
 /** Vikiye öneri getiren kanallar: "bag" olarak mutlaka bir viki maddesi ister */
 export const VIKI_AILESI: GeceTuru[] = ['viki', 'wikipedia', 'depo'];
@@ -45,6 +47,8 @@ export const kanalAyari = (items: Item[]): KanalAyari => {
 };
 
 export const kanalAcikMi = (ayar: KanalAyari, id: KanalKodu) => ayar[id] !== false;
+/** Ana sayfadaki günün sorusu ve bildirimi açık mı (Öneri ayarları) */
+export const gununSorusuAcik = (items: Item[]) => kanalAcikMi(kanalAyari(items), 'gununSorusu');
 export const acikGeceTurleri = (items: Item[]): GeceTuru[] => {
   const a = kanalAyari(items);
   return GECE_TURLERI.map(t => t.id).filter(id => kanalAcikMi(a, id));

@@ -4,6 +4,7 @@ import { bekleyenAdaylar, sorulacaklar } from './adaylar';
 import { bekleyenDugmeler } from './bekleyenIsler';
 import { tarihUyarilari, type TarihUyarisi } from './kanonTarihleri';
 import { useHaritaDuzeni } from './haritaDuzeni';
+import { gununSorusuAcik } from './oneriKanallari';
 
 /**
  * Bildirimler — menüdeki kırmızı nokta (Paket 4).
@@ -77,7 +78,7 @@ export function useBildirimler(items: Item[], yenile = 0): Bildirim[] {
     const liste: Bildirim[] = [];
     const aday = bekleyenAdaylar(items).length;  // eski öneriler bildirim değil; Temizlik kartında
     if (aday) liste.push({ tur: 'aday', sayi: aday, baslik: 'Onay bekleyen öneri', ayrinti: 'Öneri tepsisinde · stüdyo' });
-    if (!gununSorusuBittiMi() && sorulacaklar(items, 1).length) {
+    if (gununSorusuAcik(items) && !gununSorusuBittiMi() && sorulacaklar(items, 1).length) {
       liste.push({ tur: 'soru', sayi: 1, baslik: 'Günün sorusu', ayrinti: 'Henüz cevaplanmadı' });
     }
     const dugme = bekleyenDugmeler(items, haritaEski);
