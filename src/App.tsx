@@ -173,14 +173,9 @@ export default function App() {
     window.addEventListener('hashchange', degisti);
     return () => window.removeEventListener('hashchange', degisti);
   }, []);
-  /**
-   * Google ile girilmiş mi (29 Eylül). Veriler 14 Eylül'e kadar Google
-   * hesabının alanına yazıldı; girişsiz açılınca uygulama o kimliği yalnız
-   * tarayıcının hafızasından hatırlıyor. Hafıza yoksa ortak alana
-   * (kems_public) düşülüyor — veriler orada değil.
-   */
+  /** Google ile girilmiş mi (29 Eylül; 22 Ekim'den beri giriş şart) */
   const [girisli, setGirisli] = useState(false);
-  /** Tarayıcı Kemal'i hiç tanımıyor: giriş ekranı (ortak alan yok) */
+  /** Google'a bağlı değil: giriş ekranı */
   const [girisGerekli, setGirisGerekli] = useState(false);
   const [baglanmaHatasi, setBaglanmaHatasi] = useState<string | null>(null);
   const googleIleBaglan = async () => {
@@ -200,7 +195,6 @@ export default function App() {
    */
   const cikisYap = async () => {
     if (!window.confirm("Google hesabından çıkılsın mı? Kayıtların silinmez; yeniden bağlanınca hepsi yerinde olur.")) return;
-    try { localStorage.removeItem('kems_last_uid'); } catch { /* yok */ }
     await logoutUser();
     setDigerAcik(false);
   };
@@ -218,7 +212,7 @@ export default function App() {
   /** Üst köşedeki logo yüklenemediyse o adres (tekrar denenmez) */
   const [logoHatasi, setLogoHatasi] = useState<string | null>(null);
 
-  // Authentication & Settings observer (Açık erişim modu: Google girişi zorunlu değil)
+  // Authentication & Settings observer (Google girişi zorunlu)
   useEffect(() => {
     let unsubItems: (() => void) | null = null;
     let unsubSettings: (() => void) | null = null;
@@ -277,28 +271,20 @@ export default function App() {
       setGirisli(!!currentUser);
       if (currentUser) {
         setGirisGerekli(false);
-        try {
-          localStorage.setItem('kems_last_uid', currentUser.uid);
-        } catch (_) {}
         await setupWorkspaceForUser(currentUser.uid, {
           displayName: currentUser.displayName,
           email: currentUser.email,
           photoURL: currentUser.photoURL
         });
       } else {
-        // Açık erişim modu: Google girişi zorunlu değil, doğrudan ortak alan (kems_public) açılır
-        let storedUid: string | null = null;
-        try {
-          storedUid = localStorage.getItem('kems_last_uid');
-        } catch (_) {}
-        
-        setGirisGerekli(false);
-        const activeUid = storedUid || 'kems_public';
-        await setupWorkspaceForUser(activeUid, {
-          displayName: 'Kemal',
-          email: 'kemal@kems.company',
-          photoURL: null
-        });
+        // Google girişi zorunlu (22 Ekim): girişsiz açılış kalktı; tarayıcının
+        // hatırladığı kimlikle ya da ortak alanla açılmaz, giriş ekranı çıkar.
+        if (unsubItems) { unsubItems(); unsubItems = null; }
+        if (unsubSettings) { unsubSettings(); unsubSettings = null; }
+        setUser(null);
+        setItems([]);
+        setGirisGerekli(true);
+        setLoading(false);
       }
     });
 
@@ -1399,22 +1385,16 @@ export default function App() {
               )}
             </div>
             {/* Hesap (1 Ekim): çıkış ve Drive izni telefonda da */}
-            {girisli ? (
-              <div className="flex gap-2">
-                <button type="button" onClick={() => void driveIzni()} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer">
-                  <KeyRound className="w-4 h-4" /> Drive iznini yenile
-                </button>
-                <button type="button" onClick={() => void cikisYap()} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#B23A40] dark:text-[#F26B6F] cursor-pointer">
-                  <LogOut className="w-4 h-4" /> Çıkış yap
-                </button>
-              </div>
-            ) : (
-              <div className="w-full py-2.5 rounded-xl bg-[#0E1C4F]/5 dark:bg-[#2C3C72]/20 text-[#6A5E4C] dark:text-[#A6B0C9] text-[12px] font-medium text-center">
-                Açık Erişim Modu
-              </div>
-            )}
+            <div className="flex gap-2">
+              <button type="button" onClick={() => void driveIzni()} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer">
+                <KeyRound className="w-4 h-4" /> Drive iznini yenile
+              </button>
+              <button type="button" onClick={() => void cikisYap()} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#B23A40] dark:text-[#F26B6F] cursor-pointer">
+                <LogOut className="w-4 h-4" /> Çıkış yap
+              </button>
+            </div>
             <p className="text-center text-[10px] font-mono text-[#6A5E4C] dark:text-[#A6B0C9]">
-              {varlikSayisi} kayıtlı varlık · {girisli ? `Google: ${user?.email || ''}` : 'tarayıcı hatırlıyor'}
+              {varlikSayisi} kayıtlı varlık · Google: {user?.email || ''}
             </p>
             <p className="text-center text-[10px] font-mono text-[#6A5E4C] dark:text-[#A6B0C9]">
               Sürüm: {import.meta.env.VITE_SURUM || 'bilinmiyor'}

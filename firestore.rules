@@ -12,8 +12,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Kayıtlara yalnız Google'a bağlı sahibi erişir (22 Ekim). Önceden
+    // girişsiz herkes her alana girebiliyordu.
     function isOwner(userId) {
-      return (isSignedIn() && request.auth.uid == userId) || !isSignedIn();
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isValidId(id) {
@@ -49,17 +51,22 @@ service cloud.firestore {
     }
 
     // Harita düzeni (H1) — dünyaya ait, kullanıcıya değil. Tek belge:
-    // duzada/haritaDuzeni. Uygulama açık erişimli olduğu için giriş şartı yok
-    // (users altındaki isOwner da oturumsuz erişime izin veriyor).
+    // duzada/haritaDuzeni. Google'a bağlı olmak şart (22 Ekim).
     match /duzada/{docId} {
-      allow read: if docId == 'haritaDuzeni';
-      allow create, update: if docId == 'haritaDuzeni'
+      allow read: if isSignedIn() && docId == 'haritaDuzeni';
+      allow create, update: if isSignedIn() && docId == 'haritaDuzeni'
         && incoming().keys().hasAll(['surum', 'guncelleme', 'hatlar', 'yollar'])
         && incoming().surum is number
         && incoming().guncelleme is number
         && incoming().hatlar is map
         && incoming().yollar is map;
       allow delete: if false;
+    }
+
+    // Eski ortak alan (kems_public): Durum → Eksikler'deki taşıma kartı
+    // okuyabilsin diye yalnız okunur, Google'a bağlı olmak şart.
+    match /users/kems_public/items/{itemId} {
+      allow read: if isSignedIn();
     }
 
     // Match blocks for users collection

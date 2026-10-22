@@ -190,8 +190,9 @@ bağlantısı 2. adım.
 **Bu deponun işi DEĞİL:** oyun. Ayrı depo, ayrı oturum.
 
 **Veri alanı:** Kayıtlar Google hesabının alanında. Ortak alan kalktı
-(30 Eylül): tarayıcı Kemal'i hiç tanımıyorsa "Google ile bağlan" ekranı
-çıkar; tanıyorsa kendi alanı açılır.
+(30 Eylül). KKM yalnız Google hesabıyla açılır (22 Ekim): bağlı değilse
+"Google ile bağlan" ekranı çıkar; girişsiz açılış ve tarayıcının hatırladığı
+kimlik kalktı. `firestore.rules`'ta her alana yalnız sahibi girer.
 
 **Tek kayıtlık ayarlar** (30 Eylül): `site_ayar` (sitenin taslağı ve
 yayındaki hâli), `gece_hazirlik` (gece önerilerinin defteri), `kkm_ayar`
