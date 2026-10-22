@@ -7,7 +7,7 @@ Ad sorularında Claude aday önerebilir; karar Kemal'in.
 ## Adlar (Kemal koyacak)
 - ~~Kooperatif fabrikası~~ — özel adı yok, "Yağ Fabrikası"; kuruluş 1950–1970 arası, kapanış belirsiz (29 Eylül). Canva etiketindeki 2025 düzelecek.
 - ~~Birlik Zeytin~~ — kurgu, bizim (29 Eylül).
-- Sade Meyhane ve Dondurmacı Kızlar'ın sahibi: şimdilik "Eylül Hanım". Kemal'in kararı bekleniyor; hakkında bir şey yazılmaz, önerilmez.
+- ~~Sade Meyhane ve Dondurmacı Kızlar'ın sahibi~~ — Eylül Hanım = Eylül Alimyeri; Alimyeri Ailesi'nin meyhanesi ve dondurmacısı (Kemal, 22 Ekim). "Hakkında yazılmaz" kuralı kalktı.
 - ~~Küçükçetmi ailesinin soyadı~~ — Eskibey Ailesi (29 Eylül).
 - ~~Dirlik'in rakibi~~ — gerçek Küçükkuyu Gençlerbirliği, easter egg olarak (29 Eylül).
 - Dirlik forması — merch'le birlikte düşünülecek (8 Ekim: "sonra").

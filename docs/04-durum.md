@@ -2638,3 +2638,10 @@ olarak GitHub'ı seçti.
 - **Günün sorusu** artık Stüdyo → Öneri ayarları'nda bir kanal. Kapalıyken ana
   sayfada günün sorusu kartı ve bildirimi çıkmaz; sorular ajansın panosundaki
   soru kutusundan gelir (Kemal: "KKM'de kapansın"). Kemal kendi kapatır.
+
+## 22 Ekim — K: Eylül kuralı kalktı (uygulamada; kart yok)
+
+Kemal: "Eylül'ün yasaklarını kaldırabilirsin." Eylül Hanım = Eylül Alimyeri
+(Kemal, 22 Ekim, ajans panosu). CLAUDE.md'deki "hakkında hiçbir şey yazma"
+kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
+(`lib/kisiAdi.ts`) artık onu atlamıyor.

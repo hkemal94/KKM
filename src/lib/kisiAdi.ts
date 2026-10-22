@@ -62,9 +62,6 @@ function basliktanAyir(i: Item): { ad: string; soyad: string } | null {
   if (sozcukler.length !== 2) return null;
   if (!sozcukler.every(s => /^[\p{L}'’-]+$/u.test(s))) return null;
   if (UNVAN.has(kucuk(sozcukler[1]))) return null;
-  // Eylül Hanım hakkında hiçbir şey yazılmaz (CLAUDE.md)
-  const takma = Array.isArray(i.metadata?.aliases) ? (i.metadata!.aliases as unknown[]) : [];
-  if ([i.title, ...takma].some(a => typeof a === 'string' && kucuk(a) === 'eylül hanım')) return null;
   return { ad: sozcukler[0], soyad: sozcukler[1] };
 }
 

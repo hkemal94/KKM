@@ -206,5 +206,6 @@ Kemal birleştirince ekranda "bitti" olur. Kemal'in eklediği işler `kkm_ayar`'
 
 Eski otel yazıları ve ad / tarih soruları vikiye işlendi (kanon kartı,
 29 Eylül gece Kemal bastı; kart ve kodu 2 Ekim'de silindi). Kalan açık
-sorular `docs/soru-cevap/acik-sorular.md`'de. "Eylül Hanım" yalnız bir
-ad; bu karakter hakkında hiçbir şey yazma ya da önerme.
+sorular `docs/soru-cevap/acik-sorular.md`'de. Eski "Eylül Hanım hakkında
+hiçbir şey yazma" kuralı kalktı (Kemal, 22 Ekim: "Eylül'ün yasaklarını
+kaldırabilirsin"); Eylül Hanım = Eylül Alimyeri, öbür kişiler gibi.
