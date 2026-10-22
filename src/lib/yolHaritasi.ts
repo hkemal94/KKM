@@ -126,6 +126,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Durum → Ajans: "Tepsiyi ajansa gönder"; öneri tepsisi ve günün soruları ajansın gizli deposuna gider, Ajans sayfası gizli depoyu anahtarla okur' },
   { id: 'eylul-kurali', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
     ad: 'Eylül Hanım kuralı kalktı: Eylül Alimyeri öbür kişiler gibi (ad ayırma da onu atlamaz)' },
+  { id: 'site-yayin-taslak', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
+    ad: 'Site: Yayınla\'dan sonra eski taslak kopyası önizlemede kalmaz; Sayfalar listesinde her sayfanın sitedeki madde sayısı' },
   { id: 'tepsi-kararlari', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
     ad: '"Ajansın kararlarını uygula": ajansın ayıkladığı öneriler tepsiden silinir, panoda cevaplanan sorular vikiye yazılır (tek düğme); günün sorusu Öneri ayarlarından kapanır' },
   { id: 'ana-kisayol-ajans-oyun', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,

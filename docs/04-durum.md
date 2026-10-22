@@ -2672,3 +2672,12 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   parçalar `components/site/siteOrtak.ts`'e alındı. Ekranda değişen yok.
 - **Künye ve açık sorular:** Güney Burnu "Konmuş adlar" listesine eklendi
   (künyedeki bilgiyle); "Zirvelerin mahallesi" sorusu açık sorulardan kapandı.
+
+- **Site, ikinci tur** (Kemal panoda "Evet"): Yayınla'ya basınca "Taslağı
+  önizle"den kalan kopya silinir, önizleme yayındaki hâli gösterir. Site
+  yönetimi → Sayfalar'da Viki, Ürünler, Haberler'in altında sitede kaç madde
+  olduğu yazar ("sitede · 0 madde" ise ziyaretçi boş "yakında" görür).
+- **Kanon** (Kemal, 22 Ekim): iki ayrı zeytinyağı fabrikası (İskele'deki eski
+  fabrika 19. yy sonu–1920'ler, Çiftlik'teki kooperatif fabrikası 1950–1970'ler);
+  otel binası 1954'te devlet misafirhanesi, 1960'larda özelleştirilip otel.
+  Künye ve açık sorular güncellendi. Dirlik forması kararları açık sorularda.
