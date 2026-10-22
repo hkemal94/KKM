@@ -157,6 +157,8 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'gunun-sorusu-kalkti', paket: 'K', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true, ad: 'Günün sorusu KKM\'den tamamen kalktı (ana sayfa kartı, bildirimi, öneri kanalı)' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans',
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır', not: 'Nasıl iletileceği önce Kemal\'le konuşulacak.' },
+  { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
+    ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır' },
   { id: 'viki-disa-aktarim', paket: 'W', kimde: 'claude', nereden: '21 Ekim · ajans',
     ad: 'Haftalık viki dışa aktarımı: ajansın Viki Editörü maddeleri okuyabilsin' },
   { id: 'yazi-ajansa', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans',

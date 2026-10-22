@@ -1408,6 +1408,7 @@ export default function App() {
         items={items}
         onAddItem={handleAddItem}
         onUpdateItem={handleUpdateItem}
+        onAjansBaglantisi={() => { setFikirAcik(false); git('ajans'); }}
       />
 
       <AramaModal

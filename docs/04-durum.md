@@ -2726,3 +2726,15 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
 - Ana sayfada "Günün sorusu" kartı yok artık; Bugün bölümünde yalnız bekleyen işler, eksikler ve öneri tepsisi kaldı.
 - Menüdeki kırmızı nokta ve zil artık günün sorusu için yanmaz (öneri, düğme, kanon uyarısı ve yedek bildirimi duruyor).
 - Stüdyo → Öneri ayarları'nda "Günün sorusu" kanalı yok. Stüdyodaki "Soru seçenekleri" atölye soruları için duruyor. Kayıtlarda kalmış eski ayara dokunulmadı.
+
+## 22 Ekim gece — Ajansa gönder (ajans)
+
+- Fikir kutusunda (üst çubuktaki "+" → Fikir) her fikrin altında "arşive" yanında
+  küçük bir **Ajansa gönder** düğmesi var. Basınca fikir (başlık, notun, etiketler,
+  KKM kimliği, gönderilme zamanı) ajansın gizli deposuna `isler/gelen/GG-AA-YYYY-konu.md`
+  olarak yazılır; ajansın sabah planı onu ilgili ajana verir.
+- Gönderilince fikrin kaydına gönderim zamanı işlenir ve düğme sönük
+  "Ajansa gönderildi · 22 Ekim" olur; ikinci basış yeni dosya açmaz.
+- GitHub anahtarı bu tarayıcıda kayıtlı değilse düğme "Önce ajans bağlantısını kur"
+  der ve Durum → Ajans'a götürür. Ağ ya da izin hatasında ekranda sade uyarı çıkar.
+- Depo herkese açıksa (Oyun → Ajansa gönder dahil) hiçbir şey gönderilmez.
