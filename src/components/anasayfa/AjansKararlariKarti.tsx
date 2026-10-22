@@ -19,6 +19,9 @@ interface Props {
   onDeleteItem: (id: string) => Promise<void>;
 }
 
+/** Listede her işin başındaki kısa ad */
+const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt' };
+
 export const AjansKararlariKarti: React.FC<Props> = ({ items, anahtar, tur, onUpdateItem, onDeleteItem }) => {
   const [dosya, setDosya] = useState<KararDosyasi | null | 'yukleniyor' | { hata: string }>('yukleniyor');
   const [acik, setAcik] = useState(false);
@@ -78,15 +81,16 @@ export const AjansKararlariKarti: React.FC<Props> = ({ items, anahtar, tur, onUp
         islemler.length ? (
           <>
             <p className={`text-[14px] ${YAZI}`}>
-              {silSayisi ? `${silSayisi} öneri tepsiden silinecek` : ''}{silSayisi && yazSayisi ? ', ' : ''}{yazSayisi ? `${yazSayisi} cevap vikiye yazılacak` : ''}.
+              {silSayisi ? `${silSayisi} öneri tepsiden silinecek` : ''}{silSayisi && yazSayisi ? ', ' : ''}{yazSayisi ? `${yazSayisi} cevap vikiye işlenecek` : ''}.
             </p>
             <button type="button" className={DUGME_BOS} onClick={() => setAcik(a => !a)}>{acik ? 'Listeyi gizle' : 'Listeyi göster'}</button>
             {acik && (
               <ul className={`text-[13px] ${YAZI} space-y-1.5 max-h-80 overflow-y-auto`}>
                 {islemler.map(i => (
                   <li key={i.kimlik} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72] pt-1.5">
-                    <span className="font-semibold">{i.tur === 'sil' ? 'Sil' : 'Yaz'}:</span> {i.baslik}
-                    {i.tur === 'alanaYaz' && <> → <span className="font-semibold">{i.deger}</span></>}
+                    <span className="font-semibold">{ISLEM_ADI[i.tur]}:</span> {i.baslik}
+                    {(i.tur === 'alanaYaz' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') && <> → <span className="font-semibold">{i.deger}</span></>}
+                    {i.tur === 'bagKur' && <> → <span className="font-semibold">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</span></>}
                     <span className={`block text-[12px] ${IKINCIL}`}>{i.neden}</span>
                   </li>
                 ))}

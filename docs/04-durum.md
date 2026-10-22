@@ -2703,3 +2703,13 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   metinler kısaltılır ve kartta söylenir.
 - KKM kayıtlarına bir şey yazılmaz; yalnız Kemal düğmeye basınca gider. Ajans
   bağlantısı (GitHub anahtarı) kurulu değilse kart "önce ajans bağlantısını kur" der.
+
+## 22 Ekim gece — ajansın kararları genişledi (ajans)
+
+- Durum → Ajans → "Ajansın kararları" kartı artık dört yeni iş de uygular: iki
+  kişi arasında bağ (eş bağı iki kişinin kaydına da yazılır, iki tarafta da
+  tıklanır), takma ad ekleme, madde yazısına paragraf ekleme ve yazıdaki bir
+  cümleyi düzeltme. Madde adıyla bulunur; tek bir eşleşme yoksa uygulanmaz,
+  makbuzda nedeni yazar. İkinci basışta uygulanmış işler gelmez.
+- Künye: Fener Burnu ve Güney Burnu zirve değil burun (Kemal, 22 Ekim); Fener
+  Burnu'nun üstünde Deniz Feneri.

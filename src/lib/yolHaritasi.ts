@@ -150,6 +150,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Güvenlik: KKM yalnız Google hesabıyla açılır; kayıtlara ve harita düzenine girişsiz erişim kapandı' },
   { id: 'viki-aktarim', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: 'Durum → Ajans: "Vikiyi ajansa gönder" (Viki Editörü vikiyi okuyabilsin)' },
+  { id: 'kararlar-genis', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
+    ad: 'Ajansın kararları: eş bağı (iki kişide), takma ad, metne ekleme ve metin düzeltme de uygulanabilir' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans',
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır', not: 'Nasıl iletileceği önce Kemal\'le konuşulacak.' },
   { id: 'viki-disa-aktarim', paket: 'W', kimde: 'claude', nereden: '21 Ekim · ajans',
