@@ -2713,3 +2713,10 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   makbuzda nedeni yazar. İkinci basışta uygulanmış işler gelmez.
 - Künye: Fener Burnu ve Güney Burnu zirve değil burun (Kemal, 22 Ekim); Fener
   Burnu'nun üstünde Deniz Feneri.
+
+## 22 Ekim gece — "Yayınla" sessiz kalıyordu (ajans)
+
+- Site yönetiminde "Yayınla", taslak yayındakiyle aynıyken kapalı duruyordu;
+  basınca hiçbir şey olmuyordu (Kemal). Artık her zaman basılır: değişiklik
+  yoksa "yayındaki zaten bu hâli" der. Yayınla yalnız KKM içindeki siteyi
+  günceller; dışarıdan açılan bir site adresi henüz yok, bunu da yazar.

@@ -152,6 +152,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Durum → Ajans: "Vikiyi ajansa gönder" (Viki Editörü vikiyi okuyabilsin)' },
   { id: 'kararlar-genis', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
     ad: 'Ajansın kararları: eş bağı (iki kişide), takma ad, metne ekleme ve metin düzeltme de uygulanabilir' },
+  { id: 'yayinla-sessiz', paket: 'K', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true,
+    ad: 'Site: "Yayınla" değişiklik yokken de basılır ve nedenini söyler; dışarıdan açılan adres henüz yok diye yazar' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans',
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır', not: 'Nasıl iletileceği önce Kemal\'le konuşulacak.' },
   { id: 'viki-disa-aktarim', paket: 'W', kimde: 'claude', nereden: '21 Ekim · ajans',
