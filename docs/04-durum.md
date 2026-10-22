@@ -2681,3 +2681,13 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   fabrika 19. yy sonu–1920'ler, Çiftlik'teki kooperatif fabrikası 1950–1970'ler);
   otel binası 1954'te devlet misafirhanesi, 1960'larda özelleştirilip otel.
   Künye ve açık sorular güncellendi. Dirlik forması kararları açık sorularda.
+
+## 22 Ekim gece — giriş şartı (ajans, güvenlik)
+
+- KKM yalnız Google hesabıyla açılır. Tarayıcının hatırladığı kimlikle ya da
+  eski ortak alanla girişsiz açılış kalktı; bağlı değilken "Google ile bağlan"
+  ekranı çıkar. Menüdeki "Açık Erişim Modu" ve "tarayıcı hatırlıyor" yazıları gitti.
+- Veritabanı kuralı (`firestore.rules`): önceden girişsiz herkes her kullanıcı
+  alanını okuyup yazabiliyordu; artık yalnız alanın sahibi. Harita düzeni de
+  Google'a bağlı olmayı ister. Eski ortak alan yalnız okunur (taşıma kartı için).
+  *Kural, Firebase'e yüklenince geçerli olur.*
