@@ -7,6 +7,7 @@ import { AnahtarKarti } from '../oyun/OyunAyarlari';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import type { Item } from '../../types';
 import { TepsiAjansaKarti } from './TepsiAjansaKarti';
+import { VikiAjansaKarti } from './VikiAjansaKarti';
 import { AjansKararlariKarti } from './AjansKararlariKarti';
 import { DUGME_BOS, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
@@ -81,6 +82,7 @@ export const AjansSayfasi: React.FC<{
         baslik="Ajansın gizli deposunu okumak için GitHub anahtarı" depoNotu="Kems-Ajans deposu (oyuna da göndereceksen oyunun deposu da)" />}
 
       <TepsiAjansaKarti items={items} anahtar={anahtar} />
+      <VikiAjansaKarti items={items} anahtar={anahtar} />
       <AjansKararlariKarti items={items} anahtar={anahtar} tur={tur} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />
 
       <div className="grid gap-4 md:grid-cols-2">
