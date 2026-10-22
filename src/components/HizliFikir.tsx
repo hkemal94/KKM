@@ -1,8 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
-  Lightbulb, X, ArrowRight, Archive, Clock, Check, Plus
+  Lightbulb, X, ArrowRight, Archive, Clock, Check, Plus, Send
 } from 'lucide-react';
 import type { Item, ItemType, AreaType } from '../types';
+import { anahtariOku } from '../lib/oyunAyarlari';
+import { ajansaGonder, fikirDosyasiMetni } from '../lib/ajansaGonder';
 
 /**
  * Hızlı fikir — her sayfanın köşesinde duran gelen kutusu.
@@ -44,14 +46,17 @@ export interface HizliFikirProps {
   /** Pano açık mı (1 Ekim: ampul köşeden kalktı, üst çubuktaki "+" açar) */
   acik: boolean;
   onAcikDegis: (acik: boolean) => void;
+  /** Ajans bağlantısı (GitHub anahtarı) yoksa kurulan yere götürür */
+  onAjansBaglantisi: () => void;
 }
 
-export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpdateItem, acik, onAcikDegis }) => {
+export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpdateItem, acik, onAcikDegis, onAjansBaglantisi }) => {
   const setAcik = onAcikDegis;
   const [metin, setMetin] = useState('');
   const [yaziliyor, setYaziliyor] = useState(false);
   const [donusturulen, setDonusturulen] = useState<string | null>(null);
   const [rapor, setRapor] = useState<string | null>(null);
+  const [gonderilen, setGonderilen] = useState<string | null>(null);
   const girdi = useRef<HTMLInputElement | null>(null);
 
   const fikirler = useMemo(
@@ -129,6 +134,32 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
     setRapor(`${h.ad} olarak açıldı.`);
   };
 
+  /** Fikri ajansın gizli deposuna yazar; kayda yalnız gönderim zamanı işlenir (Kemal bastığı için) */
+  const ajansaYolla = async (f: Item) => {
+    if (gonderilen || (f.metadata as any)?.ajansaGonderildi) return; // ikinci basış yeni dosya açmaz
+    if (!anahtariOku()) {
+      setRapor('Önce ajans bağlantısını kur: GitHub anahtarı Durum → Ajans\'ta.');
+      onAjansBaglantisi();
+      return;
+    }
+    setGonderilen(f.id);
+    setRapor(null);
+    try {
+      const zaman = new Date();
+      await ajansaGonder(anahtariOku(), f.title, fikirDosyasiMetni(f, zaman), zaman);
+      await onUpdateItem({
+        ...f,
+        metadata: { ...((f.metadata || {}) as any), ajansaGonderildi: zaman.toISOString() },
+        updatedAt: Date.now()
+      });
+      setRapor('Ajansa gönderildi.');
+    } catch (e) {
+      setRapor(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setGonderilen(null);
+    }
+  };
+
   const arsivle = async (f: Item) =>
     onUpdateItem({ ...f, archived: true, updatedAt: Date.now() });
 
@@ -190,6 +221,7 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
           const gun = gunFarki(f.createdAt);
           const bayat = gun >= BAYATLAMA_GUNU;
           const secili = donusturulen === f.id;
+          const gonderimZamani = (f.metadata as any)?.ajansaGonderildi as string | undefined;
           return (
             <div key={f.id} className="px-4 py-2.5 border-b"
                  style={{ borderColor: 'rgba(207,197,180,0.4)' }}>
@@ -232,6 +264,17 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
                           title="Silinmez, arşive kalkar">
                     <Archive className="w-2.5 h-2.5" /> arşive
                   </button>
+                  {gonderimZamani ? (
+                    <span className="flex items-center gap-1 font-mono" style={{ fontSize: 10, color: '#9A8C76' }}>
+                      <Check className="w-2.5 h-2.5" /> Ajansa gönderildi · {new Date(gonderimZamani).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
+                    </span>
+                  ) : (
+                    <button onClick={() => void ajansaYolla(f)} disabled={gonderilen === f.id}
+                            className="flex items-center gap-1 cursor-pointer font-mono disabled:opacity-40"
+                            style={{ fontSize: 10, color: '#0E1C4F' }}>
+                      <Send className="w-2.5 h-2.5" /> {gonderilen === f.id ? 'gönderiliyor…' : 'Ajansa gönder'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

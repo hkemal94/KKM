@@ -2691,3 +2691,15 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   alanını okuyup yazabiliyordu; artık yalnız alanın sahibi. Harita düzeni de
   Google'a bağlı olmayı ister. Eski ortak alan yalnız okunur (taşıma kartı için).
   *Kural, Firebase'e yüklenince geçerli olur.*
+
+## 22 Ekim gece — Ajansa gönder (ajans)
+
+- Fikir kutusunda (üst çubuktaki "+" → Fikir) her fikrin altında "arşive" yanında
+  küçük bir **Ajansa gönder** düğmesi var. Basınca fikir (başlık, notun, etiketler,
+  KKM kimliği, gönderilme zamanı) ajansın gizli deposuna `isler/gelen/GG-AA-YYYY-konu.md`
+  olarak yazılır; ajansın sabah planı onu ilgili ajana verir.
+- Gönderilince fikrin kaydına gönderim zamanı işlenir ve düğme sönük
+  "Ajansa gönderildi · 22 Ekim" olur; ikinci basış yeni dosya açmaz.
+- GitHub anahtarı bu tarayıcıda kayıtlı değilse düğme "Önce ajans bağlantısını kur"
+  der ve Durum → Ajans'a götürür. Ağ ya da izin hatasında ekranda sade uyarı çıkar.
+- Depo herkese açıksa (Oyun → Ajansa gönder dahil) hiçbir şey gönderilmez.
