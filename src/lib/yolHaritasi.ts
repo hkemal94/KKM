@@ -155,6 +155,8 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'yayinla-sessiz', paket: 'K', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true,
     ad: 'Site: "Yayınla" değişiklik yokken de basılır ve nedenini söyler; dışarıdan açılan adres henüz yok diye yazar' },
   { id: 'gunun-sorusu-kalkti', paket: 'K', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true, ad: 'Günün sorusu KKM\'den tamamen kalktı (ana sayfa kartı, bildirimi, öneri kanalı)' },
+  { id: 'takvim-ajans-ics', paket: 'K', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true,
+    ad: 'Takvim: ajansın düzenli işleri görünür; "Takvimime ekle (.ics)" ile kendi takvimine aktarılır' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans',
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır', not: 'Nasıl iletileceği önce Kemal\'le konuşulacak.' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,

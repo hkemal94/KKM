@@ -2738,3 +2738,18 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
 - GitHub anahtarı bu tarayıcıda kayıtlı değilse düğme "Önce ajans bağlantısını kur"
   der ve Durum → Ajans'a götürür. Ağ ya da izin hatasında ekranda sade uyarı çıkar.
 - Depo herkese açıksa (Oyun → Ajansa gönder dahil) hiçbir şey gönderilmez.
+
+## 22 Ekim — takvimde ajans ve .ics (ajans)
+
+- Takvim sayfasında yeni bir "Ajans" etiketi var (lacivert, açılıp kapanır): her gün
+  07:50 sabah planı, 19:50 akşam kapanışı, 00:53 gece işleri; gece işlerinin günlük
+  rutini (Pzt–Per oyun, her gece viki taraması, Cuma marka ve merch + denetim,
+  Cumartesi içerik, Pazar teknik). Saatler İstanbul. Liste `src/lib/ajansTakvimi.ts`'te,
+  kaynağı Kems-Ajans CLAUDE.md "Zamanlı görevler"; yalnız ekranda, kayda yazılmaz.
+- "Takvimime ekle (.ics)" düğmesi `kems-takvim.ics` indirir: ajansın düzenli işleri
+  tekrarlayan etkinlik, ayrıca tarihli drop ve gönderiler ile her ayın fanzin günü.
+  Kararlı kimlikli olduğu için aynı dosya tekrar eklenince etkinlikler çoğalmaz.
+  Google ve Apple Takvim'de içe aktarılır (Google'da "Ayarlar → İçe aktar").
+  *Bir seferlik dosyadır; sonradan eklenen gönderiler için yeniden indirmek gerekir.*
+- Raporlar henüz takvimde değil: rapor günleri için ajanların rapor tarihi kaydı yok;
+  uydurma tarih konmadı.
