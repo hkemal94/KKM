@@ -60,7 +60,7 @@ const AracKartlari: React.FC<{ secili: string | null; onSec: (id: string) => voi
   const liste = (g: StudyoGrubu) => (
     <div className="mt-2 grid gap-2 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0 [&>*]:break-words">
       {[...STUDYO_ARACLARI.filter(a => a.grup === g && !a.gizli && (!hedefTuru || !a.hedefTurleri || a.hedefTurleri.includes(hedefTuru as never))).map(a => ({ id: a.id, ad: a.ad, aciklama: a.aciklama })),
-        ...(g === 'kanon' ? [{ id: SORU_ARACI, ad: 'Soru seçenekleri', aciklama: 'Günün sorusu ve atölye soruları için kısa seçenekler.' }] : [])
+        ...(g === 'kanon' ? [{ id: SORU_ARACI, ad: 'Soru seçenekleri', aciklama: 'Atölye soruları için kısa seçenekler.' }] : [])
       ].map(a => (
         <button
           key={a.id}

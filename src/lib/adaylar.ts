@@ -3,12 +3,12 @@ import { bosluklariCikar, alanaYaz, type Bosluk } from '../components/Bosluklar'
 import { kunyedeCevabiVar } from './boslukDoldurma';
 
 /**
- * Adaylar ve günün sorusu (Paket 4).
+ * Adaylar ve atölye soruları (Paket 4).
  *
  * Kemal'in kararları (29 Eylül):
  *   - Yapay zekâ taslak üretir, Kemal onaylamadan vikiye, kanona, markaya
  *     hiçbir şey girmez; önce "Adaylar"a düşer.
- *   - Günün sorusuna verilen cevap önce Adaylar'a ve soru-cevap kaydına;
+ *   - Sorulara verilen cevap önce Adaylar'a ve soru-cevap kaydına;
  *     vikiye Kemal "işle" deyince girer.
  *
  * Aday ayrı bir kayıt türüdür (`type: 'aday'`). Varlık sayılmaz, vikide,
@@ -105,36 +105,19 @@ export function adayiKapat(aday: Item, durum: Exclude<AdayDurumu, 'bekliyor'>): 
   return { ...aday, archived: true, metadata: { ...aday.metadata, aday: { ...b, durum } }, updatedAt: Date.now() };
 }
 
-/* --- günün sorusu ------------------------------------------------- */
-
-const ERTELEME_ANAHTARI = 'kems_ertelenen_sorular';
-const ERTELEME_GUNU = 7;
-
-function ertelenenler(): Record<string, number> {
-  try { return JSON.parse(localStorage.getItem(ERTELEME_ANAHTARI) || '{}'); } catch { return {}; }
-}
-
-/** "Sonra karar veririm": soru bir hafta görünmez */
-export function soruyuErtele(anahtar: string) {
-  const e = ertelenenler();
-  e[anahtar] = Date.now();
-  try { localStorage.setItem(ERTELEME_ANAHTARI, JSON.stringify(e)); } catch { /* yok */ }
-}
+/* --- sorular ------------------------------------------------------ */
 
 /** Günün sayısı — soru sırası güne göre döner, gün içinde sabit kalır */
 const gunNo = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60_000) / 86_400_000);
 
 /**
- * Sorulacak boşluklar, sırasıyla. Cevabı Adaylar'da bekleyen ya da
- * ertelenmiş soru yok. İlki günün sorusu, sonrakiler atölyenin.
+ * Sorulacak boşluklar, sırasıyla. Cevabı Adaylar'da bekleyen soru yok.
  * Sayfa metni sorusu (uzun yazı) tıklamalı soruya uymaz; atlanır.
  */
 export function sorulacaklar(items: Item[], adet = 4): Bosluk[] {
   const bekleyen = new Set(items.filter(i => i.type === 'aday' && !i.archived).map(i => adayBilgisi(i)?.anahtar));
-  const e = ertelenenler();
-  const sinir = Date.now() - ERTELEME_GUNU * 86_400_000;
   const uygun = bosluklariCikar(items)
-    .filter(b => b.alanId !== 'notes' && !b.yaz && !bekleyen.has(b.anahtar) && !((e[b.anahtar] || 0) > sinir)
+    .filter(b => b.alanId !== 'notes' && !b.yaz && !bekleyen.has(b.anahtar)
       && !kunyedeCevabiVar(b));
   if (!uygun.length) return [];
   // Art arda aynı soru ("Hangi mahallede yaşar?") ya da aynı madde

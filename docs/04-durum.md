@@ -2704,6 +2704,56 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
 - KKM kayıtlarına bir şey yazılmaz; yalnız Kemal düğmeye basınca gider. Ajans
   bağlantısı (GitHub anahtarı) kurulu değilse kart "önce ajans bağlantısını kur" der.
 
+## 22 Ekim gece — ajansın kararları genişledi (ajans)
+
+- Durum → Ajans → "Ajansın kararları" kartı artık dört yeni iş de uygular: iki
+  kişi arasında bağ (eş bağı iki kişinin kaydına da yazılır, iki tarafta da
+  tıklanır), takma ad ekleme, madde yazısına paragraf ekleme ve yazıdaki bir
+  cümleyi düzeltme. Madde adıyla bulunur; tek bir eşleşme yoksa uygulanmaz,
+  makbuzda nedeni yazar. İkinci basışta uygulanmış işler gelmez.
+- Künye: Fener Burnu ve Güney Burnu zirve değil burun (Kemal, 22 Ekim); Fener
+  Burnu'nun üstünde Deniz Feneri.
+
+## 22 Ekim gece — "Yayınla" sessiz kalıyordu (ajans)
+
+- Site yönetiminde "Yayınla", taslak yayındakiyle aynıyken kapalı duruyordu;
+  basınca hiçbir şey olmuyordu (Kemal). Artık her zaman basılır: değişiklik
+  yoksa "yayındaki zaten bu hâli" der. Yayınla yalnız KKM içindeki siteyi
+  günceller; dışarıdan açılan bir site adresi henüz yok, bunu da yazar.
+
+## 22 Ekim gece — günün sorusu kalktı (ajans)
+
+- Ana sayfada "Günün sorusu" kartı yok artık; Bugün bölümünde yalnız bekleyen işler, eksikler ve öneri tepsisi kaldı.
+- Menüdeki kırmızı nokta ve zil artık günün sorusu için yanmaz (öneri, düğme, kanon uyarısı ve yedek bildirimi duruyor).
+- Stüdyo → Öneri ayarları'nda "Günün sorusu" kanalı yok. Stüdyodaki "Soru seçenekleri" atölye soruları için duruyor. Kayıtlarda kalmış eski ayara dokunulmadı.
+
+## 22 Ekim gece — Ajansa gönder (ajans)
+
+- Fikir kutusunda (üst çubuktaki "+" → Fikir) her fikrin altında "arşive" yanında
+  küçük bir **Ajansa gönder** düğmesi var. Basınca fikir (başlık, notun, etiketler,
+  KKM kimliği, gönderilme zamanı) ajansın gizli deposuna `isler/gelen/GG-AA-YYYY-konu.md`
+  olarak yazılır; ajansın sabah planı onu ilgili ajana verir.
+- Gönderilince fikrin kaydına gönderim zamanı işlenir ve düğme sönük
+  "Ajansa gönderildi · 22 Ekim" olur; ikinci basış yeni dosya açmaz.
+- GitHub anahtarı bu tarayıcıda kayıtlı değilse düğme "Önce ajans bağlantısını kur"
+  der ve Durum → Ajans'a götürür. Ağ ya da izin hatasında ekranda sade uyarı çıkar.
+- Depo herkese açıksa (Oyun → Ajansa gönder dahil) hiçbir şey gönderilmez.
+
+## 22 Ekim — takvimde ajans ve .ics (ajans)
+
+- Takvim sayfasında yeni bir "Ajans" etiketi var (lacivert, açılıp kapanır): her gün
+  07:50 sabah planı, 19:50 akşam kapanışı, 00:53 gece işleri; gece işlerinin günlük
+  rutini (Pzt–Per oyun, her gece viki taraması, Cuma marka ve merch + denetim,
+  Cumartesi içerik, Pazar teknik). Saatler İstanbul. Liste `src/lib/ajansTakvimi.ts`'te,
+  kaynağı Kems-Ajans CLAUDE.md "Zamanlı görevler"; yalnız ekranda, kayda yazılmaz.
+- "Takvimime ekle (.ics)" düğmesi `kems-takvim.ics` indirir: ajansın düzenli işleri
+  tekrarlayan etkinlik, ayrıca tarihli drop ve gönderiler ile her ayın fanzin günü.
+  Kararlı kimlikli olduğu için aynı dosya tekrar eklenince etkinlikler çoğalmaz.
+  Google ve Apple Takvim'de içe aktarılır (Google'da "Ayarlar → İçe aktar").
+  *Bir seferlik dosyadır; sonradan eklenen gönderiler için yeniden indirmek gerekir.*
+- Raporlar henüz takvimde değil: rapor günleri için ajanların rapor tarihi kaydı yok;
+  uydurma tarih konmadı.
+
 ## 22 Ekim gece — yazıyı Yazı Editörü'ne gönder (ajans)
 
 - Blog yazısının ve kitap bölümünün editöründe "Yazı Editörü'ne gönder" düğmesi

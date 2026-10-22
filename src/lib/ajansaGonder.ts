@@ -86,9 +86,28 @@ export function oyunDosyasiMetni(items: Item[], oyunId: string, not: string, zam
   return s.join('\n');
 }
 
+/**
+ * Fikir kutusundaki bir fikir, Markdown olarak (22 Ekim, "Fikir → Ajansa gönder").
+ * Kurgu eklenmez: yalnız fikrin kendi başlığı, notu, etiketleri, kimliği ve zamanı.
+ */
+export function fikirDosyasiMetni(fikir: Item, zaman = new Date()): string {
+  const etiketler = (fikir.tags || []).filter(t => t !== 'fikir');
+  const tarih = zaman.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return [
+    `# ${fikir.title}`, '',
+    `- Gönderen: Kemal (KKM → Fikir kutusu → Ajansa gönder)`,
+    `- Gönderilme zamanı: ${zaman.toISOString()} (${tarih})`,
+    `- KKM kimliği: ${fikir.id}`,
+    `- Etiketler: ${etiketler.length ? etiketler.join(', ') : 'yok'}`,
+    `- Departman: CEO dağıtır`, '',
+    `## Kemal'in notu`, '', fikir.notes?.trim() || 'boş', '',
+  ].join('\n');
+}
+
 /** Dosyayı ajansın deposuna yazar; aynı adda dosya varsa sonuna -2, -3 ekler. Dosyanın GitHub adresini döner. */
 export async function ajansaGonder(anahtar: string, baslik: string, metin: string, zaman = new Date()): Promise<string> {
-  const bilgi = await github<{ default_branch: string }>(anahtar, `/repos/${AJANS_DEPOSU}`);
+  const bilgi = await github<{ default_branch: string; private: boolean }>(anahtar, `/repos/${AJANS_DEPOSU}`);
+  if (!bilgi.private) throw new Error('Kems-Ajans deposu herkese açık; hiçbir şey gönderilmedi. Önce depoyu GitHub\'da gizli (Private) yap.');
   const temel = `${GELEN_KLASORU}/${gunAdi(zaman)}-${kisaAd(baslik)}`;
   let yol = `${temel}.md`;
   for (let n = 2; n < 20; n++) {

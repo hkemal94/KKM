@@ -11,7 +11,7 @@ import type { Item } from '../types';
  *   - otel simülasyonunun resepsiyon vakaları (oyun verisi vikiye girmez)
  *   - Sürek Şenliği Tertip Komitesi (Kemal: "bunu sil")
  *   - ilk günün örnek verisi (Kamil Efendi, Küçükçetmi Dropu…)
- * Silinmezler: günün sorusu cevapları (aday kaydı), not defteri sayfaları,
+ * Silinmezler: soru cevapları (aday kaydı), not defteri sayfaları,
  * uygulamanın kendi kayıtları (harita ayarı, kanal).
  */
 
