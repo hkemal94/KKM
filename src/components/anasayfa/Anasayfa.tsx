@@ -4,19 +4,15 @@ import { CalendarDays, ChevronDown, Gamepad2, Globe, Milestone, Newspaper, Searc
 import { useMasaustu } from '../kabuk/KatlanirBolum';
 import type { Item } from '../../types';
 import { durumOranlari } from '../../lib/durumOranlari';
-import { adayKaydi, soruyuErtele, sorulacaklar } from '../../lib/adaylar';
-import { gununSorusuBitti } from '../../lib/bildirimler';
-import { gununSorusuAcik } from '../../lib/oneriKanallari';
 import { eksikleriCikar } from '../../lib/eksikler';
 import { YuzdeSeridi, type SeritHedefi } from './YuzdeSeridi';
-import { SoruKarti } from './SoruKarti';
 import { OneriTepsisi } from '../studyo/OneriTepsisi';
 import type { StudyoIslemleri } from '../studyo/StudyoBaglami';
 import { EksikOzeti } from './EksikOzeti';
 import { NotDefteri } from './NotDefteri';
 import { DuzadaKarti } from './DuzadaKarti';
 import { AdaKarti } from './AdaKarti';
-import { ETIKET, KART, IKINCIL, YAZI } from './stil';
+import { KART, IKINCIL, YAZI } from './stil';
 
 /**
  * Ana sayfadaki kısayollar (30 Eylül, Kemal: "büyük şeyler çok derinlere
@@ -37,7 +33,7 @@ const seritHedefi = (h: SeritHedefi): Hedef => (h === 'kunye' || h === 'kitap' |
 
 /**
  * Ana sayfa (Paket 4). Kemal onayladı, 29 Eylül:
- *   Masaüstü: tek ekran — yüzde şeridi, üretim atölyesi, günün sorusu,
+ *   Masaüstü: tek ekran — yüzde şeridi, üretim atölyesi,
  *   adaylar, neyin eksik, not defteri, Düzada kartı.
  *   Telefon (2 Ekim, Kemal: "kaydırma ekranını beğenmedim, her yer çok tuş
  *   oldu"; "yukarı sekmeleri kaldırıp açılır kapanır bir şey"): sekme ve
@@ -65,8 +61,6 @@ interface Props {
   /** Öneri tepsisi (stüdyoyla ortak) */
   studyo: StudyoIslemleri;
   onOpenSearch: () => void;
-  /** Günün sorusu cevaplanınca bildirimler yeniden sayılsın */
-  onBildirimYenile: () => void;
   /** Başlıktaki zil (App'ten) */
   zil: React.ReactNode;
   /** "+" ile yeni not sayfası isteği */
@@ -88,23 +82,11 @@ function selam(): string {
 
 export const Anasayfa: React.FC<Props> = ({
   items, bugunDugmeler, onGit, onMaddeyiAc, onAddItem, onUpdateItem, onDeleteItem, onAlanSil, studyo,
-  onOpenSearch, onBildirimYenile, zil, yeniNotBekliyor, arti, onYeniNotAcildi, sekme, onSekme
+  onOpenSearch, zil, yeniNotBekliyor, arti, onYeniNotAcildi, sekme, onSekme
 }) => {
-  const [nabiz, setNabiz] = useState(0);
   const oranlar = useMemo(() => durumOranlari(items), [items]);
   const eksikler = useMemo(() => eksikleriCikar(items), [items]);
-  const sorular = useMemo(() => sorulacaklar(items, 40), [items, nabiz]); // eslint-disable-line react-hooks/exhaustive-deps
-  const gununSorusu = sorular[0];
   const adaySayisi = useMemo(() => items.filter(i => i.type === 'aday' && !i.archived).length, [items]);
-  const cevapla = useCallback((gunun: boolean) => async (b: NonNullable<typeof gununSorusu>, cevap: string, secenektenMi: boolean) => {
-    await onAddItem(adayKaydi(b, cevap, secenektenMi));
-    if (gunun) { gununSorusuBitti(); onBildirimYenile(); }
-  }, [onAddItem, onBildirimYenile]);
-  const ertele = useCallback((gunun: boolean, anahtar: string) => {
-    soruyuErtele(anahtar);
-    if (gunun) { gununSorusuBitti(); onBildirimYenile(); }
-    setNabiz(n => n + 1);
-  }, [onBildirimYenile]);
 
   // Telefonda açık bölümler; "+ Not" gibi dışarıdan gelen istek o bölümü açar
   const masa = useMasaustu();
@@ -130,25 +112,6 @@ export const Anasayfa: React.FC<Props> = ({
     { id: 'notlar', ad: 'Notlar' },
     { id: 'durum', ad: 'Durum' }
   ], [adaySayisi]);
-
-  const soruAcik = useMemo(() => gununSorusuAcik(items), [items]);
-  const gununSorusuKarti = soruAcik && (
-    <section className={`${KART} p-4`}>
-      <div className={ETIKET}>Günün sorusu</div>
-      <div className="mt-2">
-        {gununSorusu ? (
-          <SoruKarti
-            bosluk={gununSorusu}
-            buyuk
-            onCevap={(c, s) => cevapla(true)(gununSorusu, c, s)}
-            onSonra={() => ertele(true, gununSorusu.anahtar)}
-          />
-        ) : (
-          <p className={`text-[12px] ${IKINCIL}`}>Sorulacak boşluk kalmadı.</p>
-        )}
-      </div>
-    </section>
-  );
 
   return (
     <div className="space-y-3 lg:space-y-4 animate-in fade-in duration-300">
@@ -188,7 +151,6 @@ export const Anasayfa: React.FC<Props> = ({
                   <>
                     <BekleyenIsler items={items} onUpdateItem={onUpdateItem} onAddItem={onAddItem} onDeleteItem={onDeleteItem} onAlanSil={onAlanSil} />
                     <EksikOzeti eksikler={eksikler} dugmeler={bugunDugmeler} onAc={x => onGit('eksikler', x)} />
-                    {gununSorusuKarti}
                     <OneriTepsisi {...studyo} sinir={3} />
                   </>
                 )}
@@ -246,8 +208,6 @@ export const Anasayfa: React.FC<Props> = ({
         />
 
         <div className="flex flex-col gap-3 lg:gap-4 min-w-0">
-          {gununSorusuKarti}
-
           <div className="flex-1 [&>*]:h-full">
             <OneriTepsisi {...studyo} sinir={3} />
           </div>

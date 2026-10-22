@@ -28,7 +28,7 @@ export const TepsiAjansaKarti: React.FC<{ items: Item[]; anahtar: string }> = ({
       <div>
         <div className={ETIKET}>Öneri tepsisi → ajans</div>
         <p className={`text-[13px] ${IKINCIL}`}>
-          Tepside {sayilar.oneri} öneri{sayilar.eski ? `, ${sayilar.eski} eski öneri` : ''} ve {sayilar.soru} günün sorusu var.
+          Tepside {sayilar.oneri} öneri{sayilar.eski ? `, ${sayilar.eski} eski öneri` : ''} ve {sayilar.soru} soru var.
           Gönderince ajans geceleri okur: mantıksızları eler, basitleri hazırlar, sana sorulacakları panodaki kutusuna alır.
           KKM kayıtlarına bir şey yazılmaz; tepsi olduğu gibi kalır.
         </p>

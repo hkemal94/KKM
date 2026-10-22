@@ -26,6 +26,7 @@ import type { BagTuru } from '../utils/relations';
  *     (metindeki bir cümle yenisiyle değişir). Bunlar maddeyi adıyla bulur
  *     (başlık ya da takma ad); tam bir eşleşme yoksa uygulanmaz, makbuzda
  *     nedeniyle "atlanan" olur.
+ *     Alan bu arada dolduysa üstüne yazılmaz (tepsideki "İşle" gibi).
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.

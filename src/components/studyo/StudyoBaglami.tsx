@@ -14,7 +14,7 @@ export interface StudyoIstegi {
   hedefId?: string;
   /** Serbest kutunun ilk yazısı (fanzin bölümü: "3 · Sade") */
   serbest?: string;
-  /** Günün sorusu / atölye sorusu için seçenek */
+  /** Atölye sorusu için seçenek */
   bosluk?: Bosluk;
 }
 

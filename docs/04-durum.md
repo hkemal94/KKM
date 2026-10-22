@@ -2720,3 +2720,9 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   basınca hiçbir şey olmuyordu (Kemal). Artık her zaman basılır: değişiklik
   yoksa "yayındaki zaten bu hâli" der. Yayınla yalnız KKM içindeki siteyi
   günceller; dışarıdan açılan bir site adresi henüz yok, bunu da yazar.
+
+## 22 Ekim gece — günün sorusu kalktı (ajans)
+
+- Ana sayfada "Günün sorusu" kartı yok artık; Bugün bölümünde yalnız bekleyen işler, eksikler ve öneri tepsisi kaldı.
+- Menüdeki kırmızı nokta ve zil artık günün sorusu için yanmaz (öneri, düğme, kanon uyarısı ve yedek bildirimi duruyor).
+- Stüdyo → Öneri ayarları'nda "Günün sorusu" kanalı yok. Stüdyodaki "Soru seçenekleri" atölye soruları için duruyor. Kayıtlarda kalmış eski ayara dokunulmadı.

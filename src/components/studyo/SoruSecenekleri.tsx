@@ -9,7 +9,7 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, YAZI } from '../anasayfa/stil';
 import type { StudyoIslemleri } from './StudyoBaglami';
 
 /**
- * Kanon sorusu seçenekleri (stüdyo). Günün sorusu ya da atölyedeki bir
+ * Kanon sorusu seçenekleri (stüdyo). Atölyedeki bir
  * soru için yapay zekâ en fazla üç kısa seçenek getirir; ad ya da sayı
  * soran sorularda getirmez. Seçilen cevap önce tepsiye (aday) düşer.
  */

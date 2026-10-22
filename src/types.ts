@@ -33,7 +33,7 @@ export type ItemType =
   | 'ilham_gorsel'
   // Komuta types
   | 'channel'
-  // Onay bekleyen aday (Paket 4): günün sorusu cevabı, atölye taslağı
+  // Onay bekleyen aday (Paket 4): soru cevabı, atölye taslağı
   | 'aday'
   // Oyunun tanıtım künyesi (Paket 5): durum, özet, açıklama, ekran görüntüleri
   | 'oyun_tanitim'

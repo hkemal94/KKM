@@ -164,7 +164,6 @@ export default function App() {
   const [digerAcik, setDigerAcik] = useState(false);
   /** "+" ile gelen yeni not sayfası isteği */
   const [yeniNotBekliyor, setYeniNotBekliyor] = useState(false);
-  const [bildirimNabzi, setBildirimNabzi] = useState(0);
   /** Site önizlemesi (29 Eylül gece): adres `#site` iken KKM yerine tam sayfa site */
   const siteAdresiMi = () => typeof location !== 'undefined' && /^#site(\/|$)/.test(location.hash);
   const [siteAcik, setSiteAcik] = useState(siteAdresiMi);
@@ -646,7 +645,7 @@ export default function App() {
   );
 
   /** Menüdeki kırmızı noktalar ve zil (Paket 4) */
-  const bildirimler = useBildirimler(items, bildirimNabzi);
+  const bildirimler = useBildirimler(items);
   const bildirimVar = (t: Bildirim['tur']) => bildirimler.some(b => b.tur === t);
   const bekleyenDugmeListesi = bildirimler.find(b => b.tur === 'dugme')?.ayrinti.split(' · ') ?? [];
 
@@ -932,7 +931,7 @@ export default function App() {
 
   const RAY: Array<{ grup?: string; satirlar: Array<{ id: Sayfa; ad: string; alt?: string; simge: React.ElementType; nokta?: boolean }> }> = [
     { satirlar: [
-      { id: 'komuta', ad: 'Ana sayfa', simge: Home, nokta: bildirimVar('aday') || bildirimVar('soru') }
+      { id: 'komuta', ad: 'Ana sayfa', simge: Home, nokta: bildirimVar('aday') }
     ] },
     { grup: 'Evren', satirlar: [
       { id: 'duzada', ad: 'Düzada', alt: 'viki ve Evren Raporu', simge: Compass, nokta: bildirimVar('kanon') },
@@ -986,7 +985,7 @@ export default function App() {
 
   const haritada = activeTab === 'atolye';
   const ALT: Array<{ id: string; ad: string; simge: React.ElementType; aktif: boolean; nokta?: boolean }> = [
-    { id: 'komuta', ad: 'Ana sayfa', simge: Home, aktif: activeTab === 'komuta', nokta: bildirimVar('aday') || bildirimVar('soru') },
+    { id: 'komuta', ad: 'Ana sayfa', simge: Home, aktif: activeTab === 'komuta', nokta: bildirimVar('aday') },
     { id: 'viki', ad: 'Viki', simge: Compass, aktif: activeTab === 'duzada' && !haritada, nokta: bildirimVar('kanon') },
     { id: 'oyun', ad: 'Oyun', simge: Gamepad2, aktif: activeTab === 'oyun' },
     { id: 'diger', ad: 'Diğer', simge: Menu, aktif: digerAcik || haritada || !['komuta', 'duzada', 'oyun'].includes(activeTab), nokta: bildirimVar('dugme') || bildirimVar('aday') }
@@ -1137,7 +1136,6 @@ export default function App() {
                 onAlanSil={handleAlanSil}
                 studyo={studyoIslemleri}
                 onOpenSearch={() => setIsSearchOpen(true)}
-                onBildirimYenile={() => setBildirimNabzi(n => n + 1)}
                 zil={<Zil bildirimler={bildirimler} onSec={bildirimSec} onKanonYoksay={kanonYoksay} />}
                 yeniNotBekliyor={yeniNotBekliyor}
                 arti={arti()}
