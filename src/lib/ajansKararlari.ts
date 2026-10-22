@@ -19,14 +19,13 @@ import type { BagTuru } from '../utils/relations';
  *   - `sil`: tepsideki öneri silinir (ajans eledi, departmana taşıdı ya da
  *     soru kutusuna aldı).
  *   - `alanaYaz`: Kemal'in panoda verdiği cevap, sorunun boş alanına yazılır.
- *     Alan bu arada dolduysa üstüne yazılmaz (günün sorusundaki "İşle" gibi).
+ *     Alan bu arada dolduysa üstüne yazılmaz (tepsideki "İşle" gibi).
  *   - 22 Ekim (Kemal'in kanon cevapları dolu alanlara ve bağlara dokunuyordu):
  *     `bagKur` (iki madde arasında bağ; eş bağı iki kayda da yazılır),
  *     `takmaAdEkle`, `metneEkle` (madde metnine, yani künyenin altındaki yazıya, paragraf), `metniDegistir`
  *     (metindeki bir cümle yenisiyle değişir). Bunlar maddeyi adıyla bulur
  *     (başlık ya da takma ad); tam bir eşleşme yoksa uygulanmaz, makbuzda
  *     nedeniyle "atlanan" olur.
- *     Alan bu arada dolduysa üstüne yazılmaz (tepsideki "İşle" gibi).
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
