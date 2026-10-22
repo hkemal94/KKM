@@ -2691,3 +2691,13 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   alanını okuyup yazabiliyordu; artık yalnız alanın sahibi. Harita düzeni de
   Google'a bağlı olmayı ister. Eski ortak alan yalnız okunur (taşıma kartı için).
   *Kural, Firebase'e yüklenince geçerli olur.*
+
+## 22 Ekim gece — ajansın kararları genişledi (ajans)
+
+- Durum → Ajans → "Ajansın kararları" kartı artık dört yeni iş de uygular: iki
+  kişi arasında bağ (eş bağı iki kişinin kaydına da yazılır, iki tarafta da
+  tıklanır), takma ad ekleme, madde yazısına paragraf ekleme ve yazıdaki bir
+  cümleyi düzeltme. Madde adıyla bulunur; tek bir eşleşme yoksa uygulanmaz,
+  makbuzda nedeni yazar. İkinci basışta uygulanmış işler gelmez.
+- Künye: Fener Burnu ve Güney Burnu zirve değil burun (Kemal, 22 Ekim); Fener
+  Burnu'nun üstünde Deniz Feneri.

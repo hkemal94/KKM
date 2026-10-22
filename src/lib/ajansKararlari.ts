@@ -2,6 +2,9 @@ import type { Item } from '../types';
 import { alanaYaz, bosluklariCikar } from '../components/Bosluklar';
 import { base64, base64Coz, github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
+import { bagEkle } from './bagAgi';
+import { takmaAdlar } from './alanSablonu';
+import type { BagTuru } from '../utils/relations';
 
 /**
  * Ajansın kararlarını uygula (22 Ekim, Kemal: "Ajans kendi uygulasın ama ben
@@ -17,6 +20,12 @@ import { AJANS_DEPOSU } from './ajansDeposu';
  *     soru kutusuna aldı).
  *   - `alanaYaz`: Kemal'in panoda verdiği cevap, sorunun boş alanına yazılır.
  *     Alan bu arada dolduysa üstüne yazılmaz (günün sorusundaki "İşle" gibi).
+ *   - 22 Ekim (Kemal'in kanon cevapları dolu alanlara ve bağlara dokunuyordu):
+ *     `bagKur` (iki madde arasında bağ; eş bağı iki kayda da yazılır),
+ *     `takmaAdEkle`, `metneEkle` (madde metnine, yani künyenin altındaki yazıya, paragraf), `metniDegistir`
+ *     (metindeki bir cümle yenisiyle değişir). Bunlar maddeyi adıyla bulur
+ *     (başlık ya da takma ad); tam bir eşleşme yoksa uygulanmaz, makbuzda
+ *     nedeniyle "atlanan" olur.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -27,7 +36,41 @@ export const MAKBUZ_KLASORU = 'kkm/uygulananlar';
 
 export type KararIslemi =
   | { kimlik: string; tur: 'sil'; id: string; baslik: string; neden: string }
-  | { kimlik: string; tur: 'alanaYaz'; anahtar: string; deger: string; baslik: string; neden: string };
+  | { kimlik: string; tur: 'alanaYaz'; anahtar: string; deger: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'bagKur'; kaynak: string; hedef: string; bag: BagTuru; ikiYonlu?: boolean; baslik: string; neden: string }
+  | { kimlik: string; tur: 'takmaAdEkle'; madde: string; deger: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'metneEkle'; madde: string; deger: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'metniDegistir'; madde: string; eski: string; deger: string; baslik: string; neden: string };
+
+const kucuk = (s: string) => (s || '').trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr');
+
+/** Maddeyi adıyla bulur (önce başlık, sonra takma ad); tek bir eşleşme yoksa null */
+export function maddeBul(items: Item[], ad: string): Item | null {
+  const a = kucuk(ad);
+  const canli = items.filter(i => !i.archived && !i.isProposal && i.type !== 'aday');
+  const bas = canli.filter(i => kucuk(i.title) === a);
+  if (bas.length) return bas.length === 1 ? bas[0] : null;
+  const tak = canli.filter(i => takmaAdlar(i).some(t => kucuk(t) === a));
+  return tak.length === 1 ? tak[0] : null;
+}
+
+const bagVar = (k: Item, hedefId: string, bag: string) =>
+  ((k.metadata?.relations as Array<Record<string, unknown>> | undefined) || []).some(r => r?.targetId === hedefId && r.type === bag && !r.isProposal);
+
+/** Bu iş zaten uygulanmış mı (madde bulunamazsa hayır: denenir, makbuza neden yazılır) */
+function yapilmis(items: Item[], i: KararIslemi): boolean {
+  if (i.tur === 'bagKur') {
+    const k = maddeBul(items, i.kaynak), h = maddeBul(items, i.hedef);
+    return !!k && !!h && bagVar(k, h.id, i.bag) && (!i.ikiYonlu || bagVar(h, k.id, i.bag));
+  }
+  if (i.tur === 'takmaAdEkle') {
+    const m = maddeBul(items, i.madde);
+    return !!m && (kucuk(m.title) === kucuk(i.deger) || takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)));
+  }
+  if (i.tur === 'metneEkle') { const m = maddeBul(items, i.madde); return !!m && (m.notes || '').includes(i.deger.trim()); }
+  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !(m.notes || '').includes(i.eski) && (m.notes || '').includes(i.deger.trim()); }
+  return false;
+}
 
 export interface KararDosyasi { olusturuldu: string; islemler: KararIslemi[] }
 
@@ -50,6 +93,7 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
   return islemler.filter(i => {
     if (i.tur === 'sil') { const k = kimlik.get(i.id); return !!k && k.type === 'aday' && !k.archived; }
     if (i.tur === 'alanaYaz') return !!i.deger?.trim() && bosluklar.has(i.anahtar);
+    if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') return !yapilmis(items, i);
     return false;
   });
 }
@@ -75,6 +119,33 @@ export async function kararlariUygula(
         if (!k || k.type !== 'aday' || k.archived) { sonuc.atlanan.push({ islem, neden: 'öneri tepside yok' }); continue; }
         await yaz.sil(islem.id);
         guncel.delete(islem.id);
+      } else if (islem.tur === 'bagKur') {
+        const liste = [...guncel.values()];
+        const k = maddeBul(liste, islem.kaynak), h = maddeBul(liste, islem.hedef);
+        if (!k || !h) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${!k ? islem.kaynak : islem.hedef})` }); continue; }
+        const k2 = bagEkle(k, h.id, islem.bag);
+        if (k2) { await yaz.guncelle(k2); guncel.set(k2.id, k2); }
+        if (islem.ikiYonlu) {
+          const h2 = bagEkle(guncel.get(h.id) || h, k.id, islem.bag);
+          if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
+        }
+      } else if (islem.tur === 'takmaAdEkle' || islem.tur === 'metneEkle' || islem.tur === 'metniDegistir') {
+        const m = maddeBul([...guncel.values()], islem.madde);
+        if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }
+        const metin = m.notes || '';
+        let yeni: Item;
+        if (islem.tur === 'takmaAdEkle') {
+          const eski = Array.isArray(m.metadata?.aliases) ? (m.metadata!.aliases as string[]) : [];
+          yeni = { ...m, metadata: { ...(m.metadata || {}), aliases: [...eski, islem.deger.trim()] } as Item['metadata'] };
+        } else if (islem.tur === 'metneEkle') {
+          yeni = { ...m, notes: metin.trim() ? `${metin.trimEnd()}\n\n${islem.deger.trim()}` : islem.deger.trim() };
+        } else {
+          if (!metin.includes(islem.eski)) { sonuc.atlanan.push({ islem, neden: 'değişecek cümle metinde yok' }); continue; }
+          yeni = { ...m, notes: metin.replace(islem.eski, islem.deger.trim()) };
+        }
+        yeni = { ...yeni, updatedAt: Date.now() };
+        await yaz.guncelle(yeni);
+        guncel.set(yeni.id, yeni);
       } else {
         const b = bosluklariCikar([...guncel.values()]).find(x => x.anahtar === islem.anahtar);
         if (!b) { sonuc.atlanan.push({ islem, neden: 'alan bu arada dolmuş ya da madde yok' }); continue; }
