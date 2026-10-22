@@ -22,8 +22,8 @@ export const GELEN_KLASORU = 'isler/gelen';
 
 const iki = (n: number) => String(n).padStart(2, '0');
 /** 21-10-2026 (ajansın dosya adı biçimi) */
-const gunAdi = (t: Date) => `${iki(t.getDate())}-${iki(t.getMonth() + 1)}-${t.getFullYear()}`;
-const kisaAd = (s: string) => s.toLocaleLowerCase('tr').replace(/[^a-z0-9çğıöşü]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'is';
+export const gunAdi = (t: Date) => `${iki(t.getDate())}-${iki(t.getMonth() + 1)}-${t.getFullYear()}`;
+export const kisaAd = (s: string) => s.toLocaleLowerCase('tr').replace(/[^a-z0-9çğıöşü]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'is';
 
 /** Oyun PDF'indeki bilgiler, Markdown olarak; boş alan "boş" yazar */
 export function oyunDosyasiMetni(items: Item[], oyunId: string, not: string, zaman = new Date()): string {

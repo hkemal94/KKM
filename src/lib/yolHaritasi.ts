@@ -163,8 +163,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır' },
   { id: 'viki-disa-aktarim', paket: 'W', kimde: 'claude', nereden: '21 Ekim · ajans',
     ad: 'Haftalık viki dışa aktarımı: ajansın Viki Editörü maddeleri okuyabilsin' },
-  { id: 'yazi-ajansa', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans',
-    ad: 'Blog ve kitap taslakları ajansın Yazı Editörü\'ne açılsın' },
+  { id: 'yazi-aktarim', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
+    ad: 'Blog ve kitap: "Yazı Editörü\'ne gönder" (ajans not bırakır, metni yeniden yazmaz)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
