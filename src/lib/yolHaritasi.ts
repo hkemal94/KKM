@@ -163,6 +163,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Haftalık viki dışa aktarımı: ajansın Viki Editörü maddeleri okuyabilsin' },
   { id: 'yazi-aktarim', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: 'Blog ve kitap: "Yazı Editörü\'ne gönder" (ajans not bırakır, metni yeniden yazmaz)' },
+  { id: 'viki-ekrani', paket: 'W', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true,
+    ad: 'Viki düzenleyici: yan panel ve sekmeler, "Diğer bilgiler", onaylı "Maddeyi sil"; kabul edilen öneri bölümleri sitede' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },

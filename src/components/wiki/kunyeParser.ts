@@ -139,6 +139,41 @@ export function kendiMetniYaz(item: Item, yeni: string): string {
 }
 
 /**
+ * Düzenleyicideki "Diğer bilgiler" (23 Ekim): künyeye girmeyen satırlar
+ * yenileriyle değişir. Eski satırlar notlardan çıkar; yeniler ilk eski
+ * satırın yerine (yoksa sona) '* Ad: değer' olarak yazılır. Başlık satırı
+ * ve öbür künye satırları yerinde kalır. Yalnız Kemal "Kaydet"e basınca.
+ */
+export function ekSatirlariYaz(item: Item, eskiler: Array<{ label: string; value: string }>, yeniler: Array<{ label: string; value: string }>): string {
+  const satirlar = (item.notes || '').split('\n');
+  const cikan = new Set<number>();
+  for (const e of eskiler) {
+    const i = satirlar.findIndex((s, n) => {
+      if (cikan.has(n)) return false;
+      const m = s.match(FIELD_RE);
+      return !!m && m[1].trim() === e.label && m[2].trim() === e.value;
+    });
+    if (i >= 0) cikan.add(i);
+  }
+  const yeniSatirlar = yeniler.map(y => `* ${y.label}: ${y.value}`);
+  const ilk = cikan.size ? Math.min(...cikan) : -1;
+  const sonuc: string[] = [];
+  satirlar.forEach((s, n) => {
+    if (n === ilk) sonuc.push(...yeniSatirlar);
+    if (!cikan.has(n)) sonuc.push(s);
+  });
+  if (ilk < 0 && yeniSatirlar.length) {
+    while (sonuc.length && !sonuc[sonuc.length - 1].trim()) sonuc.pop();
+    if (sonuc.length) sonuc.push('');
+    sonuc.push(...yeniSatirlar);
+  }
+  return sonuc.join('\n').trim();
+}
+
+/** "Diğer bilgiler" satırının adı künye satırı olarak okunabiliyor mu */
+export const ekAdiGecerli = (ad: string) => /^[^:\n]{2,40}$/.test(ad.trim());
+
+/**
  * Kişinin rolünü bulur: önce yapılandırılmış alan, sonra künye başlığı,
  * sonra etiketler.
  */

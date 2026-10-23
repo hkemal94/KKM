@@ -27,6 +27,8 @@ interface WikiShellProps {
   readOnly?: boolean;
   /** Madde düzenleyici ve "Yeni madde" (yapisal-4) */
   onUpdateItem?: (item: Item) => Promise<void>;
+  /** Maddeyi siler (23 Ekim): düzenleyicideki "Maddeyi sil" buradan çalışır */
+  onDeleteItem?: (id: string) => Promise<void>;
   onAddItem?: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
   /** Evren raporuna geçiş */
   onRaporAc?: () => void;
@@ -57,6 +59,7 @@ export const WikiShell: React.FC<WikiShellProps> = ({
   onSitede,
   readOnly = false,
   onUpdateItem,
+  onDeleteItem,
   onAddItem,
   onRaporAc
 }) => {
@@ -364,6 +367,7 @@ export const WikiShell: React.FC<WikiShellProps> = ({
             onSitede={onSitede}
             onUpdateItem={readOnly ? undefined : onUpdateItem}
             onSablonYaz={readOnly ? undefined : sablonuYaz}
+            onSil={readOnly || !onDeleteItem ? undefined : async () => { await onDeleteItem(selected.id); navigate(String(selected.metadata?.placeId || '') || null); }}
           />
         ) : (
           <>

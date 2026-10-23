@@ -35,10 +35,14 @@ export function sitedeKunye(i: Item): KunyeField[] {
   return getKunyeFields(i).filter(f => !sablon.has(f.id) && !madde.has(`alan:${f.id}`));
 }
 
-/** Sitede görünecek metin: öneri bölümleri ve gizlenen bölümler çıkar */
+/**
+ * Sitede görünecek metin: gizlenen bölümler çıkar. Öneri bölümleri de
+ * görünür (Kemal, 22 Ekim): maddeye yalnız Kemal "Ekle" deyince girerler,
+ * yani kabul edilmişlerdir. Tek tek gizlemek için "Sitede görünenler".
+ */
 export function sitedeGovde(i: Item) {
   const madde = maddeGizlileri(i);
-  return getArticleBody(i).filter(b => b.status !== 'öneri' && !(b.anahtar && madde.has(`bolum:${b.anahtar}`)));
+  return getArticleBody(i).filter(b => !(b.anahtar && madde.has(`bolum:${b.anahtar}`)));
 }
 
 export const sitedeTakmaAdlar = (i: Item): string[] => (maddeGizlileri(i).has('takma') ? [] : takmaAdlar(i));
@@ -54,7 +58,7 @@ export function gizlenebilenler(i: Item, gorselVar: boolean): GizlenebilenParca[
     cikti.push({ anahtar: a, ad: f.label, tur: 'alan', sablonda: sablon.has(f.id), gizli: sablon.has(f.id) || madde.has(a) });
   }
   for (const b of getArticleBody(i)) {
-    if (!b.anahtar || b.status === 'öneri') continue;
+    if (!b.anahtar) continue;
     const a = `bolum:${b.anahtar}`;
     cikti.push({ anahtar: a, ad: b.heading || 'Giriş metni', tur: 'bolum', sablonda: false, gizli: madde.has(a) });
   }

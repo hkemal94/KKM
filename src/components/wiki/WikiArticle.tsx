@@ -124,6 +124,8 @@ interface WikiArticleProps {
   onUpdateItem?: (item: Item) => Promise<void>;
   /** Düzenleyicideki "bu türe alan ekle" (3. gece) şablonu buradan yazar */
   onSablonYaz?: (s: VikiSablonu) => Promise<void>;
+  /** Düzenleyicideki "Maddeyi sil" (23 Ekim) */
+  onSil?: () => Promise<void>;
 }
 
 export const WikiArticle: React.FC<WikiArticleProps> = ({
@@ -137,7 +139,8 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
   onSoyAgaci,
   onSitede,
   onUpdateItem,
-  onSablonYaz
+  onSablonYaz,
+  onSil
 }) => {
   const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   const admin = mode === 'yonetim';
@@ -319,7 +322,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
     && (a.metadata?.aday as { durum?: string } | undefined)?.durum === 'bekliyor').length, [allItems, item.id]);
 
   return (
-    <article className="max-w-none">
+    <article className={`max-w-none ${duzenle ? 'lg:pr-[500px]' : ''}`}>
       {/* --- Başlık --- */}
       <header className="pb-4 mb-6 border-b-2 border-lacivert/15 dark:border-bej/20">
         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -424,7 +427,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
       </header>
 
       {admin && duzenle && onUpdateItem && (
-        <MaddeDuzenleyici item={item} allItems={allItems} onKaydet={onUpdateItem} onSablonYaz={onSablonYaz} onKapat={() => setDuzenle(false)} />
+        <MaddeDuzenleyici item={item} allItems={allItems} onKaydet={onUpdateItem} onSablonYaz={onSablonYaz} onKapat={() => setDuzenle(false)} onSil={onSil} />
       )}
 
       {/* Sitede görünenler (6. gece): parça parça gizle / göster; yalnız site etkilenir */}
