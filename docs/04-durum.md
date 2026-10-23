@@ -2765,3 +2765,21 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
 - Gönderilince yazının kaydına gönderim zamanı yazılır (Kemal bastığı için);
   düğme "Gönderildi · tarih · Yeniden gönder" olur, metin değişince tekrar gidebilir.
 - Ajans bağlantısı (GitHub anahtarı) yoksa düğme "önce ajans bağlantısını kur" der.
+
+## 23 Ekim — W: viki ekranı (Kemal'in 22 Ekim cevapları)
+
+- Madde sayfasında "düzenle" artık maddenin üstünde değil, sağdan açılan bir
+  yan panelde açılır; madde yanında görünmeye devam eder. Telefonda panel tam
+  ekran. Panelde dört sekme: **Künye · Metin · Bağlar · Ayarlar** (üst madde,
+  takma adlar, esin notu, kurum tiki Ayarlar'da). Sekme değiştirmek yazılanı
+  kaybettirmez.
+- **Diğer bilgiler:** sayfanın "Bilgiler" bölümündeki eski satırlar (künyeye
+  girmeyenler) Künye sekmesinde ad + değer olarak düzenlenir, silinir, yenisi
+  eklenir. Kendiliğinden taşıma yok; yalnız sen değiştirip "Kaydet"e basınca
+  yazılır. Vikide görünür, sitede görünmez (eskisi gibi).
+- **Maddeyi sil:** panelin altında; basınca "Silinsin mi? Geri alınamaz"
+  diye sorar. Öbür maddelerdeki bağları da kalkar. Silinince üst maddeye
+  (yoksa viki girişine) dönülür.
+- **Öneri bölümleri sitede:** stüdyodan "Ekle" deyip maddeye aldığın öneri
+  bölümleri artık sitede de görünür (önceden gizleniyordu). Vikide "öneri"
+  etiketi duruyor; tek tek gizlemek için "Sitede görünenler".

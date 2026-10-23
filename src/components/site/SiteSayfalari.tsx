@@ -168,7 +168,7 @@ export const VikiSayfasi: React.FC<{ items: Item[]; onMadde: (id: string) => voi
 };
 
 export const MaddeSayfasi: React.FC<{ madde: Item; onViki: () => void }> = ({ madde, onViki }) => {
-  // Sitede gizlenen alanlar ve bölümler çıkar (6. gece); öneri bölümleri kanon değil, zaten görünmez
+  // Sitede gizlenen alanlar ve bölümler çıkar (6. gece); kabul edilmiş öneri bölümleri görünür (22 Ekim)
   const kunye = sitedeKunye(madde);
   const govde = sitedeGovde(madde);
   const takma = sitedeTakmaAdlar(madde);

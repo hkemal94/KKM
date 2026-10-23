@@ -2,10 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { KURUM_TIKI } from '../../lib/markaYapisi';
 import { ArrowDown, ArrowUp, Plus, Save, Trash2, X } from 'lucide-react';
 import type { Item, WikiSection } from '../../types';
-import { parseKunye, kendiMetniYaz } from './kunyeParser';
+import { parseKunye, kendiMetniYaz, ekSatirlariYaz, ekAdiGecerli } from './kunyeParser';
 import { useKaydedilmemis } from '../../lib/kaydedilmemis';
 import { BAG_GRUPLARI, BAG_GRUP_SIRASI, bagAdaylari, etkinSablon, ozelAlanKimligi, semaAlanlari, takmaAdlar, type BagGrubu, type SablonAlani, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
-import { TYPE_LABELS, WIKI_TYPES, schemaKeyFor, getKunyeFields } from './wikiSchema';
+import { TYPE_LABELS, WIKI_TYPES, schemaKeyFor, getKunyeFields, getEkBilgiler } from './wikiSchema';
 import { BAG_TURLERI, getRelationLabels, resolveAllRelations, type BagTuru } from '../../utils/relations';
 import { aileUyeleri, type AileUyeligi } from '../../lib/aileUyeligi';
 import { tamAd } from '../../lib/kisiAdi';
@@ -21,6 +21,9 @@ import { bagUygun, kaynakTurleri, uygunTurler } from '../../lib/bagKurallari';
  *   - Metin (1 Ekim, Kemal: "künye harici düzenleme yapamıyorum"): giriş
  *     metni ve vikide görünen bölümler (başlık + metin; ekle, sil, sırala).
  *     Metni Kemal yazar; burada hiçbir şey kendiliğinden doldurulmaz.
+ * 23 Ekim: düzenleyici artık sağdan açılan yan panel (telefonda tam ekran);
+ * dört sekme (Künye · Metin · Bağlar · Ayarlar), künyeye girmeyen eski satırlar
+ * "Diğer bilgiler" olarak düzenlenir, altta onaylı "Maddeyi sil" durur.
  * Kayda yalnız "Kaydet" ile yazılır.
  */
 
@@ -31,6 +34,8 @@ interface Props {
   /** "Bu türe alan ekle" (3. gece): verilirse yeni alan şablona da yazılır */
   onSablonYaz?: (s: VikiSablonu) => Promise<void>;
   onKapat: () => void;
+  /** "Maddeyi sil" (23 Ekim): verilirse panelin altında onaylı silme düğmesi çıkar */
+  onSil?: () => Promise<void>;
 }
 
 interface Bag { targetId: string; type: BagTuru; isProposal?: boolean; reason?: string; bas?: number; bit?: number; /** ekranda yazılan yıllar ("1950–1975") */ yil?: string }
@@ -49,7 +54,7 @@ const yolOku = (item: Item, yol: string): string => {
   return typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '';
 };
 
-export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, onSablonYaz, onKapat }) => {
+export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, onSablonYaz, onKapat, onSil }) => {
   const sablonAnahtari = schemaKeyFor(item.type) || '';
   /** Bu düzenleyicide eklenen, henüz şablona yazılmamış alanlar */
   const [yeniAlanlar, setYeniAlanlar] = useState<SablonAlani[]>([]);
@@ -76,9 +81,17 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
   /** Giriş metni: notlardaki kendi metin (künye satırları hariç) */
   const ilkGiris = useMemo(() => parseKunye(item).kendiMetni, [item]);
   const [giris, setGiris] = useState<string>(ilkGiris);
+  /** Diğer bilgiler (23 Ekim): künyeye girmeyen eski "Bilgiler" satırları */
+  const ilkEkler = useMemo(() => getEkBilgiler(item, { includeSecrets: true }), [item]);
+  const [ekler, setEkler] = useState<{ label: string; value: string }[]>(() => ilkEkler.map(e => ({ label: e.label, value: e.value })));
+  const ekDegisti = JSON.stringify(ekler) !== JSON.stringify(ilkEkler.map(e => ({ label: e.label, value: e.value })));
+  const ekHatali = ekler.some(e => e.value.trim() && !ekAdiGecerli(e.label));
+  const [sekme, setSekme] = useState<'kunye' | 'metin' | 'baglar' | 'ayar'>('kunye');
+  const [silOnay, setSilOnay] = useState(false);
+  const [siliniyor, setSiliniyor] = useState(false);
   const [bolumler, setBolumler] = useState<WikiSection[]>(() => ((item.metadata?.wikiSections as WikiSection[]) || []).map(b => ({ ...b })));
   // Metin değiştiyse kaydetmeden çıkarken sorulur
-  const metinDegisti = ust !== String(item.metadata?.placeId || '') || yeniAlanlar.length > 0 || takma.trim() !== ilkTakma.trim() || ad.trim() !== item.title.trim() || giris.trim() !== ilkGiris.trim() || JSON.stringify(bolumler) !== JSON.stringify((item.metadata?.wikiSections as WikiSection[]) || []);
+  const metinDegisti = ust !== String(item.metadata?.placeId || '') || yeniAlanlar.length > 0 || takma.trim() !== ilkTakma.trim() || ad.trim() !== item.title.trim() || giris.trim() !== ilkGiris.trim() || ekDegisti || JSON.stringify(bolumler) !== JSON.stringify((item.metadata?.wikiSections as WikiSection[]) || []);
   useKaydedilmemis(metinDegisti);
   const bolumYaz = (n: number, d: Partial<WikiSection>) => setBolumler(bs => bs.map((b, k) => (k === n ? { ...b, ...d } : b)));
   const bolumTasi = (n: number, yon: -1 | 1) => setBolumler(bs => {
@@ -134,6 +147,14 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
         else if (f.fieldPath.startsWith('metadata.alanlar.')) ozel[f.fieldPath.slice('metadata.alanlar.'.length)] = v;
         else if (f.fieldPath.startsWith('metadata.')) metadata[f.fieldPath.slice('metadata.'.length)] = v;
       }
+      // Diğer bilgiler (23 Ekim): yalnız değiştiyse; eski profil satırları boşaltılır
+      let ekNotlari = item.notes;
+      if (ekDegisti) {
+        const temiz = ekler.map(e => ({ label: e.label.trim(), value: e.value.replace(/\s*\n\s*/g, ' ').trim() })).filter(e => e.label && e.value);
+        const notlardan = ilkEkler.filter(e => e.id.startsWith('ek_')).map(e => ({ label: e.label, value: e.value }));
+        ekNotlari = ekSatirlariYaz(item, notlardan, temiz);
+        for (const e of ilkEkler) if (e.id.startsWith('eski_')) profil[e.id.slice(5)] = '';
+      }
       metadata.profile = profil;
       if (Object.keys(ozel).length) metadata.alanlar = ozel;
       // Takma adlar: eski adlardan silinen de silinir
@@ -164,7 +185,8 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
         .filter(b => b.title || b.content);
       // Tik kalkınca false yazılır: kayıt birleşerek yazıldığı için anahtarı silmek yetmez
       if (kurumTikiVar && (kurum || metadata[KURUM_TIKI] !== undefined)) metadata[KURUM_TIKI] = kurum;
-      const notes = giris.trim() === ilkGiris.trim() ? item.notes : kendiMetniYaz(item, giris);
+      const notesTaban = ekDegisti ? { ...item, notes: ekNotlari } : item;
+      const notes = giris.trim() === ilkGiris.trim() ? notesTaban.notes : kendiMetniYaz(notesTaban, giris);
       // Boş ad yazılmaz; eski ad kalır
       const title = ad.trim() || item.title;
       await onKaydet({ ...item, title, notes, metadata: metadata as Item['metadata'], updatedAt: Date.now() });
@@ -177,16 +199,41 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
     }
   };
 
+  const sil = async () => {
+    if (!onSil) return;
+    setSiliniyor(true);
+    try {
+      await onSil();
+      onKapat();
+    } catch {
+      // Silinemedi: uyarıyı uygulama gösterir; panel açık kalır
+    } finally {
+      setSiliniyor(false);
+    }
+  };
+
   const secim = 'text-[13px] bg-white dark:bg-lacivert-800/60 border border-bej/70 dark:border-lacivert-600/60 rounded px-2 py-1.5 focus:outline-hidden focus:border-kiremit';
   const girdi = 'w-full text-[13px] bg-white dark:bg-lacivert-800/60 border border-bej/70 dark:border-lacivert-600/60 rounded px-2.5 py-1.5 focus:outline-hidden focus:border-kiremit';
 
+  const sekmeler: Array<[typeof sekme, string]> = [['kunye', 'Künye'], ['metin', 'Metin'], ['baglar', 'Bağlar'], ['ayar', 'Ayarlar']];
+
   return (
-    <section className="mb-8 rounded-lg border-2 border-kiremit/40 bg-white/60 dark:bg-lacivert-800/40 p-4 space-y-5">
-      <div className="flex items-center justify-between gap-2">
+    <div className="fixed inset-0 z-[55] flex flex-col bg-[#FAF8F5] dark:bg-[#13204A] sm:left-auto sm:w-[480px] sm:border-l sm:border-bej/70 dark:sm:border-lacivert-600 sm:shadow-2xl">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-bej/70 dark:border-lacivert-600/60">
         <h2 className="font-sans text-[15px] font-bold">Düzenle · {TYPE_LABELS[item.type] || item.type}</h2>
         <button type="button" onClick={onKapat} aria-label="Kapat" className="p-1 text-gri hover:text-lacivert dark:text-bej/85"><X size={16} /></button>
       </div>
-
+      <div className="flex overflow-x-auto border-b border-bej/70 dark:border-lacivert-600/60 px-2" role="tablist">
+        {sekmeler.map(([k, ad_]) => (
+          <button key={k} type="button" role="tab" aria-selected={sekme === k} onClick={() => setSekme(k)}
+            className={`shrink-0 px-3 py-2.5 text-[13px] font-semibold border-b-2 -mb-px ${sekme === k ? 'border-kiremit text-lacivert dark:text-krem' : 'border-transparent text-gri dark:text-bej/80 hover:text-lacivert dark:hover:text-krem'}`}>
+            {ad_}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {sekme === 'kunye' && (
+       <div className="space-y-5">
       <label className="block">
         <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Ad</span>
         <input value={ad} onChange={e => setAd(e.target.value)} placeholder={item.title} className={`${girdi} font-semibold`} />
@@ -237,21 +284,30 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
         </div>
       )}
 
-      <label className="block">
-        <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Üst madde · bu madde neyin altında?</span>
-        <select value={ust} onChange={e => setUst(e.target.value)} className={`${secim} w-full`}>
-          <option value="">— yok (en üstte)</option>
-          {ustAdaylari.map(h => <option key={h.id} value={h.id}>{h.title} · {TYPE_LABELS[h.type] || h.type}</option>)}
-        </select>
-      </label>
-
-      <label className="block">
-        <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Takma adlar · virgülle</span>
-        <input value={takma} onChange={e => setTakma(e.target.value)} placeholder="Başka adları (ör. Düzada Köyü). Vikide geçince bağlantı olur." className={girdi} />
-      </label>
-
       <div>
-        <div className="postmark-label text-gri dark:text-bej/85 mb-1">Metin</div>
+        <div className="postmark-label text-gri dark:text-bej/85 mb-1">Diğer bilgiler</div>
+        <p className="mb-2 text-[11px] text-gri dark:text-bej/70">Künyeye girmeyen eski satırlar. Vikide sayfanın "Bilgiler" bölümünde görünür; sitede görünmez.</p>
+        {ekler.length === 0 && <p className="text-[12px] text-gri dark:text-bej/70 mb-2">Henüz yok.</p>}
+        <ul className="space-y-1.5 mb-2">
+          {ekler.map((e, n) => (
+            <li key={n} className="flex items-center gap-1.5">
+              <input value={e.label} onChange={ev => setEkler(es => es.map((x, k) => (k === n ? { ...x, label: ev.target.value } : x)))} placeholder="Adı" aria-label="Bilginin adı"
+                className={`${girdi} !w-40 shrink-0 ${e.value.trim() && !ekAdiGecerli(e.label) ? 'border-kiremit' : ''}`} />
+              <input value={e.value} onChange={ev => setEkler(es => es.map((x, k) => (k === n ? { ...x, value: ev.target.value } : x)))} placeholder="Değeri" aria-label="Bilginin değeri" className={`${girdi} flex-1 min-w-0`} />
+              <button type="button" aria-label="Satırı sil" onClick={() => setEkler(es => es.filter((_, k) => k !== n))} className="p-2 text-gri hover:text-kiremit"><Trash2 size={14} /></button>
+            </li>
+          ))}
+        </ul>
+        <button type="button" onClick={() => setEkler(es => [...es, { label: '', value: '' }])}
+          className="inline-flex items-center gap-1 text-[12px] font-mono px-2.5 py-1.5 rounded border border-bej/70 hover:border-kiremit">
+          <Plus size={13} /> Satır ekle
+        </button>
+      </div>
+        </div>
+        )}
+        {sekme === 'metin' && (
+       <div className="space-y-5">
+      <div>
         <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Giriş metni</span>
         <textarea value={giris} onChange={e => setGiris(e.target.value)} rows={6} placeholder="Maddenin giriş metni — sen yazıyorsun." className={`${girdi} leading-relaxed`} />
         <div className="mt-3 space-y-3">
@@ -273,7 +329,10 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
           <Plus size={13} /> Bölüm ekle
         </button>
       </div>
-
+        </div>
+        )}
+        {sekme === 'baglar' && (
+       <div className="space-y-5">
       <div>
         <div className="postmark-label text-gri dark:text-bej/85 mb-2">Bağlar</div>
         {baglar.length === 0 && <p className="text-[12px] text-gri dark:text-bej/70 mb-2">Henüz bağ yok.</p>}
@@ -325,6 +384,22 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
           </button>
         </div>
       </div>
+        </div>
+        )}
+        {sekme === 'ayar' && (
+       <div className="space-y-5">
+      <label className="block">
+        <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Üst madde · bu madde neyin altında?</span>
+        <select value={ust} onChange={e => setUst(e.target.value)} className={`${secim} w-full`}>
+          <option value="">— yok (en üstte)</option>
+          {ustAdaylari.map(h => <option key={h.id} value={h.id}>{h.title} · {TYPE_LABELS[h.type] || h.type}</option>)}
+        </select>
+      </label>
+
+      <label className="block">
+        <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Takma adlar · virgülle</span>
+        <input value={takma} onChange={e => setTakma(e.target.value)} placeholder="Başka adları (ör. Düzada Köyü). Vikide geçince bağlantı olur." className={girdi} />
+      </label>
 
       <div>
         <div className="postmark-label text-gri dark:text-bej/85 mb-1">Esin notu · yalnız sen görürsün</div>
@@ -340,14 +415,36 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
           </span>
         </label>
       )}
-
-      <div className="flex justify-end gap-2">
-        <button type="button" onClick={onKapat} className="text-[12px] font-mono px-3 py-1.5 rounded border border-bej/70">Vazgeç</button>
-        <button type="button" disabled={yaziliyor} onClick={() => void kaydet()} className="inline-flex items-center gap-1 text-[12px] font-mono px-3 py-1.5 rounded bg-lacivert text-krem dark:bg-[#2C3C72] disabled:opacity-40">
-          <Save size={13} /> {yaziliyor ? 'Kaydediliyor…' : 'Kaydet'}
-        </button>
+        </div>
+        )}
       </div>
-    </section>
+      <div className="border-t border-bej/70 dark:border-lacivert-600/60 px-4 py-3 bg-[#FAF8F5] dark:bg-[#13204A]">
+        {ekHatali && <p className="mb-2 text-[11px] text-kiremit">Diğer bilgilerde adı eksik ya da ':' içeren satır var.</p>}
+        {silOnay ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="flex-1 min-w-[200px] text-[12px] text-kiremit">Silinsin mi? Geri alınamaz; öbür maddelerdeki bağları da kalkar.</span>
+            <button type="button" disabled={siliniyor} onClick={() => void sil()} className="text-[12px] font-mono px-3 py-1.5 rounded bg-kiremit text-white disabled:opacity-40">{siliniyor ? 'Siliniyor…' : 'Evet, sil'}</button>
+            <button type="button" disabled={siliniyor} onClick={() => setSilOnay(false)} className="text-[12px] font-mono px-3 py-1.5 rounded border border-bej/70">Vazgeç</button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              {onSil && (
+                <button type="button" onClick={() => setSilOnay(true)} className="inline-flex items-center gap-1 text-[12px] font-mono px-2 py-1.5 text-gri hover:text-kiremit">
+                  <Trash2 size={13} /> Maddeyi sil
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={onKapat} className="text-[12px] font-mono px-3 py-1.5 rounded border border-bej/70">Vazgeç</button>
+              <button type="button" disabled={yaziliyor || ekHatali} onClick={() => void kaydet()} className="inline-flex items-center gap-1 text-[12px] font-mono px-3 py-1.5 rounded bg-lacivert text-krem dark:bg-[#2C3C72] disabled:opacity-40">
+                <Save size={13} /> {yaziliyor ? 'Kaydediliyor…' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

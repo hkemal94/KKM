@@ -41,6 +41,7 @@ export default function Duzada({
   activeItemId,
   onSelectItem,
   onUpdateItem,
+  onDeleteItem,
   onAddItem,
   istek = null,
   onAtolye,
@@ -80,6 +81,7 @@ export default function Duzada({
           onHaritayaGit={onAtolye}
           onSoyAgaci={onSoyAgaci}
           onUpdateItem={onUpdateItem}
+          onDeleteItem={onDeleteItem}
           onAddItem={onAddItem}
           onRaporAc={() => setActiveTab('rapor')}
           onSitede={(it, acik) => {
