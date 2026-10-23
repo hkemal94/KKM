@@ -1,9 +1,10 @@
-import type { Item } from '../types';
+import type { Item, WikiSection } from '../types';
 import { alanaYaz, bosluklariCikar } from '../components/Bosluklar';
 import { base64, base64Coz, github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
 import { bagEkle } from './bagAgi';
-import { takmaAdlar } from './alanSablonu';
+import { semaAlanlari, takmaAdlar } from './alanSablonu';
+import { getKunyeFields, schemaKeyFor } from '../components/wiki/wikiSchema';
 import type { BagTuru } from '../utils/relations';
 
 /**
@@ -26,6 +27,11 @@ import type { BagTuru } from '../utils/relations';
  *     (metindeki bir cümle yenisiyle değişir). Bunlar maddeyi adıyla bulur
  *     (başlık ya da takma ad); tam bir eşleşme yoksa uygulanmaz, makbuzda
  *     nedeniyle "atlanan" olur.
+ *   - 24 Ekim (kararı verilmiş viki düzeltmeleri: Erdal'ın takma adı, kökeni,
+ *     ada kaydındaki paragraf): `takmaAdSil`, `alaniDegistir` (dolu künye
+ *     alanı yenisiyle değişir; `eski` verilirse yalnız alan hâlâ o değerdeyse)
+ *     ve `metindenSil` (metinden ya da bölümden bir paragraf / cümle çıkar;
+ *     boşalan bölüm kalkar).
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -40,7 +46,25 @@ export type KararIslemi =
   | { kimlik: string; tur: 'bagKur'; kaynak: string; hedef: string; bag: BagTuru; ikiYonlu?: boolean; baslik: string; neden: string }
   | { kimlik: string; tur: 'takmaAdEkle'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'metneEkle'; madde: string; deger: string; baslik: string; neden: string }
-  | { kimlik: string; tur: 'metniDegistir'; madde: string; eski: string; deger: string; baslik: string; neden: string };
+  | { kimlik: string; tur: 'metniDegistir'; madde: string; eski: string; deger: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'takmaAdSil'; madde: string; deger: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'alaniDegistir'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'metindenSil'; madde: string; eski: string; baslik: string; neden: string };
+
+/** `alaniDegistir` için maddenin künye alanı (kimliği ya da adıyla); metin ve başlık değil */
+function kunyeAlani(m: Item, alan: string) {
+  const a = kucuk(alan);
+  const f = semaAlanlari(schemaKeyFor(m.type) || '').find(x => (kucuk(x.id) === a || kucuk(x.label) === a) && x.fieldPath.startsWith('metadata.'));
+  if (!f) return null;
+  const deger = getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
+  return { yol: f.fieldPath, deger };
+}
+
+const bolumlerOf = (m: Item) => ((m.metadata?.wikiSections as Array<{ content?: string }> | undefined) || []);
+/** Metin ya da bölümlerden birinde geçiyor mu */
+const metindeVar = (m: Item, parca: string) => (m.notes || '').includes(parca) || bolumlerOf(m).some(b => String(b.content || '').includes(parca));
+/** Parçayı çıkarır, kalan boş satırları toplar */
+const parcaCikar = (metin: string, parca: string) => metin.replace(parca, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 
 const kucuk = (s: string) => (s || '').trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr');
 
@@ -69,6 +93,9 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   }
   if (i.tur === 'metneEkle') { const m = maddeBul(items, i.madde); return !!m && (m.notes || '').includes(i.deger.trim()); }
   if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !(m.notes || '').includes(i.eski) && (m.notes || '').includes(i.deger.trim()); }
+  if (i.tur === 'takmaAdSil') { const m = maddeBul(items, i.madde); return !!m && !takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)); }
+  if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
+  if (i.tur === 'metindenSil') { const m = maddeBul(items, i.madde); return !!m && !!i.eski?.trim() && !metindeVar(m, i.eski); }
   return false;
 }
 
@@ -93,7 +120,13 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
   return islemler.filter(i => {
     if (i.tur === 'sil') { const k = kimlik.get(i.id); return !!k && k.type === 'aday' && !k.archived; }
     if (i.tur === 'alanaYaz') return !!i.deger?.trim() && bosluklar.has(i.anahtar);
-    if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') return !yapilmis(items, i);
+    // Alan beklenen eski değerde değilse karar eskimiştir; listede durmaz
+    if (i.tur === 'alaniDegistir' && i.eski !== undefined) {
+      const m = maddeBul(items, i.madde), al = m && kunyeAlani(m, i.alan);
+      if (al && kucuk(al.deger) !== kucuk(i.eski) && kucuk(al.deger) !== kucuk(i.deger)) return false;
+    }
+    if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
+      || i.tur === 'takmaAdSil' || i.tur === 'alaniDegistir' || i.tur === 'metindenSil') return !yapilmis(items, i);
     return false;
   });
 }
@@ -129,6 +162,36 @@ export async function kararlariUygula(
           const h2 = bagEkle(guncel.get(h.id) || h, k.id, islem.bag);
           if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
         }
+      } else if (islem.tur === 'takmaAdSil' || islem.tur === 'alaniDegistir' || islem.tur === 'metindenSil') {
+        const m = maddeBul([...guncel.values()], islem.madde);
+        if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }
+        let yeni: Item;
+        if (islem.tur === 'takmaAdSil') {
+          const at = (l: unknown) => (Array.isArray(l) ? l.filter(t => typeof t === 'string' && kucuk(t) !== kucuk(islem.deger)) : l);
+          if (!takmaAdlar(m).some(t => kucuk(t) === kucuk(islem.deger))) { sonuc.atlanan.push({ islem, neden: 'takma ad maddede yok' }); continue; }
+          const md = { ...(m.metadata || {}) } as Record<string, unknown>;
+          if (Array.isArray(md.aliases)) md.aliases = at(md.aliases);
+          if (Array.isArray(md.eskiAdlar)) md.eskiAdlar = at(md.eskiAdlar);
+          yeni = { ...m, metadata: md as Item['metadata'] };
+        } else if (islem.tur === 'alaniDegistir') {
+          const a = kunyeAlani(m, islem.alan);
+          if (!a) { sonuc.atlanan.push({ islem, neden: `"${islem.alan}" bu türün künyesinde yok` }); continue; }
+          if (islem.eski !== undefined && kucuk(a.deger) !== kucuk(islem.eski)) { sonuc.atlanan.push({ islem, neden: `alan bu arada değişmiş (şimdi: ${a.deger || 'boş'})` }); continue; }
+          yeni = alanaYaz(m, a.yol, islem.deger.trim());
+        } else {
+          if (!islem.eski?.trim() || !metindeVar(m, islem.eski)) { sonuc.atlanan.push({ islem, neden: 'silinecek parça metinde yok' }); continue; }
+          if ((m.notes || '').includes(islem.eski)) yeni = { ...m, notes: parcaCikar(m.notes || '', islem.eski) };
+          else {
+            const bolumler = (m.metadata?.wikiSections as WikiSection[] | undefined) || [];
+            const n = bolumler.findIndex(b => String(b.content || '').includes(islem.eski));
+            const kalan = parcaCikar(String(bolumler[n].content || ''), islem.eski);
+            const liste = kalan ? bolumler.map((b, k) => (k === n ? { ...b, content: kalan } : b)) : bolumler.filter((_, k) => k !== n);
+            yeni = { ...m, metadata: { ...(m.metadata || {}), wikiSections: liste } as Item['metadata'] };
+          }
+        }
+        yeni = { ...yeni, updatedAt: Date.now() };
+        await yaz.guncelle(yeni);
+        guncel.set(yeni.id, yeni);
       } else if (islem.tur === 'takmaAdEkle' || islem.tur === 'metneEkle' || islem.tur === 'metniDegistir') {
         const m = maddeBul([...guncel.values()], islem.madde);
         if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }

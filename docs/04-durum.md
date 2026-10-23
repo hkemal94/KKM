@@ -2783,3 +2783,16 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
 - **Öneri bölümleri sitede:** stüdyodan "Ekle" deyip maddeye aldığın öneri
   bölümleri artık sitede de görünür (önceden gizleniyordu). Vikide "öneri"
   etiketi duruyor; tek tek gizlemek için "Sitede görünenler".
+
+## 24 Ekim gece — W: ajansın kararları silebiliyor ve değiştirebiliyor (gece işi)
+
+- Durum → Ajans → "Ajansın kararları" kartı üç yeni iş daha uygular:
+  **takma ad silme**, **dolu künye alanını değiştirme** (ajans eski değeri
+  yazdıysa yalnız alan hâlâ o değerdeyse; değişmişse karar listeden düşer) ve
+  **metinden silme** (madde metninden ya da bir bölümden paragraf / cümle;
+  boşalan bölüm kalkar). Listede "Takma ad sil", "Alanı değiştir", "Metinden
+  sil" diye görünür. İkinci basışta uygulanmış işler gelmez.
+- Bekleyen kararlar (panoda): "Erdal Yılmaz" takma adı Erdal Öztürk'ten
+  kalkacak, Erdal'ın kökeni "Sonradan geldi" olacak, ada kaydındaki "Ekim 2003,
+  Sezon Sonu" paragrafı kalkacak. Ajans bunları `kkm/kararlar.json`'a yazınca
+  Kemal düğmeye bir kez basar. *Uygulamada düğme hazır; kararlar henüz yazılmadı.*

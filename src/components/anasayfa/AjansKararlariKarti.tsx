@@ -20,7 +20,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt' };
+const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil' };
 
 export const AjansKararlariKarti: React.FC<Props> = ({ items, anahtar, tur, onUpdateItem, onDeleteItem }) => {
   const [dosya, setDosya] = useState<KararDosyasi | null | 'yukleniyor' | { hata: string }>('yukleniyor');
@@ -59,7 +59,7 @@ export const AjansKararlariKarti: React.FC<Props> = ({ items, anahtar, tur, onUp
         <div className={ETIKET}>Ajansın kararları</div>
         <p className={`text-[13px] ${IKINCIL}`}>
           Ajans tepsiyi ayıkladı: elediği, departmanına taşıdığı ve soru kutusuna aldığı öneriler tepsiden silinir;
-          panoda cevapladığın sorular vikideki boş alana yazılır. Sen basmadan hiçbir kayıt değişmez.
+          panoda cevapladığın sorular vikideki boş alana yazılır; kararı verilmiş düzeltmeler (takma ad, künye alanı, metin) işlenir. Sen basmadan hiçbir kayıt değişmez.
         </p>
       </div>
 
@@ -90,6 +90,8 @@ export const AjansKararlariKarti: React.FC<Props> = ({ items, anahtar, tur, onUp
                   <li key={i.kimlik} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72] pt-1.5">
                     <span className="font-semibold">{ISLEM_ADI[i.tur]}:</span> {i.baslik}
                     {(i.tur === 'alanaYaz' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') && <> → <span className="font-semibold">{i.deger}</span></>}
+                    {i.tur === 'alaniDegistir' && <> → <span className="font-semibold">{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger}</span></>}
+                    {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <span className="font-semibold line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</span></>}
                     {i.tur === 'bagKur' && <> → <span className="font-semibold">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</span></>}
                     <span className={`block text-[12px] ${IKINCIL}`}>{i.neden}</span>
                   </li>
