@@ -167,6 +167,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki düzenleyici: yan panel ve sekmeler, "Diğer bilgiler", onaylı "Maddeyi sil"; kabul edilen öneri bölümleri sitede' },
   { id: 'kararlar-sil-degistir', paket: 'W', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: '"Ajansın kararlarını uygula" takma ad silebiliyor, dolu künye alanını değiştirebiliyor, metinden paragraf silebiliyor' },
+  { id: 'yenile-yerinde', paket: 'K', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
+    ad: 'Sayfa yenilenince ana sayfaya atmıyor; açık sayfada (ve açık maddede) kalıyor' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
