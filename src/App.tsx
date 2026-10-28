@@ -145,19 +145,29 @@ export default function App() {
   // A ref lock to prevent infinite loops of room de-duplication on items real-time updates
   
   // Navigation & interaction states
-  const [activeTab, setActiveTab] = useState<Sayfa>('komuta');
+  /**
+   * Yenileyince kaldığı ekran (28 Ekim, Kemal: "yenilemeye basınca anasayfaya
+   * atıyor"). Geri tuşu için tarayıcı geçmişine yazılan son ekran (aşağıda)
+   * sayfa yenilenince de durur; açılışta oradan okunur. Kayda yazılmaz.
+   */
+  const [ilkEkran] = useState<Record<string, any> | null>(() => {
+    const d = typeof history !== 'undefined' ? (history.state as Record<string, any> | null) : null;
+    return d?.kkm && typeof d.tab === 'string' ? d : null;
+  });
+  const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab as Sayfa) ?? 'komuta');
   /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kurucu, Kitap) */
-  const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(null);
+  const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(() =>
+    ilkEkran?.tab === 'duzada' && (ilkEkran.duzada === 'wiki' || ilkEkran.duzada === 'rapor') ? { sekme: ilkEkran.duzada, n: Date.now() } : null);
   const [atolyeIstek, setAtolyeIstek] = useState<{ sekme: AtolyeHedefi; n: number; aile?: string; madde?: string } | null>(null);
   const [yaziIstek, setYaziIstek] = useState<{ sekme: 'blog' | 'kitap' | 'fanzin'; n: number } | null>(null);
   /** Neyin Eksik sayfası açılırken açık gelecek başlık */
   const [eksikAcik, setEksikAcik] = useState<string | null>(null);
   /** Durum'un sekmesi (1 Ekim: Neyin Eksik Durum'a katıldı) */
-  const [durumSekme, setDurumSekme] = useState<DurumSekmesi>('yuzdeler');
+  const [durumSekme, setDurumSekme] = useState<DurumSekmesi>(() => (ilkEkran?.durum as DurumSekmesi) ?? 'yuzdeler');
   /** Ana sayfanın yüzde şeridinden Durum'a gelince açılacak madde listesi (7 Ekim) */
   const [durumListe, setDurumListe] = useState<{ h: SeritHedefi; n: number } | null>(null);
   /** Markalar'da Galeri sekmesi açık mı (7 Ekim: Galeri Markalar'ın sekmesi) */
-  const [markaGaleri, setMarkaGaleri] = useState(false);
+  const [markaGaleri, setMarkaGaleri] = useState(() => !!ilkEkran?.galeri);
   /** Telefonda ana sayfa sekmesi; açılışta Bugün */
   const [telSekme, setTelSekme] = useState<TelSekmesi>('bugun');
   /** Telefonda "Diğer" listesi */
@@ -201,7 +211,7 @@ export default function App() {
     setBaglanmaHatasi(null);
     try { await driveIzniniYenile(); } catch (e: any) { setBaglanmaHatasi(`İzin alınamadı: ${e?.code || e?.message || 'bilinmeyen'}`); }
   };
-  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [activeItemId, setActiveItemId] = useState<string | null>(() => (typeof ilkEkran?.item === 'string' ? ilkEkran.item : null));
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHizliNotOpen, setIsHizliNotOpen] = useState(false);
   const [fikirAcik, setFikirAcik] = useState(false);

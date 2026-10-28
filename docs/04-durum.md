@@ -2796,3 +2796,13 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   kalkacak, Erdal'ın kökeni "Sonradan geldi" olacak, ada kaydındaki "Ekim 2003,
   Sezon Sonu" paragrafı kalkacak. Ajans bunları `kkm/kararlar.json`'a yazınca
   Kemal düğmeye bir kez basar. *Uygulamada düğme hazır; kararlar henüz yazılmadı.*
+
+## 28 Ekim — K: yenileyince kaldığı yerde (gece işi)
+
+- Tarayıcıda yenileye basınca KKM artık ana sayfaya dönmüyor; açık olan sayfa
+  geri gelir. Vikide açık madde, Durum'un sekmesi (Eksikler, Ajans…) ve
+  Markalar'da Galeri de yerinde kalır. Geri tuşunun kullandığı "son ekran"
+  bilgisinden okunur; kayda bir şey yazılmaz.
+- Sınır: sayfanın içindeki alt sekmeler (Atölye'de Harita / Tuval gibi) ve
+  yarım kalmış yazı yenileyince geri gelmez; sayfanın kendisi gelir. Yeni
+  sekmede ya da tarayıcı kapatılıp açılınca yine ana sayfa açılır.
