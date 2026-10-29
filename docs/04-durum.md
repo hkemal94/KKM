@@ -2806,3 +2806,12 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
 - Sınır: sayfanın içindeki alt sekmeler (Atölye'de Harita / Tuval gibi) ve
   yarım kalmış yazı yenileyince geri gelmez; sayfanın kendisi gelir. Yeni
   sekmede ya da tarayıcı kapatılıp açılınca yine ana sayfa açılır.
+
+## 29 Ekim — K: künye belgesi 24 Ekim cevaplarına göre
+
+- `docs/03-duzada-kunyesi.md`: ada konumu "Babakale'nin batı-kuzeybatısı, Ege
+  açıkları" oldu ("Türk suları" kalktı; koordinat aynı). Dondurmacı Kızlar
+  faaliyeti "2000 sonrası" yerine "2020–". Kems Company kuruluşu (2025) zaten
+  güncel.
+- Uygulamada değişen bir şey yok; yalnız belge. Vikideki kayıtlar ayrıca
+  Durum → Ajans kartındaki düğmeyle düzelir (Kemal basacak).
