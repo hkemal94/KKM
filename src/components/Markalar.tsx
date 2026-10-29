@@ -51,7 +51,6 @@ const GALERI_SEKMESI = '__galeri';
 
 export default function Markalar({
   items,
-  onSelectItem,
   onUpdateItem,
   onDeleteItem,
   onAddItem,
@@ -60,7 +59,7 @@ export default function Markalar({
   galeriAcik = false,
   onGaleri
 }: MarkalarProps) {
-  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
+  useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 

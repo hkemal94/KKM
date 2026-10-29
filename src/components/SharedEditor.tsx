@@ -28,7 +28,6 @@ export default function SharedEditor({
   entities,
   linkedEntityIds = [],
   onLinkEntity,
-  onUnlinkEntity,
   onAddEntityProposal,
   dismissedNames = [],
   onDismissName

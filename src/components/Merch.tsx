@@ -47,7 +47,7 @@ export default function Merch({
   onAddItem,
   onSelectArea
 }: MerchProps) {
-  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
+  useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   // Hazır internet fotoğrafları gösterilmez (29 Eylül); görseli olmayan
   // drop/ürüne kurumun arması konur (merchYedekGorseli).
   const items = useMemo(() => hamItems.map(hazirFotosuz), [hamItems]);

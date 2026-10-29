@@ -22,7 +22,7 @@ interface Props {
 }
 
 export const DuzadaKarti: React.FC<Props> = ({ items, onHarita, onMadde }) => {
-  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
+  useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   const son = useMemo(() => [...items]
     .filter(i => !i.archived && !i.isProposal && !SAYILMAZ.has(i.type) && !(i.tags || []).includes('gunluk-not') && i.type !== 'fikir')
     .sort((a, b) => b.updatedAt - a.updatedAt)

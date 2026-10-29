@@ -24,7 +24,7 @@ interface KurumOzetiProps {
 }
 
 export const KurumOzeti: React.FC<KurumOzetiProps> = ({ item, items = [], onVikideAc }) => {
-  const gorselSurumu = useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
+  useGorselSurumu(); // galeri görselleri çözülünce yenilenir (21 Ekim)
   const kunye = useMemo(() => getKunyeFields(item), [item]);
   const ekler = useMemo(() => getEkBilgiler(item), [item]);
   const govde = useMemo(() => getArticleBody(item), [item]);
