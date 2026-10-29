@@ -36,7 +36,6 @@ import {
   Hammer,
   Sun,
   Moon,
-  UserRound,
   KeyRound,
   LogOut,
   Megaphone,

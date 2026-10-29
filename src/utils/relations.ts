@@ -92,8 +92,8 @@ export function isEntityUnlinked(item: Item, allItems: Item[]): boolean {
 // Helper to determine the inverse label for a relationship type
 export function getRelationLabels(
   type: string,
-  sourceType: ItemType,
-  targetType: ItemType
+  _sourceType: ItemType,
+  _targetType: ItemType
 ): { forward: string; inverse: string } {
   switch (type) {
     case 'bulunduğu yer':

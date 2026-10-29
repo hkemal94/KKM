@@ -2815,3 +2815,13 @@ kuralı ve açık sorulardaki satır güncellendi; kişi adını ayıran kod
   güncel.
 - Uygulamada değişen bir şey yok; yalnız belge. Vikideki kayıtlar ayrıca
   Durum → Ajans kartındaki düğmeyle düzelir (Kemal basacak).
+
+## 29 Ekim — K: kullanılmayan kod temizliği
+
+- 25 Ekim kod taramasının bulduğu 11 kullanılmayan ad kalktı (sunucuda iki,
+  App, Markalar, Merch, Ana sayfa Düzada kartı, Kurum özeti, metin editörü,
+  bağ etiketleri). Ekranda değişen bir şey yok.
+- Galeri görsellerini yenileyen çağrı dört ekranda yerinde kaldı; yalnız
+  kullanılmayan değişken adı gitti.
+- Fark edilen: Kitap ve Blog'daki metin editörü "bağı kaldır" işlevini
+  alıyor ama hiç kullanmıyor; düzeltme ayrı iş.
