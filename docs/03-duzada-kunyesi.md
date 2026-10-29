@@ -8,7 +8,7 @@ bilgi uydurulmaz.
 
 Ege Denizi'nde, zeytin ağaçlarıyla çevrili kurgusal bir ada. Kurgusal ama
 gerçek enlem-boylam kullanıyor: **39,60° K · 25,85° D** civarı —
-Bozcaada'nın güneybatısı, Babakale'nin batısı, Türk suları; Küçükkuyu
+Bozcaada'nın güneybatısı, Babakale'nin batı-kuzeybatısı, Ege açıkları; Küçükkuyu
 yaklaşık 65 km doğuda (Kemal, 28 Eylül: W3 52. tur). Eski değer 39,005° K ·
 25,805° D Midilli'nin batısına, Yunan sularına düşüyordu. Harita 29 Eylül
 2026'da yeni koordinata taşındı (H); şekil ve ölçüler aynı kaldı.
@@ -109,7 +109,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   (irili ufaklı).
 - **Dirlik** — ~~profesyonel alt lige birkaç kez inip çıktı~~ (W3 52. turda kalktı: kulüp hep amatör).
 - **Mekânlar** — Sade Meyhane: fabrika kapandıktan sonra bir süre boş kaldı,
-  1980–1990'larda meyhane oldu. Dondurmacı Kızlar: 2000 sonrası; Liman'da, iskelenin
+  1980–1990'larda meyhane oldu. Dondurmacı Kızlar: 2020–; Liman'da, iskelenin
   yakınında; kışın tatlıcı / kafe olur. Liman'daki kafe ayrı bir yer: 2010
   sonrası açılmış yeni bir kafe (adsız; W3 60–61. tur).
 - **Kems Company** — Kemsköy Caddesi'nde bir dükkânı var (yeri cadde — Kemal, 29 Eylül; adı sonra;
