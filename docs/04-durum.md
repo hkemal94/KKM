@@ -1,9 +1,22 @@
 # Durum
 
-**Son güncelleme: 8 Ekim 2026 (H: yeni Merkez, ev ve arsası tek yapı)**
+**Son güncelleme: 2 Kasım 2026 (yeni yerleşim 1. adım: menü)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## Yeni yerleşim (2 Kasım, Kemal)
+
+KKM üç başlığa geçiyor: **Ajans · Evren · Ürünler**. Kararlar ajans
+deposunda (`docs/kkm-soru-turu.md`). Geçiş adım adım, her adım bir PR.
+
+1. **Menü (bu adım):** sol çubuk ve telefonun alt menüsü üç grupta. Üst
+   çubukta her sayfada arama, zil, karanlık / aydınlık. Yaz tuşu: Hızlı not ·
+   Kems'e yaz (fikir kutusu, oradan ajansa) · Notlar. Site menüden kalktı
+   (sayfası yerinde). Telefonda yedek ve hesap düğmeleri Ajans grubunda.
+   Sayfa silinmedi.
+2. Sırada: Onay bekleyenler ekranı (Ajans'ın açılışı), sonra Evren, Ürünler,
+   kalkanların silinmesi, Ajanlar ve otomasyonlar.
 
 ## 28 Eylül kararları
 

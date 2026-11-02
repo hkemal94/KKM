@@ -169,6 +169,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: '"Ajansın kararlarını uygula" takma ad silebiliyor, dolu künye alanını değiştirebiliyor, metinden paragraf silebiliyor' },
   { id: 'yenile-yerinde', paket: 'K', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: 'Sayfa yenilenince ana sayfaya atmıyor; açık sayfada (ve açık maddede) kalıyor' },
+  { id: 'yeni-menu-1', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: 'Yeni yerleşim 1. adım: menü Ajans · Evren · Ürünler, üst çubukta arama-zil-tema, Yaz tuşu (Hızlı not · Kems\'e yaz · Notlar)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
