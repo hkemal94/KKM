@@ -31,6 +31,7 @@ import {
   Gamepad2,
   ListChecks,
   CalendarDays,
+  Bot,
   Inbox,
   Briefcase,
   Package,
@@ -115,6 +116,7 @@ import HizliNotModal from './components/HizliNotModal';
 import AramaModal from './components/AramaModal';
 import { NotlarSayfasi } from './components/anasayfa/NotlarSayfasi';
 import { IslerVeTakvim, type IslerSekmesi } from './components/ajans/IslerVeTakvim';
+import { AjanlarVeOtomasyonlar, type AjanlarSekmesi } from './components/ajans/AjanlarVeOtomasyonlar';
 import { OnayBekleyenler } from './components/ajans/OnayBekleyenler';
 import { Zil } from './components/kabuk/Zil';
 import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from './lib/bildirimler';
@@ -123,10 +125,12 @@ import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from '.
  * Uygulamanın sayfaları. 'onay' açılış (2 Kasım); eski Komuta Merkezi 'durum'.
  * 2 Kasım (yol haritası 1. adım): Ana sayfa ve Site kalktı; notlar 'notlar'da.
  */
-type Sayfa = 'onay' | 'notlar' | 'isler' | 'durum' | 'markalar' | 'duzada' | 'atolye' | 'merch' | 'yazi' | 'oyun' | 'studyo' | 'sosyal';
+type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'markalar' | 'duzada' | 'atolye' | 'merch' | 'yazi' | 'oyun' | 'studyo' | 'sosyal';
 /** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
 const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar']);
-const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'ajans', 'boyut'];
+const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'boyut'];
+const AJANLAR_SEKMELERI: AjanlarSekmesi[] = ['ajanlar', 'zamanlayici', 'baglanti'];
+const ajanlarSekmesi = (s: unknown): AjanlarSekmesi => (AJANLAR_SEKMELERI.includes(s as AjanlarSekmesi) ? s as AjanlarSekmesi : 'ajanlar');
 const ISLER_SEKMELERI: IslerSekmesi[] = ['kimde', 'takvim', 'yolharitasi'];
 const islerSekmesi = (s: unknown): IslerSekmesi => (ISLER_SEKMELERI.includes(s as IslerSekmesi) ? s as IslerSekmesi : 'kimde');
 /** Geçmişten gelen Durum sekmesi (eski 'yuzdeler' dahil) geçerli değilse Eksikler */
@@ -175,6 +179,8 @@ export default function App() {
   const [durumSekme, setDurumSekme] = useState<DurumSekmesi>(() => durumSekmesi(ilkEkran?.durum));
   /** İşler ve takvim'in sekmesi (2 Kasım, yol haritası 3. adım) */
   const [islerSekme, setIslerSekme] = useState<IslerSekmesi>(() => islerSekmesi(ilkEkran?.isler));
+  /** Ajanlar ve otomasyonlar'ın sekmesi (2 Kasım, yol haritası 4. adım) */
+  const [ajanlarSekme, setAjanlarSekme] = useState<AjanlarSekmesi>(() => ajanlarSekmesi(ilkEkran?.ajanlar));
   /** Markalar'da Galeri sekmesi açık mı (7 Ekim: Galeri Markalar'ın sekmesi) */
   const [markaGaleri, setMarkaGaleri] = useState(() => !!ilkEkran?.galeri);
   /** Telefonda "Diğer" listesi */
@@ -683,7 +689,10 @@ export default function App() {
       case 'takvim': setIslerSekme('takvim'); setActiveTab('isler'); break;
       case 'yolharitasi': setIslerSekme('yolharitasi'); setActiveTab('isler'); break;
       case 'isler': setIslerSekme('kimde'); setActiveTab('isler'); break;
-      case 'ajans': setDurumSekme('ajans'); setActiveTab('durum'); break;
+      // 2 Kasım: Durum → Ajans, Ajanlar ve otomasyonlar → Ajans bağlantısı oldu
+      case 'ajans': setAjanlarSekme('baglanti'); setActiveTab('ajanlar'); break;
+      case 'ajanlar': setAjanlarSekme('ajanlar'); setActiveTab('ajanlar'); break;
+      case 'zamanlayici': setAjanlarSekme('zamanlayici'); setActiveTab('ajanlar'); break;
       case 'galeri': setMarkaGaleri(true); setActiveTab('markalar'); break;
       case 'markalar': setMarkaGaleri(false); setActiveTab('markalar'); break;
       default: setActiveTab(KALKAN_SAYFALAR.has(hedef) ? 'onay' : hedef as Sayfa);
@@ -717,18 +726,18 @@ export default function App() {
   const sonEkran = useRef<Record<string, unknown> | null>(null);
   useEffect(() => {
     const yeni: Record<string, unknown> = {
-      kkm: true, tab: activeTab, item: activeItemId ?? null, durum: durumSekme, isler: islerSekme,
+      kkm: true, tab: activeTab, item: activeItemId ?? null, durum: durumSekme, isler: islerSekme, ajanlar: ajanlarSekme,
       duzada: activeTab === 'duzada' ? (duzadaIstek?.sekme ?? 'wiki') : null,
       diger: acikGrup, galeri: activeTab === 'markalar' && markaGaleri
     };
     const eski = history.state as Record<string, unknown> | null;
-    const ayni = !!eski?.kkm && ['tab', 'item', 'durum', 'isler', 'duzada', 'diger', 'galeri'].every(k => (eski[k] ?? null) === (yeni[k] ?? null));
+    const ayni = !!eski?.kkm && ['tab', 'item', 'durum', 'isler', 'ajanlar', 'duzada', 'diger', 'galeri'].every(k => (eski[k] ?? null) === (yeni[k] ?? null));
     if (ayni) { sonEkran.current = eski; return; }
     const kayit = { ...yeni, derinlik: eski?.kkm ? Number(eski.derinlik ?? 0) + 1 : 0 };
     if (eski?.kkm) history.pushState(kayit, '', location.pathname + location.search);
     else history.replaceState(kayit, '');
     sonEkran.current = kayit;
-  }, [activeTab, activeItemId, durumSekme, islerSekme, duzadaIstek?.sekme, acikGrup, markaGaleri]);
+  }, [activeTab, activeItemId, durumSekme, islerSekme, ajanlarSekme, duzadaIstek?.sekme, acikGrup, markaGaleri]);
   useEffect(() => {
     const geri = (e: PopStateEvent) => {
       const d = e.state as Record<string, any> | null;
@@ -743,6 +752,7 @@ export default function App() {
       setActiveItemId(d.item ?? null);
       setDurumSekme(durumSekmesi(d.durum));
       setIslerSekme(islerSekmesi(d.isler));
+      setAjanlarSekme(ajanlarSekmesi(d.ajanlar));
       setAcikGrup(typeof d.diger === 'string' ? d.diger : null);
       setMarkaGaleri(!!d.galeri);
       if (d.tab === 'duzada' && (d.duzada === 'wiki' || d.duzada === 'rapor')) setDuzadaIstek({ sekme: d.duzada, n: Date.now() });
@@ -916,7 +926,8 @@ export default function App() {
     { grup: 'Ajans', simge: Briefcase, satirlar: [
       { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') },
       { id: 'isler', ad: 'İşler ve takvim', alt: 'kimde ne var, takvim, yol haritası', simge: CalendarDays },
-      { id: 'durum', ad: 'Durum', alt: 'eksikler, boşluklar, ajans, boyut', simge: ListChecks },
+      { id: 'ajanlar', ad: 'Ajanlar ve otomasyonlar', alt: 'ajan kartları, zamanlayıcı, ajans bağlantısı', simge: Bot },
+      { id: 'durum', ad: 'Durum', alt: 'eksikler, boşluklar, boyut ve hız', simge: ListChecks },
       { id: 'studyo', ad: 'Yapay zekâ', alt: 'stüdyo ve öneri tepsisi', simge: Sparkles, nokta: bildirimVar('aday') }
     ] },
     { grup: 'Evren', simge: Compass, satirlar: [
@@ -939,7 +950,7 @@ export default function App() {
   const RAY_ADI = 'min-w-0 whitespace-nowrap opacity-0 group-hover/ray:opacity-100 group-has-[:focus-visible]/ray:opacity-100 transition-opacity duration-150';
 
   const SAYFA_ADI: Record<Sayfa, string> = {
-    onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
+    onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
     oyun: 'Oyunlar', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya'
   };
 
@@ -1111,6 +1122,16 @@ export default function App() {
                 eksikAcik={eksikAcik}
                 eposta={girisli ? user?.email : null}
                 onMaddeAc={maddeyiAc}
+              />
+            )}
+
+            {activeTab === 'ajanlar' && (
+              <AjanlarVeOtomasyonlar
+                items={items}
+                sekme={ajanlarSekme}
+                onSekme={setAjanlarSekme}
+                onUpdateItem={handleUpdateItem}
+                onDeleteItem={handleDeleteItem}
               />
             )}
 

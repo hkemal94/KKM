@@ -264,12 +264,12 @@ export const OnayBekleyenler: React.FC<Props> = ({
     if (!not.trim() && !secenekler.length) throw new Error('bir not yaz ya da bir seçenek seç');
     const r = await yaz({ [s.anahtar]: { durum: 'duzenle', not, secenekler, zaman: Date.now() } });
     setPanel(null);
-    if (!anahtar) return 'Not kaydedildi. Bu tarayıcıda GitHub anahtarı olmadığı için ajansa gitmedi; Durum → Ajans\'ta anahtar girince "Tepsiyi ajansa gönder" ile gider.';
+    if (!anahtar) return 'Not kaydedildi. Bu tarayıcıda GitHub anahtarı olmadığı için ajansa gitmedi; Ajans bağlantısı\'nda anahtar girince "Tepsiyi ajansa gönder" ile gider.';
     try {
       await tepsiyiGonder(anahtar, tepsiDosyasi(yazilmisItems(r)));
       return 'Not kaydedildi ve tepsiyle ajansa gitti. Ajans bir sonraki çalışmasında notuna göre revize eder.';
     } catch (e) {
-      return `Not kaydedildi ama ajansa gönderilemedi (${hataYazi(e)}). Durum → Ajans → "Tepsiyi ajansa gönder"le yeniden dene.`;
+      return `Not kaydedildi ama ajansa gönderilemedi (${hataYazi(e)}). Ajans bağlantısı → "Tepsiyi ajansa gönder"le yeniden dene.`;
     }
   });
 
@@ -471,8 +471,8 @@ export const OnayBekleyenler: React.FC<Props> = ({
         !anahtar ? (
           <section className={`${KART} p-4 space-y-2`}>
             <p className={`text-[13px] font-semibold ${YAZI}`}>Ajansın kararları</p>
-            <p className={`text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; ajansın kararları okunamıyor. Anahtar Durum → Ajans sayfasında bir kez girilir.</p>
-            <button type="button" onClick={onAjans} className={DUGME_BOS}>Durum → Ajans</button>
+            <p className={`text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; ajansın kararları okunamıyor. Anahtar Ajanlar ve otomasyonlar → Ajans bağlantısı'nda bir kez girilir.</p>
+            <button type="button" onClick={onAjans} className={DUGME_BOS}>Ajans bağlantısı</button>
           </section>
         ) : kararlar.sonuc ? (
           <section className={`${KART} p-4 space-y-2`}>
@@ -485,7 +485,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
           </section>
         ) : d && typeof d === 'object' && 'hata' in d ? (
           <p className={`${KART} p-4 text-[12px] ${YAZI}`}>
-            Ajansın kararları okunamadı ({d.hata}). <button type="button" onClick={onAjans} className="underline cursor-pointer">Durum → Ajans</button>
+            Ajansın kararları okunamadı ({d.hata}). <button type="button" onClick={onAjans} className="underline cursor-pointer">Ajans bağlantısı</button>
           </p>
         ) : suzgec === 'kararlar' && d === 'yukleniyor' ? (
           <p className={`${KART} p-4 text-[12px] ${IKINCIL}`}>Ajansın kararları okunuyor…</p>

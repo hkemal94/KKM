@@ -29,7 +29,10 @@ export interface AjansIsi {
   bitti?: string;
 }
 
-export interface IsDosyasi { guncellendi: string; isler: AjansIsi[] }
+/** Limit uyarısı (2 Kasım, Kemal: "Kems bildirsin"); KKM sınırı okuyamaz, Kems yazar */
+export interface LimitUyarisi { uyari: string; tarih: string }
+
+export interface IsDosyasi { guncellendi: string; isler: AjansIsi[]; limit?: LimitUyarisi }
 
 const DURUMLAR = new Set<IsDurumu>(['yeni', 'goruldu', 'calisiyor', 'bitti']);
 
@@ -41,7 +44,8 @@ export async function isleriOku(anahtar: string): Promise<IsDosyasi | null> {
     const isler = (Array.isArray(j.isler) ? j.isler : [])
       .filter((i): i is AjansIsi => !!i && typeof i.id === 'string' && typeof i.metin === 'string')
       .map(i => ({ ...i, durum: DURUMLAR.has(i.durum) ? i.durum : 'yeni', kimde: i.kimde || 'Kems' }));
-    return { guncellendi: j.guncellendi || '', isler };
+    const limit = j.limit && typeof j.limit.uyari === 'string' && j.limit.uyari.trim() ? { uyari: j.limit.uyari, tarih: j.limit.tarih || '' } : undefined;
+    return { guncellendi: j.guncellendi || '', isler, ...(limit ? { limit } : {}) };
   } catch (e) {
     if (e instanceof Error && /yazma izni yok/.test(e.message)) {
       try { await github(anahtar, `/repos/${AJANS_DEPOSU}`); }

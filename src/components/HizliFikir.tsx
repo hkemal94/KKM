@@ -138,7 +138,7 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
   const ajansaYolla = async (f: Item) => {
     if (gonderilen || (f.metadata as any)?.ajansaGonderildi) return; // ikinci basış yeni dosya açmaz
     if (!anahtariOku()) {
-      setRapor('Önce ajans bağlantısını kur: GitHub anahtarı Durum → Ajans\'ta.');
+      setRapor('Önce ajans bağlantısını kur: GitHub anahtarı Ajans bağlantısı\'nda.');
       onAjansBaglantisi();
       return;
     }

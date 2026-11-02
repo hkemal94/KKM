@@ -47,8 +47,8 @@ export const KimdeNeVar: React.FC<Props> = ({ onAjans }) => {
     return (
       <section className={`${KART} p-4 space-y-2`}>
         <p className={`text-[13px] font-semibold ${YAZI}`}>Kimde ne var</p>
-        <p className={`text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; ajansın iş listesi okunamıyor. Anahtar Durum → Ajans sayfasında bir kez girilir.</p>
-        <button type="button" onClick={onAjans} className={DUGME_BOS}>Durum → Ajans</button>
+        <p className={`text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; ajansın iş listesi okunamıyor. Anahtar Ajanlar ve otomasyonlar → Ajans bağlantısı'nda bir kez girilir.</p>
+        <button type="button" onClick={onAjans} className={DUGME_BOS}>Ajans bağlantısı</button>
       </section>
     );
   }
@@ -99,7 +99,7 @@ export const KimdeNeVar: React.FC<Props> = ({ onAjans }) => {
       {dosya === 'yukleniyor' && <p className={`${KART} p-4 text-[12px] ${IKINCIL}`}>Okunuyor…</p>}
       {dosya === null && <p className={`${KART} p-4 text-[12px] ${IKINCIL}`}>Ajans henüz iş listesi yazmadı.</p>}
       {dosya && typeof dosya === 'object' && 'hata' in dosya && (
-        <p className={`${KART} p-4 text-[12px] ${YAZI}`}>Okunamadı ({dosya.hata}). <button type="button" onClick={onAjans} className="underline cursor-pointer">Durum → Ajans</button></p>
+        <p className={`${KART} p-4 text-[12px] ${YAZI}`}>Okunamadı ({dosya.hata}). <button type="button" onClick={onAjans} className="underline cursor-pointer">Ajans bağlantısı</button></p>
       )}
       {obek && (<>
         {obekGoster('Senden beklenenler', obek.sende, 'Senden beklenen iş yok.')}

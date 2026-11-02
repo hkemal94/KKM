@@ -21,7 +21,7 @@ export const YaziEditorunuGonder: React.FC<{ yazi: Item; onUpdateItem: (item: It
   const anahtar = anahtariOku();
 
   const gonder = async () => {
-    if (!anahtar) { setHata('Önce ajans bağlantısını kur (Durum → Ajans\'taki GitHub anahtarı).'); return; }
+    if (!anahtar) { setHata('Önce ajans bağlantısını kur (Ajans bağlantısı\'ndaki GitHub anahtarı).'); return; }
     setGidiyor(true);
     setHata('');
     try {
