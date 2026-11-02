@@ -98,9 +98,12 @@ export const OnayBekleyenler: React.FC<Props> = ({
 
       {goster('oneriler') && <OneriTepsisi {...studyo} />}
 
-      {goster('kararlar') && (anahtar ? (
+      {goster('kararlar') && (anahtar ? (<>
         <AjansKararlariKarti items={items} anahtar={anahtar} tur={tur} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />
-      ) : (
+        <p className={`-mt-1 px-1 text-[12px] ${IKINCIL}`}>
+          "Okunamadı" yazıyorsa anahtarın süresi dolmuştur: <button type="button" onClick={onAjans} className="underline cursor-pointer">Durum → Ajans</button> → Anahtarı kaldır → yenisini gir.
+        </p>
+      </>) : (
         <section className={`${KART} p-4 space-y-2`}>
           <p className={`text-[13px] font-semibold ${YAZI}`}>Ajansın kararları</p>
           <p className={`text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; ajansın kararları okunamıyor. Anahtar Durum → Ajans sayfasında bir kez girilir.</p>
