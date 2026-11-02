@@ -185,6 +185,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 2. adım (KKM tarafı): "Kanon Denetçisi\'ne gönder", oyun dosyası Oyun Tasarımcısı\'na, ajans takviminde eski zamanlı işler yok' },
   { id: 'isler-ve-takvim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
+  { id: 'ajanlar-ve-otomasyonlar', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: 'Yol haritası 4. adım: Ajans → Ajanlar ve otomasyonlar (ajan kartları, zamanlayıcı ayarı, Kems\'in limit uyarısı; Durum → Ajans buraya taşındı)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
