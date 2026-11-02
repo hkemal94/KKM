@@ -30,22 +30,19 @@ interface Props extends StudyoIslemleri {
 
 const kopyala = (m: string) => { try { void navigator.clipboard.writeText(m); } catch { /* yok */ } };
 
-export const OneriTepsisi: React.FC<Props> = ({
-  items, onUpdateItem, onAddItem, onDeleteItem, onMaddeyiAc, onAcceptProposal, onStudyoSayfasi,
-  sinir, hedefId, baslik = 'Öneri tepsisi', onTemizlik
-}) => {
-  const hepsi = useMemo(() => bekleyenAdaylar(items).filter(a => {
-    if (!hedefId) return true;
-    return (yapayZekaOnerisi(a)?.hedefId || adayBilgisi(a)?.hedefId) === hedefId;
-  }), [items, hedefId]);
-  const eskiler = useMemo(() => (hedefId || sinir ? [] : eskiOneriler(items)), [items, hedefId, sinir]);
-  const [acik, setAcik] = useState<string | null>(null);
+/** Satırın başındaki kısa etiket */
+export const oneriTuru = (a: Item) => (yapayZekaOnerisi(a) ? 'YAPAY ZEKÂ' : 'CEVAP');
+
+/**
+ * Bir önerinin işleri ve gövdesi (2 Kasım, 3. adım). Öneri tepsisi ve Onay
+ * bekleyenler'in ortak listesi aynı işleri kullanır. `ortak` gövdede satırın
+ * kendi dört düğmesi olduğu için gövdenin "Ekle / İşle / Sil" düğmeleri
+ * gizlenir; seçim gerektiren düğmeler (başlık, ürün) kalır.
+ */
+export function useOneriIslemleri({ items, onUpdateItem, onAddItem, onDeleteItem, onMaddeyiAc }: StudyoIslemleri) {
   const [duzenleme, setDuzenleme] = useState<Record<string, string>>({});
   const [calisan, setCalisan] = useState<string | null>(null);
   const [rapor, setRapor] = useState<string | null>(null);
-  const [eskiAcik, setEskiAcik] = useState(false);
-
-  const gorunen = sinir ? hepsi.slice(0, sinir) : hepsi;
 
   // ---- soru cevabı
   const isle = async (a: Item) => {
@@ -88,21 +85,6 @@ export const OneriTepsisi: React.FC<Props> = ({
     } finally { setCalisan(null); }
   };
 
-  const satir = (a: Item, tur: string, govde: React.ReactNode) => {
-    const buAcik = acik === a.id || (!!hedefId && hepsi.length <= 2);
-    return (
-      <li key={a.id} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72]">
-        <button type="button" onClick={() => setAcik(buAcik ? null : a.id)} className="w-full flex items-center gap-2.5 py-2 text-left cursor-pointer">
-          <i className="not-italic shrink-0 px-1.5 py-0.5 rounded bg-[#F3EFE8] dark:bg-[#17345A] text-[9px] font-mono font-bold tracking-wider text-[#6A5E4C] dark:text-[#A6B0C9]">{tur}</i>
-          <span className={`flex-1 min-w-0 truncate text-[13px] ${YAZI}`}>{a.title}</span>
-          <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{neZaman(a.createdAt)}</span>
-          {buAcik ? <ChevronDown className="w-4 h-4 text-[#F26B6F] shrink-0" /> : <ChevronRight className="w-4 h-4 text-[#CFC5B4] shrink-0" />}
-        </button>
-        {buAcik && <div className="pb-3 space-y-2">{govde}</div>}
-      </li>
-    );
-  };
-
   /** Gece önerisinin türüne göre "Ekle"nin ne açacağı; açacak bir şey yoksa düğme yok */
   const geceTuru = (o: YapayZekaOnerisi) => (o as YapayZekaOnerisi & { gece?: { tur: string } }).gece?.tur;
   const eklenebilir = (o: YapayZekaOnerisi) => {
@@ -115,8 +97,21 @@ export const OneriTepsisi: React.FC<Props> = ({
 
   const hedefiAc = (id: string) => { const h = items.find(i => i.id === id); if (h) onMaddeyiAc(h); };
 
-  const yapayZekaGovdesi = (a: Item, o: YapayZekaOnerisi) => {
+  /** Ana düğmenin adı; uygulanacak tek bir iş yoksa (seçim gerekiyorsa) null */
+  const uygulamaAdi = (o: YapayZekaOnerisi): string | null => {
     const arac = aracBul(o.arac);
+    if (!arac?.uygulama || ['baslik-yap', 'urun-ekle'].includes(arac.uygulama) || !eklenebilir(o)) return null;
+    return arac.uygulama === 'gece-oneri-ekle' ? geceDugmesi(o)
+      : arac.uygulama === 'fanzin-olustur' ? 'Fanzin olarak aç (Yazı)'
+      : arac.uygulama === 'fanzin-bolum' ? 'Bölümün yerine koy'
+      : arac.uygulama === 'site-hakkinda' ? "Site taslağına koy (Hakkında)"
+      : arac.uygulama === 'metnin-yerine' ? 'Metnin yerine koy' : arac.uygulama === 'bolum-ekle' ? 'Maddeye ekle (öneri olarak)'
+      : arac.uygulama === 'bolum-derle' ? (o.derle ? 'Derlenmiş hâli koy' : 'Maddeye ekle (öneri olarak)') : arac.uygulama === 'kunye-ekle' ? 'Boş künye alanlarına yaz' : arac.uygulama === 'renk-ekle' ? 'Paletine ekle' : 'Metne ekle';
+  };
+
+  const yapayZekaGovdesi = (a: Item, o: YapayZekaOnerisi, ortak = false) => {
+    const arac = aracBul(o.arac);
+    const ad = uygulamaAdi(o);
     const is = calisan === a.id;
     const kutu = `rounded-lg bg-white dark:bg-[#17345A] border border-[#CFC5B4] dark:border-[#2C3C72] p-2.5 text-[12px] leading-relaxed ${YAZI}`;
     return (
@@ -189,21 +184,77 @@ export const OneriTepsisi: React.FC<Props> = ({
         )}
         {arac?.kurgu && <p className={`text-[10px] ${IKINCIL}`}>Bu metni yapay zekâ yazdı; eklersen senin metnin olur, istediğin gibi düzeltirsin.</p>}
         <div className="flex flex-wrap gap-2">
-          {arac?.uygulama && !['baslik-yap', 'urun-ekle'].includes(arac.uygulama) && eklenebilir(o) && (
-            <button type="button" disabled={is} onClick={() => ekle(a, o)} className={DUGME_LAC}>
-              {arac.uygulama === 'gece-oneri-ekle' ? geceDugmesi(o)
-                : arac.uygulama === 'fanzin-olustur' ? 'Fanzin olarak aç (Yazı)'
-                : arac.uygulama === 'fanzin-bolum' ? 'Bölümün yerine koy'
-                : arac.uygulama === 'site-hakkinda' ? "Site taslağına koy (Hakkında)"
-                : arac.uygulama === 'metnin-yerine' ? 'Metnin yerine koy' : arac.uygulama === 'bolum-ekle' ? 'Maddeye ekle (öneri olarak)'
-                : arac.uygulama === 'bolum-derle' ? (o.derle ? 'Derlenmiş hâli koy' : 'Maddeye ekle (öneri olarak)') : arac.uygulama === 'kunye-ekle' ? 'Boş künye alanlarına yaz' : arac.uygulama === 'renk-ekle' ? 'Paletine ekle' : 'Metne ekle'}
-            </button>
-          )}
+          {ad && !ortak && <button type="button" disabled={is} onClick={() => ekle(a, o)} className={DUGME_LAC}>{ad}</button>}
           {o.metin && <button type="button" onClick={() => kopyala(o.metin!)} className={`${DUGME_BOS} inline-flex items-center gap-1`}><Copy className="w-3 h-3" /> Kopyala</button>}
           {o.hedefId && <button type="button" onClick={() => hedefiAc(o.hedefId)} className={DUGME_BOS}>{o.hedefAdi || 'Kaydı'} aç</button>}
-          <button type="button" disabled={is} onClick={() => sil(a)} className={DUGME_BOS}>Sil</button>
+          {!ortak && <button type="button" disabled={is} onClick={() => sil(a)} className={DUGME_BOS}>Sil</button>}
         </div>
       </>
+    );
+  };
+
+  const cevapGovdesi = (a: Item, ortak = false) => {
+    const b = adayBilgisi(a);
+    if (!b) return null;
+    return (
+      <>
+        <p className={`text-[11px] ${IKINCIL}`}>{b.soru}</p>
+        <textarea
+          rows={2}
+          value={duzenleme[a.id] ?? b.cevap}
+          onChange={e => setDuzenleme(d => ({ ...d, [a.id]: e.target.value }))}
+          className={`w-full text-[13px] bg-white dark:bg-[#17345A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg p-2 focus:outline-hidden focus:border-[#F26B6F]`}
+        />
+        <div className="flex flex-wrap gap-2">
+          {!ortak && <button type="button" disabled={calisan === a.id} onClick={() => isle(a)} className={DUGME_LAC}>İşle · vikiye yaz</button>}
+          <button type="button" onClick={() => hedefiAc(b.hedefId)} className={DUGME_BOS}>Maddeyi aç</button>
+          {!ortak && <button type="button" disabled={calisan === a.id} onClick={() => sil(a)} className={DUGME_BOS}>Vazgeç</button>}
+        </div>
+      </>
+    );
+  };
+
+  /** Önerinin gövdesi (tepside ya da ortak listede) */
+  const govde = (a: Item, ortak = false) => {
+    const o = yapayZekaOnerisi(a);
+    return o ? yapayZekaGovdesi(a, o, ortak) : cevapGovdesi(a, ortak);
+  };
+
+  /** Satırın "Uygula"sı: adı ve işi; seçim gerektiren öneride null */
+  const uygula = (a: Item): { ad: string; calistir: () => Promise<void> } | null => {
+    const o = yapayZekaOnerisi(a);
+    if (o) { const ad = uygulamaAdi(o); return ad ? { ad, calistir: () => ekle(a, o) } : null; }
+    return adayBilgisi(a) ? { ad: 'Vikiye yaz', calistir: () => isle(a) } : null;
+  };
+
+  return { calisan, rapor, setRapor, govde, uygula, sil, hedefiAc };
+}
+
+export const OneriTepsisi: React.FC<Props> = (props) => {
+  const { sinir, hedefId, baslik = 'Öneri tepsisi', onTemizlik, items, onMaddeyiAc, onAcceptProposal, onStudyoSayfasi } = props;
+  const hepsi = useMemo(() => bekleyenAdaylar(items).filter(a => {
+    if (!hedefId) return true;
+    return (yapayZekaOnerisi(a)?.hedefId || adayBilgisi(a)?.hedefId) === hedefId;
+  }), [items, hedefId]);
+  const eskiler = useMemo(() => (hedefId || sinir ? [] : eskiOneriler(items)), [items, hedefId, sinir]);
+  const [acik, setAcik] = useState<string | null>(null);
+  const [eskiAcik, setEskiAcik] = useState(false);
+  const { calisan, rapor, setRapor, govde } = useOneriIslemleri(props);
+
+  const gorunen = sinir ? hepsi.slice(0, sinir) : hepsi;
+
+  const satir = (a: Item, tur: string, govde: React.ReactNode) => {
+    const buAcik = acik === a.id || (!!hedefId && hepsi.length <= 2);
+    return (
+      <li key={a.id} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72]">
+        <button type="button" onClick={() => setAcik(buAcik ? null : a.id)} className="w-full flex items-center gap-2.5 py-2 text-left cursor-pointer">
+          <i className="not-italic shrink-0 px-1.5 py-0.5 rounded bg-[#F3EFE8] dark:bg-[#17345A] text-[9px] font-mono font-bold tracking-wider text-[#6A5E4C] dark:text-[#A6B0C9]">{tur}</i>
+          <span className={`flex-1 min-w-0 truncate text-[13px] ${YAZI}`}>{a.title}</span>
+          <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{neZaman(a.createdAt)}</span>
+          {buAcik ? <ChevronDown className="w-4 h-4 text-[#F26B6F] shrink-0" /> : <ChevronRight className="w-4 h-4 text-[#CFC5B4] shrink-0" />}
+        </button>
+        {buAcik && <div className="pb-3 space-y-2">{govde}</div>}
+      </li>
     );
   };
 
@@ -227,28 +278,7 @@ export const OneriTepsisi: React.FC<Props> = ({
         </p>
       ) : (
         <ul className="mt-1">
-          {gorunen.map(a => {
-            const o = yapayZekaOnerisi(a);
-            if (o) return satir(a, 'YAPAY ZEKÂ', yapayZekaGovdesi(a, o));
-            const b = adayBilgisi(a);
-            if (!b) return null;
-            return satir(a, 'CEVAP', (
-              <>
-                <p className={`text-[11px] ${IKINCIL}`}>{b.soru}</p>
-                <textarea
-                  rows={2}
-                  value={duzenleme[a.id] ?? b.cevap}
-                  onChange={e => setDuzenleme(d => ({ ...d, [a.id]: e.target.value }))}
-                  className={`w-full text-[13px] bg-white dark:bg-[#17345A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg p-2 focus:outline-hidden focus:border-[#F26B6F]`}
-                />
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" disabled={calisan === a.id} onClick={() => isle(a)} className={DUGME_LAC}>İşle · vikiye yaz</button>
-                  <button type="button" onClick={() => hedefiAc(b.hedefId)} className={DUGME_BOS}>Maddeyi aç</button>
-                  <button type="button" disabled={calisan === a.id} onClick={() => sil(a)} className={DUGME_BOS}>Vazgeç</button>
-                </div>
-              </>
-            ));
-          })}
+          {gorunen.map(a => satir(a, oneriTuru(a), govde(a)))}
           {sinir && hepsi.length > sinir && (
             <li className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72] pt-2">
               <button type="button" onClick={onStudyoSayfasi} className="text-[11px] font-mono text-[#D6484C] dark:text-[#F26B6F] hover:underline cursor-pointer">

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { Item, WikiSection } from '../types';
 import { bekleyenAdaylar } from './adaylar';
+import { listedekiOneriler } from './onaylar';
 import { bekleyenDugmeler } from './bekleyenIsler';
 import { tarihUyarilari, type TarihUyarisi } from './kanonTarihleri';
 import { useHaritaDuzeni } from './haritaDuzeni';
@@ -64,7 +65,7 @@ export function useBildirimler(items: Item[]): Bildirim[] {
   return useMemo(() => {
     if (!items.length) return [];
     const liste: Bildirim[] = [];
-    const aday = bekleyenAdaylar(items).length;  // eski öneriler bildirim değil; Temizlik kartında
+    const aday = listedekiOneriler(items, bekleyenAdaylar(items)).length;  // eski öneriler bildirim değil; bekletilen ve arşivdekiler de değil
     if (aday) liste.push({ tur: 'aday', sayi: aday, baslik: 'Onay bekleyen öneri', ayrinti: 'Öneri tepsisinde · stüdyo' });
     const dugme = bekleyenDugmeler(items, haritaEski);
     if (dugme.length) liste.push({ tur: 'dugme', sayi: dugme.length, baslik: 'Tek seferlik düğme bekliyor', ayrinti: dugme.join(' · ') });

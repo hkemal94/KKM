@@ -177,6 +177,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Süresi dolan GitHub anahtarı Durum → Ajans\'ta "Anahtarı kaldır" ile yenilenebiliyor' },
   { id: 'yayin-boyutu', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'AI Studio yayını 250 MB sınırına takılıyordu: yayına giden paket ~476 MB\'tan ~52 MB\'a indi' },
+  { id: 'onay-dort-dugme', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: 'Yeni yerleşim 3. adım: Onay bekleyenler tek liste; her satırda Uygula · Düzenle · Arşivle · Sil, tarihe kadar Beklet, toplu seçim, Bekletilen ve Arşiv süzgeci' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
