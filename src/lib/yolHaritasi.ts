@@ -167,6 +167,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki düzenleyici: yan panel ve sekmeler, "Diğer bilgiler", onaylı "Maddeyi sil"; kabul edilen öneri bölümleri sitede' },
   { id: 'kararlar-sil-degistir', paket: 'W', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: '"Ajansın kararlarını uygula" takma ad silebiliyor, dolu künye alanını değiştirebiliyor, metinden paragraf silebiliyor' },
+  { id: 'karar-kimlikle', paket: 'W', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: '"Ajansın kararlarını uygula" maddeyi kimliğiyle de buluyor (aynı adla iki kayıt olunca takılmıyor)' },
   { id: 'yenile-yerinde', paket: 'K', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: 'Sayfa yenilenince ana sayfaya atmıyor; açık sayfada (ve açık maddede) kalıyor' },
   { id: 'yeni-menu-1', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
@@ -191,8 +193,6 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 5. adım: ajanların işleri (PR, dosya, Drive belgesi, eksik yetenek) Onay bekleyenler\'de; karar ajansa gider, PR olan işte Uygula PR\'ı birleştirir' },
   { id: 'evren-ve-urunler', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 6. adım: Evren → Viki · Kitap · Harita ve Kurucu · Görünümler; Ürünler → Oyunlar · Marka ve merch · İçerik (sosyal medya, blog, fanzin, video); Durum → Eksikler ve ayarlar' },
-  { id: 'karar-kimlikle', paket: 'W', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
-    ad: '"Ajansın kararlarını uygula" maddeyi kimliğiyle de buluyor (aynı adla iki kayıt olunca takılmıyor)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
