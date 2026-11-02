@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 import type { Item } from '../../types';
-import { gecerliIslemler, kararlariOku, kararlariUygula, makbuzYaz, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
+import { gecerliIslemler, kararlariOku, kararlariUygula, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
 /**
@@ -20,7 +20,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', markaKarti: 'Marka kartı' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
@@ -103,6 +103,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
                     {(i.tur === 'alanaYaz' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') && <> → <span className="font-semibold">{i.deger}</span></>}
                     {i.tur === 'alaniDegistir' && <> → <span className="font-semibold">{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger}</span></>}
                     {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <span className="font-semibold line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</span></>}
+                    {i.tur === 'markaKarti' && <> → <span className="font-semibold">{i.marka} · {MARKA_KARTI_ALANLARI[i.alan] || i.alan}: {Array.isArray(i.deger) ? i.deger.join(' · ') : i.deger}</span></>}
                     {i.tur === 'bagKur' && <> → <span className="font-semibold">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</span></>}
                     <span className={`block text-[12px] ${IKINCIL}`}>{i.neden}</span>
                   </li>
