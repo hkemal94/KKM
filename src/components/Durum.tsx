@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { GomuluSayfa, SayfaBasi } from './kabuk/SayfaBasi';
+import { SayfaBasi } from './kabuk/SayfaBasi';
 import type { AreaType, Item } from '../types';
 import { eksikleriCikar } from '../lib/eksikler';
 import { Bosluklar } from './Bosluklar';
@@ -8,7 +8,7 @@ import { SayfaRayi } from './SayfaRayi';
 import { BoyutHiz } from './anasayfa/BoyutHiz';
 import { AjansSayfasi } from './anasayfa/AjansSayfasi';
 
-export type DurumSekmesi = 'eksikler' | 'bosluklar' | 'takvim' | 'yolharitasi' | 'ajans' | 'boyut';
+export type DurumSekmesi = 'eksikler' | 'bosluklar' | 'ajans' | 'boyut';
 
 /**
  * Durum (29 Eylül; 1 Ekim'de Neyin Eksik de buraya katıldı). Kemal:
@@ -24,7 +24,8 @@ export type DurumSekmesi = 'eksikler' | 'bosluklar' | 'takvim' | 'yolharitasi' |
  * 21 Ekim: Ajans sekmesi, Kems Ajans'ın dosyaları (`lib/ajansDeposu.ts`).
  *
  * 2 Kasım (yol haritası 1. adım, Kemal'in "Kalkanlar"ı): Yüzdeler sekmesi
- * ve yüzde listeleri kalktı; Durum Eksikler'le açılır.
+ * ve yüzde listeleri kalktı; Durum Eksikler'le açılır. Takvim ve Yol haritası
+ * Ajans → İşler ve takvim'e taşındı (yol haritası 3. adım).
  */
 export const Durum: React.FC<{
   items: Item[];
@@ -39,18 +40,13 @@ export const Durum: React.FC<{
   eksikAcik?: string | null;
   /** Haftalık özetin gideceği adres: Kemal'in kendi Google hesabı */
   eposta?: string | null;
-  /** Durum'un sekmesi olarak çizilen sayfalar */
-  takvim?: React.ReactNode;
-  yolHaritasi?: React.ReactNode;
   /** Listedeki maddeyi aç */
   onMaddeAc?: (item: Item) => void;
-}> = ({ items, sekme, onSekme, onSelectArea, onUpdateItem, onAddItem, onDeleteItem, onAlanSil, eksikAcik, takvim, yolHaritasi }) => {
+}> = ({ items, sekme, onSekme, onSelectArea, onUpdateItem, onAddItem, onDeleteItem, onAlanSil, eksikAcik }) => {
   const eksikSayisi = useMemo(() => eksikleriCikar(items).length, [items]);
   const bolumler = [
     { id: 'eksikler', label: eksikSayisi ? `Eksikler · ${eksikSayisi}` : 'Eksikler' },
     { id: 'bosluklar', label: 'Boşluklar' },
-    { id: 'takvim', label: 'Takvim' },
-    { id: 'yolharitasi', label: 'Yol haritası' },
     // 21 Ekim: Kems Ajans'ın dosyaları, depodan okunur
     { id: 'ajans', label: 'Ajans' },
     // 3. gece: kayıt boyutları, uygulama parçaları, açılış hızı
@@ -74,10 +70,6 @@ export const Durum: React.FC<{
       {sekme === 'bosluklar' && <Bosluklar items={items} onUpdateItem={onUpdateItem} gomulu />}
       {sekme === 'boyut' && <BoyutHiz items={items} />}
       {sekme === 'ajans' && <AjansSayfasi items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />}
-      <GomuluSayfa.Provider value={true}>
-        {sekme === 'takvim' && takvim}
-        {sekme === 'yolharitasi' && yolHaritasi}
-      </GomuluSayfa.Provider>
     </div>
   );
 };
