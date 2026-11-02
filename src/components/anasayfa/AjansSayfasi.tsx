@@ -78,8 +78,9 @@ export const AjansSayfasi: React.FC<{
         <a href={depoSayfasi(AJANS_DEPOSU)} target="_blank" rel="noreferrer" className={DUGME_BOS}><ExternalLink className="w-3.5 h-3.5" /> Depoda aç</a>
       </div>
 
-      {!anahtar && <AnahtarKarti anahtar={anahtar} onDegis={setAnahtar}
-        baslik="Ajansın gizli deposunu okumak için GitHub anahtarı" depoNotu="Kems-Ajans deposu (oyuna da göndereceksen oyunun deposu da)" />}
+      {/* Anahtar kayıtlıyken de görünür: süresi dolunca "Anahtarı kaldır" ile yenilenir (2 Kasım) */}
+      <AnahtarKarti anahtar={anahtar} onDegis={setAnahtar}
+        baslik="Ajansın gizli deposunu okumak için GitHub anahtarı" depoNotu="Kems-Ajans deposu (oyuna da göndereceksen oyunun deposu da)" />
 
       <TepsiAjansaKarti items={items} anahtar={anahtar} />
       <VikiAjansaKarti items={items} anahtar={anahtar} />
