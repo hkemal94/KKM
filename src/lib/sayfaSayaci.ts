@@ -10,7 +10,7 @@ const ANAHTAR = 'kems_sayfa_sayaci';
 export interface SayacDurumu { ilk: number | null; sayilar: Record<string, number> }
 
 export const SAYFA_ADLARI: Record<string, string> = {
-  komuta: 'Ana sayfa', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
+  onay: 'Onay bekleyenler', komuta: 'Ana sayfa', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
   oyun: 'Oyun', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya', site: 'Site'
 };
 export const DURUM_SEKME_ADLARI: Record<string, string> = {

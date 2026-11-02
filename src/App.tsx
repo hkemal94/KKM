@@ -31,6 +31,7 @@ import {
   Gamepad2,
   Home,
   ListChecks,
+  Inbox,
   Briefcase,
   Package,
   Sparkles,
@@ -116,11 +117,12 @@ import { Yedekleme } from './components/Yedekleme';
 import HizliNotModal from './components/HizliNotModal';
 import AramaModal from './components/AramaModal';
 import { Anasayfa, type TelSekmesi } from './components/anasayfa/Anasayfa';
+import { OnayBekleyenler } from './components/ajans/OnayBekleyenler';
 import { Zil } from './components/kabuk/Zil';
 import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from './lib/bildirimler';
 
-/** Uygulamanın sayfaları. 'komuta' ana sayfa; eski Komuta Merkezi 'durum'. */
-type Sayfa = 'komuta' | 'durum' | 'markalar' | 'duzada' | 'atolye' | 'merch' | 'yazi' | 'oyun' | 'studyo' | 'sosyal' | 'site';
+/** Uygulamanın sayfaları. 'onay' açılış (2 Kasım), 'komuta' ana sayfa; eski Komuta Merkezi 'durum'. */
+type Sayfa = 'onay' | 'komuta' | 'durum' | 'markalar' | 'duzada' | 'atolye' | 'merch' | 'yazi' | 'oyun' | 'studyo' | 'sosyal' | 'site';
 /** 7 Ekim'de başka sayfanın sekmesi olanlar: eski adla gelen istek oraya yönlenir */
 const SEKMEYE_GECENLER = ['fanzin', 'takvim', 'yolharitasi', 'galeri'];
 
@@ -153,7 +155,7 @@ export default function App() {
     const d = typeof history !== 'undefined' ? (history.state as Record<string, any> | null) : null;
     return d?.kkm && typeof d.tab === 'string' ? d : null;
   });
-  const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab as Sayfa) ?? 'komuta');
+  const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab as Sayfa) ?? 'onay');
   /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kurucu, Kitap) */
   const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(() =>
     ilkEkran?.tab === 'duzada' && (ilkEkran.duzada === 'wiki' || ilkEkran.duzada === 'rapor') ? { sekme: ilkEkran.duzada, n: Date.now() } : null);
@@ -776,7 +778,7 @@ export default function App() {
   const geriGit = () => {
     const d = history.state as Record<string, unknown> | null;
     if (d?.kkm && Number(d.derinlik ?? 0) > 0) history.back();
-    else git('komuta');
+    else git('onay');
   };
 
   /** Kanon uyarısında "Yanlış alarm": anahtar maddeye yazılır (Kemal'in düğmesiyle) */
@@ -788,9 +790,9 @@ export default function App() {
 
   const bildirimSec = (b: Bildirim, madde?: Item) => {
     if (madde) { maddeyiAc(madde); return; }
-    if (b.tur === 'dugme') { setTelSekme('bugun'); git('komuta'); }  // tek seferlik işler ana sayfanın üstünde
+    if (b.tur === 'dugme') git('onay');  // tek seferlik işler Onay bekleyenler'de (2 Kasım)
     else if (b.tur === 'kanon') { if (b.maddeler?.[0]) maddeyiAc(b.maddeler[0]); }
-    else if (b.tur === 'aday') git('studyo');
+    else if (b.tur === 'aday') git('onay');
     else if (b.tur === 'yedek') window.dispatchEvent(new Event('kems-yedek-ac', { cancelable: true }));
     else { setTelSekme('bugun'); git('komuta'); }
   };
@@ -942,8 +944,9 @@ export default function App() {
   type RaySatiri = { id: Sayfa; ad: string; alt?: string; simge: React.ElementType; nokta?: boolean };
   const RAY: Array<{ grup: string; simge: React.ElementType; satirlar: RaySatiri[] }> = [
     { grup: 'Ajans', simge: Briefcase, satirlar: [
-      { id: 'komuta', ad: 'Ana sayfa', alt: 'bugün, bekleyen işler, notlar', simge: Home, nokta: bildirimVar('aday') },
-      { id: 'durum', ad: 'Durum', alt: 'eksikler, takvim, yol haritası, ajans', simge: ListChecks, nokta: bildirimVar('dugme') },
+      { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') },
+      { id: 'komuta', ad: 'Ana sayfa', alt: 'bugün, notlar, ada', simge: Home },
+      { id: 'durum', ad: 'Durum', alt: 'eksikler, takvim, yol haritası, ajans', simge: ListChecks },
       { id: 'studyo', ad: 'Yapay zekâ', alt: 'stüdyo ve öneri tepsisi', simge: Sparkles, nokta: bildirimVar('aday') }
     ] },
     { grup: 'Evren', simge: Compass, satirlar: [
@@ -966,7 +969,7 @@ export default function App() {
   const RAY_ADI = 'min-w-0 whitespace-nowrap opacity-0 group-hover/ray:opacity-100 group-has-[:focus-visible]/ray:opacity-100 transition-opacity duration-150';
 
   const SAYFA_ADI: Record<Sayfa, string> = {
-    komuta: 'Ana sayfa', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
+    onay: 'Onay bekleyenler', komuta: 'Ana sayfa', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
     oyun: 'Oyunlar', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya', site: 'Site'
   };
 
@@ -1002,7 +1005,7 @@ export default function App() {
 
       {/* MASAÜSTÜ: ince simge çubuğu; üstüne gelince açılır, adlar görünür */}
       <nav className="group/ray hidden lg:flex fixed inset-y-0 left-0 z-40 w-16 hover:w-60 has-[:focus-visible]:w-60 hover:delay-150 transition-[width,box-shadow] duration-200 hover:shadow-2xl flex-col py-3 overflow-x-hidden overflow-y-auto [scrollbar-width:none] bg-[#0E1C4F] dark:bg-[#081029]">
-        <button type="button" onClick={() => git('komuta')} aria-label="Ana sayfa" className="mx-3 mb-2 flex items-center gap-3 cursor-pointer">
+        <button type="button" onClick={() => git('onay')} aria-label="Onay bekleyenler" className="mx-3 mb-2 flex items-center gap-3 cursor-pointer">
           {logo}
           <span className={RAY_ADI}><b className="block text-[13px] text-white">Kems Komuta</b><span className="block text-[10px] text-[#A6B0C9]">Merkezi</span></span>
         </button>
@@ -1065,12 +1068,12 @@ export default function App() {
           Arama, zil, karanlık / aydınlık. Telefonda geri oku ve logo da burada.
         */}
         <header className="sticky top-0 z-30 flex items-center gap-2 px-4 lg:px-6 py-2 bg-[#F3EFE8]/95 dark:bg-[#13204A]/95 backdrop-blur-xs border-b border-[#CFC5B4] dark:border-[#2C3C72]">
-          {activeTab !== 'komuta' && (
+          {activeTab !== 'onay' && (
             <button type="button" onClick={geriGit} aria-label="Geri" className="lg:hidden -ml-2 w-11 h-11 rounded-full flex items-center justify-center text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer active:bg-[#E4DCCD] dark:active:bg-[#17345A]">
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <button type="button" onClick={() => git('komuta')} aria-label="Ana sayfa" className="lg:hidden mr-1 cursor-pointer">{logo}</button>
+          <button type="button" onClick={() => git('onay')} aria-label="Onay bekleyenler" className="lg:hidden mr-1 cursor-pointer">{logo}</button>
           <span className="flex-1 min-w-0 leading-tight">
             <span className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#6A5E4C] dark:text-[#A6B0C9] truncate">{aktifGrup ?? 'Komuta Merkezi'}</span>
             <span className="block truncate font-bold text-[16px]">{SAYFA_ADI[activeTab]}</span>
@@ -1098,6 +1101,20 @@ export default function App() {
           <main className="flex-1 min-w-0 overflow-x-clip">
             {/* Google girişi şimdilik kapatıldı */}
 
+            {activeTab === 'onay' && (
+              <OnayBekleyenler
+                items={items}
+                studyo={studyoIslemleri}
+                dugmeler={bekleyenDugmeListesi}
+                onUpdateItem={handleUpdateItem}
+                onAddItem={handleAddItem}
+                onDeleteItem={handleDeleteItem}
+                onAlanSil={handleAlanSil}
+                onEksikler={x => git('eksikler', x)}
+                onAjans={() => git('ajans')}
+              />
+            )}
+
             {activeTab === 'komuta' && (
               <Anasayfa
                 items={items}
@@ -1116,7 +1133,7 @@ export default function App() {
               />
             )}
 
-            <HataKapsayici onReset={() => git('komuta')}>
+            <HataKapsayici onReset={() => git('onay')}>
             <Suspense fallback={<SayfaYukleniyor />}>
             {activeTab === 'durum' && (
               <Durum
