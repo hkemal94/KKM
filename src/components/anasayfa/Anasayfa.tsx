@@ -1,6 +1,6 @@
 import { BekleyenIsler } from './BekleyenIsler';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { CalendarDays, ChevronDown, Gamepad2, Globe, Milestone, Newspaper, Search, Sparkles, Users } from 'lucide-react';
+import { CalendarDays, ChevronDown, Gamepad2, Globe, Milestone, Newspaper, Sparkles, Users } from 'lucide-react';
 import { useMasaustu } from '../kabuk/KatlanirBolum';
 import type { Item } from '../../types';
 import { durumOranlari } from '../../lib/durumOranlari';
@@ -60,13 +60,8 @@ interface Props {
   onAlanSil?: (id: string, yollar: string[]) => Promise<void>;
   /** Öneri tepsisi (stüdyoyla ortak) */
   studyo: StudyoIslemleri;
-  onOpenSearch: () => void;
-  /** Başlıktaki zil (App'ten) */
-  zil: React.ReactNode;
   /** "+" ile yeni not sayfası isteği */
   yeniNotBekliyor: boolean;
-  /** Kiremit "+" (Not / Fikir), App'ten gelir */
-  arti: React.ReactNode;
   onYeniNotAcildi: () => void;
   sekme: TelSekmesi;
   onSekme: (s: TelSekmesi) => void;
@@ -82,7 +77,7 @@ function selam(): string {
 
 export const Anasayfa: React.FC<Props> = ({
   items, bugunDugmeler, onGit, onMaddeyiAc, onAddItem, onUpdateItem, onDeleteItem, onAlanSil, studyo,
-  onOpenSearch, zil, yeniNotBekliyor, arti, onYeniNotAcildi, sekme, onSekme
+  yeniNotBekliyor, onYeniNotAcildi, sekme, onSekme
 }) => {
   const oranlar = useMemo(() => durumOranlari(items), [items]);
   const eksikler = useMemo(() => eksikleriCikar(items), [items]);
@@ -115,23 +110,13 @@ export const Anasayfa: React.FC<Props> = ({
 
   return (
     <div className="space-y-3 lg:space-y-4 animate-in fade-in duration-300">
-      {/* Selamlama */}
+      {/* Selamlama (arama, zil ve Yaz tuşu 2 Kasım'dan beri üst çubukta ve menüde) */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className={`text-[10px] font-mono uppercase tracking-[0.2em] ${IKINCIL}`}>{tarih}</div>
           <h1 className={`mt-1 font-bold tracking-tight leading-tight text-[20px] lg:text-[28px] ${YAZI}`}>
             {selam()}, Kemal. <em className="not-italic text-[#D6484C] dark:text-[#F26B6F] block lg:inline">Bugün adada ne üretelim?</em>
           </h1>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button type="button" onClick={onOpenSearch} className={`hidden lg:flex items-center gap-2 w-56 px-3 py-2 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A] text-[12px] ${IKINCIL} hover:border-[#F26B6F] cursor-pointer`}>
-            <Search className="w-3.5 h-3.5" /> Ara <kbd className="ml-auto text-[10px]">⌘K</kbd>
-          </button>
-          <button type="button" onClick={onOpenSearch} title="Ara" className={`lg:hidden w-11 h-11 rounded-full flex items-center justify-center border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A] ${IKINCIL} cursor-pointer`}>
-            <Search className="w-4 h-4" />
-          </button>
-          <span className="lg:hidden">{zil}</span>
-          {arti}
         </div>
       </div>
 

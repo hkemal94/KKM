@@ -28,10 +28,11 @@ import {
   Compass,
   PenTool,
   Shield,
-  Menu,
   Gamepad2,
   Home,
-  Percent,
+  ListChecks,
+  Briefcase,
+  Package,
   Sparkles,
   Hammer,
   Sun,
@@ -39,7 +40,6 @@ import {
   KeyRound,
   LogOut,
   Megaphone,
-  Globe,
   ArrowLeft,
 } from 'lucide-react';
 import { SAYFA_RAYI_YUVASI } from './components/SayfaRayi';
@@ -170,7 +170,8 @@ export default function App() {
   /** Telefonda ana sayfa sekmesi; açılışta Bugün */
   const [telSekme, setTelSekme] = useState<TelSekmesi>('bugun');
   /** Telefonda "Diğer" listesi */
-  const [digerAcik, setDigerAcik] = useState(false);
+  /** Telefonda açık menü grubu (Ajans · Evren · Ürünler); kapalıysa null */
+  const [acikGrup, setAcikGrup] = useState<string | null>(null);
   /** "+" ile gelen yeni not sayfası isteği */
   const [yeniNotBekliyor, setYeniNotBekliyor] = useState(false);
   /** Site önizlemesi (29 Eylül gece): adres `#site` iken KKM yerine tam sayfa site */
@@ -204,7 +205,7 @@ export default function App() {
   const cikisYap = async () => {
     if (!window.confirm("Google hesabından çıkılsın mı? Kayıtların silinmez; yeniden bağlanınca hepsi yerinde olur.")) return;
     await logoutUser();
-    setDigerAcik(false);
+    setAcikGrup(null);
   };
   const driveIzni = async () => {
     setBaglanmaHatasi(null);
@@ -214,7 +215,6 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHizliNotOpen, setIsHizliNotOpen] = useState(false);
   const [fikirAcik, setFikirAcik] = useState(false);
-  const [digerAra, setDigerAra] = useState('');
   /** Sosyal medya → Seriler → "Takvimde gör" */
   const [takvimSeri, setTakvimSeri] = useState<{ id: string; n: number } | null>(null);
   /** Üst köşedeki logo yüklenemediyse o adres (tekrar denenmez) */
@@ -664,7 +664,7 @@ export default function App() {
    */
   const git = (hedef: string, ayrinti?: string | null) => {
     if (!ayrilmayaIzinVar()) return;
-    setDigerAcik(false);
+    setAcikGrup(null);
     setActiveItemId(null);
     const n = Date.now();
     if (!hedef.startsWith('durum-')) setDurumListe(null);
@@ -736,7 +736,7 @@ export default function App() {
     const yeni: Record<string, unknown> = {
       kkm: true, tab: activeTab, item: activeItemId ?? null, durum: durumSekme,
       duzada: activeTab === 'duzada' ? (duzadaIstek?.sekme ?? 'wiki') : null,
-      diger: digerAcik, galeri: activeTab === 'markalar' && markaGaleri
+      diger: acikGrup, galeri: activeTab === 'markalar' && markaGaleri
     };
     const eski = history.state as Record<string, unknown> | null;
     const ayni = !!eski?.kkm && ['tab', 'item', 'durum', 'duzada', 'diger', 'galeri'].every(k => (eski[k] ?? null) === (yeni[k] ?? null));
@@ -745,7 +745,7 @@ export default function App() {
     if (eski?.kkm) history.pushState(kayit, '', location.pathname + location.search);
     else history.replaceState(kayit, '');
     sonEkran.current = kayit;
-  }, [activeTab, activeItemId, durumSekme, duzadaIstek?.sekme, digerAcik, markaGaleri, siteAcik]);
+  }, [activeTab, activeItemId, durumSekme, duzadaIstek?.sekme, acikGrup, markaGaleri, siteAcik]);
   useEffect(() => {
     const geri = (e: PopStateEvent) => {
       const d = e.state as Record<string, any> | null;
@@ -759,18 +759,18 @@ export default function App() {
       setActiveTab(d.tab as Sayfa);
       setActiveItemId(d.item ?? null);
       setDurumSekme((d.durum as DurumSekmesi) ?? 'yuzdeler');
-      setDigerAcik(!!d.diger);
+      setAcikGrup(typeof d.diger === 'string' ? d.diger : null);
       setMarkaGaleri(!!d.galeri);
       if (d.tab === 'duzada' && (d.duzada === 'wiki' || d.duzada === 'rapor')) setDuzadaIstek({ sekme: d.duzada, n: Date.now() });
     };
     window.addEventListener('popstate', geri);
     return () => window.removeEventListener('popstate', geri);
   }, []);
-  /** "Diğer"i kapatmak geçmişte bir adım geri gitmek demek (yeni adım yazılmaz) */
-  const digeriKapat = () => {
+  /** Açık menü grubunu kapatmak geçmişte bir adım geri gitmek demek (yeni adım yazılmaz) */
+  const grubuKapat = () => {
     const d = history.state as Record<string, unknown> | null;
     if (d?.kkm && d.diger && Number(d.derinlik ?? 0) > 0) history.back();
-    else setDigerAcik(false);
+    else setAcikGrup(null);
   };
   /** Ekrandaki geri oku: geçmişte KKM adımı varsa geri, yoksa ana sayfa */
   const geriGit = () => {
@@ -925,84 +925,49 @@ export default function App() {
   // Logo adresi yüklenemezse kırık resim yerine yazı logosu görünsün
   const hasKemsLogo = !!(kemsLogo && (kemsLogo.startsWith('http') || kemsLogo.startsWith('data:') || kemsLogo.startsWith('/'))) && logoHatasi !== kemsLogo;
 
-  /*
-   * Menü (Paket 4, Kemal 29 Eylül): masaüstünde solda ince simge çubuğu,
-   * telefonda altta beş düğme — Ana sayfa · Viki · Harita · Merch · Diğer.
-   * "Diğer" işe göre gruplu: Evren · Marka · Araçlar.
-   *
-   * 30 Eylül (Kemal: "sol menü kalabalık, anlaşılmıyor"): masaüstünde de
-   * aynı gruplar. Kapalıyken yalnız simgeler; üstüne gelince çubuk açılır,
-   * grup başlıkları ve adlar görünür.
+  /**
+   * Menü (2 Kasım, Kemal'in yeni yerleşimi): üç başlık, Ajans · Evren ·
+   * Ürünler. Masaüstünde sol çubukta gruplar; kapalıyken yalnız simgeler,
+   * üstüne gelince adlar görünür. Telefonda altta üç grup düğmesi ve Yaz
+   * tuşu; gruba dokununca o grubun sayfaları açılır. Arama, zil ve
+   * karanlık / aydınlık her sayfada üst çubukta. Site menüden kalktı
+   * (kalkan); sayfası yerinde, adresle açılır. Sayfalar bu adımda silinmedi,
+   * yalnız yerleri değişti.
    */
+  const notlariAc = () => { setTelSekme('notlar'); git('komuta'); };
   const arti = (ek?: Partial<React.ComponentProps<typeof ArtiMenu>>) => (
-    <ArtiMenu onNot={yeniNot} onFikir={() => setFikirAcik(true)} fikirSayisi={bekleyenFikir} {...ek} />
+    <ArtiMenu onNot={yeniNot} onFikir={() => setFikirAcik(true)} onNotlar={notlariAc} fikirSayisi={bekleyenFikir} {...ek} />
   );
 
-  const RAY: Array<{ grup?: string; satirlar: Array<{ id: Sayfa; ad: string; alt?: string; simge: React.ElementType; nokta?: boolean }> }> = [
-    { satirlar: [
-      { id: 'komuta', ad: 'Ana sayfa', simge: Home, nokta: bildirimVar('aday') }
+  type RaySatiri = { id: Sayfa; ad: string; alt?: string; simge: React.ElementType; nokta?: boolean };
+  const RAY: Array<{ grup: string; simge: React.ElementType; satirlar: RaySatiri[] }> = [
+    { grup: 'Ajans', simge: Briefcase, satirlar: [
+      { id: 'komuta', ad: 'Ana sayfa', alt: 'bugün, bekleyen işler, notlar', simge: Home, nokta: bildirimVar('aday') },
+      { id: 'durum', ad: 'Durum', alt: 'eksikler, takvim, yol haritası, ajans', simge: ListChecks, nokta: bildirimVar('dugme') },
+      { id: 'studyo', ad: 'Yapay zekâ', alt: 'stüdyo ve öneri tepsisi', simge: Sparkles, nokta: bildirimVar('aday') }
     ] },
-    { grup: 'Evren', satirlar: [
-      { id: 'duzada', ad: 'Düzada', alt: 'viki ve Evren Raporu', simge: Compass, nokta: bildirimVar('kanon') },
-      { id: 'atolye', ad: 'Atölye', alt: 'harita, bağ ağı, zaman, soy ağacı, tuval', simge: Hammer },
-      { id: 'yazi', ad: 'Yazı', alt: 'kitap, blog, fanzin', simge: PenTool },
-      { id: 'oyun', ad: 'Oyun', simge: Gamepad2 }
+    { grup: 'Evren', simge: Compass, satirlar: [
+      { id: 'duzada', ad: 'Viki', alt: 'Düzada vikisi ve Evren Raporu', simge: Compass, nokta: bildirimVar('kanon') },
+      { id: 'atolye', ad: 'Atölye', alt: 'harita, bağ ağı, zaman, soy ağacı', simge: Hammer },
+      { id: 'yazi', ad: 'Yazı', alt: 'kitap, blog, fanzin', simge: PenTool }
     ] },
-    { grup: 'Marka', satirlar: [
+    { grup: 'Ürünler', simge: Package, satirlar: [
+      { id: 'oyun', ad: 'Oyunlar', simge: Gamepad2 },
       { id: 'markalar', ad: 'Markalar', alt: 'markalar ve galeri', simge: Shield },
-      { id: 'merch', ad: 'Merch', alt: 'droplar ve ürünler', simge: ShoppingBag }
-    ] },
-    { grup: 'Araçlar', satirlar: [
-      { id: 'studyo', ad: 'Yapay zekâ', alt: 'stüdyo ve öneri tepsisi', simge: Sparkles, nokta: bildirimVar('aday') },
-      { id: 'sosyal', ad: 'Sosyal medya', alt: 'fikirler, seriler, ızgara', simge: Megaphone },
-      { id: 'site', ad: 'Site', alt: 'kems.company önizlemesi', simge: Globe },
-      { id: 'durum', ad: 'Durum', alt: 'yüzdeler, eksikler, takvim, yol haritası', simge: Percent, nokta: bildirimVar('dugme') }
+      { id: 'merch', ad: 'Merch', alt: 'droplar ve ürünler', simge: ShoppingBag },
+      { id: 'sosyal', ad: 'Sosyal medya', alt: 'fikirler, seriler, ızgara', simge: Megaphone }
     ] }
   ];
+  /** Açık sayfanın grubu (Site hiçbir grupta değil) */
+  const aktifGrup = RAY.find(g => g.satirlar.some(r => r.id === activeTab))?.grup ?? null;
+  const acikGrubunSatirlari = RAY.find(g => g.grup === acikGrup)?.satirlar ?? [];
 
   /** Menü açılınca görünen yazılar (kapalıyken gizli, yer kaplamaz) */
   const RAY_ADI = 'min-w-0 whitespace-nowrap opacity-0 group-hover/ray:opacity-100 group-has-[:focus-visible]/ray:opacity-100 transition-opacity duration-150';
 
-  /**
-   * Telefonda "Diğer" (30 Eylül, Kemal: "büyük şeyler çok derine saklanmış").
-   * 7 Ekim (Kemal: "çok fazla buton var, daha az başlık"; "Harita'yı Diğer'in
-   * içine al, elim çarpıyor"): Harita buraya geldi; Fanzin Yazı'da, Takvim ve
-   * Yol haritası Durum'da, Galeri Markalar'da. Arama sekme adlarını da bulur.
-   */
-  const DIGER: Array<{ grup: string; satirlar: Array<{ hedef: string; ad: string; alt?: string; simge: React.ElementType; nokta?: boolean }> }> = [
-    { grup: 'Evren', satirlar: [
-      { hedef: 'atolye', ad: 'Atölye', alt: 'harita, bağ ağı, zaman, soy ağacı, tuval', simge: Hammer },
-      { hedef: 'yazi', ad: 'Yazı', alt: 'kitap, blog, fanzin', simge: PenTool },
-      { hedef: 'oyun', ad: 'Oyun', simge: Gamepad2 }
-    ] },
-    { grup: 'Araçlar', satirlar: [
-      { hedef: 'studyo', ad: 'Yapay zekâ', simge: Sparkles, nokta: bildirimVar('aday') },
-      { hedef: 'sosyal', ad: 'Sosyal medya', simge: Megaphone },
-      { hedef: 'site', ad: 'Site', simge: Globe },
-      { hedef: 'durum', ad: 'Durum', alt: 'yüzdeler, eksikler, takvim, yol haritası', simge: Percent, nokta: bildirimVar('dugme') }
-    ] },
-    { grup: 'Marka', satirlar: [
-      { hedef: 'markalar', ad: 'Markalar', alt: 'markalar ve galeri', simge: Shield },
-      { hedef: 'merch', ad: 'Merch', alt: 'droplar ve ürünler', simge: ShoppingBag }
-    ] }
-  ];
-  /** Diğer'deki arama kutusu (1 Ekim): yazınca gruplar süzülür; alt yazı da aranır */
-  const aranan = digerAra.trim().toLocaleLowerCase('tr');
-  const digerSuzulmus = DIGER
-    .map(g => ({ ...g, satirlar: g.satirlar.filter(r => !aranan || `${r.ad} ${r.alt ?? ''}`.toLocaleLowerCase('tr').includes(aranan)) }))
-    .filter(g => g.satirlar.length > 0);
-
-  const haritada = activeTab === 'atolye';
-  const ALT: Array<{ id: string; ad: string; simge: React.ElementType; aktif: boolean; nokta?: boolean }> = [
-    { id: 'komuta', ad: 'Ana sayfa', simge: Home, aktif: activeTab === 'komuta', nokta: bildirimVar('aday') },
-    { id: 'viki', ad: 'Viki', simge: Compass, aktif: activeTab === 'duzada' && !haritada, nokta: bildirimVar('kanon') },
-    { id: 'oyun', ad: 'Oyun', simge: Gamepad2, aktif: activeTab === 'oyun' },
-    { id: 'diger', ad: 'Diğer', simge: Menu, aktif: digerAcik || haritada || !['komuta', 'duzada', 'oyun'].includes(activeTab), nokta: bildirimVar('dugme') || bildirimVar('aday') }
-  ];
-
   const SAYFA_ADI: Record<Sayfa, string> = {
-    komuta: 'Ana sayfa', duzada: 'Düzada', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
-    oyun: 'Oyun', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya', site: 'Site'
+    komuta: 'Ana sayfa', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
+    oyun: 'Oyunlar', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya', site: 'Site'
   };
 
   const logo = hasKemsLogo ? (
@@ -1041,8 +1006,8 @@ export default function App() {
           {logo}
           <span className={RAY_ADI}><b className="block text-[13px] text-white">Kems Komuta</b><span className="block text-[10px] text-[#A6B0C9]">Merkezi</span></span>
         </button>
-        {RAY.map((g, gi) => (
-          <div key={gi} className={gi ? 'relative mt-2 pt-2 border-t border-white/10 mx-2.5' : 'mx-2.5'}>
+        {RAY.map(g => (
+          <div key={g.grup} className="relative mt-3 pt-2 border-t border-white/10 mx-2.5">
             {/* Grup adı çizginin üstünde; kapalıyken yer kaplamaz */}
             {g.grup && <div className={`${RAY_ADI} absolute -top-[7px] left-2 px-1.5 bg-[#0E1C4F] dark:bg-[#081029] text-[9px] leading-[14px] font-bold uppercase tracking-[0.18em] text-[#6F7BA0]`}>{g.grup}</div>}
             {g.satirlar.map(r => {
@@ -1071,13 +1036,8 @@ export default function App() {
           {arti({
             yon: 'sag',
             tetikSinifi: 'w-full h-11 rounded-xl flex items-center gap-3 px-3 bg-[#F26B6F] text-white hover:opacity-90 cursor-pointer',
-            etiket: <span className={`${RAY_ADI} text-[13px] font-semibold`}>Yeni not / fikir</span>
+            etiket: <span className={`${RAY_ADI} text-[13px] font-semibold`}>Yaz</span>
           })}
-          <button type="button" onClick={() => setIsSearchOpen(true)} aria-label="Ara" className="w-full h-11 rounded-xl flex items-center gap-3 px-3 text-[#A6B0C9] hover:text-white hover:bg-white/10 cursor-pointer">
-            <Search className="w-[18px] h-[18px] shrink-0" /><span className={`${RAY_ADI} text-[13px] font-semibold`}>Ara <kbd className="ml-1 text-[10px] text-[#6F7BA0]">⌘K</kbd></span>
-          </button>
-          {/* Bütün satır düğme: yazıya basınca da açılır (1 Ekim) */}
-          <Zil bildirimler={bildirimler} onSec={bildirimSec} onKanonYoksay={kanonYoksay} yon="sag" etiket={<span className={`${RAY_ADI} text-[13px] font-semibold`}>Bildirimler</span>} />
           {user && (
             <Yedekleme
               items={items}
@@ -1096,31 +1056,36 @@ export default function App() {
             onCikis={() => void cikisYap()}
             onDriveIzni={() => void driveIzni()}
           />
-          <button type="button" onClick={handleToggleTheme} aria-label="Aydınlık / karanlık" className="w-full h-11 rounded-xl flex items-center gap-3 px-3 text-[#A6B0C9] hover:text-white hover:bg-white/10 cursor-pointer">
-            <TemaSimgesi className="w-[18px] h-[18px] shrink-0" /><span className={`${RAY_ADI} text-[13px] font-semibold`}>{settings.theme === 'dark' ? 'Aydınlık' : 'Karanlık'}</span>
-          </button>
         </div>
       </nav>
 
       <div className="lg:pl-16">
-        {/* TELEFON: ana sayfa dışında ince üst çubuk */}
-        {activeTab !== 'komuta' && (
-          <header className="lg:hidden sticky top-0 z-30 flex items-center gap-2 px-4 py-2 bg-[#F3EFE8]/95 dark:bg-[#13204A]/95 backdrop-blur-xs border-b border-[#CFC5B4] dark:border-[#2C3C72]">
-            <button type="button" onClick={geriGit} aria-label="Geri" className="-ml-2 w-11 h-11 rounded-full flex items-center justify-center text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer active:bg-[#E4DCCD] dark:active:bg-[#17345A]">
+        {/*
+          Üst çubuk (2 Kasım): her sayfada, telefonda da masaüstünde de.
+          Arama, zil, karanlık / aydınlık. Telefonda geri oku ve logo da burada.
+        */}
+        <header className="sticky top-0 z-30 flex items-center gap-2 px-4 lg:px-6 py-2 bg-[#F3EFE8]/95 dark:bg-[#13204A]/95 backdrop-blur-xs border-b border-[#CFC5B4] dark:border-[#2C3C72]">
+          {activeTab !== 'komuta' && (
+            <button type="button" onClick={geriGit} aria-label="Geri" className="lg:hidden -ml-2 w-11 h-11 rounded-full flex items-center justify-center text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer active:bg-[#E4DCCD] dark:active:bg-[#17345A]">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <button type="button" onClick={() => git('komuta')} aria-label="Ana sayfa" className="mr-1 cursor-pointer">{logo}</button>
-            <span className="flex-1 min-w-0 leading-tight">
-              <span className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#6A5E4C] dark:text-[#A6B0C9] truncate">Komuta Merkezi</span>
-              <span className="block truncate font-bold text-[16px]">{SAYFA_ADI[activeTab]}</span>
-            </span>
-            <button type="button" onClick={() => setIsSearchOpen(true)} title="Ara" className="w-11 h-11 rounded-full flex items-center justify-center text-[#6A5E4C] dark:text-[#A6B0C9] cursor-pointer">
-              <Search className="w-[18px] h-[18px]" />
-            </button>
-            <Zil bildirimler={bildirimler} onSec={bildirimSec} onKanonYoksay={kanonYoksay} />
-            {arti()}
-          </header>
-        )}
+          )}
+          <button type="button" onClick={() => git('komuta')} aria-label="Ana sayfa" className="lg:hidden mr-1 cursor-pointer">{logo}</button>
+          <span className="flex-1 min-w-0 leading-tight">
+            <span className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#6A5E4C] dark:text-[#A6B0C9] truncate">{aktifGrup ?? 'Komuta Merkezi'}</span>
+            <span className="block truncate font-bold text-[16px]">{SAYFA_ADI[activeTab]}</span>
+          </span>
+          <button type="button" onClick={() => setIsSearchOpen(true)} className="hidden lg:flex items-center gap-2 w-56 px-3 py-2 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A] text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#F26B6F] cursor-pointer">
+            <Search className="w-3.5 h-3.5" /> Ara <kbd className="ml-auto text-[10px]">⌘K</kbd>
+          </button>
+          <button type="button" onClick={() => setIsSearchOpen(true)} title="Ara" className="lg:hidden w-11 h-11 rounded-full flex items-center justify-center text-[#6A5E4C] dark:text-[#A6B0C9] cursor-pointer">
+            <Search className="w-[18px] h-[18px]" />
+          </button>
+          <Zil bildirimler={bildirimler} onSec={bildirimSec} onKanonYoksay={kanonYoksay} />
+          <button type="button" onClick={handleToggleTheme} aria-label="Aydınlık / karanlık" title={settings.theme === 'dark' ? 'Aydınlık' : 'Karanlık'} className="w-11 h-11 rounded-full flex items-center justify-center text-[#6A5E4C] dark:text-[#A6B0C9] cursor-pointer hover:text-[#0E1C4F] dark:hover:text-white">
+            <TemaSimgesi className="w-[18px] h-[18px]" />
+          </button>
+        </header>
 
         <div className="max-w-[1500px] mx-auto w-full px-4 lg:px-6 pt-4 lg:pt-6 pb-28 lg:pb-12 flex flex-col lg:flex-row gap-3 lg:gap-6">
           {/*
@@ -1144,10 +1109,7 @@ export default function App() {
                 onDeleteItem={handleDeleteItem}
                 onAlanSil={handleAlanSil}
                 studyo={studyoIslemleri}
-                onOpenSearch={() => setIsSearchOpen(true)}
-                zil={<Zil bildirimler={bildirimler} onSec={bildirimSec} onKanonYoksay={kanonYoksay} />}
                 yeniNotBekliyor={yeniNotBekliyor}
-                arti={arti()}
                 onYeniNotAcildi={() => setYeniNotBekliyor(false)}
                 sekme={telSekme}
                 onSekme={setTelSekme}
@@ -1312,75 +1274,69 @@ export default function App() {
         </div>
       </div>
 
-      {/* TELEFON: alt menü */}
+      {/* TELEFON: alt menü (2 Kasım): Ajans · Evren · Ürünler · Yaz */}
       <nav className="lg:hidden fixed inset-x-0 bottom-0 z-40 h-16 pb-[env(safe-area-inset-bottom)] flex items-stretch justify-around px-1 bg-[#0E1C4F] dark:bg-[#081029]">
-        {ALT.map(a => {
-          const Simge = a.simge;
+        {RAY.map(g => {
+          const Simge = g.simge;
+          const aktif = acikGrup ? acikGrup === g.grup : aktifGrup === g.grup;
+          const nokta = g.satirlar.some(r => r.nokta);
           return (
             <button
-              key={a.id}
+              key={g.grup}
               type="button"
-              onClick={() => (a.id === 'diger' ? (setDigerAra(''), digerAcik ? digeriKapat() : setDigerAcik(true)) : git(a.id))}
-              className={`relative flex-1 my-1.5 mx-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] cursor-pointer ${a.aktif ? 'bg-[#F26B6F] text-white' : 'text-[#A6B0C9]'}`}
+              aria-expanded={acikGrup === g.grup}
+              onClick={() => (acikGrup === g.grup ? grubuKapat() : setAcikGrup(g.grup))}
+              className={`relative flex-1 my-1.5 mx-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] cursor-pointer ${aktif ? 'bg-[#F26B6F] text-white' : 'text-[#A6B0C9]'}`}
             >
               <Simge className="w-5 h-5" />
-              {a.ad}
-              {a.nokta && !a.aktif && <span className="absolute top-1.5 right-[calc(50%-16px)] w-2 h-2 rounded-full bg-[#F26B6F]" />}
+              {g.grup}
+              {nokta && !aktif && <span className="absolute top-1.5 right-[calc(50%-16px)] w-2 h-2 rounded-full bg-[#F26B6F]" />}
             </button>
           );
         })}
+        {arti({
+          yon: 'yukari',
+          kapsayiciSinifi: 'flex-1 flex my-1.5 mx-0.5',
+          tetikSinifi: 'flex-1 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] text-[#A6B0C9] cursor-pointer',
+          etiket: 'Yaz'
+        })}
       </nav>
 
-      {/* TELEFON: "Diğer" listesi — işe göre gruplu */}
-      {digerAcik && (
-        <div className="lg:hidden fixed inset-0 z-30 bg-black/40" onClick={digeriKapat}>
+      {/* TELEFON: açık grubun sayfaları */}
+      {acikGrup && (
+        <div className="lg:hidden fixed inset-0 z-30 bg-black/40" onClick={grubuKapat}>
           <div
             className="absolute inset-x-0 bottom-16 max-h-[75vh] overflow-y-auto rounded-t-2xl bg-[#FAF8F5] dark:bg-[#13204A] p-4 pb-5 space-y-4"
             onClick={e => e.stopPropagation()}
           >
-            {/* Arama kutusu (1 Ekim): yazınca düğmeler süzülür */}
-            <label className="flex items-center gap-2 h-11 px-3 rounded-xl bg-[#F3EFE8] dark:bg-[#0B132B] text-[#6A5E4C] dark:text-[#A6B0C9]">
-              <Search className="w-4 h-4 shrink-0" />
-              <input
-                value={digerAra}
-                onChange={e => setDigerAra(e.target.value)}
-                placeholder="Sayfa ara…"
-                className="flex-1 min-w-0 bg-transparent text-[14px] text-[#0E1C4F] dark:text-[#F3EFE8] focus:outline-hidden"
-              />
-            </label>
-            {digerSuzulmus.length === 0 && (
-              <p className="text-[13px] text-[#6A5E4C] dark:text-[#A6B0C9]">Bu adla sayfa yok. Bütün kayıtlarda aramak için üstteki büyüteç.</p>
-            )}
-            {digerSuzulmus.map(g => (
-              <div key={g.grup}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 rounded-full bg-[#F26B6F]" />
-                  <span className="flex-1 text-[12px] font-bold uppercase tracking-[0.16em] text-[#6A5E4C] dark:text-[#A6B0C9]">{g.grup}</span>
-                  <span className="text-[12px] tabular-nums text-[#6A5E4C] dark:text-[#A6B0C9]">{g.satirlar.length}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {g.satirlar.map(r => {
-                    const Simge = r.simge;
-                    return (
-                      <button
-                        key={r.hedef}
-                        type="button"
-                        onClick={() => git(r.hedef)}
-                        className="relative flex flex-col items-center gap-1.5 py-3 rounded-xl bg-[#F3EFE8] dark:bg-[#0B132B] text-[12px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer active:bg-[#E4DCCD] dark:active:bg-[#17345A]"
-                      >
-                        <Simge className="w-5 h-5 text-[#D6484C] dark:text-[#F26B6F]" />
-                        {r.ad}
-                        {r.nokta && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F26B6F]" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#F26B6F]" />
+              <span className="flex-1 text-[12px] font-bold uppercase tracking-[0.16em] text-[#6A5E4C] dark:text-[#A6B0C9]">{acikGrup}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {acikGrubunSatirlari.map(r => {
+                const Simge = r.simge;
+                const aktif = activeTab === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => git(r.id)}
+                    className={`relative flex items-start gap-2.5 p-3 rounded-xl text-left cursor-pointer ${aktif ? 'bg-[#F26B6F] text-white' : 'bg-[#F3EFE8] dark:bg-[#0B132B] text-[#0E1C4F] dark:text-[#F3EFE8] active:bg-[#E4DCCD] dark:active:bg-[#17345A]'}`}
+                  >
+                    <Simge className={`w-5 h-5 shrink-0 ${aktif ? '' : 'text-[#D6484C] dark:text-[#F26B6F]'}`} />
+                    <span className="min-w-0 leading-tight">
+                      <span className="block text-[13px] font-semibold">{r.ad}</span>
+                      {r.alt && <span className={`block mt-0.5 text-[11px] ${aktif ? 'text-white/80' : 'text-[#6A5E4C] dark:text-[#A6B0C9]'}`}>{r.alt}</span>}
+                    </span>
+                    {r.nokta && !aktif && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F26B6F]" />}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Ayarlar Ajans'ın altında: yedek ve hesap */}
+            {acikGrup === 'Ajans' && (<>
             <div className="flex gap-2 pt-1">
-              <button type="button" onClick={handleToggleTheme} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer">
-                <TemaSimgesi className="w-4 h-4" /> {settings.theme === 'dark' ? 'Aydınlık' : 'Karanlık'}
-              </button>
               {user && (
                 <Yedekleme
                   items={items}
@@ -1390,14 +1346,11 @@ export default function App() {
                   tetikSinifi="relative flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer"
                 />
               )}
-            </div>
-            {/* Hesap (1 Ekim): çıkış ve Drive izni telefonda da */}
-            <div className="flex gap-2">
               <button type="button" onClick={() => void driveIzni()} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer">
-                <KeyRound className="w-4 h-4" /> Drive iznini yenile
+                <KeyRound className="w-4 h-4" /> Drive izni
               </button>
               <button type="button" onClick={() => void cikisYap()} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] text-[12px] text-[#B23A40] dark:text-[#F26B6F] cursor-pointer">
-                <LogOut className="w-4 h-4" /> Çıkış yap
+                <LogOut className="w-4 h-4" /> Çıkış
               </button>
             </div>
             <p className="text-center text-[10px] font-mono text-[#6A5E4C] dark:text-[#A6B0C9]">
@@ -1406,11 +1359,12 @@ export default function App() {
             <p className="text-center text-[10px] font-mono text-[#6A5E4C] dark:text-[#A6B0C9]">
               Sürüm: {import.meta.env.VITE_SURUM || 'bilinmiyor'}
             </p>
+            </>)}
           </div>
         </div>
       )}
 
-      {/* Fikir kutusu: "+" menüsünden açılır */}
+      {/* Fikir kutusu: Yaz tuşundaki "Kems'e yaz"dan açılır */}
       <HizliFikir
         acik={fikirAcik}
         onAcikDegis={setFikirAcik}
