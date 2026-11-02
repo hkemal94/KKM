@@ -3,6 +3,7 @@ import { adayBilgisi, bekleyenAdaylar, eskiOneriler, seceneksizMi, sorulacaklar 
 import { aracBul, yapayZekaOnerisi } from './studyo';
 import { base64, github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
+import { onayKayitlari } from './onaylar';
 
 /**
  * Tepsiyi ajansa gönder (22 Ekim, Kemal: "ilgili ajan bunu kendi üzerine
@@ -69,6 +70,10 @@ export function tepsiDosyasi(items: Item[], zaman = new Date()) {
     gonderildi: zaman.toISOString(),
     sayilar: { oneri: oneriler.length, eski: eskiler.length, soru: sorular.length },
     oneriler, eskiler, sorular,
+    // Onay bekleyenler'de Kemal'in düğmeleri (2 Kasım): "duzenle" notuyla ajans
+    // revize eder; "arsiv", "bekle", "silindi" ajansa bilgi. Anahtar: oneri:<id>,
+    // is:<iş>, karar:<dosya tarihi>.
+    onaylar: onayKayitlari(items),
     maddeler: Object.fromEntries([...hedefler].map(id => [id, maddeOzeti(kimlik.get(id)!)])),
   };
 }

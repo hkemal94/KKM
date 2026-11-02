@@ -20,11 +20,14 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil' };
 
-export const AjansKararlariKarti: React.FC<Props> = ({ items, anahtar, tur, onUpdateItem, onDeleteItem }) => {
+/**
+ * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
+ * ortak listesi aynı işi kullanır.
+ */
+export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteItem }: Props) {
   const [dosya, setDosya] = useState<KararDosyasi | null | 'yukleniyor' | { hata: string }>('yukleniyor');
-  const [acik, setAcik] = useState(false);
   const [calisiyor, setCalisiyor] = useState<number | null>(null);
   const [sonuc, setSonuc] = useState<{ u: Uygulama; makbuz?: string; makbuzHata?: string } | null>(null);
 
@@ -50,6 +53,14 @@ export const AjansKararlariKarti: React.FC<Props> = ({ items, anahtar, tur, onUp
       catch (e) { setSonuc({ u, makbuzHata: e instanceof Error ? e.message : String(e) }); }
     } finally { setCalisiyor(null); }
   };
+
+  return { dosya, islemler, silSayisi, yazSayisi, calisiyor, sonuc, uygula };
+}
+
+export const AjansKararlariKarti: React.FC<Props> = (props) => {
+  const { anahtar } = props;
+  const [acik, setAcik] = useState(false);
+  const { dosya, islemler, silSayisi, yazSayisi, calisiyor, sonuc, uygula } = useAjansKararlari(props);
 
   if (!anahtar) return null;
 

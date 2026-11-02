@@ -108,7 +108,13 @@ export async function kararlariOku(anahtar: string): Promise<KararDosyasi | null
     const k = JSON.parse(base64Coz(d.content)) as Partial<KararDosyasi>;
     return { olusturuldu: k.olusturuldu || '', islemler: Array.isArray(k.islemler) ? k.islemler : [] };
   } catch (e) {
-    if (e instanceof Error && /yazma izni yok/.test(e.message)) return null; // 404: henüz karar yok
+    if (e instanceof Error && /yazma izni yok/.test(e.message)) {
+      // 404 iki şey olabilir: dosya yok ya da anahtar depoyu hiç göremiyor (2 Kasım'da
+      // ekran "henüz karar yok" diyordu). Depoyu görebiliyorsa dosya gerçekten yok.
+      try { await github(anahtar, `/repos/${AJANS_DEPOSU}`); }
+      catch { throw new Error('anahtar Kems-Ajans deposunu göremiyor; GitHub\'da anahtarın ayarlarına bu depoyu ekle'); }
+      return null;
+    }
     throw e;
   }
 }

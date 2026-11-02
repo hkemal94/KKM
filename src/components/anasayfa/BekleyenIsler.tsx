@@ -25,13 +25,17 @@ interface Props {
   onAlanSil?: (id: string, yollar: string[]) => Promise<void>;
 }
 
-interface Is { id: string; ad: string; aciklama: string; calistir: () => Promise<string> }
+export interface Is { id: string; ad: string; aciklama: string; calistir: () => Promise<string> }
 
 const KART = 'rounded-2xl border border-[#F26B6F]/50 bg-[#FAF8F5] dark:bg-[#13204A]';
 const IKINCIL = 'text-[#6A5E4C] dark:text-[#A6B0C9]';
 const YAZI = 'text-[#0E1C4F] dark:text-[#F3EFE8]';
 
-export const BekleyenIsler: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onDeleteItem, onAlanSil }) => {
+/**
+ * Bekleyen işlerin listesi ve çalıştırma işi (2 Kasım, 3. adım). Kart ve
+ * Onay bekleyenler'in ortak listesi aynı işleri kullanır.
+ */
+export function useBekleyenIsler({ items, onUpdateItem, onDeleteItem, onAlanSil }: Props) {
   const harita = useHaritaDuzeni();
   const durum = useMemo(() => haritaKaydiDurumu(harita.duzen), [harita.duzen]);
   const silinecek = useMemo(() => (onDeleteItem ? silinecekler(items) : []), [items, onDeleteItem]);
@@ -43,7 +47,6 @@ export const BekleyenIsler: React.FC<Props> = ({ items, onUpdateItem, onAddItem,
 
   const [calisan, setCalisan] = useState<string | null>(null);
   const [raporlar, setRaporlar] = useState<Record<string, string>>({});
-  const [hepsiOnay, setHepsiOnay] = useState(false);
   /** Bu açılışta bitirilen işler: veri yenilenene kadar yeniden görünmesin */
   const [bitenler, setBitenler] = useState<Set<string>>(new Set());
 
@@ -139,6 +142,15 @@ export const BekleyenIsler: React.FC<Props> = ({ items, onUpdateItem, onAddItem,
     }
   };
 
+  const raporSatirlari = Object.entries(raporlar).filter(([id]) => bitenler.has(id));
+  return { bekleyen, calistir, calisan, raporlar, raporSatirlari, galeri };
+}
+
+export const BekleyenIsler: React.FC<Props> = (props) => {
+  const { items, onAddItem } = props;
+  const { bekleyen, calistir, calisan, raporlar, raporSatirlari, galeri } = useBekleyenIsler(props);
+  const [hepsiOnay, setHepsiOnay] = useState(false);
+
   const hepsiniYap = async () => {
     setHepsiOnay(false);
     for (const is of bekleyen) {
@@ -146,7 +158,6 @@ export const BekleyenIsler: React.FC<Props> = ({ items, onUpdateItem, onAddItem,
     }
   };
 
-  const raporSatirlari = Object.entries(raporlar).filter(([id]) => bitenler.has(id));
   if (!bekleyen.length && !galeri.length && !raporSatirlari.length) return null;
 
   return (
