@@ -2,7 +2,6 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
-import { createServer as createViteServer } from "vite";
 
 dotenv.config();
 
@@ -479,6 +478,8 @@ app.get("/api/ai-durum", async (_req, res) => {
 // Vite Middleware for Development / Static serving for Production
 async function setupVite() {
   if (process.env.NODE_ENV !== "production") {
+    // Vite yalnız geliştirmede yüklenir; yayındaki sunucu ona ihtiyaç duymaz (2 Kasım, yayın boyutu)
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
