@@ -193,6 +193,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 5. adım: ajanların işleri (PR, dosya, Drive belgesi, eksik yetenek) Onay bekleyenler\'de; karar ajansa gider, PR olan işte Uygula PR\'ı birleştirir' },
   { id: 'evren-ve-urunler', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 6. adım: Evren → Viki · Kitap · Harita ve Kurucu · Görünümler; Ürünler → Oyunlar · Marka ve merch · İçerik (sosyal medya, blog, fanzin, video); Durum → Eksikler ve ayarlar' },
+  { id: 'pano-kapanir', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: 'Yol haritası 9. adım: Ajans Panosu kapandı; işlerin tek kaynağı ajansın iş dosyası (Kimde ne var), sorular Onay bekleyenler\'de' },
   { id: 'telefona-bildirim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 8. adım: zil ve Onay noktası ajanların işlerini ve ajansın kararlarını da sayıyor; telefona bildirim Kems\'ten (Claude uygulaması, çalışma sonunda tek bildirim)' },
   { id: 'ajan-dugmesi', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
