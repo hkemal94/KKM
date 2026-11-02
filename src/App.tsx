@@ -951,7 +951,7 @@ export default function App() {
   type RaySatiri = { id: Sayfa; ad: string; alt?: string; simge: React.ElementType; nokta?: boolean };
   const RAY: Array<{ grup: string; simge: React.ElementType; satirlar: RaySatiri[] }> = [
     { grup: 'Ajans', simge: Briefcase, satirlar: [
-      { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') },
+      { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') || bildirimVar('ajan') },
       { id: 'isler', ad: 'İşler ve takvim', alt: 'kimde ne var, takvim, yol haritası', simge: CalendarDays },
       { id: 'ajanlar', ad: 'Ajanlar ve otomasyonlar', alt: 'ajan kartları, zamanlayıcı, ajans bağlantısı', simge: Bot },
       { id: 'durum', ad: 'Eksikler ve ayarlar', alt: 'eksikler, boşluklar, boyut ve hız', simge: ListChecks },
