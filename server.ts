@@ -387,16 +387,6 @@ Bölüm başlığı: "${data.baslik || ""}"
 Metin: "${data.metin || ""}"`;
         break;
 
-      case "site-hakkinda":
-        prompt = `Kems Company'nin sitesindeki "Hakkında" sayfası için 2-3 cümlelik sade bir metin taslağı yaz. Yalnız aşağıdaki bilgileri kullan; yeni özel ad, sayı, fiyat, tarih uydurma (kuruluş yılı 2025, "Made with Culture" sözü ve Düzada adı kullanılabilir). "Hâlâ", "şu anda", "günümüzde" yazma. Süslü ve abartılı olma.
-Marka: "${data.baslik || "Kems Company"}"
-Marka notları: "${data.notlar || ""}"
-Marka kiti: ${JSON.stringify(data.kit || {})}
-Kemal'in isteği: "${data.istek || ""}"
-Yalnız metni döndür.`;
-        break;
-
-
       case "tutarlilik-kontrolu":
         prompt = `Aşağıdaki kitap bölümü metni ile mevcut dünya lore'u (wiki) arasında herhangi bir çelişki olup olmadığını denetle. Eğer bir çelişki varsa kibarca uyar ve düzeltme öner, her şey tutarlıysa takdir et.
 Bölüm Metni:

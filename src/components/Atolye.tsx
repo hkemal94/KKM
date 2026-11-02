@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check, Map as HaritaIkon, Share2, CalendarRange, GitBranch, LayoutDashboard } from 'lucide-react';
+import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check, Map as HaritaIkon, Share2, CalendarRange, GitBranch } from 'lucide-react';
 import { isaretle } from '../lib/olcumler';
 import type { HaritaBakisi } from './harita/DuzadaHarita';
 import { ATMOSFER_KAPALI, type AtmosferAyari } from './harita/atmosferAyari';
@@ -13,17 +13,17 @@ import { KATMANLAR, haritaIsaretleri, katmanOku, katmanYaz, type KatmanAyari, ty
 /**
  * Atölye (4. gece, 7 Ekim; vvd'den): evrenin çalışma araçları tek bölümde.
  * Harita ve Kurucu (29 Eylül'den beri tek ekran: 2D kur, 3D bak), bağ
- * ağı ve zaman çizgisi (5. gece); soy ağacı ve tuval geldikleri gece raya eklenir (Kemal:
+ * ağı ve zaman çizgisi (5. gece); soy ağacı geldiği gece raya eklendi (Kemal:
  * "görünmesin"). Düzada viki ve Evren Raporu olarak kaldı.
+ * 2 Kasım (yol haritası 1. adım): Tuval kalktı.
  */
 const RAY_BOLUMLERI: RayBolumu[] = [
   { id: 'harita', label: 'Harita ve Kurucu' },
   { id: 'ag', label: 'Bağ ağı' },
   { id: 'zaman', label: 'Zaman çizgisi' },
-  { id: 'soy', label: 'Soy ağacı' },
-  { id: 'tuval', label: 'Tuval' }
+  { id: 'soy', label: 'Soy ağacı' }
 ];
-export type AtolyeSekmesi = 'harita' | 'ag' | 'zaman' | 'soy' | 'tuval';
+export type AtolyeSekmesi = 'harita' | 'ag' | 'zaman' | 'soy';
 /** Menüden gelinen yer: bir araç ya da başlangıç ekranı */
 export type AtolyeHedefi = AtolyeSekmesi | 'giris';
 
@@ -32,15 +32,12 @@ const GIRIS_KARTLARI: Array<{ id: AtolyeSekmesi; ad: string; aciklama: string; I
   { id: 'harita', ad: 'Harita ve Kurucu', aciklama: '2D\'de yol, yapı, doğa çiz; 3D\'de adaya eğik bak.', Ikon: HaritaIkon },
   { id: 'ag', ad: 'Bağ ağı', aciklama: 'Maddeler ve aralarındaki bağlar; buradan bağ kur.', Ikon: Share2 },
   { id: 'zaman', ad: 'Zaman çizgisi', aciklama: 'Tarihli maddeler ve dönemler sırayla.', Ikon: CalendarRange },
-  { id: 'soy', ad: 'Soy ağacı', aciklama: 'Ailelerin kuşakları ve akrabalık bağları.', Ikon: GitBranch },
-  { id: 'tuval', ad: 'Tuval', aciklama: 'Madde kartlarını serbestçe dizip not al.', Ikon: LayoutDashboard }
+  { id: 'soy', ad: 'Soy ağacı', aciklama: 'Ailelerin kuşakları ve akrabalık bağları.', Ikon: GitBranch }
 ];
 
 // Bağ ağı (5. gece): sekme açılınca yüklenir
 const BagAgi = lazy(() => import('./atolye/BagAgi').then(m => ({ default: m.BagAgi })));
 // Zaman çizgisi ve dönemler (5. gece)
-// Tuval (6. gece)
-const Tuval = lazy(() => import('./atolye/Tuval').then(m => ({ default: m.Tuval })));
 // Soy ağacı (6. gece)
 const SoyAgaci = lazy(() => import('./atolye/SoyAgaci').then(m => ({ default: m.SoyAgaci })));
 const ZamanCizgisi = lazy(() => import('./atolye/ZamanCizgisi').then(m => ({ default: m.ZamanCizgisi })));
@@ -62,14 +59,12 @@ interface AtolyeProps {
   /** Haritadaki notu silmek (yalnız "Evet, sil" ile) */
   onDeleteItem: (id: string) => Promise<void>;
   /** Menüden doğrudan bir sekmeye gelmek için */
-  istek?: { sekme: AtolyeHedefi; n: number; aile?: string; madde?: string } | null;
-  /** Tuvaldeki madde kartının "aç"ı: kaydı kendi sayfasında açar */
-  onKayitAc: (item: Item) => void;
+  istek?: { sekme: AtolyeHedefi; n: number; aile?: string } | null;
   /** Haritadan seçilen maddeyi Düzada vikisinde açar */
   onMaddeAc: (id: string) => void;
 }
 
-export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, istek = null, onMaddeAc, onKayitAc }: AtolyeProps) {
+export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, istek = null, onMaddeAc }: AtolyeProps) {
   // Katmanlar ve işaretler (5. gece): 2D ve 3D ortak; katman seçimi bu tarayıcıda hatırlanır
   const [katmanlar, setKatmanlar] = useState<KatmanAyari>(katmanOku);
   const [katmanMenusu, setKatmanMenusu] = useState(false);
@@ -192,12 +187,6 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
       {sekme === 'ag' && (
         <Suspense fallback={<div className="h-48 flex items-center justify-center font-mono text-xs text-[#6A5E4C] dark:text-[#A6B0C9] animate-pulse">Ağ kuruluyor…</div>}>
           <BagAgi items={items} onUpdateItem={onUpdateItem} onAddItem={onAddItem} onMaddeAc={onMaddeAc} />
-        </Suspense>
-      )}
-      {sekme === 'tuval' && (
-        <Suspense fallback={<div className="h-48 flex items-center justify-center font-mono text-xs text-[#6A5E4C] dark:text-[#A6B0C9] animate-pulse">Tuval hazırlanıyor…</div>}>
-          <Tuval items={items} onAddItem={onAddItem} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} onKayitAc={onKayitAc}
-            ilkMadde={istek?.sekme === 'tuval' ? istek.madde ?? null : null} />
         </Suspense>
       )}
       {sekme === 'soy' && (

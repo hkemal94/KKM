@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { YazimPaneli } from '../wiki/YazimPaneli';
-import { ArrowDown, ArrowUp, Download, Globe, Plus, Printer, Save, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Download, Plus, Printer, Save, Trash2 } from 'lucide-react';
 import type { Item } from '../../types';
 import { FANZIN_TONLARI, fanzinBilgisi, type FanzinBilgisi, type FanzinBolumu } from '../../lib/studyo';
 import { StudyodaAc } from '../studyo/StudyodaAc';
@@ -13,10 +13,10 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/s
  *     Kemal "Fanzin olarak aç" deyince burada bir yazı olur.
  *   - Görünüm temiz dergi. Fanzinin adı yok (Kemal koyacak); bölümler serbest.
  *   - Her bölümün tonu ayrı seçilir; yeniden yazımı stüdyo yapar ("✨").
- *   - Çıktılar: sitede Haberler (sitede göster), PDF (yazdır → PDF olarak
- *     kaydet), Instagram karuseli (1080 × 1350 PNG'ler).
+ *   - Çıktılar: PDF (yazdır → PDF olarak kaydet), Instagram karuseli
+ *     (1080 × 1350 PNG'ler). "Sitede göster" 2 Kasım'da site kalkınca gitti.
  *
- * Kayda yalnız "Kaydet" ve "Sitede göster" düğmeleriyle yazılır.
+ * Kayda yalnız "Kaydet" düğmesiyle yazılır.
  */
 
 interface Props {
@@ -55,12 +55,6 @@ export const Fanzin: React.FC<Props> = ({ yazi, onUpdateItem, items, onMaddeAc, 
     await onUpdateItem({ ...yazi, title: baslik.trim() || yazi.title, metadata: { ...yazi.metadata, fanzin: f }, updatedAt: Date.now() });
     setMesaj('Kaydedildi.');
   };
-  const sitede = yazi.metadata?.sitede === true;
-  const siteDegistir = async () => {
-    // alanı silmek yetmiyor (kayıt üstüne eklenerek yazılıyor); false yazılır
-    await onUpdateItem({ ...yazi, metadata: { ...yazi.metadata, sitede: !sitede }, updatedAt: Date.now() });
-    setMesaj(sitede ? 'Siteden kaldırıldı.' : "Sitede Haberler'de görünüyor.");
-  };
 
   const girdi = `w-full bg-white dark:bg-[#17345A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg px-3 py-2 focus:outline-hidden focus:border-[#F26B6F]`;
 
@@ -79,9 +73,6 @@ export const Fanzin: React.FC<Props> = ({ yazi, onUpdateItem, items, onMaddeAc, 
         </div>
         <div className="w-full flex flex-wrap gap-1.5 pt-2 border-t border-[#E4DCCD] dark:border-[#2C3C72]">
           <span className={`self-center mr-1 ${ETIKET}`}>Çıktı</span>
-          <button type="button" onClick={() => void siteDegistir()} className={`${DUGME_BOS} inline-flex items-center gap-1`}>
-            <Globe className="w-3.5 h-3.5" /> {sitede ? 'Siteden kaldır' : "Sitede göster (Haberler)"}
-          </button>
           <button type="button" onClick={() => pdfYazdir(baslik, f)} className={`${DUGME_BOS} inline-flex items-center gap-1`}>
             <Printer className="w-3.5 h-3.5" /> PDF
           </button>

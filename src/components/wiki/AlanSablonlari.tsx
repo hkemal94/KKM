@@ -109,10 +109,6 @@ export const AlanSablonlari: React.FC<Props> = ({ sablon, onKaydet, onKapat }) =
                   birden çok madde
                 </label>
               )}
-              <label className={`${a.ozel ? 'ml-auto ' : ''}inline-flex items-center gap-1.5 cursor-pointer`} title="Vikide ve düzenleyicide durur; yalnız sitede görünmez">
-                <input type="checkbox" checked={!!a.sitedeGizli} onChange={e => alanYaz(n, { sitedeGizli: e.target.checked || undefined })} className="w-4 h-4 accent-[#0E1C4F] dark:accent-[#F26B6F]" />
-                sitede gizli
-              </label>
               {!a.ozel && (
                 <label className="inline-flex items-center gap-1.5 cursor-pointer">
                   <input type="checkbox" checked={!!a.gizli} onChange={e => alanYaz(n, { gizli: e.target.checked || undefined })} className="w-4 h-4 accent-[#0E1C4F] dark:accent-[#F26B6F]" />

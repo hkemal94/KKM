@@ -22,8 +22,6 @@ interface WikiShellProps {
   /** W3 · maddeden haritaya geçiş */
   onHaritayaGit?: (binaId: string) => void;
   onSoyAgaci?: (aileId: string) => void;
-  /** Site (29 Eylül gece): maddeyi sitede göster / gizle */
-  onSitede?: (item: Item, acik: boolean) => void;
   readOnly?: boolean;
   /** Madde düzenleyici ve "Yeni madde" (yapisal-4) */
   onUpdateItem?: (item: Item) => Promise<void>;
@@ -56,7 +54,6 @@ export const WikiShell: React.FC<WikiShellProps> = ({
   onEdit,
   onHaritayaGit,
   onSoyAgaci,
-  onSitede,
   readOnly = false,
   onUpdateItem,
   onDeleteItem,
@@ -364,7 +361,6 @@ export const WikiShell: React.FC<WikiShellProps> = ({
             onEdit={onEdit}
             onHaritayaGit={onHaritayaGit}
             onSoyAgaci={onSoyAgaci}
-            onSitede={onSitede}
             onUpdateItem={readOnly ? undefined : onUpdateItem}
             onSablonYaz={readOnly ? undefined : sablonuYaz}
             onSil={readOnly || !onDeleteItem ? undefined : async () => { await onDeleteItem(selected.id); navigate(String(selected.metadata?.placeId || '') || null); }}

@@ -273,7 +273,7 @@ export const DuzadaRaporu: React.FC<DuzadaRaporuProps> = ({ items, onMaddeSec })
           )}
 
           <footer className="pt-6 border-t-2 border-[#0E1C4F] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#6A5E4C]">
-            <div>Taslak: {r.sayilar.taslak} · sitede gösterilen: {r.sayilar.sitede}</div>
+            <div>Taslak: {r.sayilar.taslak}</div>
             <div>Kems Komuta Merkezi · Düzada</div>
           </footer>
         </div>

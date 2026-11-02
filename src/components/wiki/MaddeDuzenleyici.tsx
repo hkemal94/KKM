@@ -17,7 +17,7 @@ import { bagUygun, kaynakTurleri, uygunTurler } from '../../lib/bagKurallari';
  *   - Künye alanları (türün şemasından; Kişi'de "Aile", Aile'de mahalle,
  *     uğraş, bağlı mekânlar / kişiler, adaya geliş)
  *   - Bağlar: hedef madde + sabit listeden bağ türü
- *   - Esin notu: yalnız Kemal görür; sitede ve okuma yüzünde yok
+ *   - Esin notu: yalnız Kemal görür; okuma yüzünde yok
  *   - Metin (1 Ekim, Kemal: "künye harici düzenleme yapamıyorum"): giriş
  *     metni ve vikide görünen bölümler (başlık + metin; ekle, sil, sırala).
  *     Metni Kemal yazar; burada hiçbir şey kendiliğinden doldurulmaz.
@@ -286,7 +286,7 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
 
       <div>
         <div className="postmark-label text-gri dark:text-bej/85 mb-1">Diğer bilgiler</div>
-        <p className="mb-2 text-[11px] text-gri dark:text-bej/70">Künyeye girmeyen eski satırlar. Vikide sayfanın "Bilgiler" bölümünde görünür; sitede görünmez.</p>
+        <p className="mb-2 text-[11px] text-gri dark:text-bej/70">Künyeye girmeyen eski satırlar. Vikide sayfanın "Bilgiler" bölümünde görünür.</p>
         {ekler.length === 0 && <p className="text-[12px] text-gri dark:text-bej/70 mb-2">Henüz yok.</p>}
         <ul className="space-y-1.5 mb-2">
           {ekler.map((e, n) => (

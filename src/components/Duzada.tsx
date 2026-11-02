@@ -84,11 +84,6 @@ export default function Duzada({
           onDeleteItem={onDeleteItem}
           onAddItem={onAddItem}
           onRaporAc={() => setActiveTab('rapor')}
-          onSitede={(it, acik) => {
-            // Yalnız Kemal basınca yazılır. Kayıt eskisinin üstüne eklenerek
-            // yazıldığı için alanı silmek işe yaramıyor; kapatınca false yazılır.
-            void onUpdateItem({ ...it, metadata: { ...(it.metadata || {}), sitede: acik } as Item['metadata'], updatedAt: Date.now() });
-          }}
         />
       )}
 
