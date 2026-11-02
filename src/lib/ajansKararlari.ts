@@ -68,10 +68,16 @@ const parcaCikar = (metin: string, parca: string) => metin.replace(parca, '').re
 
 const kucuk = (s: string) => (s || '').trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr');
 
-/** Maddeyi adıyla bulur (önce başlık, sonra takma ad); tek bir eşleşme yoksa null */
+/**
+ * Maddeyi bulur: önce kimliğiyle (2 Kasım: aynı adla iki kayıt olunca, ör.
+ * Dondurmacı Kızlar mekânı ve markası, ajans kimlik yazar), sonra başlık,
+ * sonra takma ad; tek bir eşleşme yoksa null
+ */
 export function maddeBul(items: Item[], ad: string): Item | null {
   const a = kucuk(ad);
   const canli = items.filter(i => !i.archived && !i.isProposal && i.type !== 'aday');
+  const kimlikle = canli.find(i => i.id === ad.trim());
+  if (kimlikle) return kimlikle;
   const bas = canli.filter(i => kucuk(i.title) === a);
   if (bas.length) return bas.length === 1 ? bas[0] : null;
   const tak = canli.filter(i => takmaAdlar(i).some(t => kucuk(t) === a));
