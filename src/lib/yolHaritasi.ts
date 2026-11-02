@@ -197,6 +197,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: '"Ajansın kararları" marka kartını da işler: renk paleti, yazı, ton, örnek işler, yap / yapma, slogan (markanın bible\'ı kartın kendisi); logo ve moodboard görselleri hariç' },
   { id: 'marka-kartlari-ajansa', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: '"Vikiyi ajansa gönder" marka kartlarını da gönderir (yazı alanları; logo ve moodboard yalnız var / yok): ajans kartları buradan tamamlar' },
+  { id: 'oyun-assetleri', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: 'Oyunlar → oyun → Assetler ve Oyunlar → Ortak assetler: görseller ve 3B modeller (döndürülebilir) oyunun deposundan okunur; "Ajana değiştirt" ve "Yeni çalışma başlat" ajansa istek yazar' },
   { id: 'pano-kapanir', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 9. adım: Ajans Panosu kapandı; işlerin tek kaynağı ajansın iş dosyası (Kimde ne var), sorular Onay bekleyenler\'de' },
   { id: 'telefona-bildirim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,

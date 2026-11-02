@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { BolumBasligi, BosSatir, IlerlemeHalkasi, Rozet } from '../kabuk/Parcalar';
 import {
-  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, Gamepad2, ArrowRight, Send
+  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, Gamepad2, ArrowRight, Send, Layers
 } from 'lucide-react';
 import type { Item, AreaType } from '../../types';
 import {
@@ -17,6 +17,8 @@ import { GddBolumu } from './GddBolumu';
 import { DepoBelgesi } from './DepoBelgesi';
 import { OyunAyarlari } from './OyunAyarlari';
 import { AjansaGonder } from './AjansaGonder';
+import { OyunAssetleri } from './OyunAssetleri';
+import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
 import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
 import { ayrilmayaIzinVar } from '../../lib/kaydedilmemis';
@@ -43,7 +45,7 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
  * ayrı depoda; oraya yalnız Ayarlar sekmesinin "Oyuna gönder" düğmesi PR açar.
  */
 
-type Sekme = 'kunye' | 'surec' | 'mekanik' | 'depo' | 'yol' | 'ayar';
+type Sekme = 'kunye' | 'surec' | 'mekanik' | 'asset' | 'depo' | 'yol' | 'ayar';
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string };
 
 export interface OyunStudyoProps {
@@ -113,9 +115,20 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
   const liste = useMemo(() => oyunlar(items), [items]);
   const [oyunId, setOyunId] = useState<string | null>(null);
   const [yeniAd, setYeniAd] = useState<string | null>(null);
+  const [ortakAcik, setOrtakAcik] = useState(false);
   const secili = oyunId ? liste.find(o => o.id === oyunId) : undefined;
 
   if (secili) return <OyunEkrani key={secili.id} {...p} oyunId={secili.id} onGeri={() => { if (!ayrilmayaIzinVar()) return; setOyunId(null); window.scrollTo({ top: 0 }); }} />;
+
+  // Ortak assetler (2 Kasım): birden fazla oyunda ve haritada kullanılanlar
+  if (ortakAcik) return (
+    <div className="space-y-5 animate-in fade-in duration-300">
+      <button type="button" onClick={() => { setOrtakAcik(false); window.scrollTo({ top: 0 }); }} className={DUGME_BOS}><ArrowLeft className="w-3.5 h-3.5" /> Oyunlar</button>
+      <SayfaBasi baslik="Ortak assetler" />
+      <p className={`text-[13px] ${IKINCIL}`}>Birden fazla yerde kullanılanlar: Kems Company imzası ve logolar, yazı tipi. Binalar ortak bina kütüphanesiyle buraya gelecek; KKM haritası ve oyunlar aynı modelleri kullanacak.</p>
+      <OyunAssetleri depo={ORTAK_DEPO} kok={ORTAK_KLASOR} gizli kaynak="Ortak" ajan="merch-tasarimcisi" bosYazi="Ortak klasörde henüz görsel yok." />
+    </div>
+  );
 
   const yeniOyun = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +152,15 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
       <SayfaBasi baslik="Oyun">
         <button type="button" onClick={() => setYeniAd('')} className={DUGME_LAC}><Plus className="w-3.5 h-3.5" /> Yeni oyun</button>
       </SayfaBasi>
+      <button type="button" onClick={() => { setOrtakAcik(true); window.scrollTo({ top: 0 }); }}
+        className={`${KART} w-full p-4 flex items-center gap-4 text-left cursor-pointer hover:ring-2 hover:ring-[#F26B6F]/40`}>
+        <span className="w-12 h-12 rounded-xl bg-[#0E1C4F] dark:bg-[#2C3C72] flex items-center justify-center shrink-0"><Layers className="w-6 h-6 text-[#F26B6F]" /></span>
+        <span className="flex-1 min-w-0">
+          <span className={`block text-[16px] font-bold ${YAZI}`}>Ortak assetler</span>
+          <span className={`block text-[13px] ${IKINCIL}`}>Birden fazla oyunda ve haritada kullanılanlar: logolar, imza, yazı tipi; binalar yakında</span>
+        </span>
+        <ArrowRight className={`w-5 h-5 shrink-0 ${IKINCIL}`} />
+      </button>
       <BolumBasligi baslik="Oyunlar" sayi={liste.length} />
       {yeniAd !== null && (
         <form onSubmit={yeniOyun} className={`${KART} p-3 flex items-center gap-2`}>
@@ -202,7 +224,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   const [sekme, setSekme] = useState<Sekme>('kunye');
 
   useEffect(() => {
-    if (!depo && (sekme === 'depo' || sekme === 'yol' || sekme === 'ayar')) {
+    if (!depo && (sekme === 'asset' || sekme === 'depo' || sekme === 'yol' || sekme === 'ayar')) {
       setSekme('kunye');
     }
   }, [depo, sekme]);
@@ -513,7 +535,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
           { id: 'kunye', label: 'Künye ve konsept' },
           { id: 'surec', label: `Adım adım süreç · ${yapilan}/${ADIM_SIRASI.length}` },
           { id: 'mekanik', label: `Mekanikler ve notlar${fikirler.length ? ` · ${fikirler.length}` : ''}` },
-          ...(depo ? [{ id: 'depo', label: 'Depodaki belge' }, { id: 'yol', label: 'Yol haritası' }, { id: 'ayar', label: 'Ayarlar' }] : [])
+          ...(depo ? [{ id: 'asset', label: 'Assetler' }, { id: 'depo', label: 'Depodaki belge' }, { id: 'yol', label: 'Yol haritası' }, { id: 'ayar', label: 'Ayarlar' }] : [])
         ]}
         aktifId={sekme}
         onSec={id => { if (!ayrilmayaIzinVar()) return; setSekme(id as Sekme); window.scrollTo({ top: 0 }); }}
@@ -522,6 +544,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       {sekme === 'kunye' && Kunye}
       {sekme === 'surec' && Surec}
       {sekme === 'mekanik' && Mekanik}
+      {sekme === 'asset' && depo && <OyunAssetleri depo={depo} kaynak={oyunAdi(oyunKaydi) || 'Oyun'} ajan="oyun-gelistiricisi"
+        bosYazi="Bu oyunun deposunda görsel ya da 3B model dosyası yok; çizimleri kodla yapılıyor olabilir." />}
       {sekme === 'depo' && depo && <DepoBelgesi key="depo" depo={depo} />}
       {sekme === 'yol' && depo && <DepoBelgesi key="yol" depo={depo} yollar={YOL_HARITASI_YOLLARI} />}
       {sekme === 'ayar' && depo && <OyunAyarlari depo={depo} />}
