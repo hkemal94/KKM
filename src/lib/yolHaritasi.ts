@@ -167,6 +167,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki düzenleyici: yan panel ve sekmeler, "Diğer bilgiler", onaylı "Maddeyi sil"; kabul edilen öneri bölümleri sitede' },
   { id: 'kararlar-sil-degistir', paket: 'W', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: '"Ajansın kararlarını uygula" takma ad silebiliyor, dolu künye alanını değiştirebiliyor, metinden paragraf silebiliyor' },
+  { id: 'karar-kimlikle', paket: 'W', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: '"Ajansın kararlarını uygula" maddeyi kimliğiyle de buluyor (aynı adla iki kayıt olunca takılmıyor)' },
   { id: 'yenile-yerinde', paket: 'K', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: 'Sayfa yenilenince ana sayfaya atmıyor; açık sayfada (ve açık maddede) kalıyor' },
   { id: 'yeni-menu-1', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
