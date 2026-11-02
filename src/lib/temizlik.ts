@@ -87,6 +87,9 @@ export function silinecekler(items: Item[]): SilmeNedeni[] {
     else if (SILINECEK_ADLAR.some(r => r.test(i.title.trim()))) cikti.push({ item: i, neden: 'Kemal: sil' });
     // Otel odaları (Kemal, 29 Eylül): tek tek odalar ansiklopedi maddesi değil
     else if (i.type === 'oda') cikti.push({ item: i, neden: 'otel odası' });
+    // 2 Kasım (yol haritası 1. adım, Kemal'in "Kalkanlar"ı): Tuval ve Site ekranları kalktı
+    else if (i.type === 'tuval') cikti.push({ item: i, neden: 'Tuval panosu (ekran kalktı)' });
+    else if (i.type === 'site_ayar') cikti.push({ item: i, neden: 'site ayarı (Site kalktı)' });
   }
   return cikti;
 }
@@ -106,8 +109,10 @@ export function silmeOzeti(liste: SilmeNedeni[]): string {
  *   - proposalsSeeded: eski öneri sisteminin işareti
  *   - kitap bölümlerindeki otel simülasyonu günleri: resepsiyon vakaları,
  *     doluluk, hava, sabah notu, müdür notu, beklenen çıkışlar
+ *   - sitede, sitedeGizli: "sitede göster" ve sitede gizlenen parçalar
+ *     (2 Kasım, Site kalktı)
  */
-const ESKI_ALANLAR = ['eskiMetin', 'oyunArsivi', 'proposalsSeeded'];
+const ESKI_ALANLAR = ['eskiMetin', 'oyunArsivi', 'proposalsSeeded', 'sitede', 'sitedeGizli'];
 const SIMULASYON_ALANLARI = ['operations', 'occupancy', 'weather', 'morningNote', 'memoText', 'memoFrom', 'expectedCheckouts'];
 
 export interface EskiAlan { item: Item; alanlar: string[] }
@@ -132,6 +137,7 @@ export function eskiAlanOzeti(liste: EskiAlan[]): string {
     [say(a => a === 'eskiMetin'), 'kayıtta eski metin'],
     [say(a => a === 'oyunArsivi'), 'kayıtta oyun arşivi'],
     [say(a => a === 'proposalsSeeded'), 'kayıtta eski öneri işareti'],
+    [say(a => a === 'sitede' || a === 'sitedeGizli'), 'kayıtta site işareti'],
     [say(a => SIMULASYON_ALANLARI.includes(a)), 'kitap bölümünde otel simülasyonu günü']
   ].filter(([n]) => n).map(([n, ad]) => `${n} ${ad}`).join(' · ');
 }

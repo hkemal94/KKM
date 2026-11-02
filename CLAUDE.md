@@ -176,16 +176,16 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 
 ## Kapsam
 
-**Bu deponun işi:** Komuta Merkezi'nin bütün ekranları, **sosyal medya**
-sayfası (Araçlar, 29 Eylül gece; kararlar `docs/04-durum.md`'de) ve
-ileride **site / ön yüz**. Hepsi bu depoda, KKM'nin parçası.
-
-Site başladı (29 Eylül gece): KKM içinde tam sayfa önizleme (`#site`,
-`src/components/site/`): anasayfa, menü ve Keşfet sayfalarının teması
-(30 Eylül, `SiteSayfalari.tsx`; boş yerler "yakında" çerçevesi). Sitede yalnız Kemal'in
-"sitede göster" dediği maddeler görünür (`metadata.sitede`). Sonraki
-sayfalara Kemal'in isteklerini duymadan başlama. Sosyal medyada paylaşımı Kemal yapar; Buffer
+**Bu deponun işi:** Komuta Merkezi'nin bütün ekranları ve **sosyal medya**
+sayfası (Araçlar, 29 Eylül gece; kararlar `docs/04-durum.md`'de). Hepsi bu
+depoda, KKM'nin parçası. Sosyal medyada paylaşımı Kemal yapar; Buffer
 bağlantısı 2. adım.
+
+**Kalkanlar** (2 Kasım, Kemal; yol haritası 1. adım): Ana sayfa (Bugün, Ada,
+yüzde şeridi), Durum → Yüzdeler, Atölye → Tuval ve Site (önizleme, sayfalar,
+Hakkında, İletişim, "sitede göster") KKM'den kalktı. Notlar Yaz tuşundan
+kendi sayfasında açılır. Site ileride ayrı ele alınır; Kemal istemeden geri
+getirilmez. Eski Tuval ve site kayıtları Temizlik kartında silinir.
 
 **Bu deponun işi DEĞİL:** oyun. Ayrı depo, ayrı oturum.
 

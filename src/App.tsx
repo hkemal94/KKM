@@ -29,7 +29,6 @@ import {
   PenTool,
   Shield,
   Gamepad2,
-  Home,
   ListChecks,
   Inbox,
   Briefcase,
@@ -90,7 +89,6 @@ function lazyYukle<T extends React.ComponentType<any>>(
 const Durum = lazyYukle(() => import('./components/Durum'));
 import type { DurumSekmesi } from './components/Durum';
 import { DURUM_SEKME_ADLARI, SAYFA_ADLARI, sayfaAcildi } from './lib/sayfaSayaci';
-import type { SeritHedefi } from './components/anasayfa/YuzdeSeridi';
 const Duzada = lazyYukle(() => import('./components/Duzada'));
 import type { DuzadaSekmesi } from './components/Duzada';
 import type { AtolyeHedefi } from './components/Atolye';
@@ -99,8 +97,6 @@ const Atolye = lazyYukle(() => import('./components/Atolye'));
 const YaziAtolyesi = lazyYukle(() => import('./components/YaziAtolyesi'));
 const Galeri = lazyYukle(() => import('./components/Galeri'));
 const Sosyal = lazyYukle(() => import('./components/sosyal/Sosyal'));
-const Site = lazyYukle(() => import('./components/site/Site'));
-const SiteYonetimi = lazyYukle(() => import('./components/site/SiteYonetimi'));
 const Takvim = lazyYukle(() => import('./components/takvim/Takvim'));
 const FanzinSayfasi = lazyYukle(() => import('./components/fanzin/FanzinSayfasi'));
 const YolHaritasiSayfasi = lazyYukle(() => import('./components/anasayfa/YolHaritasiSayfasi'));
@@ -116,13 +112,21 @@ const SayfaYukleniyor = () => (
 import { Yedekleme } from './components/Yedekleme';
 import HizliNotModal from './components/HizliNotModal';
 import AramaModal from './components/AramaModal';
-import { Anasayfa, type TelSekmesi } from './components/anasayfa/Anasayfa';
+import { NotlarSayfasi } from './components/anasayfa/NotlarSayfasi';
 import { OnayBekleyenler } from './components/ajans/OnayBekleyenler';
 import { Zil } from './components/kabuk/Zil';
 import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from './lib/bildirimler';
 
-/** Uygulamanın sayfaları. 'onay' açılış (2 Kasım), 'komuta' ana sayfa; eski Komuta Merkezi 'durum'. */
-type Sayfa = 'onay' | 'komuta' | 'durum' | 'markalar' | 'duzada' | 'atolye' | 'merch' | 'yazi' | 'oyun' | 'studyo' | 'sosyal' | 'site';
+/**
+ * Uygulamanın sayfaları. 'onay' açılış (2 Kasım); eski Komuta Merkezi 'durum'.
+ * 2 Kasım (yol haritası 1. adım): Ana sayfa ve Site kalktı; notlar 'notlar'da.
+ */
+type Sayfa = 'onay' | 'notlar' | 'durum' | 'markalar' | 'duzada' | 'atolye' | 'merch' | 'yazi' | 'oyun' | 'studyo' | 'sosyal';
+/** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
+const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar']);
+const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'takvim', 'yolharitasi', 'ajans', 'boyut'];
+/** Geçmişten gelen Durum sekmesi (eski 'yuzdeler' dahil) geçerli değilse Eksikler */
+const durumSekmesi = (s: unknown): DurumSekmesi => (DURUM_SEKMELERI.includes(s as DurumSekmesi) ? s as DurumSekmesi : 'eksikler');
 /** 7 Ekim'de başka sayfanın sekmesi olanlar: eski adla gelen istek oraya yönlenir */
 const SEKMEYE_GECENLER = ['fanzin', 'takvim', 'yolharitasi', 'galeri'];
 
@@ -155,35 +159,23 @@ export default function App() {
     const d = typeof history !== 'undefined' ? (history.state as Record<string, any> | null) : null;
     return d?.kkm && typeof d.tab === 'string' ? d : null;
   });
-  const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab as Sayfa) ?? 'onay');
+  const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab && !KALKAN_SAYFALAR.has(ilkEkran.tab) ? ilkEkran.tab as Sayfa : 'onay'));
   /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kurucu, Kitap) */
   const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(() =>
     ilkEkran?.tab === 'duzada' && (ilkEkran.duzada === 'wiki' || ilkEkran.duzada === 'rapor') ? { sekme: ilkEkran.duzada, n: Date.now() } : null);
-  const [atolyeIstek, setAtolyeIstek] = useState<{ sekme: AtolyeHedefi; n: number; aile?: string; madde?: string } | null>(null);
+  const [atolyeIstek, setAtolyeIstek] = useState<{ sekme: AtolyeHedefi; n: number; aile?: string } | null>(null);
   const [yaziIstek, setYaziIstek] = useState<{ sekme: 'blog' | 'kitap' | 'fanzin'; n: number } | null>(null);
   /** Neyin Eksik sayfası açılırken açık gelecek başlık */
   const [eksikAcik, setEksikAcik] = useState<string | null>(null);
   /** Durum'un sekmesi (1 Ekim: Neyin Eksik Durum'a katıldı) */
-  const [durumSekme, setDurumSekme] = useState<DurumSekmesi>(() => (ilkEkran?.durum as DurumSekmesi) ?? 'yuzdeler');
-  /** Ana sayfanın yüzde şeridinden Durum'a gelince açılacak madde listesi (7 Ekim) */
-  const [durumListe, setDurumListe] = useState<{ h: SeritHedefi; n: number } | null>(null);
+  const [durumSekme, setDurumSekme] = useState<DurumSekmesi>(() => durumSekmesi(ilkEkran?.durum));
   /** Markalar'da Galeri sekmesi açık mı (7 Ekim: Galeri Markalar'ın sekmesi) */
   const [markaGaleri, setMarkaGaleri] = useState(() => !!ilkEkran?.galeri);
-  /** Telefonda ana sayfa sekmesi; açılışta Bugün */
-  const [telSekme, setTelSekme] = useState<TelSekmesi>('bugun');
   /** Telefonda "Diğer" listesi */
   /** Telefonda açık menü grubu (Ajans · Evren · Ürünler); kapalıysa null */
   const [acikGrup, setAcikGrup] = useState<string | null>(null);
   /** "+" ile gelen yeni not sayfası isteği */
   const [yeniNotBekliyor, setYeniNotBekliyor] = useState(false);
-  /** Site önizlemesi (29 Eylül gece): adres `#site` iken KKM yerine tam sayfa site */
-  const siteAdresiMi = () => typeof location !== 'undefined' && /^#site(\/|$)/.test(location.hash);
-  const [siteAcik, setSiteAcik] = useState(siteAdresiMi);
-  useEffect(() => {
-    const degisti = () => setSiteAcik(siteAdresiMi());
-    window.addEventListener('hashchange', degisti);
-    return () => window.removeEventListener('hashchange', degisti);
-  }, []);
   /** Google ile girilmiş mi (29 Eylül; 22 Ekim'den beri giriş şart) */
   const [girisli, setGirisli] = useState(false);
   /** Google'a bağlı değil: giriş ekranı */
@@ -606,10 +598,6 @@ export default function App() {
       setActiveTab('oyun');
     } else if (item.type === 'aday') {
       setActiveTab('studyo');
-    } else if (item.type === 'tuval') {
-      // Tuval panosu (6. gece): Atölye'de
-      setAtolyeIstek({ sekme: 'tuval', n: Date.now(), madde: String(item.metadata?.bagliId || '') || undefined });
-      setActiveTab('atolye');
     } else if (item.type === 'map_pin') {
       // Harita notu (5. gece): Atölye'de haritada
       setAtolyeIstek({ sekme: 'harita', n: Date.now() });
@@ -669,7 +657,6 @@ export default function App() {
     setAcikGrup(null);
     setActiveItemId(null);
     const n = Date.now();
-    if (!hedef.startsWith('durum-')) setDurumListe(null);
     switch (hedef) {
       // 4. gece: Harita ve Kurucu Atölye'de
       case 'harita': case 'kurucu': setAtolyeIstek({ sekme: 'harita', n }); setActiveTab('atolye'); break;
@@ -677,14 +664,13 @@ export default function App() {
       case 'atolye': setAtolyeIstek({ sekme: 'giris', n }); setActiveTab('atolye'); break;
       case 'bagagi': setAtolyeIstek({ sekme: 'ag', n }); setActiveTab('atolye'); break;
       case 'zaman': setAtolyeIstek({ sekme: 'zaman', n }); setActiveTab('atolye'); break;
-      case 'tuval': setAtolyeIstek({ sekme: 'tuval', n, ...(ayrinti ? { madde: ayrinti } : {}) }); setActiveTab('atolye'); break;
       case 'soyagaci': setAtolyeIstek({ sekme: 'soy', n, ...(ayrinti ? { aile: ayrinti } : {}) }); setActiveTab('atolye'); break;
       case 'viki': case 'kunye': case 'duzada': setDuzadaIstek({ sekme: 'wiki', n }); setActiveTab('duzada'); break;
       case 'kitap': setYaziIstek({ sekme: 'kitap', n }); setActiveTab('yazi'); break;
       case 'blog': setYaziIstek({ sekme: 'blog', n }); setActiveTab('yazi'); break;
       case 'bosluk': case 'bosluklar': setDurumSekme('bosluklar'); setActiveTab('durum'); break;
       case 'eksikler': setEksikAcik(ayrinti ?? null); setDurumSekme('eksikler'); setActiveTab('durum'); break;
-      case 'durum': setDurumSekme('yuzdeler'); setActiveTab('durum'); break;
+      case 'durum': setDurumSekme('eksikler'); setActiveTab('durum'); break;
       // 7 Ekim: Fanzin Yazı'da; Takvim ve Yol haritası Durum'da; Galeri Markalar'da
       case 'fanzin': setYaziIstek({ sekme: 'fanzin', n }); setActiveTab('yazi'); break;
       case 'takvim': setDurumSekme('takvim'); setActiveTab('durum'); break;
@@ -692,10 +678,7 @@ export default function App() {
       case 'ajans': setDurumSekme('ajans'); setActiveTab('durum'); break;
       case 'galeri': setMarkaGaleri(true); setActiveTab('markalar'); break;
       case 'markalar': setMarkaGaleri(false); setActiveTab('markalar'); break;
-      case 'durum-kunye': case 'durum-kitap': case 'durum-harita':
-        setDurumListe({ h: hedef.slice(6) as SeritHedefi, n }); setDurumSekme('yuzdeler'); setActiveTab('durum'); break;
-      case 'site-onizleme': location.hash = 'site'; return;
-      default: setActiveTab(hedef as Sayfa);
+      default: setActiveTab(KALKAN_SAYFALAR.has(hedef) ? 'onay' : hedef as Sayfa);
     }
     try { window.scrollTo({ top: 0 }); } catch { /* yok */ }
   };
@@ -711,30 +694,20 @@ export default function App() {
     sayfaAcildi(ad);
   }, [activeTab, durumSekme]);
 
-  /** Bir maddenin "Tuvalde aç"ı (6. gece): lib/tuval → tuvaldeAc olayı */
-  const gitRef = useRef(git);
-  gitRef.current = git;
-  useEffect(() => {
-    const ac = (e: Event) => gitRef.current('tuval', (e as CustomEvent<{ maddeId?: string }>).detail?.maddeId ?? null);
-    window.addEventListener('kems-tuval-ac', ac);
-    return () => window.removeEventListener('kems-tuval-ac', ac);
-  }, []);
-
   /* Eski adla gelen sayfa isteği (ör. bir alt ekrandan 'galeri') yeni yerine gider */
   useEffect(() => {
     if (SEKMEYE_GECENLER.includes(activeTab as string)) git(activeTab as string);
-    else if ((activeTab as string) === 'araclar') setActiveTab('komuta');
+    else if (KALKAN_SAYFALAR.has(activeTab as string)) setActiveTab('onay');
   }, [activeTab]);
 
   /*
    * Geri tuşu (7 Ekim, Kemal: "telefonda geri tuşu yok, direkt uygulamadan
    * çıkıyor"). Her ekran değişimi tarayıcı geçmişine bir adım yazılır;
    * telefonun geri tuşu bir önceki ekrana döner, açık "Diğer" listesini
-   * kapatır. Kaydedilmemiş yazı varsa önce sorulur. Site önizlemesi ayrı.
+   * kapatır. Kaydedilmemiş yazı varsa önce sorulur.
    */
   const sonEkran = useRef<Record<string, unknown> | null>(null);
   useEffect(() => {
-    if (siteAcik) return;
     const yeni: Record<string, unknown> = {
       kkm: true, tab: activeTab, item: activeItemId ?? null, durum: durumSekme,
       duzada: activeTab === 'duzada' ? (duzadaIstek?.sekme ?? 'wiki') : null,
@@ -747,7 +720,7 @@ export default function App() {
     if (eski?.kkm) history.pushState(kayit, '', location.pathname + location.search);
     else history.replaceState(kayit, '');
     sonEkran.current = kayit;
-  }, [activeTab, activeItemId, durumSekme, duzadaIstek?.sekme, acikGrup, markaGaleri, siteAcik]);
+  }, [activeTab, activeItemId, durumSekme, duzadaIstek?.sekme, acikGrup, markaGaleri]);
   useEffect(() => {
     const geri = (e: PopStateEvent) => {
       const d = e.state as Record<string, any> | null;
@@ -758,9 +731,9 @@ export default function App() {
         return;
       }
       sonEkran.current = d;
-      setActiveTab(d.tab as Sayfa);
+      setActiveTab(KALKAN_SAYFALAR.has(d.tab) ? 'onay' : d.tab as Sayfa);
       setActiveItemId(d.item ?? null);
-      setDurumSekme((d.durum as DurumSekmesi) ?? 'yuzdeler');
+      setDurumSekme(durumSekmesi(d.durum));
       setAcikGrup(typeof d.diger === 'string' ? d.diger : null);
       setMarkaGaleri(!!d.galeri);
       if (d.tab === 'duzada' && (d.duzada === 'wiki' || d.duzada === 'rapor')) setDuzadaIstek({ sekme: d.duzada, n: Date.now() });
@@ -794,7 +767,7 @@ export default function App() {
     else if (b.tur === 'kanon') { if (b.maddeler?.[0]) maddeyiAc(b.maddeler[0]); }
     else if (b.tur === 'aday') git('onay');
     else if (b.tur === 'yedek') window.dispatchEvent(new Event('kems-yedek-ac', { cancelable: true }));
-    else { setTelSekme('bugun'); git('komuta'); }
+    else git('onay');
   };
 
   const handleSelectArea = (area: AreaType, itemId?: string) => {
@@ -864,7 +837,7 @@ export default function App() {
   };
 
   /** "+" menüsünün iki yolu (1 Ekim): Not → not defterinde yeni sayfa; Fikir → fikir kutusu */
-  const yeniNot = () => { setTelSekme('notlar'); setYeniNotBekliyor(true); git('komuta'); };
+  const yeniNot = () => { setYeniNotBekliyor(true); git('notlar'); };
   const bekleyenFikir = useMemo(
     () => items.filter(i => i.type === 'fikir' && !i.archived && !(i.metadata as any)?.donusenId && !(i.tags || []).includes('gunluk-not')).length,
     [items]
@@ -909,18 +882,6 @@ export default function App() {
     );
   }
 
-  // Site önizlemesi: KKM'nin yerine tam sayfa (açılır pencere değil)
-  if (siteAcik) {
-    return (
-      <Suspense fallback={<SayfaYukleniyor />}>
-      <Site
-        items={items}
-        onKapat={() => { history.pushState(null, '', location.pathname + location.search); setSiteAcik(false); }}
-      />
-      </Suspense>
-    );
-  }
-
   // 2. MAIN LOGGED-IN VIEW
   const kemsCompanyItem = items.find(b => b.type === 'marka' && (b.id === 'kems_company' || b.title.toLowerCase() === 'kems company'));
   const kemsLogo = kemsCompanyItem ? maddeGorseli(kemsCompanyItem, items) : undefined;
@@ -932,11 +893,11 @@ export default function App() {
    * Ürünler. Masaüstünde sol çubukta gruplar; kapalıyken yalnız simgeler,
    * üstüne gelince adlar görünür. Telefonda altta üç grup düğmesi ve Yaz
    * tuşu; gruba dokununca o grubun sayfaları açılır. Arama, zil ve
-   * karanlık / aydınlık her sayfada üst çubukta. Site menüden kalktı
-   * (kalkan); sayfası yerinde, adresle açılır. Sayfalar bu adımda silinmedi,
-   * yalnız yerleri değişti.
+   * karanlık / aydınlık her sayfada üst çubukta.
+   * Yol haritası 1. adım (2 Kasım): Ana sayfa ve Site kalktı; Notlar Yaz
+   * tuşundan açılır.
    */
-  const notlariAc = () => { setTelSekme('notlar'); git('komuta'); };
+  const notlariAc = () => git('notlar');
   const arti = (ek?: Partial<React.ComponentProps<typeof ArtiMenu>>) => (
     <ArtiMenu onNot={yeniNot} onFikir={() => setFikirAcik(true)} onNotlar={notlariAc} fikirSayisi={bekleyenFikir} {...ek} />
   );
@@ -945,7 +906,6 @@ export default function App() {
   const RAY: Array<{ grup: string; simge: React.ElementType; satirlar: RaySatiri[] }> = [
     { grup: 'Ajans', simge: Briefcase, satirlar: [
       { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') },
-      { id: 'komuta', ad: 'Ana sayfa', alt: 'bugün, notlar, ada', simge: Home },
       { id: 'durum', ad: 'Durum', alt: 'eksikler, takvim, yol haritası, ajans', simge: ListChecks },
       { id: 'studyo', ad: 'Yapay zekâ', alt: 'stüdyo ve öneri tepsisi', simge: Sparkles, nokta: bildirimVar('aday') }
     ] },
@@ -961,7 +921,7 @@ export default function App() {
       { id: 'sosyal', ad: 'Sosyal medya', alt: 'fikirler, seriler, ızgara', simge: Megaphone }
     ] }
   ];
-  /** Açık sayfanın grubu (Site hiçbir grupta değil) */
+  /** Açık sayfanın grubu (Notlar hiçbir grupta değil; Yaz tuşundan açılır) */
   const aktifGrup = RAY.find(g => g.satirlar.some(r => r.id === activeTab))?.grup ?? null;
   const acikGrubunSatirlari = RAY.find(g => g.grup === acikGrup)?.satirlar ?? [];
 
@@ -969,8 +929,8 @@ export default function App() {
   const RAY_ADI = 'min-w-0 whitespace-nowrap opacity-0 group-hover/ray:opacity-100 group-has-[:focus-visible]/ray:opacity-100 transition-opacity duration-150';
 
   const SAYFA_ADI: Record<Sayfa, string> = {
-    onay: 'Onay bekleyenler', komuta: 'Ana sayfa', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
-    oyun: 'Oyunlar', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya', site: 'Site'
+    onay: 'Onay bekleyenler', notlar: 'Notlar', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
+    oyun: 'Oyunlar', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya'
   };
 
   const logo = hasKemsLogo ? (
@@ -1115,21 +1075,14 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'komuta' && (
-              <Anasayfa
+            {activeTab === 'notlar' && (
+              <NotlarSayfasi
                 items={items}
-                bugunDugmeler={bekleyenDugmeListesi}
-                onGit={git}
-                onMaddeyiAc={maddeyiAc}
                 onAddItem={handleAddItem}
                 onUpdateItem={handleUpdateItem}
-                onDeleteItem={handleDeleteItem}
-                onAlanSil={handleAlanSil}
-                studyo={studyoIslemleri}
-                yeniNotBekliyor={yeniNotBekliyor}
-                onYeniNotAcildi={() => setYeniNotBekliyor(false)}
-                sekme={telSekme}
-                onSekme={setTelSekme}
+                onMaddeAc={maddeyiAc}
+                yeniSayfaBekliyor={yeniNotBekliyor}
+                onYeniSayfaAcildi={() => setYeniNotBekliyor(false)}
               />
             )}
 
@@ -1140,7 +1093,6 @@ export default function App() {
                 items={items}
                 sekme={durumSekme}
                 onSekme={setDurumSekme}
-                onSec={h => git(h)}
                 onSelectArea={handleSelectArea}
                 onUpdateItem={handleUpdateItem}
                 onAddItem={handleAddItem}
@@ -1149,7 +1101,6 @@ export default function App() {
                 eksikAcik={eksikAcik}
                 eposta={girisli ? user?.email : null}
                 onMaddeAc={maddeyiAc}
-                listeIstegi={durumListe}
                 takvim={
                   <Takvim
                     items={items}
@@ -1213,7 +1164,6 @@ export default function App() {
                 onAddItem={handleAddItem}
                 onUpdateItem={handleUpdateItem}
                 onDeleteItem={handleDeleteItem}
-                onKayitAc={maddeyiAc}
                 istek={atolyeIstek}
                 onMaddeAc={id => { setDuzadaIstek({ sekme: 'wiki', n: Date.now() }); setActiveItemId(id); setActiveTab('duzada'); }}
               />
@@ -1268,9 +1218,6 @@ export default function App() {
               <Studyo {...studyoIslemleri} onTemizlik={() => git('eksikler')} />
             )}
 
-            {activeTab === 'site' && (
-              <SiteYonetimi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onOnizleme={() => git('site-onizleme')} onMaddeyiAc={maddeyiAc} oturumVar={!!user} />
-            )}
 
 
             {activeTab === 'sosyal' && (

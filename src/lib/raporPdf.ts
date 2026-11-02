@@ -73,8 +73,7 @@ export async function evrenRaporuPdf(items: Item[]): Promise<void> {
   p.bolum('Durum');
   p.alanlar([
     ['Viki maddesi', String(r.sayilar.toplam)],
-    ['Taslak', String(r.sayilar.taslak)],
-    ['Sitede gösterilen', String(r.sayilar.sitede)]
+    ['Taslak', String(r.sayilar.taslak)]
   ]);
   p.kaydet(`duzada-evren-raporu-${gun()}.pdf`);
 }

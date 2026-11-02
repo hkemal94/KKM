@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { AlertCircle, ChevronRight, Globe, Link2, PencilLine, Pin, Unlink, GitFork, Frame, Eye, EyeOff } from 'lucide-react';
-import { maddeninTuvalleri, tuvaldeAc } from '../../lib/tuval';
-import { gizlemeDegistir, gizlenebilenler } from '../../lib/siteGizleme';
+import { AlertCircle, ChevronRight, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
 import { StudyodaAc } from '../studyo/StudyodaAc';
 import { Item, WikiSection } from '../../types';
 import { MaddeDuzenleyici, AileUyeleri } from './MaddeDuzenleyici';
@@ -118,8 +116,6 @@ interface WikiArticleProps {
   onHaritayaGit?: (binaId: string) => void;
   /** Aile maddesinde "Soy ağacında aç" (6. gece) */
   onSoyAgaci?: (aileId: string) => void;
-  /** Site (29 Eylül gece): verilmezse düğme çıkmaz */
-  onSitede?: (item: Item, acik: boolean) => void;
   /** Madde düzenleyici (yapisal-4): verilirse "düzenle" onu açar */
   onUpdateItem?: (item: Item) => Promise<void>;
   /** Düzenleyicideki "bu türe alan ekle" (3. gece) şablonu buradan yazar */
@@ -137,7 +133,6 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
   onEdit,
   onHaritayaGit,
   onSoyAgaci,
-  onSitede,
   onUpdateItem,
   onSablonYaz,
   onSil
@@ -351,22 +346,6 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
               className="ml-auto flex items-center gap-1.5 text-[11px] font-mono text-gri hover:text-kiremit dark:text-bej/85 transition-colors cursor-pointer"
             />
           )}
-          {admin && onSitede && (
-            <button
-              type="button"
-              onClick={() => onSitede(item, item.metadata?.sitede !== true)}
-              title={item.metadata?.sitede === true ? 'Sitede görünüyor · basınca gizlenir' : 'Sitede görünmüyor · basınca görünür'}
-              className={`flex items-center gap-1.5 text-[11px] font-mono transition-colors cursor-pointer ${item.metadata?.sitede === true ? 'text-[#2F7A45] dark:text-[#9FD3A9]' : 'text-gri hover:text-lacivert dark:text-bej/85 dark:hover:text-krem'}`}
-            >
-              <Globe size={12} /> {item.metadata?.sitede === true ? 'sitede ✓' : 'sitede göster'}
-            </button>
-          )}
-          {admin && (item.type === 'yer' || maddeninTuvalleri(allItems, item.id).length > 0) && (
-            <button type="button" onClick={() => tuvaldeAc(item.id)} title="Bu maddenin panosu (Atölye → Tuval)"
-              className="flex items-center gap-1.5 text-[11px] font-mono transition-colors cursor-pointer text-gri hover:text-lacivert dark:text-bej/85 dark:hover:text-krem">
-              <Frame size={12} /> tuvalde aç
-            </button>
-          )}
           {item.type === 'aile' && onSoyAgaci && (
             <button type="button" onClick={() => onSoyAgaci(item.id)} title="Bu ailenin soy ağacı (Atölye)"
               className="flex items-center gap-1.5 text-[11px] font-mono transition-colors cursor-pointer text-gri hover:text-lacivert dark:text-bej/85 dark:hover:text-krem">
@@ -430,39 +409,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
         <MaddeDuzenleyici item={item} allItems={allItems} onKaydet={onUpdateItem} onSablonYaz={onSablonYaz} onKapat={() => setDuzenle(false)} onSil={onSil} />
       )}
 
-      {/* Sitede görünenler (6. gece): parça parça gizle / göster; yalnız site etkilenir */}
-      {admin && onUpdateItem && (() => {
-        const parcalar = gizlenebilenler(item, (item.images || []).some(s => typeof s === 'string' && s));
-        if (!parcalar.length) return null;
-        const gizliSayi = parcalar.filter(p => p.gizli).length;
-        return (
-          <details className="mb-6 rounded border border-dashed border-bej/70 px-3 py-2 text-[13px]">
-            <summary className="cursor-pointer postmark-label text-gri dark:text-bej/85">
-              Sitede görünenler{gizliSayi ? ` · ${gizliSayi} gizli` : ''}{item.metadata?.sitede === true ? '' : ' · madde sitede değil'}
-            </summary>
-            <ul className="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-1">
-              {parcalar.map(p => (
-                <li key={p.anahtar} className="flex items-center gap-2 min-h-8">
-                  <button type="button" disabled={p.sablonda}
-                    onClick={() => void onUpdateItem(gizlemeDegistir(item, p.anahtar, !p.gizli))}
-                    aria-pressed={!p.gizli} aria-label={`${p.ad}: ${p.gizli ? 'sitede gizli' : 'sitede görünüyor'}`}
-                    title={p.sablonda ? 'Alan şablonunda "sitede gizli"; oradan açılır' : p.gizli ? 'Basınca sitede görünür' : 'Basınca sitede gizlenir'}
-                    className={`p-1 rounded cursor-pointer disabled:cursor-not-allowed ${p.gizli ? 'text-kiremit' : 'text-[#2F7A45] dark:text-[#9FD3A9]'}`}>
-                    {p.gizli ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
-                  <span className={p.gizli ? 'line-through text-gri dark:text-bej/60' : ''}>{p.ad}</span>
-                  <span className="text-[10px] font-mono text-gri dark:text-bej/60">
-                    {p.tur === 'bolum' ? 'bölüm' : p.tur === 'alan' ? 'künye' : ''}{p.sablonda ? ' · şablonda gizli' : ''}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-[11px] text-gri dark:text-bej/70">Yalnız siteyi etkiler; vikide ve düzenleyicide hepsi görünür. Bir alanı bu türün bütün maddelerinde gizlemek için: Alan şablonları → "sitede gizli".</p>
-          </details>
-        );
-      })()}
-
-      {/* Esin notu (yapisal-4): yalnız yönetim yüzünde, sitede hiç yok */}
+      {/* Esin notu (yapisal-4): yalnız yönetim yüzünde */}
       {admin && typeof item.metadata?.esin === 'string' && item.metadata.esin.trim() && (
         <details className="mb-6 rounded border border-dashed border-bej/70 px-3 py-2 text-[13px]">
           <summary className="cursor-pointer postmark-label text-gri dark:text-bej/85">Esin notu · yalnız sen görürsün</summary>

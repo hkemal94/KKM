@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { ArrowLeft, ArrowRight, CircleCheck, CircleDashed } from 'lucide-react';
-import { BolumBasligi, BosSatir, IlerlemeHalkasi, Kuyu, Rozet, StudyoKarti } from '../kabuk/Parcalar';
+import { BolumBasligi, BosSatir, IlerlemeHalkasi, Kuyu, StudyoKarti } from '../kabuk/Parcalar';
 import type { Item } from '../../types';
 import { fanzinBilgisi } from '../../lib/studyo';
 import { StudyodaAc } from '../studyo/StudyodaAc';
@@ -75,9 +75,6 @@ export const FanzinSayfasi: React.FC<{
               <div className="flex gap-4">
                 {kapak(sonSayi, true)}
                 <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {sonSayi.metadata?.sitede === true ? <Rozet renk="bitti">sitede</Rozet> : <Rozet renk="bekliyor">taslak</Rozet>}
-                  </div>
                   <h2 className={`text-[20px] lg:text-[24px] font-bold leading-tight ${YAZI}`}>{sonSayi.title}</h2>
                   <div className="flex items-center gap-3">
                     <IlerlemeHalkasi yuzde={doluluk(sonSayi)} boyut={52} />
@@ -129,7 +126,7 @@ export const FanzinSayfasi: React.FC<{
                       {kapak(f)}
                       <span className="flex-1 min-w-0">
                         <span className={`block text-[15px] font-bold truncate ${YAZI}`}>{f.title}</span>
-                        <span className={`block mt-0.5 text-[12px] ${IKINCIL}`}>{fanzinBilgisi(f)!.bolumler.length} bölüm · {f.metadata?.sitede === true ? 'sitede' : 'taslak'} · {neZaman(f.updatedAt)}</span>
+                        <span className={`block mt-0.5 text-[12px] ${IKINCIL}`}>{fanzinBilgisi(f)!.bolumler.length} bölüm · {neZaman(f.updatedAt)}</span>
                       </span>
                     </button>
                   </li>

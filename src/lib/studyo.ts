@@ -1,6 +1,5 @@
 import type { Item, ItemType, WikiSection } from '../types';
 import { aiCagir, AiHatasi } from './aiCagir';
-import { hakkindaTaslaginaYaz } from './siteAyari';
 import { yeniGonderi } from './sosyal';
 import { MAHALLE_ISKELETI, mahalleMaddesi, mahalleMetniVerisi } from './mahalleMetinleri';
 import { derlemeVerisi, siraya } from './yerTurleri';
@@ -37,7 +36,7 @@ export const GRUP_ADLARI: Record<StudyoGrubu, string> = {
 export type SonucTuru = 'metin' | 'liste' | 'bolumler' | 'kunye' | 'renkler' | 'urunler';
 
 /** "Ekle" düğmesinin ne yaptığı; null ise yalnız kopyalanır */
-export type Uygulama = 'notlara-ekle' | 'bolum-ekle' | 'bolum-derle' | 'kunye-ekle' | 'baslik-yap' | 'metnin-yerine' | 'renk-ekle' | 'urun-ekle' | 'site-hakkinda' | 'gece-oneri-ekle' | 'fanzin-olustur' | 'fanzin-bolum' | null;
+export type Uygulama = 'notlara-ekle' | 'bolum-ekle' | 'bolum-derle' | 'kunye-ekle' | 'baslik-yap' | 'metnin-yerine' | 'renk-ekle' | 'urun-ekle' | 'gece-oneri-ekle' | 'fanzin-olustur' | 'fanzin-bolum' | null;
 
 export interface StudyoAraci {
   id: string;
@@ -215,14 +214,6 @@ export const STUDYO_ARACLARI: StudyoAraci[] = [
     aciklama: 'Markanın ya da kurumun notlarından 4 renk önerir.',
     hedefTurleri: ['marka', 'kulüp'], sonuc: 'renkler', uygulama: 'renk-ekle', task: 'logo-renk-cikar',
     veri: h => ({ logoDescription: h?.metadata?.brandKit?.selectedLogo || h?.notes || h?.title })
-  },
-  {
-    // Site → Hakkında (yapisal-4). Marka kaydından iki üç cümle; "Ekle" yalnız
-    // sitenin taslağına yazar, Kemal "Yayınla" demeden sitede görünmez.
-    id: 'site-hakkinda', grup: 'marka', ad: 'Site · Hakkında taslağı',
-    aciklama: 'Marka kaydından sitenin Hakkında sayfası için iki üç cümle önerir. "Ekle" sitenin taslağına yazar.',
-    hedefTurleri: ['marka'], serbest: 'Neyi vurgulasın? (isteğe bağlı)', sonuc: 'metin', uygulama: 'site-hakkinda', task: 'site-hakkinda',
-    veri: (h, serbest) => ({ baslik: h?.title, notlar: (h?.notes || '').slice(0, 1500), kit: h?.metadata?.brandKit || null, istek: serbest })
   },
   {
     // Gece hazırlığının önerileri (kural istisnası). Stüdyoda kart olarak
@@ -465,8 +456,6 @@ export function oneriyiUygula(
       const bolumler = f.bolumler.map((b, n) => (n === ist.sira - 1 ? { ...b, metin: oneri.metin!, ton: ist.ton } : b));
       return { guncel: { ...hedef, metadata: { ...hedef.metadata, fanzin: { ...f, bolumler } }, updatedAt: simdi } };
     }
-    case 'site-hakkinda':
-      return oneri.metin ? hakkindaTaslaginaYaz(items, oneri.metin) : null;
     case 'notlara-ekle':
       return { guncel: { ...hedef, notes: [(hedef.notes || '').trim(), oneri.metin || ''].filter(Boolean).join('\n\n'), updatedAt: simdi } };
     case 'metnin-yerine':

@@ -43,8 +43,6 @@ export interface SablonAlani {
   coklu?: boolean;
   /** Künyede, düzenleyicide ve Boşluklar'da görünmez; değeri silinmez */
   gizli?: boolean;
-  /** Yalnız sitede görünmez (6. gece); vikide ve düzenleyicide durur */
-  sitedeGizli?: boolean;
   /** Kemal'in eklediği alan (değeri metadata.alanlar'da) */
   ozel?: boolean;
 }
@@ -108,7 +106,6 @@ export function sablonuOku(ham: unknown): VikiSablonu {
         ...(bag.length ? { bag } : {}),
         ...(bag.length && a.coklu ? { coklu: true } : {}),
         ...(a.gizli ? { gizli: true } : {}),
-        ...(a.sitedeGizli ? { sitedeGizli: true } : {}),
         ...(a.ozel ? { ozel: true } : {})
       });
     }
@@ -127,7 +124,6 @@ export function sablonuYazilacak(s: VikiSablonu): Record<string, Record<string, 
       ...(a.bag?.length ? { bag: [...a.bag] } : {}),
       ...(a.bag?.length && a.coklu ? { coklu: true } : {}),
       ...(a.gizli ? { gizli: true } : {}),
-      ...(a.sitedeGizli ? { sitedeGizli: true } : {}),
       ...(a.ozel ? { ozel: true } : {})
     }));
   }
@@ -159,8 +155,6 @@ export interface SemaAlani extends KunyeSorusu {
   bag?: BagGrubu[];
   coklu?: boolean;
   ozel?: boolean;
-  /** Alan şablonunda "sitede gizli" (6. gece) */
-  sitedeGizli?: boolean;
 }
 
 /**
@@ -177,12 +171,11 @@ export function semaAlanlari(anahtar: string, s: VikiSablonu = etkin): SemaAlani
     if (a.gizli) continue;
     const h = hazir.find(f => f.id === a.id);
     if (h) {
-      alanlar.push({ ...h, label: a.label || h.label, ...(a.bag?.length ? { bag: a.bag, coklu: a.coklu } : {}), ...(a.sitedeGizli ? { sitedeGizli: true } : {}) });
+      alanlar.push({ ...h, label: a.label || h.label, ...(a.bag?.length ? { bag: a.bag, coklu: a.coklu } : {}) });
     } else if (a.ozel) {
       alanlar.push({
         id: a.id, label: a.label, question: `${a.label}?`, fieldPath: `metadata.alanlar.${a.id}`, ozel: true,
-        ...(a.bag?.length ? { bag: a.bag, coklu: a.coklu } : {}),
-        ...(a.sitedeGizli ? { sitedeGizli: true } : {})
+        ...(a.bag?.length ? { bag: a.bag, coklu: a.coklu } : {})
       });
     }
   }

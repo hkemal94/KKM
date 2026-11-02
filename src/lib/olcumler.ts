@@ -56,7 +56,6 @@ const PARCA_ADLARI: Array<[RegExp, string]> = [
   [/Wiki|wiki/i, 'Viki'],
   [/^Duzada-/, 'Düzada sayfası'],
   [/Merch|merch|Urun|three/i, 'Merch ve 3B stüdyo'],
-  [/^Site-|site/i, 'Site'],
   [/Oyun|oyun/i, 'Oyun'],
   [/Yazi|Kitap|Fanzin/i, 'Yazı'],
   [/Markalar|marka|KurumOzeti|Galeri/i, 'Markalar ve galeri'],

@@ -1258,7 +1258,7 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
       bekleyenTaslak.current = null;   // işlenen taslak zaten yazılıyor
       await kaydet({ ...d, guncelleme: Date.now(), kurucu: taslakBelgesi, kurucuIslenen: taslakBelgesi });
       setYerelIslenen(taslakBelgesi);
-      setIsleRaporu('Haritaya işlendi. "3D · bak" ile ve sitede görünür.'
+      setIsleRaporu('Haritaya işlendi. "3D · bak" ile görünür.'
         + (onceki && arsivle ? ' Önceki hâl arşive kalktı.' : ''));
     } catch (e) {
       setIsleRaporu(`İşlenemedi: ${e instanceof Error ? e.message : 'bilinmeyen hata'}. Taslak duruyor, tekrar dene.`);

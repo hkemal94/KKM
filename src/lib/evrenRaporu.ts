@@ -53,7 +53,7 @@ export interface TarihSatiri {
 
 export interface EvrenRaporu {
   tarih: string;
-  sayilar: { toplam: number; kisi: number; mekan: number; kurum: number; aile: number; olay: number; taslak: number; sitede: number };
+  sayilar: { toplam: number; kisi: number; mekan: number; kurum: number; aile: number; olay: number; taslak: number };
   ada: RaporMaddesi | null;
   mahalleler: RaporMahallesi[];
   kurumlar: RaporMaddesi[];
@@ -154,8 +154,7 @@ export function evrenRaporu(items: Item[]): EvrenRaporu {
       kurum: kurumlar.length,
       aile: aileler.length,
       olay: olaylar.length,
-      taslak: viki.filter(isStub).length,
-      sitede: viki.filter(i => i.metadata?.sitede === true).length
+      taslak: viki.filter(isStub).length
     },
     ada: adaMaddesi ? maddeyeCevir(adaMaddesi) : null,
     mahalleler, kurumlar, mekanlar, yerler: yerAdlari, aileler, olaylar, kisiler, tarihce
@@ -206,7 +205,6 @@ export function raporMarkdown(r: EvrenRaporu): string {
   for (const t of r.tarihce) s.push(`- **${t.tarih}** · ${t.madde} (${t.alan.toLocaleLowerCase('tr')})`);
   s.push('', '## Durum', '',
     `- Viki maddesi: ${r.sayilar.toplam}`,
-    `- Taslak: ${r.sayilar.taslak}`,
-    `- Sitede gösterilen: ${r.sayilar.sitede}`, '');
+    `- Taslak: ${r.sayilar.taslak}`, '');
   return s.join('\n');
 }

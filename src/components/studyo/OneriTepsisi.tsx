@@ -104,7 +104,6 @@ export function useOneriIslemleri({ items, onUpdateItem, onAddItem, onDeleteItem
     return arac.uygulama === 'gece-oneri-ekle' ? geceDugmesi(o)
       : arac.uygulama === 'fanzin-olustur' ? 'Fanzin olarak aç (Yazı)'
       : arac.uygulama === 'fanzin-bolum' ? 'Bölümün yerine koy'
-      : arac.uygulama === 'site-hakkinda' ? "Site taslağına koy (Hakkında)"
       : arac.uygulama === 'metnin-yerine' ? 'Metnin yerine koy' : arac.uygulama === 'bolum-ekle' ? 'Maddeye ekle (öneri olarak)'
       : arac.uygulama === 'bolum-derle' ? (o.derle ? 'Derlenmiş hâli koy' : 'Maddeye ekle (öneri olarak)') : arac.uygulama === 'kunye-ekle' ? 'Boş künye alanlarına yaz' : arac.uygulama === 'renk-ekle' ? 'Paletine ekle' : 'Metne ekle';
   };
