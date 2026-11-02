@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check, Map as HaritaIkon, Share2, CalendarRange, GitBranch } from 'lucide-react';
+import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check } from 'lucide-react';
 import { isaretle } from '../lib/olcumler';
 import type { HaritaBakisi } from './harita/DuzadaHarita';
 import { ATMOSFER_KAPALI, type AtmosferAyari } from './harita/atmosferAyari';
@@ -16,6 +16,9 @@ import { KATMANLAR, haritaIsaretleri, katmanOku, katmanYaz, type KatmanAyari, ty
  * ağı ve zaman çizgisi (5. gece); soy ağacı geldiği gece raya eklendi (Kemal:
  * "görünmesin"). Düzada viki ve Evren Raporu olarak kaldı.
  * 2 Kasım (yol haritası 1. adım): Tuval kalktı.
+ * 2 Kasım (yol haritası 6. adım): Evren menüsünde iki sayfa oldu: Harita ve
+ * Kurucu (`sekmeler=['harita']`) ve Görünümler (bağ ağı, zaman çizgisi, soy
+ * ağacı). Başlangıç ekranı kalktı.
  */
 const RAY_BOLUMLERI: RayBolumu[] = [
   { id: 'harita', label: 'Harita ve Kurucu' },
@@ -24,16 +27,6 @@ const RAY_BOLUMLERI: RayBolumu[] = [
   { id: 'soy', label: 'Soy ağacı' }
 ];
 export type AtolyeSekmesi = 'harita' | 'ag' | 'zaman' | 'soy';
-/** Menüden gelinen yer: bir araç ya da başlangıç ekranı */
-export type AtolyeHedefi = AtolyeSekmesi | 'giris';
-
-/** Başlangıç ekranının kartları: aracın ne işe yaradığı (kurgu yok) */
-const GIRIS_KARTLARI: Array<{ id: AtolyeSekmesi; ad: string; aciklama: string; Ikon: React.ComponentType<{ className?: string }> }> = [
-  { id: 'harita', ad: 'Harita ve Kurucu', aciklama: '2D\'de yol, yapı, doğa çiz; 3D\'de adaya eğik bak.', Ikon: HaritaIkon },
-  { id: 'ag', ad: 'Bağ ağı', aciklama: 'Maddeler ve aralarındaki bağlar; buradan bağ kur.', Ikon: Share2 },
-  { id: 'zaman', ad: 'Zaman çizgisi', aciklama: 'Tarihli maddeler ve dönemler sırayla.', Ikon: CalendarRange },
-  { id: 'soy', ad: 'Soy ağacı', aciklama: 'Ailelerin kuşakları ve akrabalık bağları.', Ikon: GitBranch }
-];
 
 // Bağ ağı (5. gece): sekme açılınca yüklenir
 const BagAgi = lazy(() => import('./atolye/BagAgi').then(m => ({ default: m.BagAgi })));
@@ -59,21 +52,24 @@ interface AtolyeProps {
   /** Haritadaki notu silmek (yalnız "Evet, sil" ile) */
   onDeleteItem: (id: string) => Promise<void>;
   /** Menüden doğrudan bir sekmeye gelmek için */
-  istek?: { sekme: AtolyeHedefi; n: number; aile?: string } | null;
+  istek?: { sekme: AtolyeSekmesi; n: number; aile?: string } | null;
+  /** Sayfanın başlığı ve gösterdiği araçlar (Harita ve Kurucu · Görünümler) */
+  baslik: string;
+  sekmeler: AtolyeSekmesi[];
   /** Haritadan seçilen maddeyi Düzada vikisinde açar */
   onMaddeAc: (id: string) => void;
 }
 
-export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, istek = null, onMaddeAc }: AtolyeProps) {
+export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, istek = null, onMaddeAc, baslik, sekmeler }: AtolyeProps) {
   // Katmanlar ve işaretler (5. gece): 2D ve 3D ortak; katman seçimi bu tarayıcıda hatırlanır
   const [katmanlar, setKatmanlar] = useState<KatmanAyari>(katmanOku);
   const [katmanMenusu, setKatmanMenusu] = useState(false);
   const katmanDegistir = (id: KatmanId) => setKatmanlar(k => { const y = { ...k, [id]: !k[id] }; katmanYaz(y); return y; });
   const isaretler = useMemo(() => haritaIsaretleri(items), [items]);
-  // Başlangıç ekranı (8 Ekim, Kemal: "Atölye'de önce başlangıç ekranı"):
-  // menüden doğrudan bir araca gelinmediyse harita hemen yüklenmez
-  const [sekme, setSekme] = useState<AtolyeHedefi>(istek?.sekme ?? 'giris');
-  useEffect(() => { if (istek) setSekme(istek.sekme); }, [istek?.n]);
+  const ilk = istek && sekmeler.includes(istek.sekme) ? istek.sekme : sekmeler[0];
+  const [sekme, setSekme] = useState<AtolyeSekmesi>(ilk);
+  useEffect(() => { if (istek && sekmeler.includes(istek.sekme)) setSekme(istek.sekme); }, [istek?.n]);
+  const bolumler = RAY_BOLUMLERI.filter(b => sekmeler.includes(b.id as AtolyeSekmesi));
   const haritaDuzeni = useHaritaDuzeni();
   const haritaMaddesi = useHaritaMaddesi({ items, onAddItem, onMaddeAc });
   // 2D çalışma, 3D bakış (29 Eylül)
@@ -166,23 +162,9 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
 
   return (
     <div className="space-y-6">
-      <SayfaBasi baslik="Atölye" />
-      <SayfaRayi baslik="Atölye" bolumler={RAY_BOLUMLERI} aktifId={sekme} onSec={id => setSekme(id as AtolyeSekmesi)} />
+      <SayfaBasi baslik={baslik} />
+      {bolumler.length > 1 && <SayfaRayi baslik={baslik} bolumler={bolumler} aktifId={sekme} onSec={id => setSekme(id as AtolyeSekmesi)} />}
 
-      {sekme === 'giris' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {GIRIS_KARTLARI.map(({ id, ad, aciklama, Ikon }) => (
-            <button key={id} type="button" onClick={() => setSekme(id)}
-              className="group text-left p-5 rounded-2xl bg-[#FAF8F5] dark:bg-[#13204A] border border-[#CFC5B4] dark:border-[#2C3C72] hover:border-[#F26B6F] dark:hover:border-[#F26B6F] shadow-[0_8px_24px_-18px_rgba(14,28,79,0.5)] cursor-pointer transition-colors">
-              <span className="w-10 h-10 rounded-xl bg-[#F3EFE8] dark:bg-[#0B132B] flex items-center justify-center text-[#0E1C4F] dark:text-[#F3EFE8] group-hover:text-[#F26B6F]">
-                <Ikon className="w-5 h-5" />
-              </span>
-              <span className="block mt-3 text-[15px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">{ad}</span>
-              <span className="block mt-1 text-[12px] leading-relaxed text-[#6A5E4C] dark:text-[#A6B0C9]">{aciklama}</span>
-            </button>
-          ))}
-        </div>
-      )}
 
       {sekme === 'ag' && (
         <Suspense fallback={<div className="h-48 flex items-center justify-center font-mono text-xs text-[#6A5E4C] dark:text-[#A6B0C9] animate-pulse">Ağ kuruluyor…</div>}>

@@ -1,49 +1,38 @@
 import React, { useMemo, useState } from 'react';
 import { Library } from 'lucide-react';
-import Blog from './Blog';
 import Kitap from './Kitap';
 import { Item } from '../types';
 import {
   ORNEK_PROJE_ID, ornekProje, ornekBolumler
 } from '../data/hikayeOrnekleri';
-import { GomuluSayfa, SayfaBasi } from './kabuk/SayfaBasi';
-import { SayfaRayi, type RayBolumu } from './SayfaRayi';
+import { SayfaBasi } from './kabuk/SayfaBasi';
 
-const RAY_BOLUMLERI: RayBolumu[] = [
-  { id: 'blog', label: 'Blog' },
-  { id: 'kitap', label: 'Kitap' },
-  // 7 Ekim: Fanzin Yazı'nın sekmesi (Kemal: "daha az başlık")
-  { id: 'fanzin', label: 'Fanzin' }
-];
+/**
+ * Evren → Kitap (2 Kasım, yol haritası 6. adım; Kemal: "Kitap Evren'e,
+ * Fanzin İçerik'e"). Eski Yazı ekranının kitap kısmı; blog ve fanzin
+ * Ürünler → İçerik'te.
+ */
 
-interface YaziAtolyesiProps {
+interface KitapSayfasiProps {
   items: Item[];
   activeItemId?: string | null;
   onSelectItem: (itemId: string | null) => void;
   onUpdateItem: (item: Item) => Promise<void>;
   onDeleteItem: (itemId: string) => Promise<void>;
   onAddItem: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<void>;
-  /** Menüden doğrudan Kitap ya da Blog'a gelmek için */
-  istek?: { sekme: 'blog' | 'kitap' | 'fanzin'; n: number } | null;
-  /** Fanzin sekmesinin içeriği (App çizer) */
-  fanzin?: React.ReactNode;
   /** Yazım panelinden maddeyi vikide açar (7. gece) */
   onMaddeAc?: (id: string) => void;
 }
 
-export default function YaziAtolyesi({
+export default function KitapSayfasi({
   items,
   activeItemId,
   onSelectItem,
   onUpdateItem,
   onDeleteItem,
   onAddItem,
-  istek = null,
-  fanzin,
   onMaddeAc
-}: YaziAtolyesiProps) {
-  const [subTab, setSubTab] = useState<'blog' | 'kitap' | 'fanzin'>(istek?.sekme ?? 'blog');
-  React.useEffect(() => { if (istek) setSubTab(istek.sekme); }, [istek?.n]);
+}: KitapSayfasiProps) {
 
   /**
    * Açılış zinciri örneği (16 Eylül).
@@ -65,7 +54,6 @@ export default function YaziAtolyesi({
     try {
       await onAddItem(ornekProje());
       for (const b of ornekBolumler()) await onAddItem(b);
-      setSubTab('kitap');
       onSelectItem(ORNEK_PROJE_ID);
     } finally {
       setOrnekKuruluyor(false);
@@ -75,16 +63,9 @@ export default function YaziAtolyesi({
   return (
     <div className="space-y-6">
 
-      <SayfaRayi
-        baslik="Yazı"
-        bolumler={RAY_BOLUMLERI}
-        aktifId={subTab}
-        onSec={id => { setSubTab(id as typeof subTab); onSelectItem(null); }}
-      />
 
-      {/* Sade başlık (1 Ekim, K-2): Blog / Kitap seçimi yalnız sayfa rayında */}
-      <SayfaBasi baslik="Yazı">
-        {!ornekVar && subTab !== 'fanzin' && (
+      <SayfaBasi baslik="Kitap">
+        {!ornekVar && (
           <button
             type="button"
             onClick={ornegiGetir}
@@ -100,32 +81,15 @@ export default function YaziAtolyesi({
         )}
       </SayfaBasi>
 
-      {/* Embedded active workspace view */}
-      <div>
-        {subTab === 'fanzin' ? (
-          <GomuluSayfa.Provider value={true}>{fanzin}</GomuluSayfa.Provider>
-        ) : subTab === 'blog' ? (
-          <Blog
-            items={items}
-            activeItemId={activeItemId}
-            onSelectItem={onSelectItem}
-            onUpdateItem={onUpdateItem}
-            onDeleteItem={onDeleteItem}
-            onAddItem={onAddItem}
-            onMaddeAc={onMaddeAc}
-          />
-        ) : (
-          <Kitap
-            items={items}
-            activeItemId={activeItemId}
-            onSelectItem={onSelectItem}
-            onUpdateItem={onUpdateItem}
-            onDeleteItem={onDeleteItem}
-            onAddItem={onAddItem}
-            onMaddeAc={onMaddeAc}
-          />
-        )}
-      </div>
+      <Kitap
+          items={items}
+          activeItemId={activeItemId}
+          onSelectItem={onSelectItem}
+          onUpdateItem={onUpdateItem}
+          onDeleteItem={onDeleteItem}
+          onAddItem={onAddItem}
+          onMaddeAc={onMaddeAc}
+      />
     </div>
   );
 }
