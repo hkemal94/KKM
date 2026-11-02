@@ -1,4 +1,4 @@
-import type { Item, WikiSection } from '../types';
+import type { BrandKit, Item, WikiSection } from '../types';
 import { alanaYaz, bosluklariCikar } from '../components/Bosluklar';
 import { base64, base64Coz, github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
@@ -32,6 +32,10 @@ import type { BagTuru } from '../utils/relations';
  *     alanı yenisiyle değişir; `eski` verilirse yalnız alan hâlâ o değerdeyse)
  *     ve `metindenSil` (metinden ya da bölümden bir paragraf / cümle çıkar;
  *     boşalan bölüm kalkar).
+ *   - 2 Kasım (Kemal: "Uygula marka kartını da işlesin"): `markaKarti` (marka
+ *     kartının, yani markanın bible'ının bir alanı: renk paleti, yazı, ton, örnek
+ *     işler, kullanım kuralları, slogan). Logo ve moodboard görselleri bununla
+ *     yazılmaz. `eski` verilirse alan yalnız hâlâ o değerdeyse değişir.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -49,7 +53,33 @@ export type KararIslemi =
   | { kimlik: string; tur: 'metniDegistir'; madde: string; eski: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'takmaAdSil'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'alaniDegistir'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
-  | { kimlik: string; tur: 'metindenSil'; madde: string; eski: string; baslik: string; neden: string };
+  | { kimlik: string; tur: 'metindenSil'; madde: string; eski: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string };
+
+/** `markaKarti` ile yazılabilen kart alanları; listeler dizi, ötekiler metin */
+export const MARKA_KARTI_ALANLARI = {
+  colorPalette: 'Renk paleti', selectedFont: 'Yazı', voiceTone: 'Ton', exemplaryWorks: 'Örnek işler',
+  usageRulesDo: 'Yap', usageRulesDont: 'Yapma', slogan: 'Slogan',
+} as const;
+export type MarkaKartiAlani = keyof typeof MARKA_KARTI_ALANLARI;
+const LISTE_ALANLARI: MarkaKartiAlani[] = ['colorPalette', 'exemplaryWorks', 'usageRulesDo', 'usageRulesDont'];
+
+/** Değeri alanın biçimine çevirir (liste alanına tek metin gelirse satırlara böler); geçersizse null */
+function kartDegeri(alan: string, deger: unknown): string | string[] | null {
+  if (!(alan in MARKA_KARTI_ALANLARI)) return null;
+  if (LISTE_ALANLARI.includes(alan as MarkaKartiAlani)) {
+    const l = Array.isArray(deger) ? deger : String(deger ?? '').split('\n');
+    const t = l.map(x => String(x).trim()).filter(Boolean);
+    return t.length ? t : null;
+  }
+  const t = Array.isArray(deger) ? deger.join(' ').trim() : String(deger ?? '').trim();
+  return t || null;
+}
+const kartAyni = (a: unknown, b: unknown) =>
+  JSON.stringify(Array.isArray(a) ? a.map(x => kucuk(String(x))) : kucuk(String(a ?? '')))
+  === JSON.stringify(Array.isArray(b) ? b.map(x => kucuk(String(x))) : kucuk(String(b ?? '')));
+const kartAlani = (m: Item, alan: string): unknown => (m.metadata?.brandKit as unknown as Record<string, unknown> | undefined)?.[alan];
+const bosMu = (v: unknown) => (Array.isArray(v) ? v.length === 0 : !String(v ?? '').trim());
 
 /** `alaniDegistir` için maddenin künye alanı (kimliği ya da adıyla); metin ve başlık değil */
 function kunyeAlani(m: Item, alan: string) {
@@ -102,6 +132,7 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'takmaAdSil') { const m = maddeBul(items, i.madde); return !!m && !takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)); }
   if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
   if (i.tur === 'metindenSil') { const m = maddeBul(items, i.madde); return !!m && !!i.eski?.trim() && !metindeVar(m, i.eski); }
+  if (i.tur === 'markaKarti') { const m = maddeBul(items, i.marka); const d = kartDegeri(i.alan, i.deger); return !!m && d !== null && kartAyni(kartAlani(m, i.alan), d); }
   return false;
 }
 
@@ -137,6 +168,12 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
       const m = maddeBul(items, i.madde), al = m && kunyeAlani(m, i.alan);
       if (al && kucuk(al.deger) !== kucuk(i.eski) && kucuk(al.deger) !== kucuk(i.deger)) return false;
     }
+    // Kart alanı beklenen eski değerde değilse (ya da eski verilmeden doluysa değil) karar eskimiştir
+    if (i.tur === 'markaKarti' && i.eski !== undefined) {
+      const m = maddeBul(items, i.marka), v = m ? kartAlani(m, i.alan) : undefined;
+      if (m && !kartAyni(v, kartDegeri(i.alan, i.eski) ?? '') && !kartAyni(v, kartDegeri(i.alan, i.deger)) && !(bosMu(v) && bosMu(i.eski))) return false;
+    }
+    if (i.tur === 'markaKarti') return !yapilmis(items, i);
     if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
       || i.tur === 'takmaAdSil' || i.tur === 'alaniDegistir' || i.tur === 'metindenSil') return !yapilmis(items, i);
     return false;
@@ -174,6 +211,20 @@ export async function kararlariUygula(
           const h2 = bagEkle(guncel.get(h.id) || h, k.id, islem.bag);
           if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
         }
+      } else if (islem.tur === 'markaKarti') {
+        const m = maddeBul([...guncel.values()], islem.marka);
+        if (!m) { sonuc.atlanan.push({ islem, neden: `marka bulunamadı ya da aynı adla birden çok var (${islem.marka})` }); continue; }
+        const d = kartDegeri(islem.alan, islem.deger);
+        if (d === null) { sonuc.atlanan.push({ islem, neden: `"${islem.alan}" kartta yazılabilen bir alan değil ya da değer boş` }); continue; }
+        const simdi = kartAlani(m, islem.alan);
+        if (islem.eski !== undefined && !kartAyni(simdi, kartDegeri(islem.alan, islem.eski) ?? '') && !(bosMu(simdi) && bosMu(islem.eski))) {
+          sonuc.atlanan.push({ islem, neden: 'kartta bu alan bu arada değişmiş' }); continue;
+        }
+        // Kart hiç açılmamışsa ekrandaki boş kartın alanlarıyla başlar
+        const bk = { selectedLogo: '', ideaLogos: [], colorPalette: [], exemplaryWorks: [], ...(m.metadata?.brandKit || {}), [islem.alan]: d } as BrandKit;
+        const yeni: Item = { ...m, metadata: { ...(m.metadata || {}), brandKit: bk }, updatedAt: Date.now() };
+        await yaz.guncelle(yeni);
+        guncel.set(yeni.id, yeni);
       } else if (islem.tur === 'takmaAdSil' || islem.tur === 'alaniDegistir' || islem.tur === 'metindenSil') {
         const m = maddeBul([...guncel.values()], islem.madde);
         if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }
