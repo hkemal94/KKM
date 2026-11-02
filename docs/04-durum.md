@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 2 Kasım 2026 (yeni yerleşim 1. adım: menü)**
+**Son güncelleme: 2 Kasım 2026 (yeni yerleşim 2. adım: Onay bekleyenler)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
@@ -15,8 +15,13 @@ deposunda (`docs/kkm-soru-turu.md`). Geçiş adım adım, her adım bir PR.
    Kems'e yaz (fikir kutusu, oradan ajansa) · Notlar. Site menüden kalktı
    (sayfası yerinde). Telefonda yedek ve hesap düğmeleri Ajans grubunda.
    Sayfa silinmedi.
-2. Sırada: Onay bekleyenler ekranı (Ajans'ın açılışı), sonra Evren, Ürünler,
-   kalkanların silinmesi, Ajanlar ve otomasyonlar.
+2. **Onay bekleyenler:** KKM bu ekranla açılır (Ajans'ın ilk sayfası). Tek
+   seferlik işler, öneri tepsisi, ajansın kararları ve eksikler tek sayfada;
+   üstte süzgeç. Her bölüm kendi düğmeleriyle çalışır. Zildeki öneri ve tek
+   seferlik iş uyarıları buraya götürür. Ortak dört düğme (Uygula · Düzenle ·
+   Arşivle · Sil), tarihe kadar bekletme ve toplu seçim henüz yok.
+3. Sırada: ortak düğmeler ve bekletme, sonra Evren, Ürünler, kalkanların
+   silinmesi, Ajanlar ve otomasyonlar.
 
 ## 28 Eylül kararları
 

@@ -171,6 +171,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Sayfa yenilenince ana sayfaya atmıyor; açık sayfada (ve açık maddede) kalıyor' },
   { id: 'yeni-menu-1', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yeni yerleşim 1. adım: menü Ajans · Evren · Ürünler, üst çubukta arama-zil-tema, Yaz tuşu (Hızlı not · Kems\'e yaz · Notlar)' },
+  { id: 'onay-bekleyenler', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: 'Yeni yerleşim 2. adım: Onay bekleyenler açılış ekranı (tek seferlik işler, öneriler, ajansın kararları, eksikler; süzgeçli)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
