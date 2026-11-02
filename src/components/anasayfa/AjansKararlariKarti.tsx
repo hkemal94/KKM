@@ -70,7 +70,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
         <div className={ETIKET}>Ajansın kararları</div>
         <p className={`text-[13px] ${IKINCIL}`}>
           Ajans tepsiyi ayıkladı: elediği, ilgili ajana taşıdığı ve soru kutusuna aldığı öneriler tepsiden silinir;
-          panoda cevapladığın sorular vikideki boş alana yazılır; kararı verilmiş düzeltmeler (takma ad, künye alanı, metin) işlenir. Sen basmadan hiçbir kayıt değişmez.
+          cevapladığın sorular vikideki boş alana yazılır; kararı verilmiş düzeltmeler (takma ad, künye alanı, metin) işlenir. Sen basmadan hiçbir kayıt değişmez.
         </p>
       </div>
 

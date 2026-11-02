@@ -2,7 +2,8 @@ import { base64Coz, github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
 
 /**
- * Kimde ne var (2 Kasım, yol haritası 3. adım; Kemal'in yerleşimi, Tur 8:
+ * Kimde ne var (2 Kasım, yol haritası 3. adım; 9. adımdan beri işlerin tek
+ * kaynağı, Ajans Panosu kapandı; Kemal'in yerleşimi, Tur 8:
  * "kimde ne var listesi: ne, kimde, durum, kanıt").
  *
  * İşleri Kems (ajansın ana oturumu) ajansın gizli deposuna `kkm/isler.json`
@@ -87,12 +88,16 @@ export const kimdeAdi = (k: string) => (k === 'Kemal' ? 'Sende' : AJAN_ADLARI[k]
 export const DURUM_ADI: Record<IsDurumu, string> = { yeni: 'Yeni', goruldu: 'Görüldü', calisiyor: 'Çalışıyor', bitti: 'Bitti' };
 
 /** Ekrandaki üç öbek: sende bekleyenler, ajansta olanlar, son bitenler */
+/** Tarih son `gun` gün içinde mi (tarih yoksa hayır) */
+const sonGunlerde = (iso: string | undefined, gun: number) => !!iso && Date.now() - Date.parse(iso) < gun * 86_400_000;
+
 export function oebekle(isler: AjansIsi[], birlesen: Set<string>) {
   const bittiMi = (i: AjansIsi) => i.durum === 'bitti' || birlesen.has(i.id);
   const acik = isler.filter(i => !bittiMi(i));
   return {
     sende: acik.filter(i => i.kimde === 'Kemal'),
     ajansta: acik.filter(i => i.kimde !== 'Kemal'),
-    biten: isler.filter(bittiMi)
+    // 9. adım (2 Kasım): iş dosyası artık bütün geçmişi tutuyor; ekranda son 7 günün bitenleri
+    biten: isler.filter(i => bittiMi(i) && (birlesen.has(i.id) || sonGunlerde(i.bitti || i.guncellendi, 7)))
   };
 }

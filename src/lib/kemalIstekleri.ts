@@ -56,7 +56,7 @@ export async function istekEkle(anahtar: string, yeni: Omit<KemalIstegi, 'id' | 
   };
   const sonraki = [...liste, istek];
   const dosya = {
-    _aciklama: "Kemal'in istekleri: ajan düğmesinden (istek) ve İşler ve takvim'deki 'Yapılacak ekle'den (yapilacak). KKM yazar. Kems her oturum başında okur, panoya ve iş listesine alır, aldığını buradan çıkarır (araclar/istekler.py).",
+    _aciklama: "Kemal'in istekleri: ajan düğmesinden (istek) ve İşler ve takvim'deki 'Yapılacak ekle'den (yapilacak). KKM yazar. Kems her oturum başında okur, iş listesine (kkm/isler.json) alır, aldığını buradan çıkarır (araclar/istekler.py).",
     guncellendi: simdi.toISOString(),
     istekler: sonraki
   };

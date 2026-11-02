@@ -34,7 +34,7 @@ export const YapilacakEkle: React.FC = () => {
     try {
       setBekleyen(await istekEkle(anahtar, { tur: 'yapilacak', metin }));
       setMetin('');
-      setMesaj('Not ajansa yazıldı. Kems sonraki oturumunda panoya ve iş listesine alır.');
+      setMesaj('Not ajansa yazıldı. Kems sonraki oturumunda iş listesine alır.');
     } catch (e) {
       setMesaj(`Yazılamadı: ${e instanceof Error ? e.message : String(e)}`);
     } finally { setCalisiyor(false); }

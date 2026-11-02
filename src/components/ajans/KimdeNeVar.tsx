@@ -104,7 +104,7 @@ export const KimdeNeVar: React.FC<Props> = ({ onAjans }) => {
       {obek && (<>
         {obekGoster('Senden beklenenler', obek.sende, 'Senden beklenen iş yok.')}
         {obekGoster('Kems ve ajanlarda', obek.ajansta, 'Ajansta açık iş yok.')}
-        {obekGoster('Son bitenler', obek.biten, 'Son günlerde biten iş yok.')}
+        {obekGoster('Son bitenler', obek.biten, 'Son 7 günde biten iş yok.')}
       </>)}
     </div>
   );
