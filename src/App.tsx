@@ -88,6 +88,7 @@ function lazyYukle<T extends React.ComponentType<any>>(
  * kabuk ve ana sayfa iner; harita verisi, Oyun, Markalar… ilk girişte
  * bir an "yükleniyor" der, sonra hep hazırdır.
  */
+import { AjanDugmesi } from './components/ajans/AjanDugmesi';
 const Durum = lazyYukle(() => import('./components/Durum'));
 import type { DurumSekmesi } from './components/Durum';
 import { DURUM_SEKME_ADLARI, SAYFA_ADLARI, sayfaAcildi } from './lib/sayfaSayaci';
@@ -145,6 +146,10 @@ const durumSekmesi = (s: unknown): DurumSekmesi => (DURUM_SEKMELERI.includes(s a
  * (7 Ekim; 2 Kasım, yol haritası 6. adım: Atölye, Yazı, Markalar, Merch,
  * Sosyal medya yeni Evren ve Ürünler sayfalarına geçti)
  */
+/** Ajan düğmesi olan sayfalar ve ajanlardaki ekran adı (2 Kasım, yol haritası 7. adım; Kemal, Tur 6) */
+const AJAN_EKRANI: Partial<Record<string, string>> = {
+  duzada: 'Viki', harita: 'Harita ve Kurucu', icerik: 'İçerik', marka: 'Marka ve merch', oyun: 'Oyunlar'
+};
 const SEKMEYE_GECENLER = ['fanzin', 'takvim', 'yolharitasi', 'galeri', 'atolye', 'yazi', 'markalar', 'merch', 'sosyal', 'blog'];
 const MARKA_SEKMELERI: MarkaSekmesi[] = ['markalar', 'merch'];
 const ICERIK_SEKMELERI: IcerikSekmesi[] = ['sosyal', 'blog', 'fanzin', 'video'];
@@ -1129,6 +1134,8 @@ export default function App() {
                 onYeniSayfaAcildi={() => setYeniNotBekliyor(false)}
               />
             )}
+
+            {AJAN_EKRANI[activeTab] && <div className="mb-3"><AjanDugmesi key={activeTab} ekran={AJAN_EKRANI[activeTab]!} /></div>}
 
             <HataKapsayici onReset={() => git('onay')}>
             <Suspense fallback={<SayfaYukleniyor />}>

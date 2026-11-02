@@ -24,8 +24,13 @@ export interface AjanBilgisi {
   baslik: string;
   aciklama: string;
   model: string;
+  /** Dosyadaki model kodu (opus · sonnet · haiku) */
+  modelKodu?: string;
   hat: string;
   ekran: string;
+  /** Künye: kullandığı araçlar ve dosyanın gövdesi (görevi, kuralları) */
+  araclar?: string;
+  govde?: string;
 }
 
 /** Kadronun hattı ve bağlı olduğu KKM ekranı (docs/ajan-soru-turu.md) */
@@ -47,6 +52,8 @@ const HATLAR: Record<string, { hat: string; ekran: string }> = {
   'kod-bakimcisi': { hat: 'Kod', ekran: 'Ajanlar ve otomasyonlar' },
   'kod-gelistiricisi': { hat: 'Kod', ekran: 'Ajanlar ve otomasyonlar' }
 };
+/** Bir KKM ekranına bağlı ajanlar (ajan düğmesinde seçim için) */
+export const ekranAjanlari = (ekran: string) => Object.entries(HATLAR).filter(([, h]) => h.ekran === ekran).map(([ad]) => ad);
 const HAT_SIRASI = ['Video', 'Sosyal medya', 'Merch', 'Evren', 'Harita', 'Bülten', 'Oyun', 'Kod'];
 
 /** Kems (CEO): dosyası yok, ana oturumdur */
@@ -59,6 +66,12 @@ export const KEMS: AjanBilgisi = {
 export const EVREN_AJANLARI = ['lore-arastirmacisi', 'viki-editoru', 'kanon-denetcisi'];
 
 export const MODEL_ADI: Record<string, string> = { opus: 'güçlü', sonnet: 'orta', haiku: 'hızlı' };
+export type ModelKodu = 'opus' | 'sonnet' | 'haiku';
+export const MODELLER: Array<{ kod: ModelKodu; ad: string; aciklama: string }> = [
+  { kod: 'opus', ad: 'Güçlü', aciklama: 'en dikkatli; limitten en çok yer' },
+  { kod: 'sonnet', ad: 'Orta', aciklama: 'çoğu iş için yeterli' },
+  { kod: 'haiku', ad: 'Hızlı', aciklama: 'kısa ve basit işler; limitten az yer' }
+];
 
 /** Dosyanın baş kısmını (--- ... ---) okur */
 export function ajanDosyasiniCoz(ad: string, metin: string): AjanBilgisi | null {
@@ -75,7 +88,8 @@ export function ajanDosyasiniCoz(ad: string, metin: string): AjanBilgisi | null 
   return {
     ad, baslik: nokta > 0 ? aciklama.slice(0, nokta) : ad,
     aciklama: nokta > 0 ? aciklama.slice(nokta + 2) : aciklama,
-    model: MODEL_ADI[alan.model] || alan.model || '—', ...h
+    model: MODEL_ADI[alan.model] || alan.model || '—', modelKodu: alan.model, ...h,
+    araclar: alan.tools || '', govde: metin.slice(m[0].length).trim()
   };
 }
 
@@ -154,4 +168,34 @@ export function zamanOzeti(z: AjanZamani): string {
     return `${new Date(y, a - 1, g).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} ${z.saat}`;
   }
   return `Her gün ${z.saat}`;
+}
+
+// ---------------------------------------------------------------- model seçimi
+
+/**
+ * Ajanların modeli (2 Kasım, Kemal: "ilgili ajanın hangi yapay zekâ modelini
+ * kullanacağını seçebileyim"). Kemal kartta seçer, "Kaydet"le
+ * `kkm/ajan-modelleri.json`'a yazılır; Kems ajanı çalıştırırken bu modeli
+ * kullanır. Seçim yoksa ajan dosyasındaki model geçerli. Yalnız Claude
+ * modelleri (ajanlar Claude'un içinde çalışır).
+ */
+export const MODELLER_YOLU = 'kkm/ajan-modelleri.json';
+
+export async function modelleriOku(anahtar: string): Promise<Record<string, ModelKodu>> {
+  try {
+    const d = await github<{ content: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${MODELLER_YOLU}`);
+    const j = JSON.parse(base64Coz(d.content)) as { ajanlar?: Record<string, string> };
+    return Object.fromEntries(Object.entries(j.ajanlar || {}).filter(([, m]) => MODELLER.some(x => x.kod === m))) as Record<string, ModelKodu>;
+  } catch {
+    return {}; // ilk kez: dosya yok
+  }
+}
+
+export function modelleriYaz(anahtar: string, modeller: Record<string, ModelKodu>): Promise<string> {
+  const dosya = {
+    _aciklama: "Ajanların modeli. Kemal KKM → Ajanlar ve otomasyonlar'da ajan kartından seçip 'Kaydet'e basınca yazılır. Kems ajanı çalıştırırken bu modeli kullanır; listede olmayan ajan kendi dosyasındaki modelle çalışır.",
+    guncellendi: new Date().toISOString(),
+    ajanlar: modeller
+  };
+  return ajansaDosyaYaz(anahtar, MODELLER_YOLU, `${JSON.stringify(dosya, null, 2)}\n`, `KKM ajan modelleri: ${Object.keys(modeller).length} seçim`, 'model ayarı');
 }
