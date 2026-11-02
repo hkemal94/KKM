@@ -1,9 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Archive, Check, ChevronDown, ChevronRight, Clock, ExternalLink, Pencil, RefreshCw, Trash2, Undo2 } from 'lucide-react';
 import type { Item } from '../../types';
 import { bekleyenAdaylar } from '../../lib/adaylar';
 import { eksikleriCikar } from '../../lib/eksikler';
 import { anahtariOku } from '../../lib/oyunAyarlari';
+import {
+  TUR_ETIKETI, ajanAnahtari, kararYaz, kararlariOku, onayKaydinaCevir, onerileriOku, prBirlestir,
+  type AjanOnerisi, type OneriKarari
+} from '../../lib/ajanOnerileri';
+import { kimdeAdi } from '../../lib/isler';
 import { tepsiDosyasi, tepsiyiGonder } from '../../lib/tepsiAjansa';
 import {
   HAZIR_SECENEKLER, bugun, gorunum, gunEkle, onayKayitlari, onaylariYaz, oneriAnahtari, tarihYaz,
@@ -29,10 +34,15 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/
  * `kkm_ayar` kaydında (`lib/onaylar.ts`), yalnız düğmeye basınca yazılır.
  * Düzenleme notu "Tepsiyi ajansa gönder"le ajansa gider; ajans revize eder.
  * Eksikler listede değil, altta kendi özetinde (onay değil, yapılacak iş).
+ *
+ * 5. adım (2 Kasım, onaylı yazma): ajanların işleri (`kkm/oneriler.json`,
+ * `lib/ajanOnerileri.ts`) de aynı düğmelerle burada. Onların kararı
+ * `kkm_ayar`'a değil ajansın deposuna (`kkm/oneri-kararlari.json`) yazılır;
+ * Kems okur. PR olan işte Uygula, sorduktan sonra PR'ı birleştirir.
  */
 
-type Suzgec = 'hepsi' | 'isler' | 'oneriler' | 'kararlar' | 'bekletilen' | 'arsiv' | 'eksikler';
-type Kaynak = 'is' | 'oneri' | 'karar';
+type Suzgec = 'hepsi' | 'isler' | 'oneriler' | 'ajanlar' | 'kararlar' | 'bekletilen' | 'arsiv' | 'eksikler';
+type Kaynak = 'is' | 'oneri' | 'ajan' | 'karar';
 
 interface Satir {
   anahtar: string;
@@ -89,7 +99,21 @@ export const OnayBekleyenler: React.FC<Props> = ({
   const isler = useBekleyenIsler({ items, onUpdateItem, onAddItem, onDeleteItem, onAlanSil });
   const oneri = useOneriIslemleri(studyo);
   const kararlar = useAjansKararlari({ items, anahtar: anahtar || '', tur, onUpdateItem, onDeleteItem });
-  const kayitlar = useMemo(() => onayKayitlari(items), [items]);
+  /** Ajanların işleri ve Kemal'in onlara verdiği kararlar (ajansın deposundan) */
+  const [ajan, setAjan] = useState<{ oneriler: AjanOnerisi[]; kararlar: Record<string, OneriKarari>; hata?: string } | null>(null);
+  useEffect(() => {
+    if (!anahtar) return;
+    let iptal = false;
+    Promise.all([onerileriOku(anahtar), kararlariOku(anahtar)])
+      .then(([oneriler, kararlar]) => { if (!iptal) setAjan({ oneriler, kararlar }); })
+      .catch(e => { if (!iptal) setAjan({ oneriler: [], kararlar: {}, hata: hataYazi(e) }); });
+    return () => { iptal = true; };
+  }, [anahtar, tur]);
+  const kayitlar = useMemo(() => {
+    const k = onayKayitlari(items);
+    for (const [id, karar] of Object.entries(ajan?.kararlar ?? {}) as Array<[string, OneriKarari]>) k[ajanAnahtari(id)] = onayKaydinaCevir(karar);
+    return k;
+  }, [items, ajan]);
   const adaylar = useMemo(() => bekleyenAdaylar(items), [items]);
   const eksikler = useMemo(() => eksikleriCikar(items), [items]);
   const eksikSayisi = eksikler.reduce((t, e) => t + e.sayi, 0);
@@ -97,10 +121,28 @@ export const OnayBekleyenler: React.FC<Props> = ({
 
   // ---------------------------------------------------------------- onay bilgisi yazma
 
-  /** Onay bilgilerini kkm_ayar'a yazar; silinmiş önerilerin eski bilgisi düşer */
+  /** Ajan işlerinin kararını ajansın deposuna yazar ve ekranda hemen gösterir */
+  const ajanaYaz = async (degisim: Record<string, OneriKarari | null>) => {
+    if (!anahtar) throw new Error('bu tarayıcıda GitHub anahtarı yok');
+    const kararlar = await kararYaz(anahtar, degisim);
+    setAjan(a => (a ? { ...a, kararlar } : a));
+  };
+
+  /**
+   * Onay bilgilerini yazar: ajan işleri ajansın deposuna, gerisi kkm_ayar'a;
+   * silinmiş önerilerin eski bilgisi düşer
+   */
   const yaz = async (degisim: Record<string, OnayKaydi | null>) => {
+    const ajanDegisim: Record<string, OneriKarari | null> = {};
+    const kkmDegisim: Record<string, OnayKaydi | null> = {};
+    for (const [k, v] of Object.entries(degisim)) {
+      if (k.startsWith('ajan:')) ajanDegisim[k.slice(5)] = v ? { ...v } : null;
+      else kkmDegisim[k] = v;
+    }
+    if (Object.keys(ajanDegisim).length) await ajanaYaz(ajanDegisim);
+    if (!Object.keys(kkmDegisim).length) return {};
     const adayVar = new Set(adaylar.map(a => oneriAnahtari(a.id)));
-    const r = onaylariYaz(items, degisim, k => !k.startsWith('oneri:') || adayVar.has(k));
+    const r = onaylariYaz(items, kkmDegisim, k => !k.startsWith('oneri:') || adayVar.has(k));
     if (r.guncel) await onUpdateItem(r.guncel);
     else if (r.yeni) await onAddItem(r.yeni);
     return r;
@@ -138,6 +180,43 @@ export const OnayBekleyenler: React.FC<Props> = ({
         uygula: oneri.uygula(a),
         sil: async () => { await oneri.sil(a); },
         silAciklama: 'Öneri silinir, geri gelmez. Hiçbir maddeye dokunulmaz.'
+      });
+    }
+
+    for (const o of ajan?.oneriler || []) {
+      const k = ajanAnahtari(o.id);
+      const karar = ajan?.kararlar[o.id];
+      if (karar?.durum === 'uygula') continue;
+      const zaman = Date.parse(o.tarih) || simdi;
+      liste.push({
+        anahtar: k, kaynak: 'ajan', etiket: TUR_ETIKETI[o.tur], baslik: o.baslik, zaman, zamanYazi: neZaman(zaman),
+        govde: (
+          <>
+            <p className={`text-[12px] leading-snug ${IKINCIL}`}>
+              <b className={YAZI}>{kimdeAdi(o.ajan)}</b>{o.ozet ? ` · ${o.ozet}` : ''}
+            </p>
+            {o.baglanti && (
+              <a href={o.baglanti} target="_blank" rel="noreferrer" className={DUGME_BOS}>
+                <ExternalLink className="w-3.5 h-3.5" /> {o.tur === 'pr' ? 'PR\'ı aç' : o.tur === 'drive' ? 'Belgeyi aç' : 'Dosyayı aç'}
+              </a>
+            )}
+            {o.tur === 'pr' && <p className={`text-[11px] ${IKINCIL}`}>Uygula bu PR'ı birleştirir (önce sorar).</p>}
+            {o.tur === 'eksik' && <p className={`text-[11px] ${IKINCIL}`}>Ajan bunu yapamadı; hazırlığı yaptı. "Gördüm" deyince listeden kalkar, ajanın kartında durmaya devam eder.</p>}
+          </>
+        ),
+        uygula: {
+          ad: o.tur === 'pr' ? 'Birleştir' : o.tur === 'eksik' ? 'Gördüm' : 'Onayla',
+          calistir: async () => {
+            let sonuc: string | undefined;
+            if (o.tur === 'pr' && o.baglanti) {
+              if (!window.confirm(`"${o.baslik}" PR'ı birleştirilsin mi? Bu geri alınamaz.`)) throw new Error('vazgeçildi');
+              sonuc = await prBirlestir(anahtar || '', o.baglanti);
+            }
+            await ajanaYaz({ [o.id]: { durum: 'uygula', zaman: Date.now(), ...(sonuc ? { sonuc } : {}) } });
+          }
+        },
+        sil: async () => { await ajanaYaz({ [o.id]: { durum: 'silindi', zaman: Date.now() } }); },
+        silAciklama: 'Ajansa "istemiyorum" diye gider; Kems işi kapatır. Hiçbir kayda, PR\'a ya da dosyaya dokunulmaz.'
       });
     }
 
@@ -188,7 +267,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     : suzgec === 'arsiv' ? arsivde
     : suzgec === 'eksikler' ? []
     : suzgec === 'hepsi' ? listede
-    : listede.filter(s => s.kaynak === ({ isler: 'is', oneriler: 'oneri', kararlar: 'karar' } as const)[suzgec]);
+    : listede.filter(s => s.kaynak === ({ isler: 'is', oneriler: 'oneri', ajanlar: 'ajan', kararlar: 'karar' } as const)[suzgec]);
   const listeGorunumu = suzgec !== 'bekletilen' && suzgec !== 'arsiv';
   const seciliSatirlar = gorunen.filter(s => secili.has(s.anahtar));
 
@@ -196,6 +275,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     { id: 'hepsi', ad: 'Hepsi', sayi: listede.length || undefined },
     { id: 'isler', ad: 'Tek seferlik işler', sayi: say('is') },
     { id: 'oneriler', ad: 'Öneriler', sayi: say('oneri') },
+    { id: 'ajanlar', ad: 'Ajanların işleri', sayi: say('ajan') },
     { id: 'kararlar', ad: 'Ajansın kararları', sayi: say('karar') },
     { id: 'bekletilen', ad: 'Bekletilen', sayi: bekletilen.length || undefined },
     { id: 'arsiv', ad: 'Arşiv', sayi: arsivde.length || undefined },
@@ -211,7 +291,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
       const m = await is();
       if (m) setMesaj(m);
     } catch (e) {
-      setMesaj(`Olmadı: ${hataYazi(e)}. Tekrar basabilirsin.`);
+      setMesaj(hataYazi(e) === 'vazgeçildi' ? 'Vazgeçildi; hiçbir şey değişmedi.' : `Olmadı: ${hataYazi(e)}. Tekrar basabilirsin.`);
     } finally { setCalisan(null); }
   };
 
@@ -227,9 +307,9 @@ export const OnayBekleyenler: React.FC<Props> = ({
   const uygula = (s: Satir) => calistir(s.anahtar, async () => {
     if (!s.uygula) return;
     await s.uygula.calistir();
-    if (kayitlar[s.anahtar]) await yaz({ [s.anahtar]: null });
+    if (s.kaynak !== 'ajan' && kayitlar[s.anahtar]) await yaz({ [s.anahtar]: null });
     setPanel(null);
-    return s.kaynak === 'oneri' ? undefined : `${s.baslik}: yapıldı.`;
+    return s.kaynak === 'oneri' ? undefined : s.kaynak === 'ajan' ? `"${s.baslik}" onaylandı; Kems gereğini yapar.` : `${s.baslik}: yapıldı.`;
   });
 
   const arsivle = (liste: Satir[]) => calistir('arsiv', async () => {
@@ -264,6 +344,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     if (!not.trim() && !secenekler.length) throw new Error('bir not yaz ya da bir seçenek seç');
     const r = await yaz({ [s.anahtar]: { durum: 'duzenle', not, secenekler, zaman: Date.now() } });
     setPanel(null);
+    if (s.kaynak === 'ajan') return 'Not ajansa gitti. Kems işi notunla ilgili ajana geri verir; yeni hâli buraya gelir.';
     if (!anahtar) return 'Not kaydedildi. Bu tarayıcıda GitHub anahtarı olmadığı için ajansa gitmedi; Ajans bağlantısı\'nda anahtar girince "Tepsiyi ajansa gönder" ile gider.';
     try {
       await tepsiyiGonder(anahtar, tepsiDosyasi(yazilmisItems(r)));
@@ -282,7 +363,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
       try {
         await s.uygula.calistir();
         oldu++;
-        if (kayitlar[s.anahtar]) temizle[s.anahtar] = null;
+        if (s.kaynak !== 'ajan' && kayitlar[s.anahtar]) temizle[s.anahtar] = null;
       } catch { olmadi++; }
     }
     if (Object.keys(temizle).length) await yaz(temizle);
@@ -431,7 +512,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     );
   };
 
-  const kararlarGorunur = suzgec === 'hepsi' || suzgec === 'kararlar';
+  const kararlarGorunur = suzgec === 'hepsi' || suzgec === 'kararlar' || suzgec === 'ajanlar';
   const d = kararlar.dosya;
 
   return (
@@ -441,7 +522,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
           <h1 className={`font-bold tracking-tight leading-tight text-[20px] lg:text-[28px] ${YAZI}`}>Onay bekleyenler</h1>
           <p className={`mt-1 text-[13px] ${IKINCIL}`}>Kararını bekleyen her şey burada. Sen basmadan hiçbir kayıt değişmez.</p>
         </div>
-        <button type="button" onClick={() => setTur(t => t + 1)} className={`${DUGME_BOS} shrink-0`} title="Ajansın kararlarını yeniden oku">
+        <button type="button" onClick={() => setTur(t => t + 1)} className={`${DUGME_BOS} shrink-0`} title="Ajansın kararlarını ve ajanların işlerini yeniden oku">
           <RefreshCw className="w-3.5 h-3.5" /> Yenile
         </button>
       </div>
@@ -471,7 +552,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
         !anahtar ? (
           <section className={`${KART} p-4 space-y-2`}>
             <p className={`text-[13px] font-semibold ${YAZI}`}>Ajansın kararları</p>
-            <p className={`text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; ajansın kararları okunamıyor. Anahtar Ajanlar ve otomasyonlar → Ajans bağlantısı'nda bir kez girilir.</p>
+            <p className={`text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; ajansın kararları ve ajanların işleri okunamıyor. Anahtar Ajanlar ve otomasyonlar → Ajans bağlantısı'nda bir kez girilir.</p>
             <button type="button" onClick={onAjans} className={DUGME_BOS}>Ajans bağlantısı</button>
           </section>
         ) : kararlar.sonuc ? (
@@ -483,6 +564,10 @@ export const OnayBekleyenler: React.FC<Props> = ({
             {kararlar.sonuc.makbuz && <a href={kararlar.sonuc.makbuz} target="_blank" rel="noreferrer" className={DUGME_BOS}><ExternalLink className="w-3.5 h-3.5" /> Makbuz</a>}
             {kararlar.sonuc.makbuzHata && <p className={`text-[12px] ${YAZI}`}>Makbuz yazılamadı ({kararlar.sonuc.makbuzHata}); ajansa "uyguladım" diye haber ver.</p>}
           </section>
+        ) : ajan?.hata ? (
+          <p className={`${KART} p-4 text-[12px] ${YAZI}`}>
+            Ajanların işleri okunamadı ({ajan.hata}). <button type="button" onClick={onAjans} className="underline cursor-pointer">Ajans bağlantısı</button>
+          </p>
         ) : d && typeof d === 'object' && 'hata' in d ? (
           <p className={`${KART} p-4 text-[12px] ${YAZI}`}>
             Ajansın kararları okunamadı ({d.hata}). <button type="button" onClick={onAjans} className="underline cursor-pointer">Ajans bağlantısı</button>
