@@ -5,11 +5,11 @@ import { github } from './oyunAyarlari';
 import { ajansaDosyaYaz } from './tepsiAjansa';
 
 /**
- * Yazıyı Yazı Editörü'ne gönder (22 Ekim, ajans). Ajansın Yazı Editörü KKM'yi
- * okuyamadığı için Kemal'in düğmesiyle tek bir blog yazısı ya da kitap bölümü
- * ajansın gizli deposuna `yazilar/GG-AA-YYYY-<kisa-konu>.md` olarak yazılır;
- * `isler/gelen/` altına da küçük bir iş notu düşer, sabah planı işi Yazı
- * Editörü'ne atar. Ajans metni yeniden yazmaz, yalnız not bırakır.
+ * Yazıyı ajansa gönder (22 Ekim; 2 Kasım'dan beri Kanon Denetçisi'ne). Ajans
+ * KKM'yi okuyamadığı için Kemal'in düğmesiyle tek bir blog yazısı ya da kitap
+ * bölümü ajansın gizli deposuna `yazilar/GG-AA-YYYY-<kisa-konu>.md` olarak
+ * yazılır; `isler/gelen/` altına da küçük bir iş notu düşer, Kems işi Kanon
+ * Denetçisi'ne verir. Ajans metni yeniden yazmaz, yalnız not bırakır.
  *
  * - Aynı adda dosya varsa sonuna -2, -3 eklenir.
  * - Yazının kaydına `metadata.yaziEditorunuGonderildi` (ISO zaman) yazılır;
@@ -63,6 +63,6 @@ export async function yaziyiGonder(anahtar: string, yazi: Item, tur: YaziTuru, z
   // gizli depo denetimi burada: depo açıksa hiçbir şey yazılmaz
   const adres = await ajansaDosyaYaz(anahtar, yol, yaziDosyasi(yazi, tur, zaman), `KKM yazısı: ${yazi.title}`, 'yazı');
   await ajansaGonder(anahtar, `yazi-notu-${konu}`,
-    `# Yazı Editörü'ne not\n\nYazı Editörü'ne not: ${yol}\n\n- Tür: ${tur}\n- Başlık: ${yazi.title}\n- Gönderen: Kemal (KKM → ${tur === 'blog' ? 'Blog' : 'Kitap'} → Yazı Editörü'ne gönder)\n`, zaman);
+    `# Kanon Denetçisi'ne not\n\nYazım, akış ve tutarlılık notu: ${yol}\n\n- Tür: ${tur}\n- Başlık: ${yazi.title}\n- Gönderen: Kemal (KKM → ${tur === 'blog' ? 'Blog' : 'Kitap'} → Kanon Denetçisi'ne gönder)\n`, zaman);
   return { adres, zaman: zaman.toISOString() };
 }

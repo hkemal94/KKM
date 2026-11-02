@@ -36,12 +36,12 @@ export const AjansaGonder: React.FC<{ items: Item[]; oyunId: string; oyunAdi: st
         <button type="button" onClick={onKapat} className={DUGME_BOS} aria-label="Kapat"><X className="w-3.5 h-3.5" /></button>
       </div>
       <p className={`text-[13px] ${IKINCIL}`}>
-        Oyunun dosyası (PDF'teki bilgiler) ve notun Kems Ajans'a gider. Ajansın sabah planı onu görür ve oyun departmanına verir.
+        Oyunun dosyası (PDF'teki bilgiler) ve notun Kems Ajans'a gider. Kems onu görür ve oyun ajanlarına verir.
         KKM kayıtlarına bir şey yazılmaz.
       </p>
       {typeof durum === 'object' && 'adres' in durum ? (
         <div className="space-y-2">
-          <p className={`text-[14px] ${YAZI}`}>Gönderildi. Ajans yarın sabahki planında görecek.</p>
+          <p className={`text-[14px] ${YAZI}`}>Gönderildi. Kems bir sonraki çalışmasında görecek.</p>
           <a href={durum.adres} target="_blank" rel="noreferrer" className={DUGME_BOS}><ExternalLink className="w-3.5 h-3.5" /> Gönderilen dosya</a>
         </div>
       ) : (

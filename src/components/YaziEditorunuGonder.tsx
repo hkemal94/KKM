@@ -5,7 +5,9 @@ import { anahtariOku } from '../lib/oyunAyarlari';
 import { yaziTuru, yaziyiGonder } from '../lib/yaziAjansa';
 
 /**
- * "Yazı Editörü'ne gönder" düğmesi (Blog ve Kitap ekranlarında, `lib/yaziAjansa.ts`).
+ * "Kanon Denetçisi'ne gönder" düğmesi (Blog ve Kitap ekranlarında, `lib/yaziAjansa.ts`).
+ * 2 Kasım: yeni ajan kadrosunda Yazı Editörü yok; yazım, akış ve tutarlılık
+ * notunu Kanon Denetçisi bırakır (Kemal). Kayıttaki alan adı değişmedi.
  * Yalnız Kemal basınca çalışır; gönderilince yazının kaydına
  * `metadata.yaziEditorunuGonderildi` yazılır ve düğme "Yeniden gönder" olur.
  */
@@ -39,11 +41,11 @@ export const YaziEditorunuGonder: React.FC<{ yazi: Item; onUpdateItem: (item: It
         onClick={() => void gonder()}
         disabled={gidiyor}
         className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#FAF6EE] dark:bg-stone-900 border border-[#CFC5B4] dark:border-stone-850 text-stone-700 dark:text-[#A6B0C9] hover:text-[#F26B6F] text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-        title="Metin ajansın gizli deposuna gider; Yazı Editörü yazım ve akış notu bırakır, metni yeniden yazmaz"
+        title="Metin ajansın gizli deposuna gider; Kanon Denetçisi yazım, akış ve tutarlılık notu bırakır, metni yeniden yazmaz"
       >
         <Send className="w-3.5 h-3.5" />
         <span>
-          {gidiyor ? 'Gönderiliyor…' : onceki ? `Gönderildi · ${new Date(onceki).toLocaleDateString('tr-TR')} · Yeniden gönder` : 'Yazı Editörü\'ne gönder'}
+          {gidiyor ? 'Gönderiliyor…' : onceki ? `Gönderildi · ${new Date(onceki).toLocaleDateString('tr-TR')} · Yeniden gönder` : 'Kanon Denetçisi\'ne gönder'}
         </span>
       </button>
       {hata && <span className="text-[11px] text-[#B23A40] font-sans max-w-60">{hata}</span>}

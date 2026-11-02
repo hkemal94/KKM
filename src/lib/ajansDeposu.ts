@@ -19,7 +19,7 @@ export const AJANS_DEPOSU = 'hkemal94/Kems-Ajans';
 export interface AjansKlasoru { yol: string; ad: string; aciklama: string }
 
 export const AJANS_KLASORLERI: AjansKlasoru[] = [
-  { yol: 'pano', ad: 'Pano notları', aciklama: 'Müdür ve şeflerin kısa notları' },
+  { yol: 'pano', ad: 'Pano notları', aciklama: 'Ajanların kısa notları ve eksik yetenekler' },
   { yol: 'oneriler', ad: 'Öneriler', aciklama: 'Sosyal medya, takvim, başlık, trend, merch ve drop' },
   { yol: 'videolar', ad: 'Videolar', aciklama: 'Video iskeletleri ve kurgu listeleri' },
   { yol: 'raporlar', ad: 'Raporlar', aciklama: 'Viki, kanon, marka denetimi, oyun, kod, yazı' }
@@ -27,9 +27,11 @@ export const AJANS_KLASORLERI: AjansKlasoru[] = [
 
 /** Ajansın elle okunacak belgeleri */
 export const AJANS_BELGELERI: { yol: string; ad: string }[] = [
-  { yol: 'docs/kkm-yol-haritasi.md', ad: 'KKM yol haritası (ajansın listesi)' },
-  { yol: 'docs/devir-notu.md', ad: 'Devir notu: nerede kaldık' },
-  { yol: 'docs/sonra-sorulacaklar.md', ad: 'Sonra sorulacaklar' }
+  // 2 Kasım: eski üç belge ajans deposunda artık yok; yerlerine bugünkü belgeler
+  { yol: 'docs/ekosistem-plani.md', ad: 'Ekosistem planı ve yol haritası' },
+  { yol: 'docs/ajan-soru-turu.md', ad: 'Ajan kadrosu (17)' },
+  { yol: 'docs/kkm-soru-turu.md', ad: 'KKM yerleşim kararları' },
+  { yol: 'pano/eksik-yetenekler.md', ad: 'Eksik yetenekler' }
 ];
 
 export interface AjansDosyasi {

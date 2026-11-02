@@ -20,18 +20,14 @@ export interface AjansIsi {
   not?: string;
 }
 
-const HAFTA_ICI_4: GunKodu[] = ['MO', 'TU', 'WE', 'TH'];
-
-export const AJANS_ISLERI: AjansIsi[] = [
-  { id: 'sabah-plani', saat: '07:50', ad: 'Sabah planı', not: 'Yeni işleri atar; gece yapılanları, birleştirilecek PR\'ları ve Kemal\'den beklenenleri panoya yazar.' },
-  { id: 'aksam-kapanisi', saat: '19:50', ad: 'Akşam kapanışı', not: 'Bitenleri toplar, günün kapanışını yazar.' },
-  { id: 'gece-isleri', saat: '00:53', ad: 'Gece işleri', not: 'Kemal\'den bir şey beklemeyen bütün işler ilgili ajanlara yaptırılır; çıktılar sabaha PR olarak hazır olur.' },
-  { id: 'gece-viki', saat: '00:53', ad: 'Gece: Evren, viki ve kanon taraması', not: 'Öneriler panoya düğmeli soru olur.' },
-  { id: 'gece-oyun', saat: '00:53', ad: 'Gece: Oyun kontrolü', gunler: HAFTA_ICI_4, not: 'Derleme ve test kontrolü.' },
-  { id: 'gece-marka', saat: '00:53', ad: 'Gece: Marka ve Merch + Marka Denetçisi', gunler: ['FR'], not: 'Drop önerisi ve haftanın marka denetimi.' },
-  { id: 'gece-icerik', saat: '00:53', ad: 'Gece: İçerik', gunler: ['SA'], not: 'Gelecek haftanın paylaşım takvimi.' },
-  { id: 'gece-teknik', saat: '00:53', ad: 'Gece: Teknik', gunler: ['SU'], not: 'Kod taraması.' }
-];
+/**
+ * 2 Kasım (yeni ajan kadrosu): ajansın zamanlı işlerinin hepsi kapalı (Kemal,
+ * 28 Ekim). Eski düzenin sabah planı, gece işleri ve kapanışı listeden çıktı.
+ * Zamanlayıcı açılınca (yol haritası 4. adım) yalnız evren ajanları (Lore
+ * Araştırmacısı, Viki Editörü, Kanon Denetçisi) her gece az az çalışacak;
+ * o gün bu liste aynı PR'da doldurulur.
+ */
+export const AJANS_ISLERI: AjansIsi[] = [];
 
 /** Date.getDay() (0 = Pazar) → gün kodu */
 const GUN_KODLARI: GunKodu[] = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
