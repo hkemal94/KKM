@@ -92,7 +92,7 @@ export function useBekleyenIsler({ items, onUpdateItem, onDeleteItem, onAlanSil 
     isler.push({
       id: 'temizlik',
       ad: `${silinecek.length} kullanılmayan kaydı sil`,
-      aciklama: `${silmeOzeti(silinecek)}. Merch arşivi kalır; silinen geri gelmez. Yedek istersen önce Durum → Eksikler → Temizlik.`,
+      aciklama: `${silmeOzeti(silinecek)}. Merch arşivi kalır; silinen geri gelmez. Yedek istersen önce Eksikler ve ayarlar → Eksikler → Temizlik.`,
       calistir: async () => {
         for (const s of silinecek) await onDeleteItem(s.item.id);
         return `${silinecek.length} kayıt silindi.`;

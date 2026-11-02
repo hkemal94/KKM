@@ -10,8 +10,9 @@ const ANAHTAR = 'kems_sayfa_sayaci';
 export interface SayacDurumu { ilk: number | null; sayilar: Record<string, number> }
 
 export const SAYFA_ADLARI: Record<string, string> = {
-  onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
-  oyun: 'Oyun', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya'
+  onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
+  kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
+  oyun: 'Oyun', marka: 'Marka ve merch', icerik: 'İçerik', durum: 'Eksikler ve ayarlar', studyo: 'Yapay zekâ'
 };
 export const DURUM_SEKME_ADLARI: Record<string, string> = {
   eksikler: 'Eksikler', bosluklar: 'Boşluklar', takvim: 'Takvim',

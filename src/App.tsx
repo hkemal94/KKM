@@ -23,7 +23,7 @@ import { gorselUidAyarla, bagliGorselleriYukle, gorselSil } from './lib/gorselDe
 import { basvurulari } from './lib/gorselBasvuru';
 import { useGorselSurumu } from './lib/gorselOnbellek';
 import {
-  ShoppingBag,
+  Share2,
   Search,
   Compass,
   PenTool,
@@ -93,10 +93,15 @@ import type { DurumSekmesi } from './components/Durum';
 import { DURUM_SEKME_ADLARI, SAYFA_ADLARI, sayfaAcildi } from './lib/sayfaSayaci';
 const Duzada = lazyYukle(() => import('./components/Duzada'));
 import type { DuzadaSekmesi } from './components/Duzada';
-import type { AtolyeHedefi } from './components/Atolye';
+import type { AtolyeSekmesi } from './components/Atolye';
+import type { MarkaSekmesi } from './components/urunler/MarkaVeMerch';
+import type { IcerikSekmesi } from './components/urunler/Icerik';
 const Merch = lazyYukle(() => import('./components/Merch'));
 const Atolye = lazyYukle(() => import('./components/Atolye'));
-const YaziAtolyesi = lazyYukle(() => import('./components/YaziAtolyesi'));
+const KitapSayfasi = lazyYukle(() => import('./components/KitapSayfasi'));
+const Blog = lazyYukle(() => import('./components/Blog'));
+const MarkaVeMerch = lazyYukle(() => import('./components/urunler/MarkaVeMerch'));
+const Icerik = lazyYukle(() => import('./components/urunler/Icerik'));
 const Galeri = lazyYukle(() => import('./components/Galeri'));
 const Sosyal = lazyYukle(() => import('./components/sosyal/Sosyal'));
 const Takvim = lazyYukle(() => import('./components/takvim/Takvim'));
@@ -125,7 +130,7 @@ import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from '.
  * Uygulamanın sayfaları. 'onay' açılış (2 Kasım); eski Komuta Merkezi 'durum'.
  * 2 Kasım (yol haritası 1. adım): Ana sayfa ve Site kalktı; notlar 'notlar'da.
  */
-type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'markalar' | 'duzada' | 'atolye' | 'merch' | 'yazi' | 'oyun' | 'studyo' | 'sosyal';
+type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik' | 'studyo';
 /** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
 const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar']);
 const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'boyut'];
@@ -135,8 +140,16 @@ const ISLER_SEKMELERI: IslerSekmesi[] = ['kimde', 'takvim', 'yolharitasi'];
 const islerSekmesi = (s: unknown): IslerSekmesi => (ISLER_SEKMELERI.includes(s as IslerSekmesi) ? s as IslerSekmesi : 'kimde');
 /** Geçmişten gelen Durum sekmesi (eski 'yuzdeler' dahil) geçerli değilse Eksikler */
 const durumSekmesi = (s: unknown): DurumSekmesi => (DURUM_SEKMELERI.includes(s as DurumSekmesi) ? s as DurumSekmesi : 'eksikler');
-/** 7 Ekim'de başka sayfanın sekmesi olanlar: eski adla gelen istek oraya yönlenir */
-const SEKMEYE_GECENLER = ['fanzin', 'takvim', 'yolharitasi', 'galeri'];
+/**
+ * Başka sayfanın sekmesi olanlar: eski adla gelen istek oraya yönlenir
+ * (7 Ekim; 2 Kasım, yol haritası 6. adım: Atölye, Yazı, Markalar, Merch,
+ * Sosyal medya yeni Evren ve Ürünler sayfalarına geçti)
+ */
+const SEKMEYE_GECENLER = ['fanzin', 'takvim', 'yolharitasi', 'galeri', 'atolye', 'yazi', 'markalar', 'merch', 'sosyal', 'blog'];
+const MARKA_SEKMELERI: MarkaSekmesi[] = ['markalar', 'merch'];
+const ICERIK_SEKMELERI: IcerikSekmesi[] = ['sosyal', 'blog', 'fanzin', 'video'];
+const markaSekmesi = (s: unknown): MarkaSekmesi => (MARKA_SEKMELERI.includes(s as MarkaSekmesi) ? s as MarkaSekmesi : 'markalar');
+const icerikSekmesi = (s: unknown): IcerikSekmesi => (ICERIK_SEKMELERI.includes(s as IcerikSekmesi) ? s as IcerikSekmesi : 'sosyal');
 
 export interface WorkspaceUser {
   uid: string;
@@ -171,8 +184,10 @@ export default function App() {
   /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kurucu, Kitap) */
   const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(() =>
     ilkEkran?.tab === 'duzada' && (ilkEkran.duzada === 'wiki' || ilkEkran.duzada === 'rapor') ? { sekme: ilkEkran.duzada, n: Date.now() } : null);
-  const [atolyeIstek, setAtolyeIstek] = useState<{ sekme: AtolyeHedefi; n: number; aile?: string } | null>(null);
-  const [yaziIstek, setYaziIstek] = useState<{ sekme: 'blog' | 'kitap' | 'fanzin'; n: number } | null>(null);
+  const [atolyeIstek, setAtolyeIstek] = useState<{ sekme: AtolyeSekmesi; n: number; aile?: string } | null>(null);
+  /** Marka ve merch ile İçerik'in sekmesi (2 Kasım, yol haritası 6. adım) */
+  const [markaSekme, setMarkaSekme] = useState<MarkaSekmesi>(() => markaSekmesi(ilkEkran?.marka));
+  const [icerikSekme, setIcerikSekme] = useState<IcerikSekmesi>(() => icerikSekmesi(ilkEkran?.icerik));
   /** Neyin Eksik sayfası açılırken açık gelecek başlık */
   const [eksikAcik, setEksikAcik] = useState<string | null>(null);
   /** Durum'un sekmesi (1 Ekim: Neyin Eksik Durum'a katıldı) */
@@ -375,7 +390,7 @@ export default function App() {
       : /quota|resource.?exhausted/i.test(metin)
       ? 'Kaydedilemedi: veritabanının günlük yazma sınırı doldu. Değişiklik bu ekranda duruyor ama sayfayı yenilersen kaybolur. Sınır her gün Türkiye saatiyle 10:00\'da sıfırlanır.'
       : /maximum allowed size|exceeds the maximum|too large|1 ?MB|1048576|cok-buyuk/i.test(metin)
-        ? 'Kaydedilemedi: bu madde 1 MB sınırını aşıyor (içindeki görseller büyük). Durum → Eksikler → "Büyük kayıtlar" kartıyla görselleri küçült, sonra yeniden kaydet. Değişiklik bu ekranda duruyor ama sayfayı yenilersen kaybolur.'
+        ? 'Kaydedilemedi: bu madde 1 MB sınırını aşıyor (içindeki görseller büyük). Eksikler ve ayarlar → Eksikler → "Büyük kayıtlar" kartıyla görselleri küçült, sonra yeniden kaydet. Değişiklik bu ekranda duruyor ama sayfayı yenilersen kaybolur.'
         : 'Kaydedilemedi: sunucu yazmayı kabul etmedi. Değişiklik bu ekranda duruyor ama sayfayı yenilersen kaybolur.');
   };
 
@@ -590,30 +605,25 @@ export default function App() {
     setActiveItemId(item.id);
     // Switch to correct tab based on item type
     if (item.type === 'drop' || item.type === 'merch_urun') {
-      setActiveTab('merch');
+      yonlendir('merch');
     } else if (item.type === 'marka') {
-      setMarkaGaleri(false);
-      setActiveTab('markalar');
+      yonlendir('markalar');
     } else if (item.type === 'blog_post') {
-      setYaziIstek({ sekme: 'blog', n: Date.now() });
-      setActiveTab('yazi');
+      yonlendir('blog');
     } else if (item.type === 'kitap_proje' || item.type === 'kitap_bolum') {
-      setYaziIstek({ sekme: 'kitap', n: Date.now() });
-      setActiveTab('yazi');
+      yonlendir('kitap');
     } else if (item.type === 'sosyal_gonderi' || item.type === 'sosyal_seri') {
       // "Son dokunulanlar"dan gönderiye basınca vikiye düşüyordu (30 Eylül)
-      setActiveTab('sosyal');
+      yonlendir('sosyal');
     } else if (item.type === 'ilham_gorsel' || item.type === 'ilham_kaynak') {
-      setMarkaGaleri(true);
-      setActiveTab('markalar');
+      yonlendir('galeri');
     } else if (item.type === 'oyun_is' || item.type === 'gdd_bolum' || item.type === 'oyun_tanitim' || item.type === 'oyun_fikir') {
       setActiveTab('oyun');
     } else if (item.type === 'aday') {
       setActiveTab('studyo');
     } else if (item.type === 'map_pin') {
-      // Harita notu (5. gece): Atölye'de haritada
-      setAtolyeIstek({ sekme: 'harita', n: Date.now() });
-      setActiveTab('atolye');
+      // Harita notu (5. gece): Harita ve Kurucu'da
+      yonlendir('harita');
     } else if (item.type === 'fikir') {
       /*
        * Brainstorm sekmesi kalktı (28 Eylül kararı). Fikirler köşedeki
@@ -664,27 +674,28 @@ export default function App() {
    * Tek gezinme kapısı (Paket 4): menü, "Diğer" listesi, yüzde şeridi,
    * zil hepsi buradan geçer.
    */
-  const git = (hedef: string, ayrinti?: string | null) => {
-    if (!ayrilmayaIzinVar()) return;
-    setAcikGrup(null);
-    setActiveItemId(null);
+  /** Sayfayı ve sekmesini seçer; açık maddeye dokunmaz (eski adlar da buradan yeni yerine gider) */
+  const yonlendir = (hedef: string, ayrinti?: string | null) => {
     const n = Date.now();
     switch (hedef) {
-      // 4. gece: Harita ve Kurucu Atölye'de
-      case 'harita': case 'kurucu': setAtolyeIstek({ sekme: 'harita', n }); setActiveTab('atolye'); break;
-      // Atölye'nin kendisi önce başlangıç ekranını açar (8 Ekim)
-      case 'atolye': setAtolyeIstek({ sekme: 'giris', n }); setActiveTab('atolye'); break;
-      case 'bagagi': setAtolyeIstek({ sekme: 'ag', n }); setActiveTab('atolye'); break;
-      case 'zaman': setAtolyeIstek({ sekme: 'zaman', n }); setActiveTab('atolye'); break;
-      case 'soyagaci': setAtolyeIstek({ sekme: 'soy', n, ...(ayrinti ? { aile: ayrinti } : {}) }); setActiveTab('atolye'); break;
+      // 2 Kasım (yol haritası 6. adım): Atölye ikiye ayrıldı: Harita ve Kurucu · Görünümler
+      case 'harita': case 'kurucu': case 'atolye': setAtolyeIstek({ sekme: 'harita', n }); setActiveTab('harita'); break;
+      case 'gorunumler': case 'bagagi': setAtolyeIstek({ sekme: 'ag', n }); setActiveTab('gorunumler'); break;
+      case 'zaman': setAtolyeIstek({ sekme: 'zaman', n }); setActiveTab('gorunumler'); break;
+      case 'soyagaci': setAtolyeIstek({ sekme: 'soy', n, ...(ayrinti ? { aile: ayrinti } : {}) }); setActiveTab('gorunumler'); break;
       case 'viki': case 'kunye': case 'duzada': setDuzadaIstek({ sekme: 'wiki', n }); setActiveTab('duzada'); break;
-      case 'kitap': setYaziIstek({ sekme: 'kitap', n }); setActiveTab('yazi'); break;
-      case 'blog': setYaziIstek({ sekme: 'blog', n }); setActiveTab('yazi'); break;
+      // Yazı ayrıldı: Kitap Evren'de; blog, fanzin, sosyal medya İçerik'te
+      case 'kitap': case 'yazi': setActiveTab('kitap'); break;
+      case 'blog': setIcerikSekme('blog'); setActiveTab('icerik'); break;
+      case 'sosyal': setIcerikSekme('sosyal'); setActiveTab('icerik'); break;
+      case 'video': setIcerikSekme('video'); setActiveTab('icerik'); break;
+      // Markalar ve Merch birleşti: Marka ve merch
+      case 'merch': setMarkaSekme('merch'); setActiveTab('marka'); break;
       case 'bosluk': case 'bosluklar': setDurumSekme('bosluklar'); setActiveTab('durum'); break;
       case 'eksikler': setEksikAcik(ayrinti ?? null); setDurumSekme('eksikler'); setActiveTab('durum'); break;
       case 'durum': setDurumSekme('eksikler'); setActiveTab('durum'); break;
       // 7 Ekim: Fanzin Yazı'da; Takvim ve Yol haritası Durum'da; Galeri Markalar'da
-      case 'fanzin': setYaziIstek({ sekme: 'fanzin', n }); setActiveTab('yazi'); break;
+      case 'fanzin': setIcerikSekme('fanzin'); setActiveTab('icerik'); break;
       // 2 Kasım: Takvim ve Yol haritası İşler ve takvim'de
       case 'takvim': setIslerSekme('takvim'); setActiveTab('isler'); break;
       case 'yolharitasi': setIslerSekme('yolharitasi'); setActiveTab('isler'); break;
@@ -693,10 +704,17 @@ export default function App() {
       case 'ajans': setAjanlarSekme('baglanti'); setActiveTab('ajanlar'); break;
       case 'ajanlar': setAjanlarSekme('ajanlar'); setActiveTab('ajanlar'); break;
       case 'zamanlayici': setAjanlarSekme('zamanlayici'); setActiveTab('ajanlar'); break;
-      case 'galeri': setMarkaGaleri(true); setActiveTab('markalar'); break;
-      case 'markalar': setMarkaGaleri(false); setActiveTab('markalar'); break;
+      case 'galeri': setMarkaGaleri(true); setMarkaSekme('markalar'); setActiveTab('marka'); break;
+      case 'markalar': setMarkaGaleri(false); setMarkaSekme('markalar'); setActiveTab('marka'); break;
       default: setActiveTab(KALKAN_SAYFALAR.has(hedef) ? 'onay' : hedef as Sayfa);
     }
+  };
+
+  const git = (hedef: string, ayrinti?: string | null) => {
+    if (!ayrilmayaIzinVar()) return;
+    setAcikGrup(null);
+    setActiveItemId(null);
+    yonlendir(hedef, ayrinti);
     try { window.scrollTo({ top: 0 }); } catch { /* yok */ }
   };
 
@@ -713,7 +731,7 @@ export default function App() {
 
   /* Eski adla gelen sayfa isteği (ör. bir alt ekrandan 'galeri') yeni yerine gider */
   useEffect(() => {
-    if (SEKMEYE_GECENLER.includes(activeTab as string)) git(activeTab as string);
+    if (SEKMEYE_GECENLER.includes(activeTab as string)) yonlendir(activeTab as string);
     else if (KALKAN_SAYFALAR.has(activeTab as string)) setActiveTab('onay');
   }, [activeTab]);
 
@@ -728,16 +746,17 @@ export default function App() {
     const yeni: Record<string, unknown> = {
       kkm: true, tab: activeTab, item: activeItemId ?? null, durum: durumSekme, isler: islerSekme, ajanlar: ajanlarSekme,
       duzada: activeTab === 'duzada' ? (duzadaIstek?.sekme ?? 'wiki') : null,
-      diger: acikGrup, galeri: activeTab === 'markalar' && markaGaleri
+      diger: acikGrup, galeri: activeTab === 'marka' && markaGaleri,
+      marka: activeTab === 'marka' ? markaSekme : null, icerik: activeTab === 'icerik' ? icerikSekme : null
     };
     const eski = history.state as Record<string, unknown> | null;
-    const ayni = !!eski?.kkm && ['tab', 'item', 'durum', 'isler', 'ajanlar', 'duzada', 'diger', 'galeri'].every(k => (eski[k] ?? null) === (yeni[k] ?? null));
+    const ayni = !!eski?.kkm && ['tab', 'item', 'durum', 'isler', 'ajanlar', 'duzada', 'diger', 'galeri', 'marka', 'icerik'].every(k => (eski[k] ?? null) === (yeni[k] ?? null));
     if (ayni) { sonEkran.current = eski; return; }
     const kayit = { ...yeni, derinlik: eski?.kkm ? Number(eski.derinlik ?? 0) + 1 : 0 };
     if (eski?.kkm) history.pushState(kayit, '', location.pathname + location.search);
     else history.replaceState(kayit, '');
     sonEkran.current = kayit;
-  }, [activeTab, activeItemId, durumSekme, islerSekme, ajanlarSekme, duzadaIstek?.sekme, acikGrup, markaGaleri]);
+  }, [activeTab, activeItemId, durumSekme, islerSekme, ajanlarSekme, duzadaIstek?.sekme, acikGrup, markaGaleri, markaSekme, icerikSekme]);
   useEffect(() => {
     const geri = (e: PopStateEvent) => {
       const d = e.state as Record<string, any> | null;
@@ -750,6 +769,8 @@ export default function App() {
       sonEkran.current = d;
       setActiveTab(KALKAN_SAYFALAR.has(d.tab) ? 'onay' : d.tab as Sayfa);
       setActiveItemId(d.item ?? null);
+      if (d.marka) setMarkaSekme(markaSekmesi(d.marka));
+      if (d.icerik) setIcerikSekme(icerikSekmesi(d.icerik));
       setDurumSekme(durumSekmesi(d.durum));
       setIslerSekme(islerSekmesi(d.isler));
       setAjanlarSekme(ajanlarSekmesi(d.ajanlar));
@@ -793,8 +814,9 @@ export default function App() {
     // 'blog' ve 'kitap' artık tek sekme: Yazı İşleri
     // Boşluklar artık Durum sayfasının içinde (29 Eylül)
     if (area === 'bosluklar') { git('bosluklar'); return; }
-    const sekme = area === 'blog' || area === 'kitap' ? 'yazi' : area;
-    setActiveTab(sekme as any);
+    const sekme: string = area;
+    if (SEKMEYE_GECENLER.includes(sekme) || sekme === 'kitap') yonlendir(sekme);
+    else setActiveTab(sekme as Sayfa);
     // Düzada'da bir madde seçildiyse harita değil viki açılsın (29 Eylül gece)
     if (sekme === 'duzada' && itemId) setDuzadaIstek({ sekme: 'wiki', n: Date.now() });
     if (itemId) {
@@ -927,19 +949,19 @@ export default function App() {
       { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') },
       { id: 'isler', ad: 'İşler ve takvim', alt: 'kimde ne var, takvim, yol haritası', simge: CalendarDays },
       { id: 'ajanlar', ad: 'Ajanlar ve otomasyonlar', alt: 'ajan kartları, zamanlayıcı, ajans bağlantısı', simge: Bot },
-      { id: 'durum', ad: 'Durum', alt: 'eksikler, boşluklar, boyut ve hız', simge: ListChecks },
+      { id: 'durum', ad: 'Eksikler ve ayarlar', alt: 'eksikler, boşluklar, boyut ve hız', simge: ListChecks },
       { id: 'studyo', ad: 'Yapay zekâ', alt: 'stüdyo ve öneri tepsisi', simge: Sparkles, nokta: bildirimVar('aday') }
     ] },
     { grup: 'Evren', simge: Compass, satirlar: [
       { id: 'duzada', ad: 'Viki', alt: 'Düzada vikisi ve Evren Raporu', simge: Compass, nokta: bildirimVar('kanon') },
-      { id: 'atolye', ad: 'Atölye', alt: 'harita, bağ ağı, zaman, soy ağacı', simge: Hammer },
-      { id: 'yazi', ad: 'Yazı', alt: 'kitap, blog, fanzin', simge: PenTool }
+      { id: 'kitap', ad: 'Kitap', alt: 'kitap projeleri ve bölümler', simge: PenTool },
+      { id: 'harita', ad: 'Harita ve Kurucu', alt: '2D kur, 3D bak', simge: Hammer },
+      { id: 'gorunumler', ad: 'Görünümler', alt: 'bağ ağı, zaman çizgisi, soy ağacı', simge: Share2 }
     ] },
     { grup: 'Ürünler', simge: Package, satirlar: [
       { id: 'oyun', ad: 'Oyunlar', simge: Gamepad2 },
-      { id: 'markalar', ad: 'Markalar', alt: 'markalar ve galeri', simge: Shield },
-      { id: 'merch', ad: 'Merch', alt: 'droplar ve ürünler', simge: ShoppingBag },
-      { id: 'sosyal', ad: 'Sosyal medya', alt: 'fikirler, seriler, ızgara', simge: Megaphone }
+      { id: 'marka', ad: 'Marka ve merch', alt: 'markalar, galeri, droplar, ürünler', simge: Shield },
+      { id: 'icerik', ad: 'İçerik', alt: 'sosyal medya, blog, fanzin, video', simge: Megaphone }
     ] }
   ];
   /** Açık sayfanın grubu (Notlar hiçbir grupta değil; Yaz tuşundan açılır) */
@@ -950,8 +972,9 @@ export default function App() {
   const RAY_ADI = 'min-w-0 whitespace-nowrap opacity-0 group-hover/ray:opacity-100 group-has-[:focus-visible]/ray:opacity-100 transition-opacity duration-150';
 
   const SAYFA_ADI: Record<Sayfa, string> = {
-    onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki', atolye: 'Atölye', markalar: 'Markalar', merch: 'Merch', yazi: 'Yazı',
-    oyun: 'Oyunlar', durum: 'Durum', studyo: 'Yapay zekâ', sosyal: 'Sosyal medya'
+    onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
+    kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
+    oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', durum: 'Eksikler ve ayarlar', studyo: 'Yapay zekâ'
   };
 
   const logo = hasKemsLogo ? (
@@ -1158,26 +1181,43 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'markalar' && (
-              <Markalar
-                items={items}
-                onSelectItem={setActiveItemId}
-                onUpdateItem={handleUpdateItem}
-                onDeleteItem={handleDeleteItem}
-                onAddItem={handleAddItem}
-                onSelectArea={handleSelectArea}
-                galeriAcik={markaGaleri}
-                onGaleri={setMarkaGaleri}
-                galeri={
-                  <Galeri
+            {activeTab === 'marka' && (
+              <MarkaVeMerch
+                sekme={markaSekme}
+                onSekme={setMarkaSekme}
+                markalar={
+                  <Markalar
                     items={items}
-                    onAddItem={handleAddItem}
+                    onSelectItem={setActiveItemId}
                     onUpdateItem={handleUpdateItem}
                     onDeleteItem={handleDeleteItem}
-                    onSelectItem={(id) => {
-                      const it = items.find(i => i.id === id);
-                      if (it) handleSelectResult(it);
-                    }}
+                    onAddItem={handleAddItem}
+                    onSelectArea={handleSelectArea}
+                    galeriAcik={markaGaleri}
+                    onGaleri={setMarkaGaleri}
+                    galeri={
+                      <Galeri
+                        items={items}
+                        onAddItem={handleAddItem}
+                        onUpdateItem={handleUpdateItem}
+                        onDeleteItem={handleDeleteItem}
+                        onSelectItem={(id) => {
+                          const it = items.find(i => i.id === id);
+                          if (it) handleSelectResult(it);
+                        }}
+                      />
+                    }
+                  />
+                }
+                merch={
+                  <Merch
+                    items={items}
+                    activeItemId={activeItemId}
+                    onSelectItem={setActiveItemId}
+                    onUpdateItem={handleUpdateItem}
+                    onDeleteItem={handleDeleteItem}
+                    onAddItem={handleAddItem}
+                    onSelectArea={handleSelectArea}
                   />
                 }
               />
@@ -1192,13 +1232,15 @@ export default function App() {
                 onDeleteItem={handleDeleteItem}
                 onAddItem={handleAddItem}
                 istek={duzadaIstek}
-                onAtolye={() => git('atolye')}
+                onAtolye={() => git('harita')}
                 onSoyAgaci={aileId => git('soyagaci', aileId)}
               />
             )}
 
-            {activeTab === 'atolye' && (
+            {activeTab === 'harita' && (
               <Atolye
+                baslik="Harita ve Kurucu"
+                sekmeler={['harita']}
                 items={items}
                 onAddItem={handleAddItem}
                 onUpdateItem={handleUpdateItem}
@@ -1208,20 +1250,22 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'merch' && (
-              <Merch
+            {activeTab === 'gorunumler' && (
+              <Atolye
+                baslik="Görünümler"
+                sekmeler={['ag', 'zaman', 'soy']}
                 items={items}
-                activeItemId={activeItemId}
-                onSelectItem={setActiveItemId}
+                onAddItem={handleAddItem}
                 onUpdateItem={handleUpdateItem}
                 onDeleteItem={handleDeleteItem}
-                onAddItem={handleAddItem}
-                onSelectArea={handleSelectArea}
+                istek={atolyeIstek}
+                onMaddeAc={id => { setDuzadaIstek({ sekme: 'wiki', n: Date.now() }); setActiveItemId(id); setActiveTab('duzada'); }}
               />
             )}
 
-            {activeTab === 'yazi' && (
-              <YaziAtolyesi
+
+            {activeTab === 'kitap' && (
+              <KitapSayfasi
                 items={items}
                 activeItemId={activeItemId}
                 onSelectItem={setActiveItemId}
@@ -1229,8 +1273,6 @@ export default function App() {
                 onDeleteItem={handleDeleteItem}
                 onAddItem={handleAddItem}
                 onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }}
-                istek={yaziIstek}
-                fanzin={<FanzinSayfasi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onStudyo={() => git('studyo')} onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }} />}
               />
             )}
 
@@ -1259,14 +1301,33 @@ export default function App() {
 
 
 
-            {activeTab === 'sosyal' && (
-              <Sosyal
-                items={items}
-                acilacakId={activeItemId}
-                onAddItem={handleAddItem}
-                onUpdateItem={handleUpdateItem}
-                onDeleteItem={handleDeleteItem}
-                onTakvim={seriId => { git('takvim'); if (seriId) setTakvimSeri({ id: seriId, n: Date.now() }); }}
+            {activeTab === 'icerik' && (
+              <Icerik
+                sekme={icerikSekme}
+                onSekme={setIcerikSekme}
+                onAjans={() => git('ajans')}
+                sosyal={
+                  <Sosyal
+                    items={items}
+                    acilacakId={activeItemId}
+                    onAddItem={handleAddItem}
+                    onUpdateItem={handleUpdateItem}
+                    onDeleteItem={handleDeleteItem}
+                    onTakvim={seriId => { git('takvim'); if (seriId) setTakvimSeri({ id: seriId, n: Date.now() }); }}
+                  />
+                }
+                blog={
+                  <Blog
+                    items={items}
+                    activeItemId={activeItemId}
+                    onSelectItem={setActiveItemId}
+                    onUpdateItem={handleUpdateItem}
+                    onDeleteItem={handleDeleteItem}
+                    onAddItem={handleAddItem}
+                    onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }}
+                  />
+                }
+                fanzin={<FanzinSayfasi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onStudyo={() => git('studyo')} onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }} />}
               />
             )}
 

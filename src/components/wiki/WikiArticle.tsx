@@ -347,7 +347,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
             />
           )}
           {item.type === 'aile' && onSoyAgaci && (
-            <button type="button" onClick={() => onSoyAgaci(item.id)} title="Bu ailenin soy ağacı (Atölye)"
+            <button type="button" onClick={() => onSoyAgaci(item.id)} title="Bu ailenin soy ağacı (Görünümler)"
               className="flex items-center gap-1.5 text-[11px] font-mono transition-colors cursor-pointer text-gri hover:text-lacivert dark:text-bej/85 dark:hover:text-krem">
               <GitFork size={12} /> soy ağacında aç
             </button>
