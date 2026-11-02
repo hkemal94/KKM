@@ -52,8 +52,8 @@ export const Durum: React.FC<{
   ];
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      <SayfaBasi baslik="Durum" />
-      <SayfaRayi baslik="Durum" bolumler={bolumler} aktifId={sekme} onSec={id => onSekme(id as DurumSekmesi)} />
+      <SayfaBasi baslik="Eksikler ve ayarlar" />
+      <SayfaRayi baslik="Eksikler ve ayarlar" bolumler={bolumler} aktifId={sekme} onSec={id => onSekme(id as DurumSekmesi)} />
       {sekme === 'eksikler' && (
         <Eksikler
           items={items}
