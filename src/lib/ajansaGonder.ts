@@ -9,8 +9,8 @@ import { AJANS_DEPOSU } from './ajansDeposu';
 /**
  * Ajansa gönder (21 Ekim, Kemal: "düğmeyi bir sonraki iş olarak düşünebiliriz").
  * Oyunun dosyası (oyun PDF'indeki bilgiler) Markdown olarak Kems Ajans'ın
- * deposuna `isler/gelen/` altına yazılır; ajansın sabah planı oradan okur ve
- * işi oyun departmanına dağıtır.
+ * deposuna `isler/gelen/` altına yazılır; Kems (CEO) oradan okur ve işi oyun
+ * ajanlarına (Oyun Tasarımcısı, Oyun Geliştiricisi) verir.
  *
  * - Yazma yolu "Oyuna gönder" ile aynı: GitHub anahtarı yalnız bu tarayıcıda
  *   durur (`lib/oyunAyarlari.ts`); anahtarın Kems-Ajans deposuna da izni olmalı.
@@ -38,7 +38,7 @@ export function oyunDosyasiMetni(items: Item[], oyunId: string, not: string, zam
   s.push(`- Gönderen: Kemal (KKM → Oyun → Ajansa gönder)`);
   s.push(`- Tarih: ${zaman.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}`);
   s.push(`- Aşama: ${asama ? `${asama.ad} (${asama.terim})` : 'başlamadı'}`);
-  s.push(`- Departman: Oyun Müdürü (CEO dağıtır)`, '');
+  s.push(`- Ajan: Oyun Tasarımcısı (Kems dağıtır)`, '');
   s.push(`## Kemal'in notu`, '', not.trim() || 'boş', '');
 
   const bolumYaz = (id: string) => {
@@ -99,7 +99,7 @@ export function fikirDosyasiMetni(fikir: Item, zaman = new Date()): string {
     `- Gönderilme zamanı: ${zaman.toISOString()} (${tarih})`,
     `- KKM kimliği: ${fikir.id}`,
     `- Etiketler: ${etiketler.length ? etiketler.join(', ') : 'yok'}`,
-    `- Departman: CEO dağıtır`, '',
+    `- Ajan: Kems dağıtır`, '',
     `## Kemal'in notu`, '', fikir.notes?.trim() || 'boş', '',
   ].join('\n');
 }

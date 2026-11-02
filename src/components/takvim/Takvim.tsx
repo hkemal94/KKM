@@ -281,7 +281,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
           <i className="w-2.5 h-2.5 rounded-full block" style={{ background: TUR[t].renk }} /> {TUR[t].ad}
         </button>
       ))}
-      <button type="button" onClick={() => setAjansAcik(a => !a)} aria-pressed={ajansAcik} className={cipSinifi(ajansAcik)} title="Ajansın düzenli işleri (sabah planı, gece işleri, kapanış)">
+      <button type="button" onClick={() => setAjansAcik(a => !a)} aria-pressed={ajansAcik} className={cipSinifi(ajansAcik)} title="Ajansın zamanlı işleri (şimdilik hepsi kapalı)">
         <i className="w-2.5 h-2.5 rounded-full block" style={{ background: AJANS_RENGI }} /> Ajans
       </button>
       {acik.gonderi && <span className="shrink-0 w-px my-2 bg-[#CFC5B4] dark:bg-[#2C3C72]" />}

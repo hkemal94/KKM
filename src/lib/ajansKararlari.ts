@@ -17,7 +17,7 @@ import type { BagTuru } from '../utils/relations';
  * düğmeyle değişir (KKM kuralı).
  *
  * İşler:
- *   - `sil`: tepsideki öneri silinir (ajans eledi, departmana taşıdı ya da
+ *   - `sil`: tepsideki öneri silinir (ajans eledi, ilgili ajana taşıdı ya da
  *     soru kutusuna aldı).
  *   - `alanaYaz`: Kemal'in panoda verdiği cevap, sorunun boş alanına yazılır.
  *     Alan bu arada dolduysa üstüne yazılmaz (tepsideki "İşle" gibi).
