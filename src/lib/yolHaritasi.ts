@@ -195,6 +195,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 6. adım: Evren → Viki · Kitap · Harita ve Kurucu · Görünümler; Ürünler → Oyunlar · Marka ve merch · İçerik (sosyal medya, blog, fanzin, video); Durum → Eksikler ve ayarlar' },
   { id: 'marka-karti-uygula', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: '"Ajansın kararları" marka kartını da işler: renk paleti, yazı, ton, örnek işler, yap / yapma, slogan (markanın bible\'ı kartın kendisi); logo ve moodboard görselleri hariç' },
+  { id: 'marka-kartlari-ajansa', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
+    ad: '"Vikiyi ajansa gönder" marka kartlarını da gönderir (yazı alanları; logo ve moodboard yalnız var / yok): ajans kartları buradan tamamlar' },
   { id: 'pano-kapanir', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 9. adım: Ajans Panosu kapandı; işlerin tek kaynağı ajansın iş dosyası (Kimde ne var), sorular Onay bekleyenler\'de' },
   { id: 'telefona-bildirim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,

@@ -9,6 +9,10 @@ import { ajansaDosyaYaz } from './tepsiAjansa';
  * `kkm/viki.json`'a yazılır. Yalnız okumak içindir: KKM kayıtlarına hiçbir
  * şey yazılmaz. Arşivdeki ve öneri olan maddeler, görseller ve harita verisi
  * gitmez. Dosya 1 MB'ı geçerse en uzun metinler kısaltılır ve işaretlenir.
+ *
+ * 2 Kasım (Kemal: marka kartı "en kapsamlısı KKM"): marka kartları da gider
+ * (`markaKartlari`): kartın yazı alanları; logo ve moodboard görseli gitmez,
+ * yalnız var mı yok mu. Merch Tasarımcısı kartı buradan okur.
  */
 
 export const VIKI_YOLU = 'kkm/viki.json';
@@ -57,10 +61,39 @@ export function vikiDosyasi(items: Item[], zaman = new Date()) {
       baglar,
     };
   });
-  return { olusturuldu: zaman.toISOString(), sayi: maddeler.length, kisaltildi: false, maddeler };
+  return { olusturuldu: zaman.toISOString(), sayi: maddeler.length, kisaltildi: false, maddeler, markaKartlari: markaKartlari(items) };
 }
 
 export type VikiDosyasi = ReturnType<typeof vikiDosyasi>;
+
+const KART_METINLERI = ['selectedFont', 'voiceTone', 'slogan'] as const;
+const KART_LISTELERI = ['colorPalette', 'exemplaryWorks', 'usageRulesDo', 'usageRulesDont'] as const;
+const doluMu = (d: unknown) => (Array.isArray(d) ? d.length > 0 : typeof d === 'string' && !!d.trim());
+
+/** Markalar ekranındaki kartlar: kartı olan, marka ya da kulüp türündeki ya da kurum tikli kayıtlar */
+export function markaKartlari(items: Item[]) {
+  return items
+    .filter(i => !i.archived && !i.isProposal && (i.metadata?.brandKit || i.type === 'marka' || i.type === 'kulüp' || i.metadata?.kurumOlarakGoster === true))
+    .map(i => {
+      const bk = (i.metadata?.brandKit || {}) as unknown as Record<string, unknown>;
+      const kart: Record<string, string | string[]> = {};
+      for (const k of KART_METINLERI) if (metinMi(bk[k]) && (bk[k] as string).trim()) kart[k] = (bk[k] as string).trim();
+      for (const k of KART_LISTELERI) {
+        const l = Array.isArray(bk[k]) ? (bk[k] as unknown[]).filter(metinMi).map(x => x.trim()).filter(Boolean) : [];
+        if (l.length) kart[k] = l;
+      }
+      const fikir = Array.isArray(bk.ideaLogos) ? bk.ideaLogos.length : 0;
+      return {
+        id: i.id, baslik: i.title, tur: i.type, kart,
+        logo: {
+          birincil: doluMu(bk.selectedLogo) || doluMu(bk.logoBase64),
+          ikincil: typeof bk.ikincilLogoSira === 'number' && bk.ikincilLogoSira < fikir,
+          alternatif: typeof bk.alternatifLogoSira === 'number' && bk.alternatifLogoSira < fikir,
+        },
+        moodboard: Array.isArray(bk.atmosphereMoodboard) ? bk.atmosphereMoodboard.length : 0,
+      };
+    });
+}
 
 const bayt = (d: unknown) => new TextEncoder().encode(JSON.stringify(d, null, 2)).length;
 
