@@ -203,6 +203,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 6. adım: Evren → Viki · Kitap · Harita ve Kurucu · Görünümler; Ürünler → Oyunlar · Marka ve merch · İçerik (sosyal medya, blog, fanzin, video); Durum → Eksikler ve ayarlar' },
   { id: 'marka-karti-uygula', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: '"Ajansın kararları" marka kartını da işler: renk paleti, yazı, ton, örnek işler, yap / yapma, slogan (markanın bible\'ı kartın kendisi); logo ve moodboard görselleri hariç' },
+  { id: 'viki-gorsel-temizligi', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Durum → Eksikler: galeriden silinip vikide kalan görseller listelenir, seçilenler tek düğmeyle kaldırılır (emin olunmayanlar seçili gelmez); görseli olmayan maddeler "Görsel istiyor" listesinde, ajandan Canva önerisi istenir' },
   { id: 'marka-kartlari-ajansa', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: '"Vikiyi ajansa gönder" marka kartlarını da gönderir (yazı alanları; logo ve moodboard yalnız var / yok): ajans kartları buradan tamamlar' },
   { id: 'oyun-assetleri', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,

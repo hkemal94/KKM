@@ -10,6 +10,7 @@ import { AdDegisikligiKarti } from './AdDegisikligiKarti';
 import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
 import { GaleriDisariKarti } from './GaleriDisariKarti';
+import { VikiGorselKarti } from './VikiGorselKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
 import { boslukDoldurma } from '../lib/boslukDoldurma';
 import { kisiAdlariniAyir } from '../lib/kisiAdi';
@@ -99,6 +100,7 @@ export const Eksikler: React.FC<EksiklerProps> = ({
 
       {/* Galeri görselleri kayıtların dışına (21 Ekim) */}
       {onUpdateItem && <GaleriDisariKarti items={items} onUpdateItem={onUpdateItem} />}
+      {onUpdateItem && <VikiGorselKarti items={items} onUpdateItem={onUpdateItem} onMaddeAc={id => onSelectArea('duzada', id)} />}
 
       {onUpdateItem && <BuyukKayitKarti items={items} onUpdateItem={onUpdateItem} />}
       {onUpdateItem && <AdDegisikligiKarti items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />}

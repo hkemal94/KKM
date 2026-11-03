@@ -11,6 +11,7 @@ import { PinterestPanolari } from './galeri/PinterestPanolari';
 import { GaleriTemizligi } from './galeri/GaleriTemizligi';
 import { GorselImg } from './GorselImg';
 import { gorselYaz, gorselOku, gorselSil, useGorsel } from '../lib/gorselDeposu';
+import { izEkle } from '../lib/vikiGorselTemizligi';
 
 /**
  * Galeri.
@@ -208,8 +209,15 @@ export const Galeri: React.FC<GaleriProps> = ({
     const kare = await gorselOku(kareRef);
     if (!kare) { setRapor('Görsel okunamadı, bağlanmadı. Biraz sonra yeniden dene.'); return; }
     const mevcut = hedef.images || [];
-    if (!mevcut.includes(kare)) {
-      await onUpdateItem({ ...hedef, images: [kare, ...mevcut], updatedAt: Date.now() });
+    // Galeri izi (3 Kasım): galeriden silinince vikideki kopya kesin bulunsun
+    const izler = izEkle(hedef, gorsel.id, kare);
+    if (!mevcut.includes(kare) || izler) {
+      await onUpdateItem({
+        ...hedef,
+        images: mevcut.includes(kare) ? mevcut : [kare, ...mevcut],
+        ...(izler ? { metadata: { ...(hedef.metadata || {}), galeriKaynaklari: izler } } : {}),
+        updatedAt: Date.now()
+      });
     }
     await onUpdateItem({
       ...gorsel,
