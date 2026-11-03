@@ -47,6 +47,12 @@ import { TakipGovdesi } from './AsamaSeridi';
  * Onayına düştü, `lib/ajansta.ts`). Yeni hâli ajansın dosyasına `kaynak`ıyla
  * gelince eski satır kapanır. Kemal'in ajan düğmesiyle verdiği istekler de
  * aynı süzgeçte, yalnız okunur. KKM ajansın dosyalarına bunun için yazmaz.
+ *
+ * Onay ayarları (3 Kasım, Kemal'in soru turu): en yeni üstte; arşiv süresiz
+ * (kendiliğinden silinmez, Kemal siler); "Hepsini uygula" ve "Seçilenleri
+ * uygula" her türde, her satırda o türün kendi Uygula'sı çalışır (PR'larda
+ * tek "emin misin"); kapalı satırda başlığın altında kısa özet ve varsa
+ * küçük görsel, tam içerik satır açılınca.
  */
 
 type Suzgec = 'hepsi' | 'isler' | 'oneriler' | 'ajanlar' | 'kararlar' | 'ajansta' | 'bekletilen' | 'arsiv' | 'eksikler';
@@ -60,9 +66,15 @@ interface Satir {
   /** Sıralama için (ms); tek seferlik işlerde şimdi */
   zaman: number;
   zamanYazi?: string;
+  /** Kapalı satırda başlığın altındaki 1-2 satırlık özet */
+  ozet?: string;
+  /** Kapalı satırdaki küçük önizleme görseli */
+  gorsel?: string;
   govde: React.ReactNode;
-  /** Uygula; seçim gerektiren öneride null (seçim gövdede) */
-  uygula: { ad: string; calistir: () => Promise<void> } | null;
+  /** Uygula; seçim gerektiren öneride null (seçim gövdede). `soruldu`: toplu uygulamada "emin misin" bir kez soruldu */
+  uygula: { ad: string; calistir: (soruldu?: boolean) => Promise<void> } | null;
+  /** Uygula bir PR birleştirecek mi (toplu uygulamada tek soru için) */
+  pr?: boolean;
   /** Sil: öneride kaydı siler; işte ve kararda satırı listeden kalıcı kaldırır */
   sil: () => Promise<void>;
   silAciklama: string;
@@ -86,6 +98,8 @@ interface Props {
 /** Satır başlığındaki aşama adı (Ajanda'da ajanın adı) */
 const asamaAdi = (t: TakipSatiri) => (t.durum.asama === 'ajanda' && t.durum.kimde ? kimdeAdi(t.durum.kimde) : ASAMALAR.find(a => a.id === t.durum.asama)?.ad || '');
 const hataYazi = (e: unknown) => (e instanceof Error ? e.message : String(e));
+/** Bağlantı doğrudan bir görsel mi (önizleme için) */
+const GORSEL_ADRESI = /\.(png|jpe?g|webp|gif|avif)(\?.*)?$/i;
 const KUTU = `rounded-lg bg-white dark:bg-[#17345A] border border-[#CFC5B4] dark:border-[#2C3C72] p-2.5 text-[12px] leading-relaxed ${YAZI}`;
 const CIP = (aktif: boolean) => `shrink-0 min-h-9 px-3 rounded-full text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer border ${aktif ? 'bg-[#0E1C4F] dark:bg-[#2C3C72] border-transparent text-[#F3EFE8]' : 'border-[#CFC5B4] dark:border-[#2C3C72] text-[#0E1C4F] dark:text-[#F3EFE8] hover:border-[#F26B6F]'}`;
 
@@ -186,6 +200,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     for (const is of isler.bekleyen) {
       liste.push({
         anahtar: `is:${is.id}:${is.ad}`, kaynak: 'is', etiket: 'İŞ', baslik: is.ad, zaman: simdi,
+        ozet: isler.raporlar[is.id] ?? is.aciklama,
         govde: <p className={`text-[12px] leading-snug ${IKINCIL}`}>{isler.raporlar[is.id] ?? is.aciklama}</p>,
         uygula: { ad: 'Yap', calistir: async () => { await isler.calistir(is); } },
         sil: async () => { await yaz({ [`is:${is.id}:${is.ad}`]: { durum: 'silindi', zaman: Date.now() } }); },
@@ -194,9 +209,11 @@ export const OnayBekleyenler: React.FC<Props> = ({
     }
 
     for (const a of adaylar) {
+      const oz = oneri.ozet(a);
       liste.push({
         anahtar: oneriAnahtari(a.id), kaynak: 'oneri', etiket: oneriTuru(a), baslik: a.title,
         zaman: a.createdAt, zamanYazi: neZaman(a.createdAt),
+        ozet: oz.metin || undefined, gorsel: oz.gorsel,
         govde: oneri.govde(a, true),
         uygula: oneri.uygula(a),
         sil: async () => { await oneri.sil(a); },
@@ -211,6 +228,9 @@ export const OnayBekleyenler: React.FC<Props> = ({
       const zaman = Date.parse(o.tarih) || simdi;
       liste.push({
         anahtar: k, kaynak: 'ajan', etiket: TUR_ETIKETI[o.tur], baslik: o.baslik, zaman, zamanYazi: neZaman(zaman),
+        ozet: `${kimdeAdi(o.ajan)}${o.ozet ? ` · ${o.ozet}` : ''}`,
+        gorsel: o.baglanti && GORSEL_ADRESI.test(o.baglanti) ? o.baglanti : undefined,
+        pr: o.tur === 'pr' && !!o.baglanti,
         govde: (
           <>
             <p className={`text-[12px] leading-snug ${IKINCIL}`}>
@@ -227,10 +247,10 @@ export const OnayBekleyenler: React.FC<Props> = ({
         ),
         uygula: {
           ad: o.tur === 'pr' ? 'Birleştir' : o.tur === 'eksik' ? 'Gördüm' : 'Onayla',
-          calistir: async () => {
+          calistir: async (soruldu?: boolean) => {
             let sonuc: string | undefined;
             if (o.tur === 'pr' && o.baglanti) {
-              if (!window.confirm(`"${o.baslik}" PR'ı birleştirilsin mi? Bu geri alınamaz.`)) throw new Error('vazgeçildi');
+              if (!soruldu && !window.confirm(`"${o.baslik}" PR'ı birleştirilsin mi? Bu geri alınamaz.`)) throw new Error('vazgeçildi');
               sonuc = await prBirlestir(anahtar || '', o.baglanti);
             }
             await ajanaYaz({ [o.id]: { durum: 'uygula', zaman: Date.now(), ...(sonuc ? { sonuc } : {}) } });
@@ -249,6 +269,10 @@ export const OnayBekleyenler: React.FC<Props> = ({
       liste.push({
         anahtar: k, kaynak: 'karar', etiket: 'KARAR', zaman, zamanYazi: neZaman(zaman),
         baslik: `Ajansın kararları: ${kararlar.islemler.length} iş`,
+        ozet: [
+          [silSayisi ? `${silSayisi} öneri silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye` : ''].filter(Boolean).join(', '),
+          kararlar.islemler.slice(0, 3).map(i => i.baslik).join(' · ')
+        ].filter(Boolean).join(' · '),
         govde: (
           <>
             <p className={`text-[12px] ${IKINCIL}`}>
@@ -269,7 +293,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
             </ul>
           </>
         ),
-        uygula: { ad: 'Uygula', calistir: kararlar.uygula },
+        uygula: { ad: 'Uygula', calistir: () => kararlar.uygula() },
         sil: async () => { await yaz({ [k]: { durum: 'silindi', zaman: Date.now() } }); },
         silAciklama: 'Bu karar dosyası listeden kalkar ve ajansa "istemiyorum" diye gider. Kayıtlara dokunulmaz; ajans yeni dosya yazarsa yeniden görünür.'
       });
@@ -382,14 +406,24 @@ export const OnayBekleyenler: React.FC<Props> = ({
     }
   });
 
-  const topluUygula = () => calistir('toplu', async () => {
+  /**
+   * Toplu uygula (3 Kasım: her türde). Her satırda o türün kendi Uygula'sı
+   * çalışır; PR birleştirecekse ya da "Hepsini uygula"ysa önce tek soru.
+   */
+  const topluUygula = (liste: Satir[], hepsi = false) => calistir('toplu', async () => {
     let oldu = 0, olmadi = 0;
-    const secimli = seciliSatirlar.filter(s => !s.uygula).length;
+    const secimli = liste.filter(s => !s.uygula).length;
+    const prSayisi = liste.filter(s => s.uygula && s.pr).length;
+    if (hepsi || prSayisi) {
+      const uygulanacak = liste.length - secimli;
+      const soru = `${uygulanacak} satır uygulansın mı?${prSayisi ? ` Bunların ${prSayisi} tanesi PR; birleştirilir, geri alınamaz.` : ''}`;
+      if (!window.confirm(soru)) throw new Error('vazgeçildi');
+    }
     const temizle: Record<string, null> = {};
-    for (const s of seciliSatirlar) {
+    for (const s of liste) {
       if (!s.uygula) continue;
       try {
-        await s.uygula.calistir();
+        await s.uygula.calistir(true);
         oldu++;
         if (s.kaynak !== 'ajan' && kayitlar[s.anahtar]) temizle[s.anahtar] = null;
       } catch { olmadi++; }
@@ -401,6 +435,8 @@ export const OnayBekleyenler: React.FC<Props> = ({
   });
 
   const sec = (k: string) => setSecili(x => { const y = new Set(x); if (y.has(k)) y.delete(k); else y.add(k); return y; });
+  /** "Hepsini uygula"nın sayısı: seçim isteyen öneriler hariç */
+  const uygulanabilir = gorunen.filter(s => s.uygula).length;
   const hepsiSecili = gorunen.length > 0 && gorunen.every(s => secili.has(s.anahtar));
 
   // ---------------------------------------------------------------- görünüm
@@ -423,7 +459,11 @@ export const OnayBekleyenler: React.FC<Props> = ({
           )}
           <button type="button" onClick={() => setAcik(buAcik ? null : s.anahtar)} className="flex-1 min-w-0 min-h-11 flex items-center gap-2.5 py-2 text-left cursor-pointer">
             <i className="not-italic shrink-0 px-1.5 py-0.5 rounded bg-[#F3EFE8] dark:bg-[#17345A] text-[9px] font-mono font-bold tracking-wider text-[#6A5E4C] dark:text-[#A6B0C9]">{s.etiket}</i>
-            <span className={`flex-1 min-w-0 truncate text-[13px] ${YAZI}`}>{s.baslik}</span>
+            <span className="flex-1 min-w-0">
+              <span className={`block truncate text-[13px] ${YAZI}`}>{s.baslik}</span>
+              {!buAcik && s.ozet && <span className={`block text-[11px] leading-snug line-clamp-2 ${IKINCIL}`}>{s.ozet}</span>}
+            </span>
+            {!buAcik && s.gorsel && <img src={s.gorsel} alt="" loading="lazy" className="w-10 h-10 shrink-0 rounded-md object-cover border border-[#CFC5B4] dark:border-[#2C3C72]" />}
             {k?.durum === 'duzenle' && <Pencil className="w-3.5 h-3.5 shrink-0 text-[#F26B6F]" aria-label="Düzenleme notu var" />}
             {suzgec === 'bekletilen' && k?.tarih && <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{tarihYaz(k.tarih)}</span>}
             {suzgec === 'ajansta' && t && <span className={`shrink-0 text-[10px] font-semibold text-[#F26B6F]`}>{asamaAdi(t)}</span>}
@@ -631,9 +671,15 @@ export const OnayBekleyenler: React.FC<Props> = ({
                 <input type="checkbox" checked={hepsiSecili} onChange={() => setSecili(hepsiSecili ? new Set() : new Set(gorunen.map(s => s.anahtar)))} className="w-4 h-4 accent-[#F26B6F] cursor-pointer" />
                 {seciliSatirlar.length ? `${seciliSatirlar.length} seçili` : 'Hepsini seç'}
               </label>
+              {seciliSatirlar.length === 0 && uygulanabilir > 0 && (
+                <button type="button" disabled={!!calisan} onClick={() => void topluUygula(gorunen, true)} className={`ml-auto ${DUGME_BOS}`}
+                  title="Listedeki her satırın kendi Uygula'sı çalışır; önce bir kez sorar">
+                  <Check className="w-3.5 h-3.5" /> {calisan === 'toplu' ? 'Uygulanıyor…' : `Hepsini uygula (${uygulanabilir})`}
+                </button>
+              )}
               {seciliSatirlar.length > 0 && (
                 <span className="ml-auto flex flex-wrap gap-2">
-                  <button type="button" disabled={!!calisan} onClick={() => void topluUygula()} className={DUGME_LAC}>
+                  <button type="button" disabled={!!calisan} onClick={() => void topluUygula(seciliSatirlar)} className={DUGME_LAC}>
                     <Check className="w-3.5 h-3.5" /> {calisan === 'toplu' ? 'Uygulanıyor…' : 'Seçilenleri uygula'}
                   </button>
                   <button type="button" disabled={!!calisan} onClick={() => void arsivle(seciliSatirlar)} className={DUGME_BOS}>
@@ -644,7 +690,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
             </div>
           )}
           {suzgec === 'bekletilen' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Tarihi gelen kendiliğinden listeye döner.</p>}
-          {suzgec === 'arsiv' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Arşivdekiler bekler; "Listeye geri al" deyince yeniden onayına gelir.</p>}
+          {suzgec === 'arsiv' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Arşiv süresiz: sen silmeden hiçbir şey kendiliğinden kalkmaz. "Listeye geri al" deyince yeniden onayına gelir.</p>}
           {suzgec === 'ajansta' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Düzenle dediğin işler ajansta. Yeni hâli gelince buradan kalkar, listeye yeni satır olarak düşer. "Listeye geri al" notu geri çeker.</p>}
           {gorunen.length ? <ul>{gorunen.map(satirGoster)}</ul> : (
             <p className={`text-[12px] ${IKINCIL}`}>

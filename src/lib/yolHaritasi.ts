@@ -159,6 +159,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Takvim: ajansın düzenli işleri görünür; "Takvimime ekle (.ics)" ile kendi takvimine aktarılır' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır' },
+  { id: 'onay-ayarlari', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Onay bekleyenler: en yeni üstte, arşiv süresiz, "Hepsini uygula" her türde, kapalı satırda kısa özet ve küçük görsel' },
   { id: 'viki-disa-aktarim', paket: 'W', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: 'Haftalık viki dışa aktarımı: ajansın Viki Editörü maddeleri okuyabilsin' },
   { id: 'yazi-aktarim', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
