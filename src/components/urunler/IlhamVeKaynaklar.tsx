@@ -4,6 +4,7 @@ import type { Item } from '../../types';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { KisaListe } from '../kabuk/KisaListe';
 import { GorselImg } from '../GorselImg';
+import { PinterestPanoOnizleme } from './PinterestPanoOnizleme';
 import { gorselSil, gorselYaz } from '../../lib/gorselDeposu';
 import { basvurulari } from '../../lib/gorselBasvuru';
 import { compressImageBase64, compressPngKeepAlpha, dosyayiOku } from '../../lib/imageCompressor';
@@ -166,6 +167,9 @@ const IlhamFormu: React.FC<{
           </label>
         </div>
       </div>
+
+      {/* Pinterest panosuysa panodaki pinler (yalnız okuma) */}
+      {adres && pinterestMi(adres) && <PinterestPanoOnizleme adres={adres} />}
 
       {/* Bağlar: Galeri'deki "Bir kayda bağla" kalıbı */}
       <div className="space-y-1.5">

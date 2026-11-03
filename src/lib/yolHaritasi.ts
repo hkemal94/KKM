@@ -203,6 +203,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 2. adım (KKM tarafı): "Kanon Denetçisi\'ne gönder", oyun dosyası Oyun Tasarımcısı\'na, ajans takviminde eski zamanlı işler yok' },
   { id: 'kkm-ekranlari-son', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'KKM ekranları son PR: İçerik → Sosyal medya → Gönderiler (her gönderi bir kart, ajansın taslakları "Benim listeme al"); Temizlik\'te Kems Company kurulus ve Düzada activeEra eski alanları' },
+  { id: 'pinterest-onizleme', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'İlham ve kaynaklar: bağlantı Pinterest panosuysa panodaki pinlerin küçük resimleri (ilk 12, "Tümünü gör"); resme basınca pin Pinterest\'te açılır, kayda yazmaz' },
   { id: 'isler-ve-takvim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
   { id: 'ajansta-asamalar', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
