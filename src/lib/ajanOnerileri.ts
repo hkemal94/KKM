@@ -35,6 +35,12 @@ export interface AjanOnerisi {
   ozet?: string;
   /** PR, dosya ya da belge bağlantısı */
   baglanti?: string;
+  /**
+   * İsteğe bağlı (3 Kasım): bu satır bir isteğin ya da Düzenle notunun yeni
+   * hâliyse onun kimliği (iş kaydındaki `kaynak` ile aynı biçim). Gelince eski
+   * satır Ajansta'dan kalkar (`lib/ajansta.ts`).
+   */
+  kaynak?: string;
   /** ISO */
   tarih: string;
 }

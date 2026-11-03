@@ -26,6 +26,13 @@ export interface AjansIsi {
   not?: string;
   /** PR, makbuz ya da dosya bağlantısı */
   kanit?: string;
+  /**
+   * İsteğe bağlı (3 Kasım): işin doğduğu istek ya da Düzenle notu. Değer
+   * isteğin kimliği ya da Onay bekleyenler satırının anahtarı
+   * (`oneri:…`, `ajan:…`, `is:…`, `karar:…`); aşamalar bununla okunur (`lib/ajansta.ts`).
+   */
+  kaynak?: string;
+  tarih?: string;
   guncellendi?: string;
   bitti?: string;
 }

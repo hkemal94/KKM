@@ -12,6 +12,7 @@ import { etkinSablon, sablonKaydi, takmaAdlar, type VikiSablonu } from '../../li
 import { AlanSablonlari } from './AlanSablonlari';
 import { MaddeOnerileri } from './MaddeOnerileri';
 import { MaddeTablosu } from './MaddeTablosu';
+import { wikipediadanMi } from '../../lib/vikipediKaynagi';
 import { maddeOnerileri, reddedilenler } from '../../lib/maddeOnerileri';
 
 interface WikiShellProps {
@@ -581,6 +582,11 @@ const MaddeButonu: React.FC<{
         {item.metadata?.adiGecici && (
           <span className="text-[9px] font-mono px-1 py-px rounded border border-dashed border-bej/70 text-[#6b5b46]">
             adsız
+          </span>
+        )}
+        {wikipediadanMi(item) && (
+          <span title="Gerçek dünyadan, Wikipedia'dan gelen madde" className="text-[9px] font-mono px-1 py-px rounded border border-[#0E1C4F]/25 text-[#0E1C4F] dark:border-[#F3EFE8]/30 dark:text-[#F3EFE8]">
+            Wikipedia'dan
           </span>
         )}
         {stub && (

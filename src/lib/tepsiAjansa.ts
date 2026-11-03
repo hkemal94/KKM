@@ -66,7 +66,7 @@ export function tepsiDosyasi(items: Item[], zaman = new Date()) {
   }));
 
   return {
-    _aciklama: "KKM'nin öneri tepsisi ve günün soruları. Kemal 'Tepsiyi ajansa gönder'e basınca yazılır; elle düzenlenmez.",
+    _aciklama: "KKM'nin öneri tepsisi ve günün soruları. Kemal 'Tepsiyi ajansa gönder'e basınca ya da KKM açıkken tepsi değişince kendiliğinden yazılır; elle düzenlenmez.",
     gonderildi: zaman.toISOString(),
     sayilar: { oneri: oneriler.length, eski: eskiler.length, soru: sorular.length },
     oneriler, eskiler, sorular,
