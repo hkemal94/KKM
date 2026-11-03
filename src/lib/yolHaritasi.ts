@@ -205,6 +205,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'KKM ekranları son PR: İçerik → Sosyal medya → Gönderiler (her gönderi bir kart, ajansın taslakları "Benim listeme al"); Temizlik\'te Kems Company kurulus ve Düzada activeEra eski alanları' },
   { id: 'isler-ve-takvim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
+  { id: 'turkce-buyuk-harf', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kems', bitti: true,
+    ad: 'Sayfa dili Türkçe: büyük harfli başlıklarda "PANODAKI" yerine "PANODAKİ" (i → İ)' },
   { id: 'ajansta-asamalar', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Onay bekleyenler → "Ajansta": Düzenle denen iş listeden kalkar, aşaması görünür (Sırada → Kems aldı → Ajanda → Onayına düştü); aynısı Kimde ne var\'da' },
   { id: 'ajanlar-ve-otomasyonlar', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
