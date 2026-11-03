@@ -216,5 +216,28 @@ export function useOneriIslemleri({ items, onUpdateItem, onAddItem, onDeleteItem
     return adayBilgisi(a) ? { ad: 'Vikiye yaz', calistir: () => isle(a) } : null;
   };
 
-  return { calisan, rapor, setRapor, govde, uygula, sil, hedefiAc };
+  /**
+   * Kapalı satırdaki kısa özet ve küçük önizleme (3 Kasım, Kemal): metnin ilk
+   * satırları, varsa ilk görsel. Tam içerik satır açılınca görünür.
+   */
+  const ozet = (a: Item): { metin: string; gorsel?: string } => {
+    const o = yapayZekaOnerisi(a);
+    if (!o) {
+      const b = adayBilgisi(a);
+      return { metin: b ? [b.etiket, b.cevap].filter(Boolean).join(' · ') : '' };
+    }
+    const parcalar = [
+      o.hedefAdi,
+      o.metin
+        || o.bolumler?.map(b => `${b.title}: ${b.content}`).join(' · ')
+        || (o.kunye ? Object.entries(o.kunye).map(([k, v]) => `${k}: ${v}`).join(' · ') : '')
+        || o.liste?.join(' · ')
+        || o.urunler?.map(u => u.title).join(' · ')
+        || o.renkler?.map(r => r.name || r.hex).join(' · ')
+        || ''
+    ];
+    return { metin: parcalar.filter(Boolean).join(' · '), ...(o.gorseller?.[0] ? { gorsel: o.gorseller[0] } : {}) };
+  };
+
+  return { calisan, rapor, setRapor, govde, uygula, sil, hedefiAc, ozet };
 }
