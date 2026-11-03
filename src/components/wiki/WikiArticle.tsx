@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { KisaListe } from '../kabuk/KisaListe';
-import { AlertCircle, ChevronRight, ExternalLink, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
+import { AlertCircle, Bot, ChevronRight, ExternalLink, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
 import { kaynakAdresi, wikipediadanMi } from '../../lib/vikipediKaynagi';
 import { Item, WikiSection } from '../../types';
 import { MaddeDuzenleyici, AileUyeleri } from './MaddeDuzenleyici';
@@ -15,6 +15,9 @@ import { KunyeDegeri } from './KunyeDegeri';
 import { BAG_GRUPLARI, adiCoz, bagParcalari, kunyeBaglari, semaAlanlari, takmaAdlar, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
 import { maddeGorseli } from '../../lib/maddeGorseli';
 import { useGorselSurumu } from '../../lib/gorselOnbellek';
+import { bosAlanlar, taslakIstegi } from '../../lib/taslakIstegi';
+import { anahtariOku } from '../../lib/oyunAyarlari';
+import { istekEkle } from '../../lib/kemalIstekleri';
 import {
   getKunyeFields,
   getEkBilgiler,
@@ -312,6 +315,22 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
 
   const unlinked = useMemo(() => isEntityUnlinked(item, allItems), [item, allItems]);
   const stub = useMemo(() => isStub(item), [item]);
+  /** Bu taslak için öneri iste (3 Kasım): yalnız düğmeye basınca ajansa istek gider, kayda yazılmaz */
+  const [taslakDurumu, setTaslakDurumu] = useState<{ id: string; metin: string } | null>(null);
+  const taslakMesaji = taslakDurumu?.id === item.id ? taslakDurumu.metin : '';
+  const taslakOneriIste = async () => {
+    const id = item.id;
+    const anahtar = anahtariOku();
+    if (!anahtar) { setTaslakDurumu({ id, metin: "Önce Ajans bağlantısı'nda GitHub anahtarını gir." }); return; }
+    setTaslakDurumu({ id, metin: 'Gönderiliyor…' });
+    try {
+      const { metin, ajan } = taslakIstegi([{ ad: item.title, not: bosAlanlar(item) }]);
+      await istekEkle(anahtar, { tur: 'istek', metin, ekran: 'Viki', ajan });
+      setTaslakDurumu({ id, metin: "Gönderildi. Öneri Onay bekleyenler'e düşer." });
+    } catch (h) {
+      setTaslakDurumu({ id, metin: `Gönderilemedi: ${h instanceof Error ? h.message : String(h)}` });
+    }
+  };
 
   return (
     <article className={`max-w-none ${duzenle ? 'lg:pr-[500px]' : ''}`}>
@@ -448,6 +467,17 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
               <span>
                 Taslak. Künyenin %{completeness.pct}'i dolu ({completeness.filled}/
                 {completeness.total} alan) ve gövde metni kısa.
+                <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={taslakMesaji === 'Gönderiliyor…'}
+                    onClick={() => void taslakOneriIste()}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] hover:opacity-90 disabled:opacity-40 cursor-pointer"
+                  >
+                    <Bot size={12} /> Bu taslak için öneri iste
+                  </button>
+                  {taslakMesaji && <span className="text-[11px]">{taslakMesaji}</span>}
+                </span>
               </span>
             </p>
           )}
