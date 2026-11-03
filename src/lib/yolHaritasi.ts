@@ -223,6 +223,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: '"Vikiyi ajansa gönder" marka kartlarını da gönderir (yazı alanları; logo ve moodboard yalnız var / yok): ajans kartları buradan tamamlar' },
   { id: 'oyun-assetleri', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Oyunlar → oyun → Assetler ve Oyunlar → Ortak assetler: görseller ve 3B modeller (döndürülebilir) oyunun deposundan okunur; "Ajana değiştirt" ve "Yeni çalışma başlat" ajansa istek yazar' },
+  { id: 'oyun-ekran-goruntuleri', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Oyunlar → oyun → Ekran görüntüleri: oyunun gerçek ekran görüntüleri depodan okunur (telefon / masaüstü süzgeci, büyük görünüm, başlık ve tarih); eski taslaklar "İlham / taslak" diye ayrı; yol haritası olmayan oyunda sakin boş yazı' },
   { id: 'pano-kapanir', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 9. adım: Ajans Panosu kapandı; işlerin tek kaynağı ajansın iş dosyası (Kimde ne var), sorular Onay bekleyenler\'de' },
   { id: 'eve-kisi-bagla', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
