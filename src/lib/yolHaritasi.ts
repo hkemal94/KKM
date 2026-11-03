@@ -154,6 +154,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Durum → Ajans: "Vikiyi ajansa gönder" (Viki Editörü vikiyi okuyabilsin)' },
   { id: 'kararlar-genis', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
     ad: 'Ajansın kararları: eş bağı (iki kişide), takma ad, metne ekleme ve metin düzeltme de uygulanabilir' },
+  { id: 'kucuk-duzeltmeler', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Küçük düzeltmeler: takvimde iş olmayan güne "Ajans · 0 iş" yazılmaz, Zamanlayıcı\'da bütün ajanlar görünür, kullanılmayan tutarlılık denetimi ve eski gece öneri kanalları kalktı' },
   { id: 'yayinla-sessiz', paket: 'K', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true,
     ad: 'Site: "Yayınla" değişiklik yokken de basılır ve nedenini söyler; dışarıdan açılan adres henüz yok diye yazar' },
   { id: 'gunun-sorusu-kalkti', paket: 'K', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true, ad: 'Günün sorusu KKM\'den tamamen kalktı (ana sayfa kartı, bildirimi, öneri kanalı)' },

@@ -10,7 +10,7 @@ import { gonderiBilgisi, gonderiler } from './sosyal';
  * takvimde görünmez.
  */
 
-export type TakvimTuru = 'drop' | 'gonderi' | 'fanzin';
+export type TakvimTuru = 'drop' | 'gonderi';
 
 export interface TakvimOlayi {
   tur: TakvimTuru;
@@ -26,7 +26,7 @@ export const dropTarihi = (d: Item): string => {
 };
 
 /** Bir ayın bütün olayları, tarihe göre */
-export function takvimOlaylari(items: Item[], y: number, a: number, turler: TakvimTuru[] = ['drop', 'gonderi', 'fanzin']): Map<string, TakvimOlayi[]> {
+export function takvimOlaylari(items: Item[], y: number, a: number, turler: TakvimTuru[] = ['drop', 'gonderi']): Map<string, TakvimOlayi[]> {
   const on = `${y}-${String(a + 1).padStart(2, '0')}-`;
   const m = new Map<string, TakvimOlayi[]>();
   const ekle = (o: TakvimOlayi) => { if (!o.tarih.startsWith(on)) return; m.set(o.tarih, [...(m.get(o.tarih) || []), o]); };
@@ -42,10 +42,6 @@ export function takvimOlaylari(items: Item[], y: number, a: number, turler: Takv
       const b = gonderiBilgisi(g);
       if (b.tarih) ekle({ tur: 'gonderi', id: g.id, baslik: g.title, tarih: b.tarih, saat: b.saat || undefined });
     }
-  }
-  if (turler.includes('fanzin')) {
-    // Fanzin taslağı her ayın ilk günü gece hazırlanır (kural istisnası)
-    ekle({ tur: 'fanzin', id: `fanzin-${on}`, baslik: 'Fanzin taslağı hazırlanır', tarih: `${on}01` });
   }
   for (const [k, v] of m) m.set(k, v.sort((x, z) => (x.saat || '').localeCompare(z.saat || '')));
   return m;

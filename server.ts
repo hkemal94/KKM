@@ -294,57 +294,6 @@ Bölüm:
         break;
 
 
-      // Gece hazırlığı (kural istisnası, yapisal-4): günde 3 üretim önerisi.
-      // Yalnız öneri tepsisine düşer; Kemal "Ekle" demeden kayda girmez.
-      case "gece-onerileri":
-        prompt = `Kems Company ve kurgusal Düzada adası için bugünün ${(data.yuvalar || []).length} önerisini hazırla. Her yuva için bir öneri; yuvalar: ${JSON.stringify(data.yuvalar || [])}. Cevaptaki "tur" alanı yuvanın "tur" değeri olsun.
-Öneri bir iş fikridir. Kısa ve uygulanabilir olsun; ada kanonundan bir bilgiye dayansın.
-Genel kurallar:
-- Yeni özel ad (kişi, yer, kurum, ürün, drop adı) uydurma; yalnız aşağıda geçen adları kullan.
-- Fiyat, sayı, tarih uydurma. "Hâlâ", "şu anda", "günümüzde" yazma.
-- Her yuva türü için "Daha önce önerilenler" listesindeki başlıkları ve benzerlerini önerme; her gün farklı bir konu getir.
-Tür kuralları:
-- "viki": Aşağıdaki "Viki" listesinden BİR maddeyi seç (listenin başındakiler en boş olanlardır; sırayla farklı türlerden madde seç, hep aynı türe gitme). "bagId" alanına o maddenin "id" değerini AYNEN yaz, "bag" alanına adını yaz. "metin": maddede neyin eksik olduğunu (dolu ve boş bölümlere bak) ve Kemal'e sorulacak tek somut soruyu söyler. "bolumler": o maddenin notlarındaki bilgiyle yazılabilen en çok 2 kısa örnek bölüm [{"title","content"}]; bilgi yetmiyorsa boş dizi. Bölüm metni ansiklopedik olsun.
-- "wikipedia": Aşağıdaki "Vikipedi örneği" gerçek dünyadan bir maddedir, KOPYALANMAYACAK; yalnız yapısı için örnektir. Düzada'da ona benzeyen BİR viki maddesini "Viki" listesinden seç (kulüp, köy, mahalle gibi türüne uygun), "bagId"ine id'sini yaz. "metin": örnek maddede hangi başlıklar ve hangi bilgi türleri var (konum, tarihçe, yapı, faaliyet vb.), Düzada'daki maddede hangilerinin boş olduğu ve Kemal'e sorulacak sorular. Örnekteki özel adları, sayıları, tarihleri Düzada'ya taşıma. "bolumler": boş dizi.
-- "depo": Aşağıdaki "Oyun deposu" metni Dondurmacı Kızlar oyununun evren bilgisidir. "bagId" boş bırak (madde sabit: "${data.depo?.madde || ""}"). "metin": depodaki hangi evren bilgisinin (yer, dönem, sahip) vikide eksik olduğunu söyle. "bolumler": yalnız o metinde yazan bilgiyle en çok 2 kısa ansiklopedik bölüm. Oyun ayarı (fiyat, süre, oran, sayı) ASLA; oyun mekaniğinden de söz etme.
-- "sosyal": gönderi fikri; "bag" bir viki ya da drop adı olabilir.
-- "drop": yeni bir ürün fikri; "Ürünler" listesinde olanı yeniden önerme. "bag" bir drop adı olsun.
-- "yazi": blog ya da lore yazısı fikri; "bag" ilgili viki maddesi olabilir.
-${VIKI_USLUBU}
-(Bu üslup viki, wikipedia ve depo yuvalarının "metin" ve "bolumler" alanları için geçerlidir; viki metni kurgu yazmaz, eksik ve sorudur.)
-Daha önce önerilenler (tür: başlıklar): ${JSON.stringify(data.onceki || {})}
-Viki: ${JSON.stringify(data.viki || [])}
-Vikipedi örneği: ${JSON.stringify(data.wikipedia || null)}
-Oyun deposu (yalnız evren bilgisi): ${JSON.stringify(data.depo || null)}
-Droplar: ${JSON.stringify(data.droplar || [])}
-Ürünler: ${JSON.stringify(data.urunler || [])}
-Sosyal medya gönderileri: ${JSON.stringify(data.gonderiler || [])}
-Yazılar: ${JSON.stringify(data.yazilar || [])}
-Not defteri: ${JSON.stringify(data.notlar || [])}
-Yanıtı saf JSON dizisi olarak döndür: [{"tur": "viki", "baslik": "kısa başlık", "metin": "2-4 kısa cümle", "bagId": "madde id", "bag": "madde adı", "bolumler": [{"title": "Konum", "content": "…"}]}]`;
-        systemInstruction = "Bir markanın ve bir ada vikisinin sessiz asistanısın; sade, kısa, kanona bağlı öneriler veriyorsun. Viki ile ilgili metinleri ansiklopedik ve nesnel yazarsın, şiirsel dil kullanmazsın. Sadece saf bir JSON dizisi döndür.";
-        break;
-
-      // Aylık fanzin taslağı (yapisal-2, 31; yapisal-4, 29-32). Adı yok; bölümler serbest.
-      case "fanzin-taslak":
-        prompt = `Kems Company'nin ${data.ay || "bu ayki"} fanzini için bölüm taslakları hazırla. Temiz bir dergi gibi: 4-6 bölüm, her bölümün kısa bir başlığı ve 60-150 kelimelik metni. Fanzine ad koyma.
-Kaynaklar: viki ve künye, Merch ve droplar, not defteri, Pinterest panoları, Canva / galeri görselleri ve sosyal medya hesapları (aşağıda). Her bölüm bu kaynaklardan birine dayansın.
-Kurallar:
-- Yeni özel ad (kişi, yer, kurum, ürün, drop adı) uydurma; yalnız aşağıda geçen adları kullan.
-- Fiyat, sayı, tarih uydurma. "Hâlâ", "şu anda", "günümüzde" yazma.
-- Ton sade; Kemal her bölümün tonunu sonra kendisi seçecek.
-Viki: ${JSON.stringify(data.viki || [])}
-Droplar: ${JSON.stringify(data.droplar || [])}
-Ürünler: ${JSON.stringify(data.urunler || [])}
-Not defteri: ${JSON.stringify(data.notlar || [])}
-Pinterest: ${JSON.stringify(data.pinterest || [])}
-Galeri: ${JSON.stringify(data.galeri || [])}
-Sosyal medya: ${JSON.stringify(data.gonderiler || [])} · hesaplar: ${JSON.stringify(data.hesaplar || [])}
-Kemal'in isteği: "${data.istek || ""}"
-Yanıtı saf JSON dizisi olarak döndür: [{"title": "Bölüm başlığı", "content": "Bölüm metni"}]`;
-        systemInstruction = "Küçük, özenli bir fanzinin editörüsün. Sade Türkçe, süssüz. Sadece saf bir JSON dizisi döndür.";
-        break;
-
       // Mahalle metinleri (1 Ekim gece, metin soru turu). İskelet Kemal'in
       // cevaplarından; model yalnız onu ansiklopedik metne çevirir.
       case "mahalle-metinleri":

@@ -16,7 +16,6 @@ import {
   askidakiYazilariDinle,
 } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { geceHazirliginiYap, yapilacaklar } from './lib/geceHazirligi';
 import { Item, UserSettings, AreaType, ItemType } from './types';
 import { maddeGorseli } from './lib/maddeGorseli';
 import { gorselUidAyarla, bagliGorselleriYukle, gorselSil } from './lib/gorselDeposu';
@@ -529,38 +528,6 @@ export default function App() {
       }
     }
   };
-
-  /*
-   * Gece hazırlığı (kural istisnası, Kemal 30 Eylül — yapisal-4, 17):
-   * günde bir kez 3 üretim önerisi, ayın ilk günü fanzin taslağı; yalnız
-   * öneri tepsisine. Yalnız Google ile girilmişken çalışır. Uygulama açık
-   * kaldıkça 15 dakikada bir "yapılacak var mı" diye bakar; kota dolduysa bir
-   * saat sonra yeniden dener (lib/geceHazirligi.ts).
-   */
-  const geceRef = useRef({ calisiyor: false, items, islem: { onAddItem: handleAddItem, onUpdateItem: handleUpdateItem } });
-  geceRef.current.items = items;
-  geceRef.current.islem = { onAddItem: handleAddItem, onUpdateItem: handleUpdateItem };
-  useEffect(() => {
-    if (loading || !user || !girisli) return;
-    const dene = async () => {
-      const g = geceRef.current;
-      if (g.calisiyor || g.items.length === 0) return;
-      const is = yapilacaklar(g.items);
-      if (!is.oneriler && !is.fanzin) return;
-      g.calisiyor = true;
-      try {
-        const rapor = await geceHazirliginiYap(g.items, g.islem);
-        if (rapor) console.info(rapor);
-      } catch (e) {
-        console.warn('Gece hazırlığı yapılamadı:', e);
-      } finally {
-        g.calisiyor = false;
-      }
-    };
-    const ilk = setTimeout(dene, 8000);
-    const aralik = setInterval(dene, 15 * 60 * 1000);
-    return () => { clearTimeout(ilk); clearInterval(aralik); };
-  }, [loading, user, girisli]);
 
   /*
    * Sayfa her açıldığında kayıtlara kendiliğinden yazan eski kodlar SİLİNDİ
@@ -1141,7 +1108,6 @@ export default function App() {
                   <Takvim
                     items={items}
                     onAc={o => {
-                      if (o.tur === 'fanzin') { git('fanzin'); return; }
                       const k = items.find(i => i.id === o.id);
                       if (k) handleSelectResult(k);
                     }}

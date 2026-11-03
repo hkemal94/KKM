@@ -19,8 +19,7 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/s
 
 /**
  * Birleşik Takvim (1 Ekim, Kemal: "tek ve birleşik bir takvim olsun").
- * Drop çıkışları, sosyal medya gönderileri, seri boş yerleri ve ayın fanzin
- * günü tek yerde. Sosyal medyanın kendi takvimi buraya taşındı; orada
+ * Drop çıkışları, sosyal medya gönderileri ve seri boş yerleri tek yerde. Sosyal medyanın kendi takvimi buraya taşındı; orada
  * fikir kutusu, seriler ve ızgara kaldı.
  *
  * Telefon: hafta şeridi → seçili gün → yaklaşanlar.
@@ -41,8 +40,7 @@ type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>;
 /** Süzgeç türleri; renkler markadan (kiremit, çam, bej) */
 const TUR: Record<TakvimTuru, { ad: string; renk: string }> = {
   drop: { ad: 'Drop', renk: '#F26B6F' },
-  gonderi: { ad: 'Gönderi', renk: '#336659' },
-  fanzin: { ad: 'Fanzin', renk: '#BBA591' }
+  gonderi: { ad: 'Gönderi', renk: '#336659' }
 };
 
 /** Ajansın düzenli işleri (yalnız ekranda; kayıt değil) */
@@ -69,7 +67,7 @@ const gunAdi = (t: string) => {
 
 interface Props {
   items: Item[];
-  /** Drop ve fanzin kendi sayfasında açılır */
+  /** Drop kendi sayfasında açılır */
   onAc: (o: TakvimOlayi) => void;
   onAddItem: (item: YeniKayit & { id?: string }) => Promise<void>;
   onUpdateItem: (item: Item) => Promise<void>;
@@ -83,7 +81,7 @@ interface Props {
 export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, onDeleteItem, seriIstegi, acilacakId = null }) => {
   const bugun = bugunTarih();
   const [secili, setSecili] = useState(bugun);
-  const [acik, setAcik] = useState<Record<TakvimTuru, boolean>>({ drop: true, gonderi: true, fanzin: true });
+  const [acik, setAcik] = useState<Record<TakvimTuru, boolean>>({ drop: true, gonderi: true });
   const [ajansAcik, setAjansAcik] = useState(true);
   const [kanalSuz, setKanalSuz] = useState('');
   const [seriSuz, setSeriSuz] = useState('');
@@ -130,7 +128,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
     .sort((a, b) => (gonderiBilgisi(a).saat || '99').localeCompare(gonderiBilgisi(b).saat || '99'));
 
   /*
-   * Drop, fanzin ve seri boş yerleri ay ay hesaplanır. Seçili ay, bugünün
+   * Drop ve seri boş yerleri ay ay hesaplanır. Seçili ay, bugünün
    * ayı ve sonraki ay (yaklaşanlar 30 günü kapsar) birlikte.
    */
   const aylar = useMemo(() => {
@@ -141,7 +139,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
     liste.push([hb.getFullYear(), hb.getMonth()], [hs.getFullYear(), hs.getMonth()]);
     return [...new Map(liste.map(([y, a]) => [`${y}-${a}`, [y, a] as [number, number]])).values()];
   }, [ay, bugun, secili]);
-  const turler = (['drop', 'fanzin'] as TakvimTuru[]).filter(t => acik[t]);
+  const turler = (['drop'] as TakvimTuru[]).filter(t => acik[t]);
   const olaylar = useMemo(() => {
     const m = new Map<string, TakvimOlayi[]>();
     for (const [y, a] of aylar) for (const [k, v] of takvimOlaylari(items, y, a, turler)) m.set(k, v);
@@ -192,8 +190,6 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
       const b = gonderiBilgisi(g);
       if (b.tarih) kkm.push({ uid: `kkm-gonderi-${g.id}@kkm.kems`, baslik: g.title || 'Adsız gönderi', tarih: b.tarih, saat: b.saat || undefined });
     }
-    // Fanzin taslağı her ayın ilk günü hazırlanır
-    kkm.push({ uid: 'kkm-fanzin@kkm.kems', baslik: 'Fanzin taslağı hazırlanır', tarih: `${bugun.slice(0, 8)}01`, kural: 'FREQ=MONTHLY;BYMONTHDAY=1' });
     const dosya = new Blob([icsUret([...ajansIcsEtkinlikleri(), ...kkm])], { type: 'text/calendar;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(dosya);
@@ -389,7 +385,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
               <button type="button" onClick={() => setSecili(t)} title="Günü seç" className={`text-[12px] font-bold w-6 h-6 flex items-center justify-center rounded-full cursor-pointer ${t === bugun ? 'bg-[#F26B6F] text-white' : t < bugun ? 'text-[#B3A894] dark:text-[#6F7BA0]' : YAZI}`}>{gun}</button>
               <button type="button" onClick={() => yeni({ tarih: t })} title="Bu güne gönderi" className={`w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 ${IKINCIL} hover:bg-[#F3EFE8] dark:hover:bg-[#17345A] cursor-pointer`}><Plus className="w-3.5 h-3.5" /></button>
             </div>
-            {ajansAcik && (
+            {ajansAcik && ajansGunu(t).length > 0 && (
               <button type="button" onClick={() => setSecili(t)} title={ajansGunu(t).map(i => `${i.saat} ${i.ad}`).join('\n')}
                 className={`w-full text-left rounded-lg border-l-4 bg-[#FAF8F5] dark:bg-[#13204A] px-1.5 py-0.5 text-[10.5px] font-semibold cursor-pointer ${YAZI}`} style={{ borderLeftColor: AJANS_RENGI }}>
                 Ajans · {ajansGunu(t).length} iş
