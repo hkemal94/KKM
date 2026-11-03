@@ -260,7 +260,7 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
         <section className={`${KART} p-4`}>
           <div className={ETIKET}>Zamanlayıcı · İstanbul saati</div>
           <p className={`mt-1 text-[12px] ${IKINCIL}`}>Alarm gibi: her gün, haftanın seçtiğin günleri ya da tek bir tarih. Kararın (2 Kasım): şimdilik yalnız evren ajanları her gece az az; diğerleri sen isteyince.</p>
-          <KisaListe className="mt-2">
+          <ul className="mt-2">
             {ajanlar.map(a => {
               const z = zaman(a.ad);
               return (
@@ -287,7 +287,7 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
                 </li>
               );
             })}
-          </KisaListe>
+          </ul>
         </section>
       )}
 

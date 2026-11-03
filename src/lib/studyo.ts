@@ -54,7 +54,7 @@ export const STUDYO_ARACLARI: StudyoAraci[] = [
   { id: 'yazi-ozet', ad: 'Bölüm özeti', uygulama: null },
   { id: 'yazi-fikir', ad: 'Sonraki bölüm için fikir', uygulama: null, kurgu: true },
   { id: 'marka-renk', ad: 'Renk paleti öner', uygulama: 'renk-ekle' },
-  // Gece hazırlığının önerileri (kural istisnası; `geceHazirligi.ts` üretir)
+  // Eski gece hazırlığının önerileri: üretimi 3 Kasım'da kalktı; önceden gelenler uygulanabilir
   { id: 'gece-oneri', ad: 'Günün üretim önerisi', uygulama: 'gece-oneri-ekle' },
   { id: 'fanzin', ad: 'Bu ayın fanzini', uygulama: 'fanzin-olustur', kurgu: true },
   { id: 'fanzin-bolum', ad: 'Fanzin bölümünü tonla yaz', uygulama: 'fanzin-bolum', kurgu: true },

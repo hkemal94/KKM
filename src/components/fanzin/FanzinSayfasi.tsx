@@ -63,7 +63,7 @@ export const FanzinSayfasi: React.FC<{
       )}
 
       {!sonSayi ? (
-        <BosSatir yazi="Henüz fanzin yok. Taslak her ayın ilk günü gece öneri tepsisine düşer." />
+        <BosSatir yazi="Henüz fanzin yok." />
       ) : (
         <>
           {/* Son sayı: kapak, durum, ilerleme (1 Ekim, Stitch iskeleti) */}

@@ -129,17 +129,13 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   Bekleyen öneriler Onay bekleyenler'de; Kemal "Ekle" demeden kayda
   yazılmaz (`src/lib/studyo.ts` yalnız bunu uygular). Sayfa açılınca
   kendiliğinden yapay zekâya sorulmaz.
-- **Tek istisna** (Kemal, 30 Eylül, `docs/soru-cevap/yapisal-4.md`): stüdyo
-  geceleri günde bir kez 3 üretim önerisi, ayın ilk günü fanzin taslağı
-  hazırlar — **yalnız öneri tepsisine**. Kanona / kayda hiçbir şey yazmaz.
-- **Öneri kanalları** (Kemal, 21 Ekim): her kanal açık / kapalı bilgisi
-  `kkm_ayar` → `oneriKanallari`'nda (`src/lib/oneriKanallari.ts`); ayar
-  ekranı Stüdyo ile kalktı (3 Kasım), kayıttaki ayar geçerli.
-  Günün üç yuvasının çoğu vikiye gider. Viki yazıları Vikipedi gibi genel,
-  nesnel, süssüz yazılır (`server.ts` → `VIKI_USLUBU`). Dondurmacı Kızlar
-  deposu (`hkemal94/DondurmaciKizlar`, public; 21 Ekim'de adı düzeldi) yalnız evren bilgisini ve taslak
-  görselleri **öneri olarak** besler; oyun ayarları (fiyat, süre, oran)
-  hiçbir zaman.
+- **Gece hazırlığı ve öneri kanalları kalktı** (Kemal, 3 Kasım: "gerek yok,
+  kalksın"): uygulama artık geceleri kendiliğinden öneri ya da fanzin taslağı
+  hazırlamaz; gece işlerini ajansın evren ajanları yapar. Önceden gelmiş
+  öneriler Onay bekleyenler'de durur ve uygulanabilir. Kayıttaki eski
+  `kkm_ayar` → `oneriKanallari` ayarı ve `gece_hazirlik` defteri okunmaz,
+  silinmedi. Viki yazıları Vikipedi gibi genel, nesnel, süssüz yazılır
+  (`server.ts` → `VIKI_USLUBU`).
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz
   yok" diye açıkça söylenir (30 Eylül'de karışmıştı).
 
