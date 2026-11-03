@@ -1,6 +1,7 @@
 import type { AreaType, Item } from '../types';
 import { HARITA_YAPILARI } from '../data/haritaYapilari';
-import { isStub, getKunyeFields, getArticleBody } from '../components/wiki/wikiSchema';
+import { isStub } from '../components/wiki/wikiSchema';
+import { bosAlanlar, taslakIstegi } from './taslakIstegi';
 import { getRol } from '../components/wiki/kunyeParser';
 import { isEntityUnlinked } from '../utils/relations';
 import { markaYapisi } from './markaYapisi';
@@ -50,14 +51,6 @@ export interface Eksik {
    * görebilmek isterim"). Satıra basınca liste yerinde açılır.
    */
   kayitlar?: Array<{ id?: string; ad: string; not?: string; cozum?: Cozum }>;
-}
-
-/** Maddenin künyesinde boş kalan alanlar — "neyi eksik" satırı */
-function bosAlanlar(i: Item): string {
-  const bos = getKunyeFields(i, { includeEmpty: true }).filter(f => !f.value).map(f => f.label.toLocaleLowerCase('tr'));
-  const govde = getArticleBody(i).length === 0;
-  const parcalar = [...(govde ? ['sayfa metni'] : []), ...bos];
-  return parcalar.length ? `boş: ${parcalar.slice(0, 4).join(', ')}${parcalar.length > 4 ? '…' : ''}` : '';
 }
 
 /** Haritada maddesi olması gereken yapılar */
@@ -265,6 +258,8 @@ export function eksikleriCikar(items: Item[]): Eksik[] {
  * önerir (yoksa Kems seçer). Kayda hiçbir şey yazılmaz.
  */
 export function eksikIstegi(e: Eksik): { metin: string; ajan?: string } {
+  // Taslak maddeler: tamamlamak için aday metin/alan (maddenin sayfasındaki düğmeyle aynı metin)
+  if (e.anahtar === 'taslak') return taslakIstegi(e.kayitlar || []);
   const liste = (e.kayitlar || []).slice(0, 40).map(k => `- ${k.ad}${k.not ? ` (${k.not})` : ''}`).join('\n');
   const fazla = (e.kayitlar || []).length > 40 ? `\n… ve ${(e.kayitlar || []).length - 40} kayıt daha` : '';
   const b = e.baslik.toLocaleLowerCase('tr');

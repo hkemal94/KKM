@@ -191,6 +191,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yapay zekâ (Stüdyo) ekranı ve sayfalardaki "Stüdyoda aç" düğmeleri kalktı; bekleyen öneriler Onay bekleyenler\'de' },
   { id: 'onay-dort-dugme', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yeni yerleşim 3. adım: Onay bekleyenler tek liste; her satırda Uygula · Düzenle · Arşivle · Sil, tarihe kadar Beklet, toplu seçim, Bekletilen ve Arşiv süzgeci' },
+  { id: 'taslak-oneri', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Taslak maddeler için öneri: Eksikler\'deki taslak listesinin "Ajana öneri hazırlat" düğmesi viki editöründen aday metin/alan ister; taslak maddenin sayfasında "Bu taslak için öneri iste"' },
   { id: 'temizlik-kalkanlar', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 1. adım (temizlik): Ana sayfa, Yüzdeler, Tuval ve Site ekranları kalktı; Notlar Yaz tuşundan kendi sayfasında açılıyor' },
   { id: 'yeni-kadro-kkm', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
