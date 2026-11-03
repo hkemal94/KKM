@@ -14,16 +14,16 @@ export default function AramaModal({ isOpen, onClose, items, onSelectResult }: A
 
   const filteredItems = useMemo(() => {
     if (!queryStr.trim()) return [];
-    const searchVal = queryStr.toLowerCase().trim();
+    const searchVal = queryStr.toLocaleLowerCase('tr').trim();
     
     return items.filter(item => {
-      const matchTitle = item.title.toLowerCase().includes(searchVal);
-      const matchNotes = item.notes?.toLowerCase().includes(searchVal);
-      const matchTags = item.tags.some(t => t.toLowerCase().includes(searchVal));
+      const matchTitle = item.title.toLocaleLowerCase('tr').includes(searchVal);
+      const matchNotes = item.notes?.toLocaleLowerCase('tr').includes(searchVal);
+      const matchTags = item.tags.some(t => t.toLocaleLowerCase('tr').includes(searchVal));
       
       // Match by relation/links (checking names of linked items if matching)
       const linkedItems = items.filter(other => (item.links || []).includes(other.id));
-      const matchLinks = linkedItems.some(linked => linked.title.toLowerCase().includes(searchVal));
+      const matchLinks = linkedItems.some(linked => linked.title.toLocaleLowerCase('tr').includes(searchVal));
 
       return matchTitle || matchNotes || matchTags || matchLinks;
     });

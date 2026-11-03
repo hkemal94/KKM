@@ -2021,6 +2021,8 @@ export default function Merch({
                                 onClick={() => {
                                   setActiveImageIdx(prev => (prev - 1 + activeItem.images.length) % activeItem.images.length);
                                 }}
+                                aria-label="Önceki görsel"
+                                title="Önceki görsel"
                                 className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 border border-[#CFC5B4] text-[#0E1C4F] flex items-center justify-center hover:bg-[#F26B6F] hover:text-white transition-all cursor-pointer shadow-md z-10"
                               >
                                 <ChevronLeft className="w-6 h-6" />
@@ -2031,6 +2033,8 @@ export default function Merch({
                                 onClick={() => {
                                   setActiveImageIdx(prev => (prev + 1) % activeItem.images.length);
                                 }}
+                                aria-label="Sonraki görsel"
+                                title="Sonraki görsel"
                                 className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 border border-[#CFC5B4] text-[#0E1C4F] flex items-center justify-center hover:bg-[#F26B6F] hover:text-white transition-all cursor-pointer shadow-md z-10"
                               >
                                 <ChevronRight className="w-6 h-6" />

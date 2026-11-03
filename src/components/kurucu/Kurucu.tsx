@@ -1832,8 +1832,8 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
 
       {/* Yakınlaştırma */}
       <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-1">
-        <button type="button" onClick={() => yakinlas(1 / 1.5)} className={`${kart} w-9 h-9 flex items-center justify-center cursor-pointer`}><Plus className="w-4 h-4" /></button>
-        <button type="button" onClick={() => yakinlas(1.5)} className={`${kart} w-9 h-9 flex items-center justify-center cursor-pointer`}><Minus className="w-4 h-4" /></button>
+        <button type="button" onClick={() => yakinlas(1 / 1.5)} aria-label="Yakınlaştır" title="Yakınlaştır" className={`${kart} w-9 h-9 flex items-center justify-center cursor-pointer`}><Plus className="w-4 h-4" /></button>
+        <button type="button" onClick={() => yakinlas(1.5)} aria-label="Uzaklaştır" title="Uzaklaştır" className={`${kart} w-9 h-9 flex items-center justify-center cursor-pointer`}><Minus className="w-4 h-4" /></button>
       </div>
 
       {/* İpucu */}
@@ -1853,7 +1853,7 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
         <div className={`${kart} absolute z-10 right-3 top-16 w-72 max-w-[calc(100%-1.5rem)] max-h-[calc(100%-13rem)] overflow-y-auto p-3 text-[12px]`}>
           <div className="flex items-start justify-between gap-2">
             <div className={etiket}>{seciliOzel ? 'Seçili · özel yapı' : seciliBina ? 'Seçili · yapı' : seciliYol ? 'Seçili · yol' : 'Seçili · doğa'}</div>
-            <button type="button" onClick={() => setSecili(null)} className="p-0.5 cursor-pointer text-[#6A5E4C] dark:text-[#A6B0C9]"><X className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={() => setSecili(null)} aria-label="Kapat" title="Kapat" className="p-0.5 cursor-pointer text-[#6A5E4C] dark:text-[#A6B0C9]"><X className="w-3.5 h-3.5" /></button>
           </div>
 
           {seciliOzel && (() => {
@@ -1870,9 +1870,9 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
                 )}
                 <div className="mt-2 flex items-center gap-2">
                   <span className="w-10">Kat</span>
-                  <button type="button" className={dugmeBos} onClick={() => ozelDegistir(seciliOzel.id, o => ({ ...o, kat: Math.max(1, o.kat - 1) }))}><Minus className="w-3 h-3" /></button>
+                  <button type="button" aria-label="Kat azalt" title="Kat azalt" className={dugmeBos} onClick={() => ozelDegistir(seciliOzel.id, o => ({ ...o, kat: Math.max(1, o.kat - 1) }))}><Minus className="w-3 h-3" /></button>
                   <b className="w-6 text-center tabular-nums">{seciliOzel.kat}</b>
-                  <button type="button" className={dugmeBos} onClick={() => ozelDegistir(seciliOzel.id, o => ({ ...o, kat: Math.min(30, o.kat + 1) }))}><Plus className="w-3 h-3" /></button>
+                  <button type="button" aria-label="Kat ekle" title="Kat ekle" className={dugmeBos} onClick={() => ozelDegistir(seciliOzel.id, o => ({ ...o, kat: Math.min(30, o.kat + 1) }))}><Plus className="w-3 h-3" /></button>
                   <span className="text-[10px] text-[#6A5E4C] dark:text-[#A6B0C9]">≈ {Math.round(seciliOzel.kat * 3.2)} m</span>
                 </div>
                 <div className="mt-2 flex items-center gap-1.5">
@@ -1918,9 +1918,9 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
                 <>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="w-10">Kat</span>
-                    <button type="button" className={dugmeBos} onClick={() => katYaz(kat - 1)} disabled={kat <= 1}><Minus className="w-3 h-3" /></button>
+                    <button type="button" aria-label="Kat azalt" title="Kat azalt" className={dugmeBos} onClick={() => katYaz(kat - 1)} disabled={kat <= 1}><Minus className="w-3 h-3" /></button>
                     <b className="w-6 text-center tabular-nums">{kat}</b>
-                    <button type="button" className={dugmeBos} onClick={() => katYaz(kat + 1)}><Plus className="w-3 h-3" /></button>
+                    <button type="button" aria-label="Kat ekle" title="Kat ekle" className={dugmeBos} onClick={() => katYaz(kat + 1)}><Plus className="w-3 h-3" /></button>
                   </div>
                   <div className="mt-2 flex gap-1.5">
                     <button type="button" className={`${dugmeBos} flex-1`} onClick={() => dondur(-Math.PI / 12)}><RotateCcw className="w-3.5 h-3.5" />Döndür</button>
@@ -2009,7 +2009,7 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
           <div className={`${kart} absolute z-10 right-3 top-16 w-72 max-w-[calc(100%-1.5rem)] max-h-[calc(100%-13rem)] overflow-y-auto p-3 text-[12px] space-y-2`}>
             <div className="flex items-start justify-between gap-2">
               <div className={etiket}>{notTaslagi ? 'Yeni not' : isr?.tur === 'not' ? 'Not' : 'Madde işareti'}</div>
-              <button type="button" onClick={kapat} className="p-0.5 cursor-pointer text-[#6A5E4C] dark:text-[#A6B0C9]"><X className="w-3.5 h-3.5" /></button>
+              <button type="button" onClick={kapat} aria-label="Kapat" title="Kapat" className="p-0.5 cursor-pointer text-[#6A5E4C] dark:text-[#A6B0C9]"><X className="w-3.5 h-3.5" /></button>
             </div>
             {notTaslagi && (
               <>

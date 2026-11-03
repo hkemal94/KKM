@@ -237,11 +237,11 @@ export default function Markalar({
   // Filter existing entities by search query
   const filteredExistingEntities = useMemo(() => {
     if (!searchQuery.trim()) return existingEntitiesToLink;
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLocaleLowerCase('tr');
     return existingEntitiesToLink.filter(i => 
-      i.title.toLowerCase().includes(query) || 
-      (i.notes && i.notes.toLowerCase().includes(query)) ||
-      (i.tags && i.tags.some(t => t.toLowerCase().includes(query)))
+      i.title.toLocaleLowerCase('tr').includes(query) || 
+      (i.notes && i.notes.toLocaleLowerCase('tr').includes(query)) ||
+      (i.tags && i.tags.some(t => t.toLocaleLowerCase('tr').includes(query)))
     );
   }, [existingEntitiesToLink, searchQuery]);
 
