@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { KisaListe } from '../kabuk/KisaListe';
 import { AlertTriangle, ChevronDown, ChevronRight, Clock, ExternalLink, Power, RefreshCw, Save } from 'lucide-react';
 import type { Item } from '../../types';
 import { anahtariOku } from '../../lib/oyunAyarlari';
@@ -166,11 +167,11 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
         </div>
         <div>
           <div className={ETIKET}>Elindeki işler ({el.length})</div>
-          {el.length ? <ul className="mt-1 space-y-1">{el.map(isSatiri)}</ul> : <p className={`mt-1 text-[12px] ${IKINCIL}`}>İş yok.</p>}
+          {el.length ? <KisaListe className="mt-1 space-y-1">{el.map(isSatiri)}</KisaListe> : <p className={`mt-1 text-[12px] ${IKINCIL}`}>İş yok.</p>}
         </div>
         <div>
           <div className={ETIKET}>Eski işleri ({eski.length})</div>
-          {eski.length ? <ul className="mt-1 space-y-1 max-h-60 overflow-y-auto">{eski.map(isSatiri)}</ul> : <p className={`mt-1 text-[12px] ${IKINCIL}`}>Henüz biten iş yok.</p>}
+          {eski.length ? <KisaListe className="mt-1 space-y-1 max-h-60 overflow-y-auto">{eski.map(isSatiri)}</KisaListe> : <p className={`mt-1 text-[12px] ${IKINCIL}`}>Henüz biten iş yok.</p>}
         </div>
       </div>
     );
@@ -259,7 +260,7 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
         <section className={`${KART} p-4`}>
           <div className={ETIKET}>Zamanlayıcı · İstanbul saati</div>
           <p className={`mt-1 text-[12px] ${IKINCIL}`}>Alarm gibi: her gün, haftanın seçtiğin günleri ya da tek bir tarih. Kararın (2 Kasım): şimdilik yalnız evren ajanları her gece az az; diğerleri sen isteyince.</p>
-          <ul className="mt-2">
+          <KisaListe className="mt-2">
             {ajanlar.map(a => {
               const z = zaman(a.ad);
               return (
@@ -286,7 +287,7 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
                 </li>
               );
             })}
-          </ul>
+          </KisaListe>
         </section>
       )}
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { KisaListe } from '../kabuk/KisaListe';
 import { ArrowLeft, ExternalLink, FileText, RefreshCw } from 'lucide-react';
 import { AJANS_BELGELERI, AJANS_DEPOSU, AJANS_KLASORLERI, dosyaBasligi, klasoruOku, type AjansDosyasi } from '../../lib/ajansDeposu';
 import { depoSayfasi } from '../../lib/depoBelgesi';
@@ -98,7 +99,7 @@ export const AjansSayfasi: React.FC<{
               {d === 'yukleniyor' && <p className={`text-[13px] ${IKINCIL}`}>Okunuyor…</p>}
               {typeof d === 'object' && 'hata' in d && <p className={`text-[13px] ${YAZI}`}>Okunamadı ({d.hata}).</p>}
               {Array.isArray(d) && (d.length
-                ? <ul className="-mx-1">{d.map(f => <DosyaDugmesi key={f.yol} yol={f.yol} ad={dosyaBasligi(f.ad)} tarih={f.tarih} />)}</ul>
+                ? <KisaListe className="-mx-1" dugmeClassName="px-2">{d.map(f => <DosyaDugmesi key={f.yol} yol={f.yol} ad={dosyaBasligi(f.ad)} tarih={f.tarih} />)}</KisaListe>
                 : <p className={`text-[13px] ${IKINCIL}`}>Henüz dosya yok.</p>)}
             </section>
           );
@@ -107,7 +108,7 @@ export const AjansSayfasi: React.FC<{
 
       <section className={`${KART} px-4 py-4 space-y-2`}>
         <div className={ETIKET}>Ajansın belgeleri</div>
-        <ul className="-mx-1">{AJANS_BELGELERI.map(b => <DosyaDugmesi key={b.yol} yol={b.yol} ad={b.ad} />)}</ul>
+        <KisaListe className="-mx-1" dugmeClassName="px-2">{AJANS_BELGELERI.map(b => <DosyaDugmesi key={b.yol} yol={b.yol} ad={b.ad} />)}</KisaListe>
       </section>
     </div>
   );

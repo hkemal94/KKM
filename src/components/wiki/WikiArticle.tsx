@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { KisaListe } from '../kabuk/KisaListe';
 import { AlertCircle, ChevronRight, ExternalLink, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
 import { kaynakAdresi, wikipediadanMi } from '../../lib/vikipediKaynagi';
 import { StudyodaAc } from '../studyo/StudyodaAc';
@@ -559,7 +560,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
           {altMaddeler.length > 0 && (
             <section className="mt-8">
               <h2 className="font-sans text-xl text-lacivert dark:text-krem mb-3 tracking-tight">Alt maddeler</h2>
-              <ul className="flex flex-wrap gap-1.5">
+              <KisaListe className="flex flex-wrap gap-1.5" dugmeClassName="mt-1">
                 {altMaddeler.map(a => (
                   <li key={a.id}>
                     <button type="button" onClick={() => onNavigate(a.id)}
@@ -568,7 +569,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                     </button>
                   </li>
                 ))}
-              </ul>
+              </KisaListe>
             </section>
           )}
 
@@ -582,7 +583,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                 {ananlar.map(g => (
                   <div key={g.alan}>
                     <div className="text-[12px] text-gri dark:text-bej/85 mb-1.5">{g.alan}</div>
-                    <ul className="flex flex-wrap gap-1.5">
+                    <KisaListe className="flex flex-wrap gap-1.5" dugmeClassName="mt-1">
                       {g.l.map(k => (
                         <li key={k.id}>
                           <button type="button" onClick={() => onNavigate(k.id)}
@@ -592,7 +593,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                           </button>
                         </li>
                       ))}
-                    </ul>
+                    </KisaListe>
                   </div>
                 ))}
               </div>

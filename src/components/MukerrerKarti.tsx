@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { KisaListe } from './kabuk/KisaListe';
 import { Copy, Download, Link2Off } from 'lucide-react';
 import type { Item } from '../types';
 import { mukerrerGruplari, mukerrerIsleri } from '../lib/mukerrerler';
@@ -62,9 +63,9 @@ export const MukerrerKarti: React.FC<{
             Aynı türde aynı adlı maddeler en eskisinde birleşir. Ötekinin dolu alanları yalnız boş alanlara eklenir; görseller, etiketler,
             bağlar ve bölümler birleşir; başka maddelerdeki bağlar kalan maddeye döner. Sonra kopya silinir.
           </p>
-          <ul className="mt-1.5 list-disc pl-5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
+          <KisaListe className="mt-1.5 list-disc pl-5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
             {gruplar.map(g => <li key={g.kalan.id}>{g.kalan.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {TYPE_LABELS[g.kalan.type] || g.kalan.type} · {g.gidenler.length + 1} madde</span></li>)}
-          </ul>
+          </KisaListe>
           <button type="button" onClick={yedekIndir} className="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer">
             <Download className="w-3.5 h-3.5" /> {yedeklendi ? 'Yedek indi ✓' : 'Yedek indir · isteğe bağlı'}
           </button>
@@ -94,7 +95,7 @@ export const UymayanBagKarti: React.FC<{ items: Item[]; onMaddeAc?: (id: string)
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">Uymayan bağlar: {liste.length}</p>
           <p className={ACIKLAMA}>Bu bağ türleri bu madde türleri arasında olmaz (ör. bir kişi bir mekânla evli olamaz). Maddeyi aç, düzenleyicide türü değiştir ya da bağı kaldır.</p>
-          <ul className="mt-1.5 space-y-0.5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
+          <KisaListe className="mt-1.5 space-y-0.5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
             {liste.map((u, n) => (
               <li key={`${u.kaynak.id}-${u.hedef.id}-${n}`}>
                 {onMaddeAc
@@ -104,7 +105,7 @@ export const UymayanBagKarti: React.FC<{ items: Item[]; onMaddeAc?: (id: string)
                 {u.hedef.title}<span className="text-[#6A5E4C] dark:text-[#A6B0C9]"> ({TYPE_LABELS[u.hedef.type] || u.hedef.type})</span>
               </li>
             ))}
-          </ul>
+          </KisaListe>
         </div>
       </div>
     </div>

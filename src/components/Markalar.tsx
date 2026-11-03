@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { KisaListe } from './kabuk/KisaListe';
 import { LogoKutusu } from './LogoKutusu';
 import {
   Shield,
@@ -1553,6 +1554,7 @@ export default function Markalar({
                   </div>
 
                   <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                    <KisaListe as="div" className="space-y-1.5">
                     {brandKisiler.map(k => (
                       <div 
                         key={k.id} 
@@ -1585,6 +1587,7 @@ export default function Markalar({
                         </select>
                       </div>
                     ))}
+                    </KisaListe>
                     {brandKisiler.length === 0 && (
                       <p className="text-[10px] text-stone-500 dark:text-stone-400 italic">Bu markaya bağlı kişi tanımlanmadı.</p>
                     )}
@@ -1608,6 +1611,7 @@ export default function Markalar({
                   </div>
 
                   <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                    <KisaListe as="div" className="space-y-1.5">
                     {brandYerler.map(y => (
                       <div 
                         key={y.id} 
@@ -1640,6 +1644,7 @@ export default function Markalar({
                         </select>
                       </div>
                     ))}
+                    </KisaListe>
                     {brandYerler.length === 0 && (
                       <p className="text-[10px] text-stone-500 dark:text-stone-400 italic">Bu markaya bağlı mekan tanımlanmadı.</p>
                     )}
@@ -1670,6 +1675,7 @@ export default function Markalar({
                       📦 Droplar ({brandDroplar.length})
                     </span>
                     <div className="space-y-1">
+                      <KisaListe as="div" className="space-y-1">
                       {brandDroplar.map(d => (
                         <div 
                           key={d.id} 
@@ -1680,6 +1686,7 @@ export default function Markalar({
                           <span className="text-[9px] font-mono text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950 px-1 py-0.5 rounded">{d.status}</span>
                         </div>
                       ))}
+                      </KisaListe>
                       {brandDroplar.length === 0 && (
                         <span className="text-[11px] text-stone-500 dark:text-stone-400 italic block">Aktif Drop bulunmuyor.</span>
                       )}
@@ -1692,6 +1699,7 @@ export default function Markalar({
                       👕 Ürünler ({brandUrunler.length})
                     </span>
                     <div className="space-y-1">
+                      <KisaListe as="div" className="space-y-1">
                       {brandUrunler.map(u => (
                         <div 
                           key={u.id} 
@@ -1702,6 +1710,7 @@ export default function Markalar({
                           <span className="text-[9px] font-mono text-[#F26B6F] shrink-0">{u.metadata?.category || 'giyim'}</span>
                         </div>
                       ))}
+                      </KisaListe>
                       {brandUrunler.length === 0 && (
                         <span className="text-[11px] text-stone-500 dark:text-stone-400 italic block">Oluşturulmuş ürün bulunmuyor.</span>
                       )}

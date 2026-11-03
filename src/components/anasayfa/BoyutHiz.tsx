@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { KisaListe } from '../kabuk/KisaListe';
 import { RefreshCw } from 'lucide-react';
 import type { Item } from '../../types';
 import { useHaritaDuzeni } from '../../lib/haritaDuzeni';
@@ -63,7 +64,7 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
         {sayacSirali.length === 0 ? (
           <p className={`text-[12px] ${IKINCIL}`}>Veri yok. Sayfalar açıldıkça burada sıralanır.</p>
         ) : (
-          <ul className="space-y-2">
+          <KisaListe className="space-y-2">
             {sayacSirali.map(s => (
               <li key={s.ad}>
                 <div className="flex items-baseline gap-2 text-[12px]">
@@ -73,7 +74,7 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
                 <Cubuk oran={s.sayi / enCokAcilan} />
               </li>
             ))}
-          </ul>
+          </KisaListe>
         )}
         <div className="flex flex-wrap items-center gap-2">
           <p className={`text-[11px] flex-1 min-w-[14rem] ${IKINCIL}`}>Yalnız bu tarayıcıda tutulur; veritabanına yazılmaz. Başka cihazın sayımı ayrıdır.</p>
@@ -145,7 +146,7 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
         {!parca.parcalar.length ? (
           <p className={`text-[12px] ${IKINCIL}`}>Tarayıcı indirme kaydını vermedi.</p>
         ) : (
-          <ul className="space-y-2">
+          <KisaListe className="space-y-2">
             {parca.parcalar.map(p => (
               <li key={p.ad} title={`${p.ad}: ${p.dosyalar} dosya, ${kb(p.bayt)}`}>
                 <div className="flex items-baseline gap-2 text-[12px]">
@@ -156,7 +157,7 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
                 <Cubuk oran={p.bayt / enBuyukParca} />
               </li>
             ))}
-          </ul>
+          </KisaListe>
         )}
         <p className={`text-[11px] ${IKINCIL}`}>Bir bölüm yalnız açıldığında indirilir. Haritayı, Kurucu'yu ya da PDF'i açtıktan sonra "Yenile"ye basınca onlar da listeye gelir.</p>
       </section>

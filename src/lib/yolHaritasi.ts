@@ -173,6 +173,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: '"Ajansın kararlarını uygula" maddeyi kimliğiyle de buluyor (aynı adla iki kayıt olunca takılmıyor)' },
   { id: 'yenile-yerinde', paket: 'K', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: 'Sayfa yenilenince ana sayfaya atmıyor; açık sayfada (ve açık maddede) kalıyor' },
+  { id: 'uzun-listeler', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Kart içindeki uzun listelerde ilk 5 satır görünür; "Hepsini göster" ile açılır, "Daha az göster" ile kapanır (PC ve mobil)' },
   { id: 'yeni-menu-1', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yeni yerleşim 1. adım: menü Ajans · Evren · Ürünler, üst çubukta arama-zil-tema, Yaz tuşu (Hızlı not · Kems\'e yaz · Notlar)' },
   { id: 'onay-bekleyenler', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,

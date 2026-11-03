@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { KisaListe } from './kabuk/KisaListe';
 import { MapPin, Sparkles } from 'lucide-react';
 import type { Item, ItemType } from '../types';
 import {
@@ -60,7 +61,7 @@ export const YerKartlariKarti: React.FC<{
         </div>
       </div>
       {liste.length > 0 && (
-        <ul className="mt-2.5 divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
+        <KisaListe className="mt-2.5 divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
           {liste.map(({ item, tahmin }) => {
             const s = secim[item.id] ?? tahmin ?? '';
             return (
@@ -81,7 +82,7 @@ export const YerKartlariKarti: React.FC<{
               </li>
             );
           })}
-        </ul>
+        </KisaListe>
       )}
       {onAddItem && (adaYok || yolYok) && (
         <div className="mt-2.5 pt-2.5 border-t border-[#CFC5B4]/50 dark:border-[#2C3C72]/60 flex flex-wrap items-center gap-2">
@@ -118,7 +119,7 @@ export const MahalleDerlemeKarti: React.FC<{ items: Item[]; onAc: (id: string) =
           </p>
         </div>
       </div>
-      <ul className="mt-2.5 divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
+      <KisaListe className="mt-2.5 divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
         {liste.map(t => (
           <li key={t.item.id} className="py-2 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => onAc(t.item.id)} className="flex-1 min-w-[160px] text-left cursor-pointer">
@@ -135,7 +136,7 @@ export const MahalleDerlemeKarti: React.FC<{ items: Item[]; onAc: (id: string) =
             </button>
           </li>
         ))}
-      </ul>
+      </KisaListe>
     </div>
   );
 };
@@ -248,7 +249,7 @@ export const ClaudeDerlemeKarti: React.FC<{ items: Item[]; onUpdateItem: (item: 
           {calisiyor ? 'Yazılıyor…' : 'Derlenmiş hâli koy'}
         </button>
       </div>
-      <ul className="mt-2.5 divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
+      <KisaListe className="mt-2.5 divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
         {liste.map(x => {
           const eski = ((x.item.metadata?.wikiSections as Array<{ title: string; status: string; content: string }> | undefined) || [])
             .filter(b => b.status === 'öneri' && String(b.content || '').trim());
@@ -278,7 +279,7 @@ export const ClaudeDerlemeKarti: React.FC<{ items: Item[]; onUpdateItem: (item: 
         {ekler.map((e, idx) => (
           <li key={`ek-${e.item.id}-${idx}`} className="py-2 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">✎ {e.item.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">· {e.ne}</span></li>
         ))}
-      </ul>
+      </KisaListe>
     </div>
   );
 };
