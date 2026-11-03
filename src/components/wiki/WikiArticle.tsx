@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { AlertCircle, ChevronRight, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
+import { AlertCircle, ChevronRight, ExternalLink, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
+import { kaynakAdresi, wikipediadanMi } from '../../lib/vikipediKaynagi';
 import { Item, WikiSection } from '../../types';
 import { MaddeDuzenleyici, AileUyeleri } from './MaddeDuzenleyici';
 import { maddeyiAnanNotlar } from '../../lib/notBaglari';
@@ -333,6 +334,17 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
               adı henüz konmadı
             </span>
           )}
+          {/* Wikipedia'dan (3 Kasım): gerçek dünyadan gelen madde; bağlantı yeni sekmede */}
+          {wikipediadanMi(item) && (kaynakAdresi(item) ? (
+            <a href={kaynakAdresi(item)} target="_blank" rel="noopener noreferrer" title="Kaynak: Wikipedia · yeni sekmede açılır"
+              className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full border border-[#0E1C4F]/25 text-[#0E1C4F] dark:border-[#F3EFE8]/30 dark:text-[#F3EFE8] hover:border-[#F26B6F] hover:text-[#F26B6F] transition-colors">
+              Wikipedia'dan <ExternalLink size={10} aria-hidden />
+            </a>
+          ) : (
+            <span title="Kaynak bağlantısı yazılmamış" className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-[#0E1C4F]/25 text-[#0E1C4F] dark:border-[#F3EFE8]/30 dark:text-[#F3EFE8]">
+              Wikipedia'dan
+            </span>
+          ))}
           {item.type === 'aile' && onSoyAgaci && (
             <button type="button" onClick={() => onSoyAgaci(item.id)} title="Bu ailenin soy ağacı (Görünümler)"
               className="flex items-center gap-1.5 text-[11px] font-mono transition-colors cursor-pointer text-gri hover:text-lacivert dark:text-bej/85 dark:hover:text-krem">
