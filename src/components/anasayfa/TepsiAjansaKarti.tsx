@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ExternalLink, Send } from 'lucide-react';
 import type { Item } from '../../types';
 import { tepsiDosyasi, tepsiyiGonder } from '../../lib/tepsiAjansa';
+import { sonTepsiOtoGonderim } from '../../lib/tepsiOtoGonder';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
 /**
@@ -31,6 +32,10 @@ export const TepsiAjansaKarti: React.FC<{ items: Item[]; anahtar: string }> = ({
           Tepside {sayilar.oneri} öneri{sayilar.eski ? `, ${sayilar.eski} eski öneri` : ''} ve {sayilar.soru} soru var.
           Gönderince ajans geceleri okur: mantıksızları eler, basitleri hazırlar, sana sorulacakları aday cevaplı soru olarak Onay bekleyenler'e düşürür.
           KKM kayıtlarına bir şey yazılmaz; tepsi olduğu gibi kalır.
+        </p>
+        <p className={`mt-1 text-[13px] ${IKINCIL}`}>
+          Kendiliğinden gönderim açık: KKM açıkken tepsi değişince birkaç dakika içinde kendisi gönderir, düğmeye basman gerekmez.
+          {sonTepsiOtoGonderim() ? ` Son kendiliğinden gönderim: ${new Date(sonTepsiOtoGonderim()).toLocaleString('tr-TR')}.` : ''}
         </p>
       </div>
       {typeof durum === 'object' && 'adres' in durum && (
