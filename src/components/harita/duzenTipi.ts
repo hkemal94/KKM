@@ -73,6 +73,12 @@ export interface KurucuBelge {
   /** Yapı → viki maddesi bağı (haritadan gelen ya da Kurucu'da konan yapı) */
   baglar?: Record<string, string>;
   /**
+   * Evde oturanlar (3 Kasım, Kemal): ev kimliği → kişi maddelerinin
+   * kimlikleri. Kurucu'da ya da 3B haritadaki ev kartında Kemal seçer.
+   * Yalnız bağdır; "Haritaya işle" beklemez, harita taslaktan okur.
+   */
+  oturanlar?: Record<string, string[]>;
+  /**
    * Haritadan gelen yolun yeni hâli (30 Eylül): noktası taşındı ya da bir
    * parçası silindi. Parça sırası → düz nokta dizisi [b0, e0, b1, e1…].
    * (Firestore iç içe dizi kabul etmiyor; parçalar nesne anahtarıyla.)

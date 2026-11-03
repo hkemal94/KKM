@@ -75,6 +75,8 @@ export interface KurucuTaslak {
   doga: Record<string, { tur: DogaTuru; koseler: Nokta[] }>;
   /** Yapı kimliği → viki maddesi kimliği */
   baglar: Record<string, string>;
+  /** Ev kimliği → orada oturan kişi maddelerinin kimlikleri (3 Kasım) */
+  oturanlar: Record<string, string[]>;
   /** Haritadan gelen yolun yeni hâli: parçalar, [boylam, enlem] (30 Eylül) */
   yolDuzeni: Record<string, Nokta[][]>;
   /** Haritadan gelen yapının düzeltmesi: dx/dy metre (doğu/güney), aci radyan */
@@ -92,7 +94,7 @@ export const DOGA_TURLERI: Array<{ id: DogaTuru; ad: string; renk: string; kenar
   { id: 'kumsal', ad: 'Kumsal', renk: '#EBDDB0', kenar: '#C6B27E', aciklama: 'Kıyıda kum' }
 ];
 
-export const bosTaslak = (): KurucuTaslak => ({ surum: HARITA_KUSAGI, yeniYollar: {}, turDegisikligi: {}, gizlenen: [], yeniBinalar: {}, ozelYapilar: {}, doga: {}, baglar: {}, yolDuzeni: {}, binaDuzeni: {} });
+export const bosTaslak = (): KurucuTaslak => ({ surum: HARITA_KUSAGI, yeniYollar: {}, turDegisikligi: {}, gizlenen: [], yeniBinalar: {}, ozelYapilar: {}, doga: {}, baglar: {}, oturanlar: {}, yolDuzeni: {}, binaDuzeni: {} });
 
 const duz = (k: Nokta[]) => k.flatMap(p => [Math.round(p[0] * 1e6) / 1e6, Math.round(p[1] * 1e6) / 1e6]);
 const coz = (n: unknown): Nokta[] => {
@@ -139,6 +141,7 @@ export function taslaktanBelge(t: KurucuTaslak): KurucuBelge {
     ),
     doga: Object.fromEntries(Object.entries(t.doga).map(([id, d]) => [id, { tur: d.tur, n: duz(d.koseler) }])),
     baglar: { ...t.baglar },
+    oturanlar: Object.fromEntries(Object.entries(t.oturanlar).filter(([, l]) => l.length).map(([id, l]) => [id, [...l]])),
     yolDuzeni: Object.fromEntries(Object.entries(t.yolDuzeni).map(([id, p]) => [id,
       Object.fromEntries(p.map((k, i) => [String(i), duz(sadelestir(k))]))])),
     binaDuzeni: Object.fromEntries(Object.entries(t.binaDuzeni).map(([id, b]) => [id, {
@@ -187,6 +190,10 @@ export function belgedenTaslak(ham: unknown): KurucuTaslak {
     if (k.length >= 3 && dogaTurleri.has(String(d.tur))) t.doga[id] = { tur: d.tur as DogaTuru, koseler: k };
   }
   for (const [id, w] of Object.entries(b.baglar ?? {})) if (typeof w === 'string' && w) t.baglar[id] = w;
+  for (const [id, l] of Object.entries(b.oturanlar ?? {})) {
+    const kisiler = Array.isArray(l) ? [...new Set(l.filter(x => typeof x === 'string' && x))] : [];
+    if (kisiler.length) t.oturanlar[id] = kisiler;
+  }
   for (const [id, p] of Object.entries(b.yolDuzeni ?? {})) {
     const parcalar = Object.keys(p ?? {}).sort((x, y) => Number(x) - Number(y)).map(i => coz(p[i])).filter(k => k.length >= 2);
     if (parcalar.length) t.yolDuzeni[id] = parcalar;

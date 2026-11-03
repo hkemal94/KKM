@@ -192,6 +192,8 @@ export function kurucuKatmani(features: Feature[], belge: KurucuBelge): Feature[
 
 /** Taslak ile haritadaki hâl aynı mı? (Haritaya işle düğmesi için) */
 export function belgelerAyniMi(a: KurucuBelge | undefined, b: KurucuBelge | undefined): boolean {
+  // Oturanlar (3 Kasım) haritaya işlenmeyi beklemez; karşılaştırmaya girmez
+  a = oturansiz(a); b = oturansiz(b);
   const bos = (x?: KurucuBelge) => !x || (!Object.keys(x.yeniYollar ?? {}).length
     && !Object.keys(x.turDegisikligi ?? {}).length && !(x.gizlenen ?? []).length
     && !Object.keys(x.yeniBinalar ?? {}).length && !Object.keys(x.ozelYapilar ?? {}).length
@@ -205,6 +207,12 @@ export function belgelerAyniMi(a: KurucuBelge | undefined, b: KurucuBelge | unde
   if (bos(a) && bos(b)) return true;
   return sirali(a) === sirali(b);
 }
+
+const oturansiz = (x?: KurucuBelge): KurucuBelge | undefined => {
+  if (!x) return x;
+  const { oturanlar: _o, ...kalan } = x;
+  return kalan;
+};
 
 /**
  * Anahtarları sıralı, sayıları yuvarlanmış metin (30 Eylül: kayıttan dönen

@@ -223,6 +223,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Oyunlar → oyun → Assetler ve Oyunlar → Ortak assetler: görseller ve 3B modeller (döndürülebilir) oyunun deposundan okunur; "Ajana değiştirt" ve "Yeni çalışma başlat" ajansa istek yazar' },
   { id: 'pano-kapanir', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 9. adım: Ajans Panosu kapandı; işlerin tek kaynağı ajansın iş dosyası (Kimde ne var), sorular Onay bekleyenler\'de' },
+  { id: 'eve-kisi-bagla', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Eve kişi bağlama: Kurucu\'da eve basınca "Oturanlar" (kişi ara, ekle, çıkar); 3B haritadaki ev kartında "Oturan ekle"; dolu ev rengi ve kartı bu bağı okur' },
   { id: 'telefona-bildirim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 8. adım: zil ve Onay noktası ajanların işlerini ve ajansın kararlarını da sayıyor; telefona bildirim Kems\'ten (Claude uygulaması, çalışma sonunda tek bildirim)' },
   { id: 'tepsi-oto-gonder', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
