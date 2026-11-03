@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { ArrowLeft, ArrowRight, CircleCheck, CircleDashed } from 'lucide-react';
-import { BolumBasligi, BosSatir, IlerlemeHalkasi, Kuyu, StudyoKarti } from '../kabuk/Parcalar';
+import { BolumBasligi, BosSatir, IlerlemeHalkasi, Kuyu } from '../kabuk/Parcalar';
 import type { Item } from '../../types';
 import { fanzinBilgisi } from '../../lib/studyo';
-import { StudyodaAc } from '../studyo/StudyodaAc';
 import { Fanzin } from './Fanzin';
 import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
 
@@ -18,10 +17,11 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/
 export const FanzinSayfasi: React.FC<{
   items: Item[];
   onUpdateItem: (item: Item) => Promise<void>;
-  onStudyo: () => void;
+  /** Onay bekleyenler'e git (fanzin taslakları orada) */
+  onOnay: () => void;
   onMaddeAc?: (id: string) => void;
   onAddItem?: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<void>;
-}> = ({ items, onUpdateItem, onStudyo, onMaddeAc, onAddItem }) => {
+}> = ({ items, onUpdateItem, onOnay, onMaddeAc, onAddItem }) => {
   const fanzinler = items.filter(i => i.type === 'blog_post' && !i.archived && fanzinBilgisi(i)).sort((a, b) => b.createdAt - a.createdAt);
   const bekleyen = items.filter(i => i.type === 'aday' && !i.archived && (i.metadata?.aday as { arac?: string } | undefined)?.arac === 'fanzin');
   const [acik, setAcik] = useState<string | null>(null);
@@ -55,12 +55,10 @@ export const FanzinSayfasi: React.FC<{
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      <SayfaBasi baslik="Fanzin">
-        <StudyodaAc arac="fanzin" etiket="Bu ayın fanzini · stüdyo" />
-      </SayfaBasi>
+      <SayfaBasi baslik="Fanzin" />
       {bekleyen.length > 0 && (
-        <button type="button" onClick={onStudyo} className={`${KART} w-full min-h-11 p-3 text-left text-[13px] ${YAZI} hover:ring-2 hover:ring-[#F26B6F]/40 cursor-pointer`}>
-          Öneri tepsisinde {bekleyen.length} fanzin taslağı bekliyor · aç
+        <button type="button" onClick={onOnay} className={`${KART} w-full min-h-11 p-3 text-left text-[13px] ${YAZI} hover:ring-2 hover:ring-[#F26B6F]/40 cursor-pointer`}>
+          Onay bekleyenler'de {bekleyen.length} fanzin taslağı bekliyor · aç
         </button>
       )}
 
@@ -137,7 +135,6 @@ export const FanzinSayfasi: React.FC<{
         </>
       )}
 
-      <StudyoKarti baslik="Bu ayın fanzini" aciklama="Bölüm taslağı, ton değişikliği; sonuç öneri tepsisine düşer." istek={{ arac: 'fanzin' }} />
     </div>
   );
 };

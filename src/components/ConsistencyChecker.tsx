@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ShieldCheck, AlertTriangle, Info, Check, X, RefreshCw } from 'lucide-react';
-import { StudyodaAc } from './studyo/StudyodaAc';
 import { Item } from '../types';
 import { 
   ConsistencyIssue, 
@@ -256,12 +255,6 @@ export default function ConsistencyChecker({
                     })}
                   </div>
                 )}
-              </div>
-
-              {/* Yapay zekâ ile tutarlılık kontrolü stüdyoda (29 Eylül akşamı) */}
-              <div className="pt-6 border-t border-stone-200 dark:border-stone-800 space-y-2">
-                <p className="text-[11px] text-stone-600 dark:text-stone-400">Bir yazıyı ya da maddeyi yapay zekâyla vikiye karşı denetlemek istersen:</p>
-                <StudyodaAc arac="kanon-tutarlilik" etiket="Tutarlılık kontrolü · stüdyoda" />
               </div>
 
             </div>

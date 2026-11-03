@@ -172,22 +172,6 @@ export function mahalleTekrarlari(items: Item[]): MahalleTekrari[] {
   return sonuc;
 }
 
-/** Stüdyoya giden derleme verisi: neyin derleneceği, neyin dokunulmaz olduğu */
-export function derlemeVerisi(h: Item | null, items: Item[]) {
-  if (!h) return {};
-  const bolumler = (h.metadata?.wikiSections as WikiSection[] | undefined) || [];
-  const altYerler = canli(items).filter(i => ['cadde', 'meydan', 'yer_adi'].includes(i.type)).map(i => ({ ad: i.title, tur: turAdi(i.type) }));
-  return {
-    mahalle: h.title,
-    kunye: getKunyeFields(h).map(f => ({ alan: f.label, deger: f.value })),
-    giris: parseKunye(h).body.trim(),
-    resmi: bolumler.filter(b => b.status === 'resmi' && String(b.content || '').trim()).map(b => ({ title: b.title, content: b.content })),
-    oneriler: bolumler.filter(b => b.status === 'öneri' && String(b.content || '').trim()).map(b => ({ title: b.title, content: b.content })),
-    sira: MAHALLE_BOLUM_SIRASI,
-    altYerler
-  };
-}
-
 /** Bölümleri sabit sıraya dizer (aynı sıradakilerin yeri değişmez) */
 export function siraya(bolumler: WikiSection[]): WikiSection[] {
   const yer = (b: WikiSection) => {

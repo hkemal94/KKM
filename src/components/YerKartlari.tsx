@@ -6,7 +6,6 @@ import {
   TASINABILEN_TURLER, adaMaddesiEksik, adaMaddesiKaydi, cevreYoluKaydi, cevreYoluVar,
   mahalleKalsin, mahalleTekrarlari, tasinacaklar, turAdi, turuDegistir
 } from '../lib/yerTurleri';
-import { useStudyo } from './studyo/StudyoBaglami';
 import { acilacaklar, duzeltmeler } from '../lib/maddeSoruTuru';
 import { derlemeyiUygula, derlenecekler, ekDuzeltmeler } from '../lib/mahalleDerlemesi';
 
@@ -14,8 +13,8 @@ import { derlemeyiUygula, derlenecekler, ekDuzeltmeler } from '../lib/mahalleDer
  * Yer kartları (8 Ekim). İki kart, ikisi de yalnız iş varken görünür:
  *   1. Mahalle kartında duran cadde, meydan, tepe ve adanın kaydı: Kemal her
  *      birinin türünü seçip "Taşı" der. Boş Düzada ve çevre yolu maddeleri.
- *   2. Tekrar eden mahalle bilgileri: "✨ Stüdyoda derle" stüdyoyu açar;
- *      sonuç öneri tepsisine düşer, Kemal "Ekle" demeden bir şey değişmez.
+ *   2. Tekrar eden mahalle bilgileri: liste; maddeye basınca açılır
+ *      ("Stüdyoda derle" düğmesi Stüdyo ile birlikte kalktı, 3 Kasım).
  */
 
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string };
@@ -105,7 +104,6 @@ export const YerKartlariKarti: React.FC<{
 
 export const MahalleDerlemeKarti: React.FC<{ items: Item[]; onAc: (id: string) => void }> = ({ items, onAc }) => {
   const liste = useMemo(() => mahalleTekrarlari(items), [items]);
-  const studyo = useStudyo();
   if (!liste.length) return null;
   return (
     <div className={KUTU}>
@@ -113,10 +111,6 @@ export const MahalleDerlemeKarti: React.FC<{ items: Item[]; onAc: (id: string) =
         <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-[#D6484C] dark:text-[#F26B6F]" />
         <div className="flex-1 min-w-0">
           <p className={BASLIK}>{liste.length} mahallede tekrar eden bilgi var</p>
-          <p className={ACIKLAMA}>
-            "Stüdyoda derle" öneri bölümlerini tek düzenli hâle getirir: her bilgi bir kez, aynı başlık iki kez yok, bölümler sabit sırada.
-            Resmî bölümlere dokunmaz. Sonuç öneri tepsisine düşer; "Ekle" demeden hiçbir şey değişmez.
-          </p>
         </div>
       </div>
       <KisaListe className="mt-2.5 divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
@@ -130,9 +124,6 @@ export const MahalleDerlemeKarti: React.FC<{ items: Item[]; onAc: (id: string) =
                   t.benzerCumle ? `${t.benzerCumle} tekrar eden cümle${t.ornek ? ` (${t.ornek.a} ↔ ${t.ornek.b})` : ''}` : ''
                 ].filter(Boolean).join(' · ')}
               </span>
-            </button>
-            <button type="button" onClick={() => studyo.ac({ arac: 'viki-derle', hedefId: t.item.id })} className={`${DUGME} inline-flex items-center gap-1.5`}>
-              <Sparkles className="w-3.5 h-3.5" /> Stüdyoda derle
             </button>
           </li>
         ))}

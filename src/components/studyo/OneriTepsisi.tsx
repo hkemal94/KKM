@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Copy } from 'lucide-react';
+import React, { useState } from 'react';
+import { Copy } from 'lucide-react';
 import type { Item } from '../../types';
-import { adayBilgisi, adayiIsle, bekleyenAdaylar, eskiOneriler } from '../../lib/adaylar';
+import { adayBilgisi, adayiIsle } from '../../lib/adaylar';
 import { aracBul, oneriyiUygula, yapayZekaOnerisi, type YapayZekaOnerisi } from '../../lib/studyo';
-import { TYPE_LABELS } from '../wiki/wikiSchema';
-import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
+import { DUGME_BOS, DUGME_LAC, IKINCIL, YAZI } from '../anasayfa/stil';
 import type { StudyoIslemleri } from './StudyoBaglami';
 
 /**
@@ -15,18 +14,9 @@ import type { StudyoIslemleri } from './StudyoBaglami';
  *   - YAPAY ZEKÂ: stüdyonun ürettiği öneri. "Ekle" hedef kayda yazar ve
  *     öneriyi siler; "Sil" yalnız öneriyi siler. Hiçbiri sen basmadan
  *     bir kayda dokunmaz.
- * Ana sayfada kısa hâli (ilk 3), stüdyoda tamamı.
+ * Stüdyo ekranı 3 Kasım'da kalktı (Kemal: "kalksın"); öneriler yalnız
+ * Onay bekleyenler'de. Bu dosyada onun kullandığı işler kaldı.
  */
-
-interface Props extends StudyoIslemleri {
-  /** Kaç öneri görünsün (ana sayfa: 3) */
-  sinir?: number;
-  /** Yalnız bu kayda ait öneriler (yan panel) */
-  hedefId?: string;
-  baslik?: string;
-  /** Neyin Eksik'teki Temizlik kartına götürür (eski öneriler orada silinir) */
-  onTemizlik?: () => void;
-}
 
 const kopyala = (m: string) => { try { void navigator.clipboard.writeText(m); } catch { /* yok */ } };
 
@@ -228,94 +218,3 @@ export function useOneriIslemleri({ items, onUpdateItem, onAddItem, onDeleteItem
 
   return { calisan, rapor, setRapor, govde, uygula, sil, hedefiAc };
 }
-
-export const OneriTepsisi: React.FC<Props> = (props) => {
-  const { sinir, hedefId, baslik = 'Öneri tepsisi', onTemizlik, items, onMaddeyiAc, onAcceptProposal, onStudyoSayfasi } = props;
-  const hepsi = useMemo(() => bekleyenAdaylar(items).filter(a => {
-    if (!hedefId) return true;
-    return (yapayZekaOnerisi(a)?.hedefId || adayBilgisi(a)?.hedefId) === hedefId;
-  }), [items, hedefId]);
-  const eskiler = useMemo(() => (hedefId || sinir ? [] : eskiOneriler(items)), [items, hedefId, sinir]);
-  const [acik, setAcik] = useState<string | null>(null);
-  const [eskiAcik, setEskiAcik] = useState(false);
-  const { calisan, rapor, setRapor, govde } = useOneriIslemleri(props);
-
-  const gorunen = sinir ? hepsi.slice(0, sinir) : hepsi;
-
-  const satir = (a: Item, tur: string, govde: React.ReactNode) => {
-    const buAcik = acik === a.id || (!!hedefId && hepsi.length <= 2);
-    return (
-      <li key={a.id} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72]">
-        <button type="button" onClick={() => setAcik(buAcik ? null : a.id)} className="w-full flex items-center gap-2.5 py-2 text-left cursor-pointer">
-          <i className="not-italic shrink-0 px-1.5 py-0.5 rounded bg-[#F3EFE8] dark:bg-[#17345A] text-[9px] font-mono font-bold tracking-wider text-[#6A5E4C] dark:text-[#A6B0C9]">{tur}</i>
-          <span className={`flex-1 min-w-0 truncate text-[13px] ${YAZI}`}>{a.title}</span>
-          <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{neZaman(a.createdAt)}</span>
-          {buAcik ? <ChevronDown className="w-4 h-4 text-[#F26B6F] shrink-0" /> : <ChevronRight className="w-4 h-4 text-[#CFC5B4] shrink-0" />}
-        </button>
-        {buAcik && <div className="pb-3 space-y-2">{govde}</div>}
-      </li>
-    );
-  };
-
-  return (
-    <section className={`${KART} p-4`}>
-      <div className="flex items-center justify-between gap-2">
-        <div className={ETIKET}>{baslik} · bekleyen {hepsi.length}</div>
-        {sinir && hepsi.length > 0 && (
-          <button type="button" onClick={onStudyoSayfasi} className="text-[11px] font-mono text-[#D6484C] dark:text-[#F26B6F] hover:underline cursor-pointer">tümü · stüdyo</button>
-        )}
-      </div>
-      {rapor && (
-        <p className={`mt-2 px-3 py-2 rounded-lg bg-[#F3EFE8] dark:bg-[#17345A] text-[11px] ${IKINCIL}`}>
-          {rapor} <button type="button" onClick={() => setRapor(null)} className="underline cursor-pointer">tamam</button>
-        </p>
-      )}
-
-      {hepsi.length === 0 ? (
-        <p className={`mt-2 text-[12px] ${IKINCIL}`}>
-          {hedefId ? 'Bu kayıt için bekleyen öneri yok.' : 'Bekleyen öneri yok. Atölyede verdiğin cevaplar ve stüdyonun ürettikleri burada onayını bekler.'}
-        </p>
-      ) : (
-        <ul className="mt-1">
-          {gorunen.map(a => satir(a, oneriTuru(a), govde(a)))}
-          {sinir && hepsi.length > sinir && (
-            <li className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72] pt-2">
-              <button type="button" onClick={onStudyoSayfasi} className="text-[11px] font-mono text-[#D6484C] dark:text-[#F26B6F] hover:underline cursor-pointer">
-                +{hepsi.length - sinir} öneri daha · stüdyoda
-              </button>
-            </li>
-          )}
-        </ul>
-      )}
-
-      {/* Eski öneriler (onaylanmamış, eski yapay zekâdan): tek satır özet */}
-      {eskiler.length > 0 && (
-        <div className="mt-3 rounded-xl border border-dashed border-[#CFC5B4] dark:border-[#2C3C72] p-3">
-          <div className="flex items-start gap-3">
-            <b className="font-mono text-[16px] text-[#6A5E4C] dark:text-[#A6B0C9] tabular-nums shrink-0">{eskiler.length}</b>
-            <span className={`flex-1 min-w-0 text-[12px] font-semibold ${YAZI}`}>eski öneri (onaylanmamış) · Temizlik kartıyla silinir</span>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => setEskiAcik(x => !x)} className={DUGME_BOS}>{eskiAcik ? 'Listeyi kapat' : 'Listeyi aç'}</button>
-            {onTemizlik && <button type="button" onClick={onTemizlik} className={DUGME_BOS}>Hepsini sil · Temizlik kartı</button>}
-          </div>
-          {eskiAcik && (
-            <ul className="mt-2 max-h-72 overflow-y-auto pr-1">
-              {eskiler.map(e => satir(e, (TYPE_LABELS[e.type] || e.type).toLocaleUpperCase('tr'), (
-                <>
-                  <p className={`text-[12px] leading-snug whitespace-pre-line line-clamp-4 ${IKINCIL}`}>{e.notes || 'Açıklama yok.'}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <button type="button" disabled={calisan === e.id} onClick={() => onAcceptProposal(e.id)} className={DUGME_LAC}>Kabul et</button>
-                    <button type="button" onClick={() => onMaddeyiAc(e)} className={DUGME_BOS}>Aç</button>
-                  </div>
-                </>
-              )))}
-            </ul>
-          )}
-        </div>
-      )}
-    </section>
-  );
-};
-
-export default OneriTepsisi;

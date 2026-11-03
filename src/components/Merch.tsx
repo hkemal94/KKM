@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingBag, Sparkles, FolderDot, ChevronRight, ChevronLeft, ChevronDown, Image, Plus, Layers, Check, Trash2, Archive, Edit3 } from 'lucide-react';
-import { StudyodaAc } from './studyo/StudyodaAc';
 import { Item, ItemType, AreaType } from '../types';
 import { hazirFotosuz, merchYedekGorseli } from '../lib/gorselSecimi';
 import { useGorselSurumu } from '../lib/gorselOnbellek';
@@ -674,14 +673,6 @@ export default function Merch({
                 );
               })}
             </div>
-          </div>
-
-          {/* Ürün fikri yapay zekâdan: stüdyoda (29 Eylül akşamı) */}
-          <div className="flex flex-wrap items-center gap-3 bg-[#F3EFE8]/80 dark:bg-[#13204A]/60 border border-[#CFC5B4] dark:border-[#2C3C72] rounded-xl p-4">
-            <p className="flex-1 min-w-[220px] text-xs text-[#6A5E4C] dark:text-[#A6B0C9]">
-              Bir drop için ürün fikri stüdyoda. Eklediğin fikir drop'a "Konsept" olarak girer; fiyat önerilmez.
-            </p>
-            <StudyodaAc arac="merch-oner" />
           </div>
 
         </div>

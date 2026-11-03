@@ -5,7 +5,6 @@ import React, { useState, useMemo } from 'react';
 import { BeklemeliMetin } from './kabuk/BeklemeliMetin';
 import { anilanKimlikler, buildLinkIndex } from './wiki/autoLink';
 import { FileText, Trash2, Compass, ListTodo, RefreshCw } from 'lucide-react';
-import { StudyodaAc } from './studyo/StudyodaAc';
 import { Item, ItemType } from '../types';
 import { getCachedAccessToken } from '../lib/firebase';
 import { createGoogleDoc } from '../lib/googleApi';
@@ -824,15 +823,6 @@ export default function Kitap({
                   Ekle
                 </button>
               </div>
-            </div>
-
-            {/* Yapay zekâ işleri stüdyoda (29 Eylül akşamı) */}
-            <div className="bg-[#F3EFE8] dark:bg-[#13204A] border border-[#CFC5B4] dark:border-[#2C3C72] p-5 rounded-xl space-y-2">
-              <h4 className="font-sans font-bold text-sm text-[#0E1C4F] dark:text-[#F3EFE8] tracking-tight">Yapay zekâ</h4>
-              <p className="text-xs text-[#6A5E4C] dark:text-[#A6B0C9] leading-relaxed">
-                Bölüm özeti, sonraki bölüm için fikir, devam et ve tutarlılık kontrolü stüdyoda.
-              </p>
-              <StudyodaAc grup="yazi" hedefId={activeChapter.id} />
             </div>
 
             {/* Link varlık kancası */}

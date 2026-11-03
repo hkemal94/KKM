@@ -35,7 +35,6 @@ import {
   Inbox,
   Briefcase,
   Package,
-  Sparkles,
   Hammer,
   Sun,
   Moon,
@@ -45,8 +44,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { SAYFA_RAYI_YUVASI } from './components/SayfaRayi';
-import { Studyo, StudyoPaneli } from './components/studyo/Studyo';
-import { StudyoSaglayici, type StudyoIslemleri } from './components/studyo/StudyoBaglami';
+import type { StudyoIslemleri } from './components/studyo/StudyoBaglami';
 import HizliFikir from './components/HizliFikir';
 import ArtiMenu from './components/kabuk/ArtiMenu';
 import HesapMenusu from './components/kabuk/HesapMenusu';
@@ -133,9 +131,9 @@ import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from '.
  * Uygulamanın sayfaları. 'onay' açılış (2 Kasım); eski Komuta Merkezi 'durum'.
  * 2 Kasım (yol haritası 1. adım): Ana sayfa ve Site kalktı; notlar 'notlar'da.
  */
-type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik' | 'studyo';
+type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik';
 /** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
-const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar']);
+const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar', 'studyo']);
 const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'boyut'];
 const AJANLAR_SEKMELERI: AjanlarSekmesi[] = ['ajanlar', 'zamanlayici', 'baglanti'];
 const ajanlarSekmesi = (s: unknown): AjanlarSekmesi => (AJANLAR_SEKMELERI.includes(s as AjanlarSekmesi) ? s as AjanlarSekmesi : 'ajanlar');
@@ -631,7 +629,8 @@ export default function App() {
     } else if (item.type === 'oyun_is' || item.type === 'gdd_bolum' || item.type === 'oyun_tanitim' || item.type === 'oyun_fikir') {
       setActiveTab('oyun');
     } else if (item.type === 'aday') {
-      setActiveTab('studyo');
+      // Stüdyo kalktı (3 Kasım): öneriler Onay bekleyenler'de
+      setActiveTab('onay');
     } else if (item.type === 'map_pin') {
       // Harita notu (5. gece): Harita ve Kurucu'da
       yonlendir('harita');
@@ -837,40 +836,6 @@ export default function App() {
     }
   };
 
-  const handleAcceptProposal = async (itemId: string) => {
-    const item = items.find(i => i.id === itemId);
-    if (item) {
-      if (itemId.endsWith('_proposal')) {
-        const originalId = itemId.slice(0, -9);
-        const originalItem = items.find(i => i.id === originalId);
-        if (originalItem) {
-          // Merge proposal fields into the original item
-          await handleUpdateItem({
-            ...originalItem,
-            title: item.title.replace(/\s*\(Öneri\)/i, ''),
-            notes: item.notes,
-            tags: item.tags.filter(t => t !== 'öneri'),
-            metadata: item.metadata,
-            links: item.links,
-            priority: item.priority,
-            status: item.type === 'drop' ? 'Konsept' : 'Bitti'
-          });
-          // Delete the proposal item
-          await handleDeleteItem(itemId);
-          return;
-        }
-      }
-      
-      // Standard accept logic
-      await handleUpdateItem({
-        ...item,
-        title: item.title.replace(/\s*\(Öneri\)/i, ''),
-        isProposal: false,
-        status: item.type === 'drop' ? 'Konsept' : 'Bitti'
-      });
-    }
-  };
-
   const handleSaveHizliNot = async (title: string, notes: string, area: AreaType, type: ItemType) => {
     await handleAddItem({
       title,
@@ -895,16 +860,14 @@ export default function App() {
     [items]
   );
 
-  /** Stüdyonun işlemleri: sayfa, yan panel ve öneri tepsisi aynı işlemleri kullanır */
+  /** Öneri işleri (Onay bekleyenler kullanır; Stüdyo ekranı 3 Kasım'da kalktı) */
   // Düz nesne: işlemler her çizimde güncel kalsın (useMemo([items]) eski oturum bilgisini tutuyordu)
   const studyoIslemleri: StudyoIslemleri = {
     items,
     onAddItem: handleAddItem,
     onUpdateItem: handleUpdateItem,
     onDeleteItem: handleDeleteItem,
-    onAcceptProposal: handleAcceptProposal,
-    onMaddeyiAc: maddeyiAc,
-    onStudyoSayfasi: () => git('studyo')
+    onMaddeyiAc: maddeyiAc
   };
 
   if (girisGerekli && !user) {
@@ -960,8 +923,7 @@ export default function App() {
       { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') || bildirimVar('ajan') },
       { id: 'isler', ad: 'İşler ve takvim', alt: 'kimde ne var, takvim, yol haritası', simge: CalendarDays },
       { id: 'ajanlar', ad: 'Ajanlar ve otomasyonlar', alt: 'ajan kartları, zamanlayıcı, ajans bağlantısı', simge: Bot },
-      { id: 'durum', ad: 'Eksikler ve ayarlar', alt: 'eksikler, boşluklar, boyut ve hız', simge: ListChecks },
-      { id: 'studyo', ad: 'Yapay zekâ', alt: 'stüdyo ve öneri tepsisi', simge: Sparkles, nokta: bildirimVar('aday') }
+      { id: 'durum', ad: 'Eksikler ve ayarlar', alt: 'eksikler, boşluklar, boyut ve hız', simge: ListChecks }
     ] },
     { grup: 'Evren', simge: Compass, satirlar: [
       { id: 'duzada', ad: 'Viki', alt: 'Düzada vikisi ve Evren Raporu', simge: Compass, nokta: bildirimVar('kanon') },
@@ -985,7 +947,7 @@ export default function App() {
   const SAYFA_ADI: Record<Sayfa, string> = {
     onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
     kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
-    oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', durum: 'Eksikler ve ayarlar', studyo: 'Yapay zekâ'
+    oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', durum: 'Eksikler ve ayarlar'
   };
 
   const logo = hasKemsLogo ? (
@@ -1007,8 +969,6 @@ export default function App() {
   const TemaSimgesi = temaSimgesi;
 
   return (
-    <StudyoSaglayici>
-    <StudyoPaneli {...studyoIslemleri} />
     <div className="min-h-screen bg-[#F3EFE8] dark:bg-[#0B132B] text-[#0E1C4F] dark:text-[#F3EFE8] font-sans transition-colors duration-200 paper-grain selection:bg-[#F26B6F] selection:text-white">
 
       {kayitHatasi && (
@@ -1309,9 +1269,6 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'studyo' && (
-              <Studyo {...studyoIslemleri} onTemizlik={() => git('eksikler')} />
-            )}
 
 
 
@@ -1341,7 +1298,7 @@ export default function App() {
                     onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }}
                   />
                 }
-                fanzin={<FanzinSayfasi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onStudyo={() => git('studyo')} onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }} />}
+                fanzin={<FanzinSayfasi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onOnay={() => git('onay')} onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }} />}
               />
             )}
 
@@ -1466,6 +1423,5 @@ export default function App() {
       />
 
     </div>
-    </StudyoSaglayici>
   );
 }

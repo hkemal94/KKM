@@ -1,6 +1,6 @@
 import type { Item } from '../types';
 import { aiCagir, AiHatasi } from './aiCagir';
-import { hatayiNotEt, kotaNotunuSil, type YapayZekaOnerisi } from './studyo';
+import type { YapayZekaOnerisi } from './studyo';
 import { gonderiler } from './sosyal';
 import {
   GECE_TURLERI, ONCEKI_HEDEF_SINIRI, ONCEKI_SINIRI, WIKIPEDIA_KAYNAKLARI, acikGeceTurleri, bekleyenHedefler, defterSatiri,
@@ -362,11 +362,9 @@ export async function geceHazirliginiYap(items: Item[], islem: GeceIslemleri, si
       deg.sonFanzinAy = ay;
       rapor.push(`${ayYazisi(ay)} fanzin taslağı`);
     }
-    kotaNotunuSil();
     // alan silmek yerine sıfırlanır (kayıt üstüne eklenerek yazılıyor)
     deg.sonHata = 0; deg.hata = '';
   } catch (e) {
-    hatayiNotEt(e);
     // Sunucu hiç yoksa (önizleme) deftere yazılmaz; yapacak bir şey yok
     if (e instanceof AiHatasi && e.sunucuYok) return null;
     deg.sonHata = Date.now();
@@ -375,5 +373,5 @@ export async function geceHazirliginiYap(items: Item[], islem: GeceIslemleri, si
   const s = durumYaz(items, deg);
   if (s.guncel) await islem.onUpdateItem(s.guncel);
   if (s.yeni) await islem.onAddItem(s.yeni);
-  return rapor.length ? `Stüdyo hazırladı: ${rapor.join(' ve ')}. Öneri tepsisinde.` : null;
+  return rapor.length ? `Gece hazırlandı: ${rapor.join(' ve ')}. Onay bekleyenler'de.` : null;
 }

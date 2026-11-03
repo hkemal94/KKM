@@ -1,6 +1,4 @@
 import React from 'react';
-import { Sparkles, ArrowRight } from 'lucide-react';
-import { useStudyo, type StudyoIstegi } from '../studyo/StudyoBaglami';
 
 /**
  * Ekran iskeletinin ortak parçaları (1 Ekim, Kemal: "yapı değil, iskelet ve
@@ -68,25 +66,3 @@ export const BosSatir: React.FC<{ yazi?: string; onEkle?: () => void }> = ({ yaz
   </div>
 );
 
-/**
- * Sayfa sonundaki lacivert "Stüdyoda aç" kartı. Yapay zekâ yalnız stüdyodan
- * çalışır; bu kart onun kapısı, kendiliğinden hiçbir şey sormaz.
- */
-export const StudyoKarti: React.FC<{ baslik: string; aciklama?: string; istek: StudyoIstegi }> = ({ baslik, aciklama, istek }) => {
-  const { ac } = useStudyo();
-  return (
-    <button
-      type="button"
-      onClick={() => ac(istek)}
-      className="w-full text-left flex items-center gap-3 p-4 rounded-2xl bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] hover:opacity-95 cursor-pointer"
-    >
-      <span className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0"><Sparkles className="w-5 h-5 text-[#F26B6F]" /></span>
-      <span className="flex-1 min-w-0">
-        <span className="block text-[12px] font-bold uppercase tracking-[0.16em] text-[#A6B0C9]">Stüdyoda aç</span>
-        <span className="block text-[15px] font-semibold leading-snug">{baslik}</span>
-        {aciklama && <span className="block mt-0.5 text-[12px] text-[#A6B0C9]">{aciklama}</span>}
-      </span>
-      <ArrowRight className="w-5 h-5 shrink-0" />
-    </button>
-  );
-};
