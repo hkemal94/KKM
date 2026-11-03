@@ -163,6 +163,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Haftalık viki dışa aktarımı: ajansın Viki Editörü maddeleri okuyabilsin' },
   { id: 'yazi-aktarim', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: 'Blog ve kitap: "Yazı Editörü\'ne gönder" (ajans not bırakır, metni yeniden yazmaz)' },
+  { id: 'wikipedia-isareti', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Viki: "Wikipedia\'dan" işareti (düzenleyicide tik ve kaynak bağlantısı; madde başında ve listede küçük işaret)' },
   { id: 'viki-ekrani', paket: 'W', kimde: 'claude', nereden: '22 Ekim · Kemal', bitti: true,
     ad: 'Viki düzenleyici: yan panel ve sekmeler, "Diğer bilgiler", onaylı "Maddeyi sil"; kabul edilen öneri bölümleri sitede' },
   { id: 'kararlar-sil-degistir', paket: 'W', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
