@@ -148,6 +148,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Künye: Güney Burnu "Konmuş adlar"da; "Zirvelerin mahallesi" açık sorulardan kapandı' },
   { id: 'giris-sart', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
     ad: 'Güvenlik: KKM yalnız Google hesabıyla açılır; kayıtlara ve harita düzenine girişsiz erişim kapandı' },
+  { id: 'harita-evler', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Harita: açılış eğik 3B, "yukarıdan bak" düğmesi; içinde kayıtlı kişi oturan evler açık renkte, eve basınca oturanlar' },
   { id: 'viki-aktarim', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: 'Durum → Ajans: "Vikiyi ajansa gönder" (Viki Editörü vikiyi okuyabilsin)' },
   { id: 'kararlar-genis', paket: 'K', kimde: 'claude', nereden: '22 Ekim · ajans', bitti: true,
