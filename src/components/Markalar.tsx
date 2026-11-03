@@ -16,7 +16,6 @@ import {
   Images,
   Search,
 } from 'lucide-react';
-import { StudyodaAc } from './studyo/StudyodaAc';
 import { Item, ItemType, AreaType } from '../types';
 import { compressImageBase64 } from '../lib/imageCompressor';
 import { resolveAllRelations, cleanupRelationsOnDelete } from '../utils/relations';
@@ -1041,12 +1040,7 @@ export default function Markalar({
                         </KatlanirBolum>
 
                         {/* 2. COLOR PALETTE WITH CLICK-TO-COPY */}
-                        <KatlanirBolum baslik="2. Kurumsal Renk Paleti" ek={<><StudyodaAc
-                              arac="marka-renk"
-                              hedefId={activeBrand.id}
-                              etiket="Renk önerisi · stüdyoda"
-                              className="text-[9px] font-mono text-[#F26B6F] hover:underline flex items-center gap-1 cursor-pointer font-bold"
-                            /></>} bos={!(bk.colorPalette || []).length} duzenleniyor={isEditingBrand} onEkle={kitiDuzenle}>
+                        <KatlanirBolum baslik="2. Kurumsal Renk Paleti" bos={!(bk.colorPalette || []).length} duzenleniyor={isEditingBrand} onEkle={kitiDuzenle}>
 
                           {!isEditingBrand ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">

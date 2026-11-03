@@ -124,15 +124,17 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 - Ürün hayat çizgisi: Konsept → Tasarım → Üretim → Satışta.
 
 **Yapay zekâ** (29 Eylül)
-- Bütün yapay zekâ çağrıları stüdyodan geçer (`src/lib/studyo.ts`,
-  `src/components/studyo/`). Sayfalara yeni AI düğmesi konmaz; yalnız
-  "✨ Stüdyoda aç". Sonuç öneri tepsisine düşer, Kemal "Ekle" demeden
-  kayda yazılmaz. Sayfa açılınca kendiliğinden yapay zekâya sorulmaz.
+- **Stüdyo kalktı** (Kemal, 3 Kasım: "kalksın"): Yapay zekâ ekranı ve
+  sayfalardaki "Stüdyoda aç" düğmeleri yok. Sayfalara AI düğmesi konmaz.
+  Bekleyen öneriler Onay bekleyenler'de; Kemal "Ekle" demeden kayda
+  yazılmaz (`src/lib/studyo.ts` yalnız bunu uygular). Sayfa açılınca
+  kendiliğinden yapay zekâya sorulmaz.
 - **Tek istisna** (Kemal, 30 Eylül, `docs/soru-cevap/yapisal-4.md`): stüdyo
   geceleri günde bir kez 3 üretim önerisi, ayın ilk günü fanzin taslağı
   hazırlar — **yalnız öneri tepsisine**. Kanona / kayda hiçbir şey yazmaz.
-- **Öneri kanalları** (Kemal, 21 Ekim): Stüdyo → "Öneri ayarları"nda her
-  kanal açılıp kapanır (`kkm_ayar` → `oneriKanallari`, `src/lib/oneriKanallari.ts`).
+- **Öneri kanalları** (Kemal, 21 Ekim): her kanal açık / kapalı bilgisi
+  `kkm_ayar` → `oneriKanallari`'nda (`src/lib/oneriKanallari.ts`); ayar
+  ekranı Stüdyo ile kalktı (3 Kasım), kayıttaki ayar geçerli.
   Günün üç yuvasının çoğu vikiye gider. Viki yazıları Vikipedi gibi genel,
   nesnel, süssüz yazılır (`server.ts` → `VIKI_USLUBU`). Dondurmacı Kızlar
   deposu (`hkemal94/DondurmaciKizlar`, public; 21 Ekim'de adı düzeldi) yalnız evren bilgisini ve taslak

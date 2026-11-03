@@ -3,7 +3,6 @@ import { YazimPaneli } from '../wiki/YazimPaneli';
 import { ArrowDown, ArrowUp, Download, Plus, Printer, Save, Trash2 } from 'lucide-react';
 import type { Item } from '../../types';
 import { FANZIN_TONLARI, fanzinBilgisi, type FanzinBilgisi, type FanzinBolumu } from '../../lib/studyo';
-import { StudyodaAc } from '../studyo/StudyodaAc';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
 /**
@@ -102,10 +101,6 @@ export const Fanzin: React.FC<Props> = ({ yazi, onUpdateItem, items, onMaddeAc, 
                 <select value={b.ton} onChange={e => bolumYaz(b.id, { ton: e.target.value })} className={`text-[12px] bg-white dark:bg-[#17345A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg px-2 py-1 focus:outline-hidden focus:border-[#F26B6F]`}>
                   {FANZIN_TONLARI.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                {/* Yapay zekâ yalnız stüdyodan (kural): bu tonda yeniden yazımı ister */}
-                {!degisti
-                  ? <StudyodaAc arac="fanzin-bolum" hedefId={yazi.id} serbest={`${i + 1} · ${b.ton}`} etiket="Bu tonda yaz · stüdyo" />
-                  : <span className={`text-[11px] ${IKINCIL}`}>Stüdyoya göndermek için önce kaydet.</span>}
               </div>
             </section>
           ))}

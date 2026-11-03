@@ -100,7 +100,7 @@ export function useBildirimler(items: Item[]): Bildirim[] {
     if (!items.length) return [];
     const liste: Bildirim[] = [];
     const aday = listedekiOneriler(items, bekleyenAdaylar(items)).length;  // eski öneriler bildirim değil; bekletilen ve arşivdekiler de değil
-    if (aday) liste.push({ tur: 'aday', sayi: aday, baslik: 'Onay bekleyen öneri', ayrinti: 'Öneri tepsisinde · stüdyo' });
+    if (aday) liste.push({ tur: 'aday', sayi: aday, baslik: 'Onay bekleyen öneri', ayrinti: 'Onay bekleyenler' });
     // Karar dosyası: hâlâ uygulanacak işi varsa ve Kemal satırı silmediyse / arşivlemediyse
     const karar = ajans.karar && gecerliIslemler(items, ajans.karar.islemler).length
       && gorunum(onayKayitlari(items)[`karar:${ajans.karar.olusturuldu || 'dosya'}`]) === 'liste' ? 1 : 0;
