@@ -1170,6 +1170,7 @@ export default function App() {
 
             {activeTab === 'isler' && (
               <IslerVeTakvim
+                items={items}
                 sekme={islerSekme}
                 onSekme={setIslerSekme}
                 onAjans={() => git('ajans')}

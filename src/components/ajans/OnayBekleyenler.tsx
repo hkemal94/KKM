@@ -20,7 +20,9 @@ import { EksikOzeti } from '../anasayfa/EksikOzeti';
 import { ISLEM_ADI, useAjansKararlari } from '../anasayfa/AjansKararlariKarti';
 import { oneriTuru, useOneriIslemleri } from '../studyo/OneriTepsisi';
 import type { StudyoIslemleri } from '../studyo/StudyoBaglami';
-import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
+import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
+import { ASAMALAR, takipListesi, useAjansta, type TakipSatiri } from '../../lib/ajansta';
+import { TakipGovdesi } from './AsamaSeridi';
 
 /**
  * Ajans → Onay bekleyenler (2 Kasım, Kemal'in yeni yerleşimi).
@@ -39,9 +41,15 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/
  * `lib/ajanOnerileri.ts`) de aynı düğmelerle burada. Onların kararı
  * `kkm_ayar`'a değil ajansın deposuna (`kkm/oneri-kararlari.json`) yazılır;
  * Kems okur. PR olan işte Uygula, sorduktan sonra PR'ı birleştirir.
+ *
+ * Ajansta (3 Kasım, Kemal): Düzenle denen satır listeden kalkar, "Ajansta"
+ * süzgecine geçer; orada aşaması görünür (Sırada → Kems aldı → Ajanda →
+ * Onayına düştü, `lib/ajansta.ts`). Yeni hâli ajansın dosyasına `kaynak`ıyla
+ * gelince eski satır kapanır. Kemal'in ajan düğmesiyle verdiği istekler de
+ * aynı süzgeçte, yalnız okunur. KKM ajansın dosyalarına bunun için yazmaz.
  */
 
-type Suzgec = 'hepsi' | 'isler' | 'oneriler' | 'ajanlar' | 'kararlar' | 'bekletilen' | 'arsiv' | 'eksikler';
+type Suzgec = 'hepsi' | 'isler' | 'oneriler' | 'ajanlar' | 'kararlar' | 'ajansta' | 'bekletilen' | 'arsiv' | 'eksikler';
 type Kaynak = 'is' | 'oneri' | 'ajan' | 'karar';
 
 interface Satir {
@@ -75,6 +83,8 @@ interface Props {
   onAjans: () => void;
 }
 
+/** Satır başlığındaki aşama adı (Ajanda'da ajanın adı) */
+const asamaAdi = (t: TakipSatiri) => (t.durum.asama === 'ajanda' && t.durum.kimde ? kimdeAdi(t.durum.kimde) : ASAMALAR.find(a => a.id === t.durum.asama)?.ad || '');
 const hataYazi = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const KUTU = `rounded-lg bg-white dark:bg-[#17345A] border border-[#CFC5B4] dark:border-[#2C3C72] p-2.5 text-[12px] leading-relaxed ${YAZI}`;
 const CIP = (aktif: boolean) => `shrink-0 min-h-9 px-3 rounded-full text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer border ${aktif ? 'bg-[#0E1C4F] dark:bg-[#2C3C72] border-transparent text-[#F3EFE8]' : 'border-[#CFC5B4] dark:border-[#2C3C72] text-[#0E1C4F] dark:text-[#F3EFE8] hover:border-[#F26B6F]'}`;
@@ -114,6 +124,17 @@ export const OnayBekleyenler: React.FC<Props> = ({
     for (const [id, karar] of Object.entries(ajan?.kararlar ?? {}) as Array<[string, OneriKarari]>) k[ajanAnahtari(id)] = onayKaydinaCevir(karar);
     return k;
   }, [items, ajan]);
+  /** Aşamalar için ajansın iş listesi, istekleri ve son tepsi (yalnız okunur) */
+  const ajansta = useAjansta(anahtar, tur);
+  const takip = useMemo(() => {
+    const v = ajansta.veri;
+    return takipListesi(items, {
+      istekler: v?.istekler || [], isler: v?.isler || [], tepsiOnaylar: v?.tepsiOnaylar ?? null,
+      oneriler: ajan?.oneriler || v?.oneriler || [], kararlar: ajan?.kararlar || v?.kararlar || {}
+    });
+  }, [items, ajansta.veri, ajan]);
+  const takipBul = useMemo(() => new Map(takip.map(t => [t.kaynak, t])), [takip]);
+  const takipIstekler = takip.filter(t => t.tur === 'istek');
   const adaylar = useMemo(() => bekleyenAdaylar(items), [items]);
   const eksikler = useMemo(() => eksikleriCikar(items), [items]);
   const eksikSayisi = eksikler.reduce((t, e) => t + e.sayi, 0);
@@ -261,14 +282,18 @@ export const OnayBekleyenler: React.FC<Props> = ({
   const listede = satirlar.filter(s => nerede(s) === 'liste');
   const bekletilen = satirlar.filter(s => nerede(s) === 'bekletilen');
   const arsivde = satirlar.filter(s => nerede(s) === 'arsiv');
+  // Yeni hâli onaya düşmüş olan eski satır hiçbir yerde görünmez (takip listesinde yok)
+  const ajanstaki = satirlar.filter(s => nerede(s) === 'ajansta' && takipBul.has(s.anahtar));
+  const ajanstaSayisi = ajanstaki.length + takipIstekler.length;
   const say = (k: Kaynak) => listede.filter(s => s.kaynak === k).length || undefined;
 
   const gorunen = suzgec === 'bekletilen' ? bekletilen
     : suzgec === 'arsiv' ? arsivde
+    : suzgec === 'ajansta' ? ajanstaki
     : suzgec === 'eksikler' ? []
     : suzgec === 'hepsi' ? listede
     : listede.filter(s => s.kaynak === ({ isler: 'is', oneriler: 'oneri', ajanlar: 'ajan', kararlar: 'karar' } as const)[suzgec]);
-  const listeGorunumu = suzgec !== 'bekletilen' && suzgec !== 'arsiv';
+  const listeGorunumu = suzgec !== 'bekletilen' && suzgec !== 'arsiv' && suzgec !== 'ajansta';
   const seciliSatirlar = gorunen.filter(s => secili.has(s.anahtar));
 
   const SUZGECLER: Array<{ id: Suzgec; ad: string; sayi?: number }> = [
@@ -277,6 +302,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     { id: 'oneriler', ad: 'Öneriler', sayi: say('oneri') },
     { id: 'ajanlar', ad: 'Ajanların işleri', sayi: say('ajan') },
     { id: 'kararlar', ad: 'Ajansın kararları', sayi: say('karar') },
+    { id: 'ajansta', ad: 'Ajansta', sayi: ajanstaSayisi || undefined },
     { id: 'bekletilen', ad: 'Bekletilen', sayi: bekletilen.length || undefined },
     { id: 'arsiv', ad: 'Arşiv', sayi: arsivde.length || undefined },
     { id: 'eksikler', ad: 'Eksikler', sayi: eksikSayisi || undefined }
@@ -344,13 +370,15 @@ export const OnayBekleyenler: React.FC<Props> = ({
     if (!not.trim() && !secenekler.length) throw new Error('bir not yaz ya da bir seçenek seç');
     const r = await yaz({ [s.anahtar]: { durum: 'duzenle', not, secenekler, zaman: Date.now() } });
     setPanel(null);
-    if (s.kaynak === 'ajan') return 'Not ajansa gitti. Kems işi notunla ilgili ajana geri verir; yeni hâli buraya gelir.';
-    if (!anahtar) return 'Not kaydedildi. Bu tarayıcıda GitHub anahtarı olmadığı için ajansa gitmedi; Ajans bağlantısı\'nda anahtar girince "Tepsiyi ajansa gönder" ile gider.';
+    setAcik(null);
+    if (s.kaynak === 'ajan') return 'Not ajansa gitti; iş "Ajansta" süzgecine geçti. Kems işi notunla ilgili ajana geri verir; yeni hâli buraya gelir.';
+    if (!anahtar) return 'Not kaydedildi; iş "Ajansta" süzgecine geçti. Bu tarayıcıda GitHub anahtarı olmadığı için ajansa gitmedi; Ajans bağlantısı\'nda anahtar girince "Tepsiyi ajansa gönder" ile gider.';
     try {
       await tepsiyiGonder(anahtar, tepsiDosyasi(yazilmisItems(r)));
-      return 'Not kaydedildi ve tepsiyle ajansa gitti. Ajans bir sonraki çalışmasında notuna göre revize eder.';
+      setTur(t => t + 1); // aşama için tepsiyi yeniden oku
+      return 'Not kaydedildi ve tepsiyle ajansa gitti; iş "Ajansta" süzgecine geçti. Ajans bir sonraki çalışmasında notuna göre revize eder.';
     } catch (e) {
-      return `Not kaydedildi ama ajansa gönderilemedi (${hataYazi(e)}). Ajans bağlantısı → "Tepsiyi ajansa gönder"le yeniden dene.`;
+      return `Not kaydedildi ama ajansa gönderilemedi (${hataYazi(e)}); iş "Ajansta" süzgecinde. Ajans bağlantısı → "Tepsiyi ajansa gönder"le yeniden dene.`;
     }
   });
 
@@ -383,6 +411,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     const bu = calisan === s.anahtar;
     const mesgul = !!calisan;
     const p = panel?.anahtar === s.anahtar ? panel.tur : null;
+    const t = suzgec === 'ajansta' ? takipBul.get(s.anahtar) : undefined;
     return (
       <li key={s.anahtar} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72]">
         <div className="flex items-center gap-2">
@@ -397,13 +426,15 @@ export const OnayBekleyenler: React.FC<Props> = ({
             <span className={`flex-1 min-w-0 truncate text-[13px] ${YAZI}`}>{s.baslik}</span>
             {k?.durum === 'duzenle' && <Pencil className="w-3.5 h-3.5 shrink-0 text-[#F26B6F]" aria-label="Düzenleme notu var" />}
             {suzgec === 'bekletilen' && k?.tarih && <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{tarihYaz(k.tarih)}</span>}
-            {suzgec !== 'bekletilen' && s.zamanYazi && <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{s.zamanYazi}</span>}
+            {suzgec === 'ajansta' && t && <span className={`shrink-0 text-[10px] font-semibold text-[#F26B6F]`}>{asamaAdi(t)}</span>}
+            {suzgec !== 'bekletilen' && suzgec !== 'ajansta' && s.zamanYazi && <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{s.zamanYazi}</span>}
             {buAcik ? <ChevronDown className="w-4 h-4 text-[#F26B6F] shrink-0" /> : <ChevronRight className="w-4 h-4 text-[#CFC5B4] shrink-0" />}
           </button>
         </div>
 
         {buAcik && (
           <div className="pb-3 space-y-2">
+            {t && <TakipGovdesi s={t} notGizle />}
             {s.govde}
 
             {k?.durum === 'duzenle' && (
@@ -512,6 +543,21 @@ export const OnayBekleyenler: React.FC<Props> = ({
     );
   };
 
+  const istekGoster = (t: TakipSatiri) => {
+    const buAcik = acik === `takip:${t.kaynak}`;
+    return (
+      <li key={t.kaynak} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72]">
+        <button type="button" onClick={() => setAcik(buAcik ? null : `takip:${t.kaynak}`)} className="w-full min-h-11 flex items-center gap-2.5 py-2 text-left cursor-pointer">
+          <i className="not-italic shrink-0 px-1.5 py-0.5 rounded bg-[#F3EFE8] dark:bg-[#17345A] text-[9px] font-mono font-bold tracking-wider text-[#6A5E4C] dark:text-[#A6B0C9]">İSTEK</i>
+          <span className={`flex-1 min-w-0 text-[13px] leading-snug line-clamp-2 ${YAZI}`}>{t.baslik}</span>
+          <span className="shrink-0 text-[10px] font-semibold text-[#F26B6F]">{asamaAdi(t)}</span>
+          {buAcik ? <ChevronDown className="w-4 h-4 text-[#F26B6F] shrink-0" /> : <ChevronRight className="w-4 h-4 text-[#CFC5B4] shrink-0" />}
+        </button>
+        {buAcik && <div className="pb-3"><TakipGovdesi s={t} /></div>}
+      </li>
+    );
+  };
+
   const kararlarGorunur = suzgec === 'hepsi' || suzgec === 'kararlar' || suzgec === 'ajanlar';
   const d = kararlar.dosya;
 
@@ -599,9 +645,10 @@ export const OnayBekleyenler: React.FC<Props> = ({
           )}
           {suzgec === 'bekletilen' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Tarihi gelen kendiliğinden listeye döner.</p>}
           {suzgec === 'arsiv' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Arşivdekiler bekler; "Listeye geri al" deyince yeniden onayına gelir.</p>}
+          {suzgec === 'ajansta' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Düzenle dediğin işler ajansta. Yeni hâli gelince buradan kalkar, listeye yeni satır olarak düşer. "Listeye geri al" notu geri çeker.</p>}
           {gorunen.length ? <ul>{gorunen.map(satirGoster)}</ul> : (
             <p className={`text-[12px] ${IKINCIL}`}>
-              {suzgec === 'bekletilen' ? 'Bekletilen yok.' : suzgec === 'arsiv' ? 'Arşiv boş.' : 'Onayını bekleyen bir şey yok.'}
+              {suzgec === 'bekletilen' ? 'Bekletilen yok.' : suzgec === 'arsiv' ? 'Arşiv boş.' : suzgec === 'ajansta' ? 'Düzenle dediğin bir iş yok.' : 'Onayını bekleyen bir şey yok.'}
             </p>
           )}
           {/* Bu açılışta biten tek seferlik işler */}
@@ -610,6 +657,17 @@ export const OnayBekleyenler: React.FC<Props> = ({
               <Check className="w-3.5 h-3.5 text-[#2F7A45] dark:text-[#9FD3A9]" /> {r}
             </p>
           ))}
+        </section>
+      )}
+
+      {/* Ajansta: Kemal'in ajan düğmesiyle ve Yapılacak ekle'den verdikleri (yalnız okunur) */}
+      {suzgec === 'ajansta' && (
+        <section className={`${KART} p-4`}>
+          <div className={ETIKET}>Ajana verdiklerin · {takipIstekler.length}</div>
+          {ajansta.hata && <p className={`mt-2 text-[12px] ${YAZI}`}>Ajansın iş listesi okunamadı ({ajansta.hata}); aşamalar "Sırada" görünür.</p>}
+          {!anahtar ? <p className={`mt-2 text-[12px] ${IKINCIL}`}>Bu tarayıcıda GitHub anahtarı yok; istekler okunamıyor.</p>
+            : takipIstekler.length ? <ul className="mt-1">{takipIstekler.map(t => istekGoster(t))}</ul>
+            : <p className={`mt-2 text-[12px] ${IKINCIL}`}>Ajansta bekleyen isteğin yok.</p>}
         </section>
       )}
 

@@ -32,7 +32,8 @@ export interface OnayKaydi {
   zaman: number;
 }
 
-export type Gorunum = 'liste' | 'bekletilen' | 'arsiv' | 'gizli';
+/** ajansta: Düzenle notuyla ajansa geri verildi (3 Kasım); yeni hâli gelene kadar listede değil */
+export type Gorunum = 'liste' | 'bekletilen' | 'arsiv' | 'ajansta' | 'gizli';
 
 /** Düzenle'deki hazır seçenekler */
 export const HAZIR_SECENEKLER = ['Daha kısa', 'Daha sade', 'Kanona daha sadık', 'Başka seçenekler getir', 'Yeniden dene'] as const;
@@ -67,19 +68,20 @@ export function onayKayitlari(items: Item[]): Record<string, OnayKaydi> {
   return sonuc;
 }
 
-/** Satır nerede görünür: listede, bekletilenlerde, arşivde ya da hiç */
+/** Satır nerede görünür: listede, bekletilenlerde, arşivde, ajansta ya da hiç */
 export function gorunum(kayit: OnayKaydi | undefined, gun = bugun()): Gorunum {
   if (!kayit) return 'liste';
   if (kayit.durum === 'arsiv') return 'arsiv';
   if (kayit.durum === 'silindi') return 'gizli';
   // Tarihi gelen bekletme kendiliğinden listeye döner (kayıt değişmez)
   if (kayit.durum === 'bekle') return kayit.tarih && kayit.tarih > gun ? 'bekletilen' : 'liste';
+  if (kayit.durum === 'duzenle') return 'ajansta';
   return 'liste';
 }
 
 export const oneriAnahtari = (id: string) => `oneri:${id}`;
 
-/** Listede görünen öneriler (bekletilen ve arşivdekiler hariç); zil bunu sayar */
+/** Listede görünen öneriler (bekletilen, arşivdeki ve ajanstakiler hariç); zil bunu sayar */
 export function listedekiOneriler(items: Item[], adaylar: Item[]): Item[] {
   const k = onayKayitlari(items);
   if (!Object.keys(k).length) return adaylar;
