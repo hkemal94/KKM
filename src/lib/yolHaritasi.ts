@@ -205,6 +205,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'KKM ekranları son PR: İçerik → Sosyal medya → Gönderiler (her gönderi bir kart, ajansın taslakları "Benim listeme al"); Temizlik\'te Kems Company kurulus ve Düzada activeEra eski alanları' },
   { id: 'pinterest-onizleme', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'İlham ve kaynaklar: bağlantı Pinterest panosuysa panodaki pinlerin küçük resimleri (ilk 12, "Tümünü gör"); resme basınca pin Pinterest\'te açılır, kayda yazmaz' },
+  { id: 'kullanilmayan-dosyalar', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kems', bitti: true,
+    ad: 'Temizlik: hiçbir yerden kullanılmayan dosyalar silindi (kökteki logo-* ve doku_*.png, src/lib/aiCagir.ts, siteHatasi.ts); ekranda değişiklik yok' },
   { id: 'isler-ve-takvim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
   { id: 'turkce-buyuk-harf', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kems', bitti: true,
