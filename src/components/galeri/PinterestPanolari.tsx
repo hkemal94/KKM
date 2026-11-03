@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ExternalLink, Plus, Check, X } from 'lucide-react';
 import type { Item } from '../../types';
 
@@ -40,6 +40,9 @@ export const PinterestPanolari: React.FC<Props> = ({ items, onAddItem, onDeleteI
   const [hata, setHata] = useState<string | null>(null);
   const [pinler, setPinler] = useState<Record<string, Pin[] | 'yukleniyor' | string>>({});
   const [silOnay, setSilOnay] = useState<string | null>(null);
+  // Galeriye alınırken bekleyen pinler (görsel adresiyle): ikinci basış ikinci kayıt açmasın
+  const [aliniyor, setAliniyor] = useState<Set<string>>(() => new Set());
+  const aliniyorRef = useRef<Set<string>>(new Set());
 
   const panolar = items.filter(i => i.type === 'ilham_kaynak' && !i.archived && i.metadata?.kaynak === 'pinterest');
   const galeridekiler = new Set(items.filter(i => i.type === 'ilham_gorsel' && !i.archived).map(i => i.images?.[0]).filter(Boolean));
@@ -80,7 +83,22 @@ export const PinterestPanolari: React.FC<Props> = ({ items, onAddItem, onDeleteI
     }
   };
 
-  const galeriyeAl = (pin: Pin, pano: Item) => onAddItem({
+  const galeriyeAl = async (pin: Pin, pano: Item) => {
+    const anahtar = pin.image;
+    if (aliniyorRef.current.has(anahtar)) return;
+    aliniyorRef.current.add(anahtar);
+    setAliniyor(new Set(aliniyorRef.current));
+    try {
+      await galeriKaydiYaz(pin, pano);
+    } catch {
+      // Uyarıyı kayıt katmanı zaten gösteriyor (kayıt yazılamadı şeridi); burada yalnız hata yutulmadan sonlanır
+    } finally {
+      aliniyorRef.current.delete(anahtar);
+      setAliniyor(new Set(aliniyorRef.current));
+    }
+  };
+
+  const galeriKaydiYaz = (pin: Pin, pano: Item) => onAddItem({
     title: pin.title || 'Pinterest ilhamı',
     area: 'ilham',
     type: 'ilham_gorsel',
@@ -131,14 +149,15 @@ export const PinterestPanolari: React.FC<Props> = ({ items, onAddItem, onDeleteI
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                   {p.map((pin, idx) => {
                     const alindi = galeridekiler.has(pin.image);
+                    const bekliyor = aliniyor.has(pin.image);
                     return (
                       <div key={`${pin.link || pin.image}-${idx}`} className={`rounded-lg overflow-hidden border ${CIZGI} bg-[#F3EFE8] dark:bg-[#17345A]`}>
                         <a href={pin.link} target="_blank" rel="noreferrer" title={pin.title}>
                           <img src={pin.image} alt="" loading="lazy" referrerPolicy="no-referrer" className="w-full aspect-[3/4] object-cover" />
                         </a>
-                        <button type="button" disabled={alindi} onClick={() => void galeriyeAl(pin, pano)}
+                        <button type="button" disabled={alindi || bekliyor} onClick={() => void galeriyeAl(pin, pano)}
                           className={`w-full py-1 text-[10.5px] font-semibold inline-flex items-center justify-center gap-1 cursor-pointer disabled:cursor-default ${alindi ? 'text-[#3F6B45] dark:text-[#B9D8BC]' : `${YAZI} hover:text-[#D6484C]`}`}>
-                          {alindi ? <><Check className="w-3 h-3" /> Galeride</> : '+ Galeriye al'}
+                          {alindi ? <><Check className="w-3 h-3" /> Galeride</> : bekliyor ? 'Alınıyor…' : '+ Galeriye al'}
                         </button>
                       </div>
                     );

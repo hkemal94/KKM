@@ -175,6 +175,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki düzenleyici: yan panel ve sekmeler, "Diğer bilgiler", onaylı "Maddeyi sil"; kabul edilen öneri bölümleri sitede' },
   { id: 'kararlar-sil-degistir', paket: 'W', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
     ad: '"Ajansın kararlarını uygula" takma ad silebiliyor, dolu künye alanını değiştirebiliyor, metinden paragraf silebiliyor' },
+  { id: 'cift-basis-korumasi', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Çift basışa karşı: viki "Ajana öneri hazırlat" ve Pinterest "Galeriye al" işlem sürerken kilitli; tema kaydedilemezse uyarı çıkar' },
   { id: 'karar-kimlikle', paket: 'W', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: '"Ajansın kararlarını uygula" maddeyi kimliğiyle de buluyor (aynı adla iki kayıt olunca takılmıyor)' },
   { id: 'yenile-yerinde', paket: 'K', kimde: 'claude', nereden: '23 Ekim · Kemal', bitti: true,
