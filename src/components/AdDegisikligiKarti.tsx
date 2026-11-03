@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { KisaListe } from './kabuk/KisaListe';
 import { PenLine } from 'lucide-react';
 import type { Item } from '../types';
 import { adIsiVar, adIsleri, adYazimlari } from '../lib/adYayma';
@@ -54,10 +55,10 @@ export const AdDegisikligiKarti: React.FC<{
           <p className="mt-0.5 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]">
             Eski adın geçtiği maddelerde yeni ad yazılır (metin, künye, bölümler). Tarihî eski adlara (İskele'nin "Kemsköy"ü gibi) dokunulmaz.
           </p>
-          <ul className="mt-1.5 list-disc pl-5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
+          <KisaListe className="mt-1.5 list-disc pl-5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
             {isler.metin.map(m => <li key={m.item.id}>{m.item.title}</li>)}
             {isler.kopya.map(k => <li key={k.item.id}>Boş kopya silinir: {k.item.title} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">(asıl madde: {k.asil.title})</span></li>)}
-          </ul>
+          </KisaListe>
         </div>
         <button type="button" disabled={calisiyor} onClick={() => void isle()}
           className="shrink-0 min-h-9 px-3 rounded-lg bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] text-[12px] font-semibold disabled:opacity-40 cursor-pointer">

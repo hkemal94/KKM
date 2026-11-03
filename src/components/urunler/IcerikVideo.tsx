@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { KisaListe } from '../kabuk/KisaListe';
 import { ExternalLink, FolderOpen } from 'lucide-react';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import { DURUM_ADI, isleriOku, kimdeAdi, type AjansIsi } from '../../lib/isler';
@@ -55,14 +56,14 @@ export function IcerikVideo({ onAjans }: { onAjans: () => void }) {
         ) : !isler.length ? (
           <p className={`text-[12px] ${IKINCIL}`}>Şu an video işi yok.</p>
         ) : (
-          <ul className="space-y-1.5">
+          <KisaListe className="space-y-1.5">
             {isler.map(i => (
               <li key={i.id} className={`text-[12px] ${YAZI}`}>
                 <span className="font-semibold">{DURUM_ADI[i.durum]}</span> · {i.metin}
                 <span className={`block text-[11px] ${IKINCIL}`}>{kimdeAdi(i.kimde)}{i.not ? ` · ${i.not}` : ''}</span>
               </li>
             ))}
-          </ul>
+          </KisaListe>
         )}
       </section>
     </div>

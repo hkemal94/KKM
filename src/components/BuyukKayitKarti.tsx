@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { KisaListe } from './kabuk/KisaListe';
 import { HardDrive } from 'lucide-react';
 import type { Item } from '../types';
 import { buyukKayitlar, kaydiKucult, kayitBoyutu, BUYUK_SINIR } from '../lib/buyukKayitlar';
@@ -44,9 +45,9 @@ export const BuyukKayitKarti: React.FC<{ items: Item[]; onUpdateItem: (item: Ite
             Bir kayıt 1 MB'ı aşınca kaydedilmiyor; bu kayıtlara birkaç satır eklemek bile yetiyor. İçlerindeki görseller küçültülür
             (saydam olanlar saydam kalır, en uzun kenar 1400 px). Metne ve künyeye dokunulmaz. Sınır: {kb(BUYUK_SINIR)}.
           </p>
-          <ul className="mt-1.5 list-disc pl-5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
+          <KisaListe className="mt-1.5 list-disc pl-5 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
             {liste.map(x => <li key={x.item.id}>{x.item.title || x.item.id} · {kb(x.boyut)}</li>)}
-          </ul>
+          </KisaListe>
         </div>
         <button type="button" disabled={calisiyor} onClick={() => void kucult()}
           className="shrink-0 min-h-9 px-3 rounded-lg bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] text-[12px] font-semibold disabled:opacity-40 cursor-pointer">

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { KisaListe } from './kabuk/KisaListe';
 import { ArrowRight, Bot, ChevronDown, CircleCheck } from 'lucide-react';
 import type { AreaType, Item } from '../types';
 import { TemizlikKarti, EskiAlanKarti } from './TemizlikKarti';
@@ -180,7 +181,7 @@ export const Eksikler: React.FC<EksiklerProps> = ({
               </button>
               {acik && (
                 <div className="border border-t-0 border-[#F26B6F] rounded-b-xl bg-white/70 dark:bg-[#0E1C4F]/60 max-h-80 overflow-y-auto">
-                  <ul className="divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60">
+                  <KisaListe className="divide-y divide-[#CFC5B4]/50 dark:divide-[#2C3C72]/60" dugmeClassName="px-4">
                     {liste.map((k, n) => (
                       <li key={(k.id || k.ad) + n} className="flex items-center">
                         <div className="flex-1 min-w-0">
@@ -213,7 +214,7 @@ export const Eksikler: React.FC<EksiklerProps> = ({
                         )}
                       </li>
                     ))}
-                  </ul>
+                  </KisaListe>
                   <div className="sticky bottom-0 flex flex-wrap items-center gap-3 px-4 py-2 border-t border-[#CFC5B4]/50 dark:border-[#2C3C72]/60 bg-[#FAF8F5] dark:bg-[#13204A]">
                     <button
                       type="button"
