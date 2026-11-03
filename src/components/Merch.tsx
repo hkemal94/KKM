@@ -1041,6 +1041,7 @@ export default function Merch({
                                 setActiveImageIdx(prev => (prev - 1 + activeItem.images.length) % activeItem.images.length);
                               }}
                               className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 dark:bg-[#13204A]/95 border border-[#CFC5B4] text-[#0E1C4F] dark:text-[#F3EFE8] flex items-center justify-center hover:bg-[#F26B6F] hover:text-white transition-all cursor-pointer opacity-100 lg:opacity-0 lg:group-hover/showcase:opacity-100 shadow-md z-10"
+                              aria-label="Önceki Görsel"
                               title="Önceki Görsel"
                             >
                               <ChevronLeft className="w-5 h-5" />
@@ -1052,6 +1053,7 @@ export default function Merch({
                                 setActiveImageIdx(prev => (prev + 1) % activeItem.images.length);
                               }}
                               className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 dark:bg-[#13204A]/95 border border-[#CFC5B4] text-[#0E1C4F] dark:text-[#F3EFE8] flex items-center justify-center hover:bg-[#F26B6F] hover:text-white transition-all cursor-pointer opacity-100 lg:opacity-0 lg:group-hover/showcase:opacity-100 shadow-md z-10"
+                              aria-label="Sonraki Görsel"
                               title="Sonraki Görsel"
                             >
                               <ChevronRight className="w-5 h-5" />
@@ -1730,6 +1732,7 @@ export default function Merch({
                                   setActiveImageIdx(prev => (prev - 1 + activeItem.images.length) % activeItem.images.length);
                                 }}
                                 className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 dark:bg-[#13204A]/90 border border-[#CFC5B4] text-[#0E1C4F] dark:text-[#F3EFE8] flex items-center justify-center hover:bg-[#F26B6F] hover:text-white transition-all cursor-pointer opacity-0 group-hover/showcase:opacity-100 shadow-md z-10"
+                                aria-label="Önceki Görsel"
                                 title="Önceki Görsel"
                               >
                                 <ChevronLeft className="w-5 h-5" />
@@ -1741,6 +1744,7 @@ export default function Merch({
                                   setActiveImageIdx(prev => (prev + 1) % activeItem.images.length);
                                 }}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 dark:bg-[#13204A]/90 border border-[#CFC5B4] text-[#0E1C4F] dark:text-[#F3EFE8] flex items-center justify-center hover:bg-[#F26B6F] hover:text-white transition-all cursor-pointer opacity-0 group-hover/showcase:opacity-100 shadow-md z-10"
+                                aria-label="Sonraki Görsel"
                                 title="Sonraki Görsel"
                               >
                                 <ChevronRight className="w-5 h-5" />

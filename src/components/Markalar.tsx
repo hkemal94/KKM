@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { KisaListe } from './kabuk/KisaListe';
 import { LogoKutusu } from './LogoKutusu';
+import { aramaKatla } from '../lib/aramaKatla';
 import {
   Shield,
   Plus,
@@ -237,11 +238,11 @@ export default function Markalar({
   // Filter existing entities by search query
   const filteredExistingEntities = useMemo(() => {
     if (!searchQuery.trim()) return existingEntitiesToLink;
-    const query = searchQuery.toLocaleLowerCase('tr');
+    const query = aramaKatla(searchQuery);
     return existingEntitiesToLink.filter(i => 
-      i.title.toLocaleLowerCase('tr').includes(query) || 
-      (i.notes && i.notes.toLocaleLowerCase('tr').includes(query)) ||
-      (i.tags && i.tags.some(t => t.toLocaleLowerCase('tr').includes(query)))
+      aramaKatla(i.title).includes(query) || 
+      (i.notes && aramaKatla(i.notes).includes(query)) ||
+      (i.tags && i.tags.some(t => aramaKatla(t).includes(query)))
     );
   }, [existingEntitiesToLink, searchQuery]);
 
