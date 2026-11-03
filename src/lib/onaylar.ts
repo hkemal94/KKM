@@ -38,6 +38,13 @@ export type Gorunum = 'liste' | 'bekletilen' | 'arsiv' | 'ajansta' | 'gizli';
 /** Düzenle'deki hazır seçenekler */
 export const HAZIR_SECENEKLER = ['Daha kısa', 'Daha sade', 'Kanona daha sadık', 'Başka seçenekler getir', 'Yeniden dene'] as const;
 
+/**
+ * "Ajansa yolla" (3 Kasım, Kemal): not yazmadan "olduğu gibi yeniden yap".
+ * Düzenle'nin yazdığı kaydın aynısı (`durum: 'duzenle'`) bu hazır notla yazılır;
+ * ajans (Kems) onu Düzenle notu gibi okur, ayrı bir şey bilmesi gerekmez.
+ */
+export const AJANSA_YOLLA_NOTU = 'Ajansa yolla: olduğu gibi yeniden yap';
+
 /** Bugünün tarihi (YYYY-AA-GG, yerel saat) */
 export function bugun(simdi = new Date()): string {
   const y = simdi.getFullYear(), a = String(simdi.getMonth() + 1).padStart(2, '0'), g = String(simdi.getDate()).padStart(2, '0');
