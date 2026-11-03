@@ -52,6 +52,7 @@ import ArtiMenu from './components/kabuk/ArtiMenu';
 import HesapMenusu from './components/kabuk/HesapMenusu';
 import { HataKapsayici } from './components/kabuk/HataKapsayici';
 import { ayrilmayaIzinVar } from './lib/kaydedilmemis';
+import { useVikiOtoGonder } from './lib/vikiOtoGonder';
 
 /**
  * Dinamik modül yükleyici: Ağ gecikmesi veya Vite önbellek yenilenmesi
@@ -171,6 +172,8 @@ export default function App() {
   // yüklenince ekran yenilenir (maddeGorseli bellek önbelleğinden okur)
   useGorselSurumu();
   useEffect(() => { bagliGorselleriYukle(items); }, [items]);
+  // Viki değişince ajansa kendiliğinden gider (3 Kasım); kayda yazmaz
+  useVikiOtoGonder(items, !!user);
   const [settings, setSettings] = useState<UserSettings>({ theme: 'arşiv' });
   
   // A ref lock to prevent infinite loops of room de-duplication on items real-time updates

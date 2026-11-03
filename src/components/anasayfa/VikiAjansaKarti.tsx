@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ExternalLink, Send } from 'lucide-react';
 import type { Item } from '../../types';
 import { sinirliVikiDosyasi, vikiDosyasi, vikiMaddeleri, vikiyiGonder } from '../../lib/vikiAjansa';
+import { sonOtoGonderim } from '../../lib/vikiOtoGonder';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
 /**
@@ -34,6 +35,10 @@ export const VikiAjansaKarti: React.FC<{ items: Item[]; anahtar: string }> = ({ 
         <p className={`text-[13px] ${IKINCIL}`}>
           Vikide {sayi} madde var (arşivdekiler ve öneriler hariç). Gönderince ajansın Viki Editörü vikiyi okuyabilir.
           Görseller ve harita verisi gitmez; KKM kayıtlarına bir şey yazılmaz. Her basışta önceki dosyanın yerine yenisi yazılır.
+        </p>
+        <p className={`mt-1 text-[13px] ${IKINCIL}`}>
+          Kendiliğinden gönderim açık: KKM açıkken viki değişince birkaç dakika içinde kendisi gönderir, düğmeye basman gerekmez.
+          {sonOtoGonderim() ? ` Son kendiliğinden gönderim: ${new Date(sonOtoGonderim()).toLocaleString('tr-TR')}.` : ''}
         </p>
       </div>
       {typeof durum === 'object' && 'adres' in durum && (
