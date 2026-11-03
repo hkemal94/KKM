@@ -203,6 +203,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 9. adım: Ajans Panosu kapandı; işlerin tek kaynağı ajansın iş dosyası (Kimde ne var), sorular Onay bekleyenler\'de' },
   { id: 'telefona-bildirim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 8. adım: zil ve Onay noktası ajanların işlerini ve ajansın kararlarını da sayıyor; telefona bildirim Kems\'ten (Claude uygulaması, çalışma sonunda tek bildirim)' },
+  { id: 'tepsi-oto-gonder', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Tepsi ajansa kendiliğinden gider: KKM açıkken tepsi değişince birkaç dakika içinde (açılışta da bir kez); elle düğme de durur, kayda yazmaz' },
   { id: 'viki-oto-gonder', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Viki ajansa kendiliğinden gider: KKM açıkken viki değişince birkaç dakika içinde (açılışta da bir kez); kayda yazmaz' },
   { id: 'galeri-temizligi', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
