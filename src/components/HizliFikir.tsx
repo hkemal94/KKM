@@ -57,6 +57,8 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
   const [donusturulen, setDonusturulen] = useState<string | null>(null);
   const [rapor, setRapor] = useState<string | null>(null);
   const [gonderilen, setGonderilen] = useState<string | null>(null);
+  // Dosyası ajansa gitmiş ama işareti yazılamamış fikirler: bu oturumda yeniden gönderilmez (-2 kopya açılmasın)
+  const [gidenler, setGidenler] = useState<Set<string>>(() => new Set());
   const girdi = useRef<HTMLInputElement | null>(null);
 
   const fikirler = useMemo(
@@ -136,7 +138,7 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
 
   /** Fikri ajansın gizli deposuna yazar; kayda yalnız gönderim zamanı işlenir (Kemal bastığı için) */
   const ajansaYolla = async (f: Item) => {
-    if (gonderilen || (f.metadata as any)?.ajansaGonderildi) return; // ikinci basış yeni dosya açmaz
+    if (gonderilen || gidenler.has(f.id) || (f.metadata as any)?.ajansaGonderildi) return; // ikinci basış yeni dosya açmaz
     if (!anahtariOku()) {
       setRapor('Önce ajans bağlantısını kur: GitHub anahtarı Ajans bağlantısı\'nda.');
       onAjansBaglantisi();
@@ -144,17 +146,28 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
     }
     setGonderilen(f.id);
     setRapor(null);
+    const zaman = new Date();
     try {
-      const zaman = new Date();
-      await ajansaGonder(anahtariOku(), f.title, fikirDosyasiMetni(f, zaman), zaman);
-      await onUpdateItem({
-        ...f,
-        metadata: { ...((f.metadata || {}) as any), ajansaGonderildi: zaman.toISOString() },
-        updatedAt: Date.now()
-      });
-      setRapor('Ajansa gönderildi.');
-    } catch (e) {
-      setRapor(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}`);
+      // 1. adım: dosya ajansa gider
+      try {
+        await ajansaGonder(anahtariOku(), f.title, fikirDosyasiMetni(f, zaman), zaman);
+      } catch (e) {
+        setRapor(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}`);
+        return;
+      }
+      // Dosya gitti: bundan sonra ne olursa olsun bu oturumda yeniden gönderilmez
+      setGidenler(onceki => new Set(onceki).add(f.id));
+      // 2. adım: kayda gönderim işareti
+      try {
+        await onUpdateItem({
+          ...f,
+          metadata: { ...((f.metadata || {}) as any), ajansaGonderildi: zaman.toISOString() },
+          updatedAt: Date.now()
+        });
+        setRapor('Ajansa gönderildi.');
+      } catch {
+        setRapor('Dosya ajansa gitti; işaret yazılamadı. Yeniden gönderme.');
+      }
     } finally {
       setGonderilen(null);
     }
@@ -269,10 +282,10 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
                       <Check className="w-2.5 h-2.5" /> Ajansa gönderildi · {new Date(gonderimZamani).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
                     </span>
                   ) : (
-                    <button onClick={() => void ajansaYolla(f)} disabled={gonderilen === f.id}
+                    <button onClick={() => void ajansaYolla(f)} disabled={gonderilen === f.id || gidenler.has(f.id)}
                             className="flex items-center gap-1 cursor-pointer font-mono disabled:opacity-40"
                             style={{ fontSize: 10, color: '#0E1C4F' }}>
-                      <Send className="w-2.5 h-2.5" /> {gonderilen === f.id ? 'gönderiliyor…' : 'Ajansa gönder'}
+                      <Send className="w-2.5 h-2.5" /> {gonderilen === f.id ? 'gönderiliyor…' : gidenler.has(f.id) ? 'ajansa gitti' : 'Ajansa gönder'}
                     </button>
                   )}
                 </div>
