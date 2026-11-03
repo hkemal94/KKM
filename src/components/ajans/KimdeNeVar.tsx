@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, ExternalLink, RefreshCw } from 'lucide-react';
 import { anahtariOku } from '../../lib/oyunAyarlari';
-import { DURUM_ADI, isleriOku, kimdeAdi, oebekle, prAdresi, prBirlestiMi, type AjansIsi, type IsDosyasi } from '../../lib/isler';
+import { DURUM_ADI, isleriOku, kimdeAdi, konulara, oebekle, prAdresi, prBirlestiMi, type AjansIsi, type IsDosyasi } from '../../lib/isler';
 import { DUGME_BOS, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
 import type { Item } from '../../types';
 import { ASAMALAR, takipListesi, takiptekiIsler, useAjansta, type TakipSatiri } from '../../lib/ajansta';
@@ -14,6 +14,10 @@ import { TakipGovdesi } from './AsamaSeridi';
  *
  * Ajansta (3 Kasım): Kemal'in istekleri ve Düzenle notları aşamasıyla en üstte
  * (`lib/ajansta.ts`); bağlı işleri "Kems ve ajanlarda"da ikinci kez görünmez.
+ *
+ * 3 Kasım (Kemal): açık işler varsayılan olarak kategoriye (`konu`) göre;
+ * "Kimde" düğmesiyle eski öbekler. Biten işlerin hepsi altta açılır-kapanır
+ * kutuda, varsayılan kapalı.
  */
 interface Props {
   /** Düzenle notları ve öneri başlıkları için */
@@ -31,6 +35,8 @@ export const KimdeNeVar: React.FC<Props> = ({ items, onAjans }) => {
   const [dosya, setDosya] = useState<IsDosyasi | null | 'yukleniyor' | { hata: string }>('yukleniyor');
   const [birlesen, setBirlesen] = useState<Set<string>>(new Set());
   const [acik, setAcik] = useState<string | null>(null);
+  const [gorunum, setGorunum] = useState<'konu' | 'kimde'>('konu');
+  const [bitenAcik, setBitenAcik] = useState(false);
 
   useEffect(() => {
     if (!anahtar) return;
@@ -55,7 +61,8 @@ export const KimdeNeVar: React.FC<Props> = ({ items, onAjans }) => {
     if (!(dosya && typeof dosya === 'object' && 'isler' in dosya)) return null;
     const o = oebekle(dosya.isler, birlesen);
     const takipte = takiptekiIsler(takip);
-    return { ...o, ajansta: o.ajansta.filter(i => !takipte.has(i.id)) };
+    const ajansta = o.ajansta.filter(i => !takipte.has(i.id));
+    return { ...o, ajansta, konular: konulara([...o.sende, ...ajansta]) };
   }, [dosya, birlesen, takip]);
 
   if (!anahtar) {
@@ -141,9 +148,29 @@ export const KimdeNeVar: React.FC<Props> = ({ items, onAjans }) => {
         </section>
       )}
       {obek && (<>
-        {obekGoster('Senden beklenenler', obek.sende, 'Senden beklenen iş yok.')}
-        {obekGoster('Kems ve ajanlarda', obek.ajansta, 'Ajansta açık iş yok.')}
-        {obekGoster('Son bitenler', obek.biten, 'Son 7 günde biten iş yok.')}
+        <div className="flex items-center gap-1.5" role="group" aria-label="Açık işleri sırala">
+          {([['konu', 'Kategoriye göre'], ['kimde', 'Kimde']] as const).map(([id, ad]) => (
+            <button key={id} type="button" onClick={() => setGorunum(id)} aria-pressed={gorunum === id}
+              className={`min-h-9 px-3 rounded-full text-[12px] font-semibold border cursor-pointer ${gorunum === id ? 'bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] border-transparent' : `bg-[#FAF8F5] dark:bg-[#13204A] border-[#CFC5B4] dark:border-[#2C3C72] ${IKINCIL}`}`}>
+              {ad}
+            </button>
+          ))}
+        </div>
+        {gorunum === 'konu'
+          ? (obek.konular.length
+            ? obek.konular.map(k => <React.Fragment key={k.konu}>{obekGoster(k.konu, k.isler, '')}</React.Fragment>)
+            : <p className={`${KART} p-4 text-[12px] ${IKINCIL}`}>Açık iş yok.</p>)
+          : (<>
+            {obekGoster('Senden beklenenler', obek.sende, 'Senden beklenen iş yok.')}
+            {obekGoster('Kems ve ajanlarda', obek.ajansta, 'Ajansta açık iş yok.')}
+          </>)}
+        <section className={`${KART} p-4`}>
+          <button type="button" onClick={() => setBitenAcik(a => !a)} aria-expanded={bitenAcik} className="w-full min-h-9 flex items-center gap-2 text-left cursor-pointer">
+            <span className={`flex-1 ${ETIKET}`}>Biten işler ({obek.biten.length})</span>
+            {bitenAcik ? <ChevronDown className="w-4 h-4 text-[#F26B6F] shrink-0" /> : <ChevronRight className="w-4 h-4 text-[#CFC5B4] shrink-0" />}
+          </button>
+          {bitenAcik && (obek.biten.length ? <ul className="mt-1">{obek.biten.map(satir)}</ul> : <p className={`mt-2 text-[12px] ${IKINCIL}`}>Biten iş yok.</p>)}
+        </section>
       </>)}
     </div>
   );

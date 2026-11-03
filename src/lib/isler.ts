@@ -90,21 +90,45 @@ const AJAN_ADLARI: Record<string, string> = {
   'bulten-ajani': 'Bülten Ajanı', 'oyun-tasarimcisi': 'Oyun Tasarımcısı', 'oyun-gelistiricisi': 'Oyun Geliştiricisi',
   'kod-bakimcisi': 'Kod Bakımcısı', 'kod-gelistiricisi': 'Kod Geliştiricisi'
 };
+/** Kadrodaki ajan dosyalarının adları (Yapılacak ekle'de isteğe bağlı seçim için) */
+export const AJAN_DOSYALARI = Object.keys(AJAN_ADLARI);
 export const kimdeAdi = (k: string) => (k === 'Kemal' ? 'Sende' : AJAN_ADLARI[k] || k);
 
 export const DURUM_ADI: Record<IsDurumu, string> = { yeni: 'Yeni', goruldu: 'Görüldü', calisiyor: 'Çalışıyor', bitti: 'Bitti' };
 
-/** Ekrandaki üç öbek: sende bekleyenler, ajansta olanlar, son bitenler */
 /** Tarih son `gun` gün içinde mi (tarih yoksa hayır) */
-const sonGunlerde = (iso: string | undefined, gun: number) => !!iso && Date.now() - Date.parse(iso) < gun * 86_400_000;
+export const sonGunlerde = (iso: string | undefined, gun: number) => !!iso && Date.now() - Date.parse(iso) < gun * 86_400_000;
 
+/** Ekrandaki üç öbek: sende bekleyenler, ajansta olanlar, bitenler */
 export function oebekle(isler: AjansIsi[], birlesen: Set<string>) {
   const bittiMi = (i: AjansIsi) => i.durum === 'bitti' || birlesen.has(i.id);
   const acik = isler.filter(i => !bittiMi(i));
   return {
     sende: acik.filter(i => i.kimde === 'Kemal'),
     ajansta: acik.filter(i => i.kimde !== 'Kemal'),
-    // 9. adım (2 Kasım): iş dosyası artık bütün geçmişi tutuyor; ekranda son 7 günün bitenleri
-    biten: isler.filter(i => bittiMi(i) && (birlesen.has(i.id) || sonGunlerde(i.bitti || i.guncellendi, 7)))
+    // 3 Kasım (Kemal): biten işlerin hepsi, en yeni üstte (ekranda açılır-kapanır kutuda)
+    biten: isler.filter(bittiMi).sort((a, b) => bitisZamani(b) - bitisZamani(a))
   };
 }
+
+/**
+ * Kategoriye göre öbekler (3 Kasım, Kemal): işin `konu` alanı ("1 · KKM hataları"
+ * … "7 · Ajans düzeni"). Başında numara olanlar numara sırasıyla, numarasız
+ * konular ardından abece sırasıyla, konusuz işler en sonda "Diğer".
+ */
+export const DIGER_KONU = 'Diğer';
+export function konulara(isler: AjansIsi[]): Array<{ konu: string; isler: AjansIsi[] }> {
+  const m = new Map<string, AjansIsi[]>();
+  for (const i of isler) {
+    const k = i.konu?.trim() || DIGER_KONU;
+    m.set(k, [...(m.get(k) || []), i]);
+  }
+  const no = (k: string) => { const r = k.match(/^\s*(\d+)/); return r ? Number(r[1]) : null; };
+  const sira = (k: string) => (k === DIGER_KONU ? 2 : no(k) === null ? 1 : 0);
+  return [...m.entries()]
+    .sort(([a], [b]) => sira(a) - sira(b) || (no(a) ?? 0) - (no(b) ?? 0) || a.localeCompare(b, 'tr'))
+    .map(([konu, l]) => ({ konu, isler: l }));
+}
+
+/** Biten işin kapanış zamanı (ms; bilinmiyorsa 0) */
+export const bitisZamani = (i: AjansIsi) => Date.parse(i.bitti || i.guncellendi || i.tarih || '') || 0;

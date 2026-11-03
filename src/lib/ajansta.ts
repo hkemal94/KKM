@@ -196,3 +196,31 @@ export function takipListesi(items: Item[], veri: AjanstaVeri): TakipSatiri[] {
 export function takiptekiIsler(liste: TakipSatiri[]): Set<string> {
   return new Set(liste.map(s => s.durum.is?.id).filter((x): x is string => !!x));
 }
+
+/** Takvimde görünen ajan işi: Ajansta satırı ya da iş listesinde bir ajanda duran açık iş */
+export interface TakvimAjanIsi {
+  anahtar: string;
+  baslik: string;
+  /** İşin verildiği / iş listesine girdiği an (ms; bilinmiyorsa 0, takvimde güne konmaz) */
+  zaman: number;
+  durum: AsamaBilgisi;
+  /** Ajansta satırıysa kendisi (not ve ajansın notu için) */
+  satir?: TakipSatiri;
+}
+
+/**
+ * Takvim için ajan işleri (3 Kasım, Kemal: "takvimde ajan işleri aşamasıyla
+ * görünsün"): Ajansta satırları (aşamaları `asamaBul`'dan) ve iş listesinde
+ * bir ajanda duran, Ajansta'ya bağlı olmayan açık işler (aşaması "Ajanda").
+ * Yalnız okunur; hiçbir şey yazılmaz.
+ */
+export function takvimAjanIsleri(items: Item[], veri: AjanstaVeri): TakvimAjanIsi[] {
+  const takip = takipListesi(items, veri);
+  const takipte = takiptekiIsler(takip);
+  const liste: TakvimAjanIsi[] = takip.map(s => ({ anahtar: `takip:${s.kaynak}`, baslik: s.baslik, zaman: s.zaman, durum: s.durum, satir: s }));
+  for (const is of veri.isler) {
+    if (is.durum === 'bitti' || takipte.has(is.id) || is.kimde === 'Kems' || is.kimde === 'Kemal') continue;
+    liste.push({ anahtar: `is:${is.id}`, baslik: is.metin, zaman: Date.parse(is.tarih || is.guncellendi || '') || 0, durum: { asama: 'ajanda', kimde: is.kimde, is } });
+  }
+  return liste.sort((x, y) => y.zaman - x.zaman);
+}

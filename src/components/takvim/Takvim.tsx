@@ -10,6 +10,9 @@ import {
 } from '../../lib/sosyal';
 import { dropTarihi, takvimOlaylari, type TakvimOlayi, type TakvimTuru } from '../../lib/takvim';
 import { ajansGunu, ajansIcsEtkinlikleri } from '../../lib/ajansTakvimi';
+import { anahtariOku } from '../../lib/oyunAyarlari';
+import { takvimAjanIsleri, useAjansta, type TakvimAjanIsi } from '../../lib/ajansta';
+import { AsamaSeridi, asamaNotu } from '../ajans/AsamaSeridi';
 import { icsUret, type IcsEtkinlik } from '../../lib/takvimIcs';
 import { GonderiKarti } from '../sosyal/GonderiKarti';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/stil';
@@ -26,6 +29,11 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/s
  *
  * Hiçbir şey kendiliğinden kaydolmaz: seri boş yerleri yalnız görünür,
  * gönderi Kemal basınca açılır. Drop tarihi Merch'te girilir.
+ *
+ * 3 Kasım (Kemal): ajan işleri aşamasıyla görünür (`lib/ajansta.ts`; GitHub
+ * anahtarı varsa ajansın dosyalarından okunur): her iş verildiği günde, açık
+ * olanların hepsi ayrıca "Ajanlardaki işler"de. "Ajans" süzgeci ikisini de açar
+ * kapatır. Yalnız okunur.
  */
 
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>;
@@ -93,6 +101,20 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [acilacakId]);
 
+  const ajansta = useAjansta(anahtariOku(), 0);
+  const ajanIsleri = useMemo(() => (ajansta.veri ? takvimAjanIsleri(items, ajansta.veri) : []), [items, ajansta.veri]);
+  const ajanGunleri = useMemo(() => {
+    const m = new Map<string, TakvimAjanIsi[]>();
+    for (const a of ajanIsleri) {
+      if (!a.zaman) continue;
+      const d = new Date(a.zaman);
+      const t = tarihYaz(d.getFullYear(), d.getMonth(), d.getDate());
+      m.set(t, [...(m.get(t) || []), a]);
+    }
+    return m;
+  }, [ajanIsleri]);
+  const ajanGunu = (t: string) => (ajansAcik ? ajanGunleri.get(t) || [] : []);
+
   const ay = useMemo(() => { const d = new Date(secili + 'T12:00'); return { y: d.getFullYear(), a: d.getMonth() }; }, [secili]);
 
   const tum = useMemo(() => gonderiler(items), [items]);
@@ -135,7 +157,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
     }
     return m;
   }, [seriListesi, tum, aylar, bugun, seriSuz, kanalSuz, acik.gonderi]);
-  const doluMu = (t: string) => (olaylar.get(t)?.length || 0) + gunde(t).length + (bosYer.get(t)?.length || 0) > 0;
+  const doluMu = (t: string) => (olaylar.get(t)?.length || 0) + gunde(t).length + (bosYer.get(t)?.length || 0) + ajanGunu(t).length > 0;
 
   const yeni = (b: Partial<GonderiBilgisi>) => {
     const id = `sosyal_gonderi_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -248,23 +270,41 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
     </div>
   );
 
+  /** Ajan işi: başlık ve aşama şeridi (Ajansta'daki parçanın aynısı) */
+  const ajanIsiKarti = (a: TakvimAjanIsi) => (
+    <div key={a.anahtar} className="rounded-lg border-l-4 bg-[#FAF8F5] dark:bg-[#13204A] px-3 py-2 space-y-1.5 shadow-[0_1px_2px_rgba(14,28,79,0.06)]" style={{ borderLeftColor: AJANS_RENGI }}>
+      <p className={`text-[13px] font-semibold leading-snug line-clamp-2 ${YAZI}`}>{a.baslik}</p>
+      <AsamaSeridi durum={a.durum} />
+      <p className={`text-[11px] ${IKINCIL}`}>{asamaNotu({ durum: a.durum, gitti: a.satir?.gitti })}</p>
+    </div>
+  );
+  const ajanBlogu = (l: TakvimAjanIsi[]) => l.length > 0 && (
+    <div className="space-y-1.5">
+      <div className={ETIKET}>Ajan işleri · bu gün verilen</div>
+      {l.map(ajanIsiKarti)}
+    </div>
+  );
+
   /** Bir günün bütün içeriği; boşsa "boş · ekle" */
   const gunIcerigi = (t: string) => {
     const liste = gunde(t);
     const bos = bosYer.get(t) || [];
     const ol = olaylar.get(t) || [];
     const aj = ajansAcik ? ajansGunu(t) : [];
+    const ai = ajanGunu(t);
     if (!liste.length && !bos.length && !ol.length) {
       return (
         <div className="space-y-1.5">
           <BosSatir yazi="Bu gün boş" onEkle={() => yeni({ tarih: t })} />
           {ajansBlogu(aj)}
+          {ajanBlogu(ai)}
         </div>
       );
     }
     return (
       <div className="space-y-1.5">
         {ajansBlogu(aj)}
+        {ajanBlogu(ai)}
         {ol.map(o => olayCip(o))}
         {liste.map(g => gonderiCip(g))}
         {bos.map(s => bosYerCip(s, t))}
@@ -281,7 +321,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
           <i className="w-2.5 h-2.5 rounded-full block" style={{ background: TUR[t].renk }} /> {TUR[t].ad}
         </button>
       ))}
-      <button type="button" onClick={() => setAjansAcik(a => !a)} aria-pressed={ajansAcik} className={cipSinifi(ajansAcik)} title="Ajansın zamanlı işleri (şimdilik hepsi kapalı)">
+      <button type="button" onClick={() => setAjansAcik(a => !a)} aria-pressed={ajansAcik} className={cipSinifi(ajansAcik)} title="Ajansın zamanlı işleri (şimdilik hepsi kapalı) ve ajanlara verilen işler">
         <i className="w-2.5 h-2.5 rounded-full block" style={{ background: AJANS_RENGI }} /> Ajans
       </button>
       {acik.gonderi && <span className="shrink-0 w-px my-2 bg-[#CFC5B4] dark:bg-[#2C3C72]" />}
@@ -355,6 +395,12 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
                 Ajans · {ajansGunu(t).length} iş
               </button>
             )}
+            {ajanGunu(t).length > 0 && (
+              <button type="button" onClick={() => setSecili(t)} title={ajanGunu(t).map(a => a.baslik).join('\n')}
+                className={`w-full text-left rounded-lg border-l-4 bg-[#FAF8F5] dark:bg-[#13204A] px-1.5 py-0.5 text-[10.5px] font-semibold cursor-pointer ${YAZI}`} style={{ borderLeftColor: '#F26B6F' }}>
+                Ajan işi · {ajanGunu(t).length}
+              </button>
+            )}
             {(olaylar.get(t) || []).map(o => olayCip(o, true))}
             {gunde(t).map(g => gonderiCip(g, true))}
             {(bosYer.get(t) || []).map(s => bosYerCip(s, t, true))}
@@ -405,6 +451,15 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
     </section>
   );
 
+  // Açık ajan işlerinin hepsi (verildiği gün geçmişte kalsa da görünsün)
+  const AjanlardakiIsler = ajansAcik && ajansta.veri && (
+    <section className="space-y-2">
+      <BolumBasligi baslik="Ajanlardaki işler" sayi={ajanIsleri.length} renk="bekliyor" />
+      {ajanIsleri.length === 0 && <p className={`text-[13px] ${IKINCIL}`}>Ajanlarda açık iş yok.</p>}
+      <div className="space-y-1.5 max-h-[48vh] overflow-y-auto">{ajanIsleri.map(ajanIsiKarti)}</div>
+    </section>
+  );
+
   const TurLejanti = (
     <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] ${IKINCIL}`}>
       <span className={ETIKET}>Gönderi türü · yalnız KKM</span>
@@ -429,6 +484,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
         {HaftaSeridi}
         {SeciliGun}
         {Yaklasanlar}
+        {AjanlardakiIsler}
         {TurLejanti}
       </div>
 
@@ -448,6 +504,7 @@ export const Takvim: React.FC<Props> = ({ items, onAc, onAddItem, onUpdateItem, 
           {SeciliGun}
           {acik.gonderi && Fikirler}
           {Yaklasanlar}
+          {AjanlardakiIsler}
         </div>
       </div>
 
