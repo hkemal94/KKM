@@ -350,6 +350,8 @@ export const Galeri: React.FC<GaleriProps> = ({
                 >
                   <button
                     onClick={() => setBuyuk(g)}
+                    aria-label="Görseli büyüt"
+                    title="Görseli büyüt"
                     className="block w-full cursor-pointer"
                     style={{
                       // saydam logo kirli görünmesin diye krem zemin

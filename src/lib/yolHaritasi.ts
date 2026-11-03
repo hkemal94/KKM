@@ -211,6 +211,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
   { id: 'turkce-buyuk-harf', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kems', bitti: true,
     ad: 'Sayfa dili Türkçe: büyük harfli başlıklarda "PANODAKI" yerine "PANODAKİ" (i → İ)' },
+  { id: 'arama-ve-dugme-adlari', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Arama Türkçe harfle bulur ("iskele" → "İskele"); yalnız simgeli düğmelerin üstüne gelince ne yaptığı yazar' },
   { id: 'ajansta-asamalar', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Onay bekleyenler → "Ajansta": Düzenle denen iş listeden kalkar, aşaması görünür (Sırada → Kems aldı → Ajanda → Onayına düştü); aynısı Kimde ne var\'da' },
   { id: 'ajanlar-ve-otomasyonlar', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,

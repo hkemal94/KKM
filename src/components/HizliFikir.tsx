@@ -198,7 +198,7 @@ export const HizliFikir: React.FC<HizliFikirProps> = ({ items, onAddItem, onUpda
           className="flex-1 bg-white rounded-lg px-2.5 py-2 focus:outline-hidden"
           style={{ fontSize: 13, border: '1px solid #CFC5B4', color: '#0E1C4F' }}
         />
-        <button type="submit" disabled={!metin.trim() || yaziliyor}
+        <button type="submit" disabled={!metin.trim() || yaziliyor} aria-label="Fikri ekle" title="Fikri ekle"
                 className="p-2 rounded-lg cursor-pointer disabled:opacity-30"
                 style={{ background: '#0E1C4F', color: '#F3EFE8' }}>
           <Plus className="w-3.5 h-3.5" />
