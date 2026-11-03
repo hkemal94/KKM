@@ -207,6 +207,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'İlham ve kaynaklar: bağlantı Pinterest panosuysa panodaki pinlerin küçük resimleri (ilk 12, "Tümünü gör"); resme basınca pin Pinterest\'te açılır, kayda yazmaz' },
   { id: 'isler-ve-takvim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
+  { id: 'turkce-buyuk-harf', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kems', bitti: true,
+    ad: 'Sayfa dili Türkçe: büyük harfli başlıklarda "PANODAKI" yerine "PANODAKİ" (i → İ)' },
   { id: 'ajansta-asamalar', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Onay bekleyenler → "Ajansta": Düzenle denen iş listeden kalkar, aşaması görünür (Sırada → Kems aldı → Ajanda → Onayına düştü); aynısı Kimde ne var\'da' },
   { id: 'ajanlar-ve-otomasyonlar', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
