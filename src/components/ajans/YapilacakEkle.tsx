@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { anahtariOku } from '../../lib/oyunAyarlari';
-import { kimdeAdi } from '../../lib/isler';
+import { AJAN_DOSYALARI, kimdeAdi } from '../../lib/isler';
 import { istekEkle, istekleriOku, type KemalIstegi } from '../../lib/kemalIstekleri';
 import { DUGME_LAC, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
 
@@ -11,10 +11,13 @@ import { DUGME_LAC, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
  * (`lib/kemalIstekleri.ts`); Kems'in o an çalışması gerekmez. Altta Kems'in
  * henüz almadığı notlar ve ajan düğmesinden gelen istekler durur; Kems
  * alınca listeden kalkar ve "Kimde ne var"da iş olarak görünür.
+ * 3 Kasım (Kemal): ajan seçimi isteğe bağlı; seçilmezse Kems dağıtır ve
+ * dosyaya ajan yazılmaz.
  */
 export const YapilacakEkle: React.FC = () => {
   const anahtar = anahtariOku();
   const [metin, setMetin] = useState('');
+  const [ajan, setAjan] = useState('');
   const [bekleyen, setBekleyen] = useState<KemalIstegi[] | null>(null);
   const [calisiyor, setCalisiyor] = useState(false);
   const [mesaj, setMesaj] = useState<string | null>(null);
@@ -32,9 +35,10 @@ export const YapilacakEkle: React.FC = () => {
     setCalisiyor(true);
     setMesaj(null);
     try {
-      setBekleyen(await istekEkle(anahtar, { tur: 'yapilacak', metin }));
+      setBekleyen(await istekEkle(anahtar, { tur: 'yapilacak', metin, ...(ajan ? { ajan } : {}) }));
       setMetin('');
-      setMesaj('Not ajansa yazıldı. Kems sonraki oturumunda iş listesine alır.');
+      setMesaj(`Not ajansa yazıldı. Kems sonraki oturumunda iş listesine alır; ${ajan ? `seçtiğin ajan: ${kimdeAdi(ajan)}` : 'uygun ajanı kendisi seçer'}.`);
+      setAjan('');
     } catch (e) {
       setMesaj(`Yazılamadı: ${e instanceof Error ? e.message : String(e)}`);
     } finally { setCalisiyor(false); }
@@ -47,6 +51,11 @@ export const YapilacakEkle: React.FC = () => {
         <input value={metin} onChange={e => setMetin(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && metin.trim() && !calisiyor) void ekle(); }}
           placeholder="Aklına geleni yaz; Kems'in limiti dolu olsa da kaybolmaz"
           className={`flex-1 min-w-0 min-h-11 lg:min-h-9 px-3 rounded-lg text-[13px] bg-[#FAF8F5] dark:bg-[#13204A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72] focus:outline-hidden focus:border-[#F26B6F]`} />
+        <select value={ajan} onChange={e => setAjan(e.target.value)} aria-label="Hangi ajan (isteğe bağlı)" title="İsteğe bağlı; seçmezsen Kems dağıtır"
+          className={`shrink-0 max-w-[40%] min-h-11 lg:min-h-9 px-2 rounded-lg text-[12px] bg-[#FAF8F5] dark:bg-[#13204A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72]`}>
+          <option value="">Kems dağıtsın</option>
+          {AJAN_DOSYALARI.map(a => <option key={a} value={a}>{kimdeAdi(a)}</option>)}
+        </select>
         <button type="button" disabled={calisiyor || !metin.trim()} onClick={() => void ekle()} className={DUGME_LAC}>
           <Plus className="w-3.5 h-3.5" /> {calisiyor ? 'Yazılıyor…' : 'Ekle'}
         </button>
@@ -60,7 +69,7 @@ export const YapilacakEkle: React.FC = () => {
               <li key={i.id} className={`text-[12px] ${YAZI}`}>
                 {i.metin}
                 <span className={`block text-[11px] ${IKINCIL}`}>
-                  {i.tur === 'istek' ? `Ajan düğmesi · ${i.ekran || ''}${i.ajan ? ` · ${kimdeAdi(i.ajan)}` : ''}` : 'Not'} · {neZaman(Date.parse(i.tarih))}
+                  {i.tur === 'istek' ? `Ajan düğmesi · ${i.ekran || ''}${i.ajan ? ` · ${kimdeAdi(i.ajan)}` : ''}` : `Not${i.ajan ? ` · ${kimdeAdi(i.ajan)}` : ''}`} · {neZaman(Date.parse(i.tarih))}
                 </span>
               </li>
             ))}

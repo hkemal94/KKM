@@ -4,12 +4,14 @@ import { GomuluSayfa, SayfaBasi } from '../kabuk/SayfaBasi';
 import { SayfaRayi } from '../SayfaRayi';
 import { KimdeNeVar } from './KimdeNeVar';
 import { YapilacakEkle } from './YapilacakEkle';
+import { HaftalikOzet } from './HaftalikOzet';
 
 /**
  * Ajans → İşler ve takvim (2 Kasım, yol haritası 3. adım; Kemal'in yerleşimi).
  * Üç bölüm: Kimde ne var · Takvim · Yol haritası. Takvim ve Yol haritası
  * Durum'dan buraya taşındı; çizimleri değişmedi.
  * 7. adım (2 Kasım): Kimde ne var'ın üstünde "Yapılacak ekle".
+ * 3 Kasım: pazartesileri en üstte "Bu hafta" özeti (`HaftalikOzet`).
  */
 export type IslerSekmesi = 'kimde' | 'takvim' | 'yolharitasi';
 
@@ -31,6 +33,7 @@ const BOLUMLER = [
 export const IslerVeTakvim: React.FC<Props> = ({ items, sekme, onSekme, takvim, yolHaritasi, onAjans }) => (
   <div className="space-y-5 animate-in fade-in duration-300">
     <SayfaBasi baslik="İşler ve takvim" />
+    <HaftalikOzet />
     <SayfaRayi baslik="İşler ve takvim" bolumler={BOLUMLER} aktifId={sekme} onSec={id => onSekme(id as IslerSekmesi)} />
     {sekme === 'kimde' && <><YapilacakEkle /><KimdeNeVar items={items} onAjans={onAjans} /></>}
     <GomuluSayfa.Provider value={true}>
