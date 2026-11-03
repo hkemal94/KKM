@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { isaretle } from '../../lib/olcumler';
 import * as maplibregl from 'maplibre-gl';
 import type { Map as MLMap, MapGeoJSONFeature, MapLayerMouseEvent } from 'maplibre-gl';
@@ -19,6 +19,8 @@ import { yolEtiketleri } from './yolEtiketleri';
 import { DEM_SINIR } from '../../data/duzadaDem';
 import { Atmosfer, atmosferVerisi, ATMOSFER_KAPALI, type AtmosferAyari } from './atmosfer';
 import { KATMANLAR_ACIK, type KatmanAyari, type HaritaIsareti } from '../../lib/haritaIsaretleri';
+import type { Item } from '../../types';
+import { evMi, evMaddeleri, evNumarasi, evSakinleri, type EvSakini, type EvSakinleri } from '../../lib/evSakinleri';
 
 /**
  * Düzada haritası.
@@ -44,6 +46,7 @@ import { KATMANLAR_ACIK, type KatmanAyari, type HaritaIsareti } from '../../lib/
  */
 const EN_UZAK = 8.4;
 const BASLANGIC = { zoom: 11.35, pitch: 46, bearing: -17 } as const;
+
 
 /**
  * Etiket türlerinin görünür olduğu yakınlık aralıkları.
@@ -93,6 +96,11 @@ interface DuzadaHaritaProps {
   isaretler?: HaritaIsareti[];
   /** Görünen katmanlar (5. gece; Atölye tutar, 2D ile ortak) */
   katmanlar?: KatmanAyari;
+  /**
+   * Kayıtlar (3 Kasım): evde oturan kişiler buradan okunur, dolu evler açık
+   * renkte görünür. Yalnız okunur.
+   */
+  items?: Item[];
 }
 
 /** Haritanın baktığı yer: merkez (boylam, enlem) ve MapLibre yakınlığı */
@@ -106,7 +114,19 @@ interface SecimBilgisi {
   ad: string;
   tur: string;
   detay?: string;
+  /** Ev seçiliyse: içinde oturan kayıtlı kişiler (boşsa boş ev) */
+  sakinler?: EvSakini[];
 }
+
+/** Mahalle kimliği → adı (ev kartındaki adres satırı için) */
+const MAHALLE_ADI = new Map<string, string>(
+  DUZADA_GEO.features
+    .filter(f => f.properties?.katman === 'mahalle')
+    .map(f => [String(f.properties?.id), String(f.properties?.ad ?? '')] as [string, string])
+);
+
+/** Eğik bakışın açısı; "yukarıdan" 0 */
+const EGIK = 46;
 
 /**
  * Etiket işaretçisinin DOM'unu kurar.
@@ -144,7 +164,7 @@ function etiketElemani(p: Record<string, unknown>): {
   return { kok, ic };
 }
 
-export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className, duzen, bakis, onBakis, vitrin, atmosfer = ATMOSFER_KAPALI, isaretler, katmanlar }) => {
+export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className, duzen, bakis, onBakis, vitrin, atmosfer = ATMOSFER_KAPALI, isaretler, katmanlar, items }) => {
   const kapsayici = useRef<HTMLDivElement | null>(null);
   const harita = useRef<MLMap | null>(null);
   /** Düzen değişince etiketleri yeniden kuran işlev — kurulum sırasında dolar */
@@ -153,6 +173,12 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
   const [hazir, setHazir] = useState(false);
   const [yon, setYon] = useState(BASLANGIC.bearing);
   const [zoom, setZoom] = useState(BASLANGIC.zoom);
+  const [egim, setEgim] = useState<number>(BASLANGIC.pitch);
+  /** Şu an çizili (düzen uygulanmış) veri: dolu evleri bulmak için */
+  const [cizili, setCizili] = useState<FeatureCollection | null>(null);
+  /** Tıklama dinleyicisi kurulumda bir kez bağlanıyor; güncel sakinleri buradan okur */
+  const sakinRef = useRef<EvSakinleri | null>(null);
+  const doluRef = useRef<Set<string>>(new Set());
   // Kurulumda da düzenli hâlle başlasın (harita bir kez kuruluyor)
   const ilkDuzen = useRef(duzen ?? null);
   const ilkBakis = useRef(bakis ?? null);
@@ -634,6 +660,9 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
             ['==', ['get', 'tur'], 'direk'], '#9AA0A6',
             ['==', ['get', 'tur'], 'iskele'], YAPI.iskele,
             ['==', ['get', 'tur'], 'Özel yapı'], '#EDE3D1',
+            // Dolu ev (3 Kasım): içinde kayıtlı biri oturuyorsa kâğıt beyazı,
+            // boş evlerden bir ton açık. Durum yalnız evlere konuyor.
+            ['boolean', ['feature-state', 'dolu'], false], '#FAF8F5',
             // Evler: badana, krem, taş ve soluk mavi (2 Ekim, ayrıntı)
             // Kurucu'da konan ev ve "Mahalle doldur" evleri de aynı renkleri alır
             ['any', ['==', ['get', 'tur'], 'ev'], ['in', ['get', 'kurucuTur'], ['literal', ['ev', 'dukkanli', 'yazlik']]]],
@@ -759,6 +788,21 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
             ].filter(Boolean).join(' · ')
           : p.alanKm2 ? `${p.alanKm2} km²` : undefined;
 
+      if (evMi(p)) {
+        // Ev kartı (3 Kasım): numara, mahalle, oturanlar
+        const no = evNumarasi(p.id);
+        const wikiId = typeof p.wikiId === 'string' && p.wikiId ? p.wikiId : '';
+        const mahalle = p.mahalle ? MAHALLE_ADI.get(String(p.mahalle)) : undefined;
+        setSecim({
+          wikiId,
+          ad: no ? `Ev no. ${no}` : 'Ev',
+          tur: [mahalle, p.ad && p.ad !== 'Ev' ? String(p.ad) : null].filter(Boolean).join(' · ') || 'Ev',
+          detay: detay || undefined,
+          sakinler: (wikiId && sakinRef.current?.maddeye.get(wikiId)) || []
+        });
+        return;
+      }
+
       setSecim({
         // H8: wikiId yoksa yoktur. Eskiden kimliğe düşülüyordu; o yüzden
         // apartmana tıklayınca "Maddeye git" çıkıyor, basınca hiçbir şey
@@ -773,6 +817,7 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
     const hareket = () => {
       setYon(map.getBearing());
       setZoom(map.getZoom());
+      setEgim(map.getPitch());
       etiketGorunurluk(map.getZoom());
       etiketleriYukselt();
     };
@@ -792,6 +837,7 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
     const map = harita.current;
     if (!map || !hazir) return;
     const uygulanan = duzeniUygula(DUZADA_GEO, duzen ?? null);
+    setCizili(uygulanan);
     (map.getSource('duzada') as maplibregl.GeoJSONSource | undefined)
       ?.setData(atmosferVerisi(uygulanan) as never);
     (map.getSource('ayrinti') as maplibregl.GeoJSONSource | undefined)
@@ -799,6 +845,30 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
     // Etiketler işaretçi olduğu için kaynakla birlikte güncellenmiyor
     if (!vitrin) etiketleriKurRef.current?.(uygulanan);
   }, [duzen, hazir, vitrin]);
+
+  // Dolu evler (3 Kasım): kayıtlardan okunur, haritada yalnız görünüm durumu
+  // olarak işaretlenir (kayda yazılmaz)
+  const sakinler = useMemo(
+    () => (items && cizili ? evSakinleri(items, evMaddeleri(cizili)) : null),
+    [items, cizili]
+  );
+  useEffect(() => {
+    sakinRef.current = sakinler;
+    const map = harita.current;
+    if (!map || !hazir || !cizili) return;
+    const yeni = new Set<string>();
+    if (sakinler) {
+      for (const f of cizili.features) {
+        const p = f.properties as Record<string, unknown> | null;
+        if (evMi(p) && typeof p?.wikiId === 'string' && sakinler.maddeye.get(p.wikiId)?.length) yeni.add(String(p.id));
+      }
+    }
+    for (const id of doluRef.current) if (!yeni.has(id)) map.setFeatureState({ source: 'duzada', id }, { dolu: false });
+    for (const id of yeni) map.setFeatureState({ source: 'duzada', id }, { dolu: true });
+    doluRef.current = yeni;
+  }, [sakinler, cizili, hazir]);
+  const doluEvSayisi = useMemo(() => (sakinler ? [...sakinler.maddeye.values()].filter(l => l.length).length : 0), [sakinler]);
+  const oturanSayisi = useMemo(() => (sakinler ? new Set([...sakinler.maddeye.values()].flat().map(s => s.id)).size : 0), [sakinler]);
 
   // Atmosfer düğmeleri (KKM) değişince
   useEffect(() => {
@@ -850,6 +920,12 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
     harita.current?.easeTo({ center: DUZADA_MERKEZ, ...BASLANGIC, duration: 1000 });
   };
 
+  // Yukarıdan ↔ eğik bakış (3 Kasım): açılış eğik; düğme kamerayı dikleştirir, yeniden basınca geri eğer
+  const yukaridan = egim < 5;
+  const bakisiDegistir = () => {
+    harita.current?.easeTo({ pitch: yukaridan ? EGIK : 0, duration: 700 });
+  };
+
   return (
     // `relative` her zaman kalmalı: bilgi kartı, seçim kartı ve sıfırlama
     // düğmesi buna göre konumlanıyor. Dışarıdan sınıf verilince düşerse
@@ -888,6 +964,28 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
           {secim.detay && (
             <p className="font-mono text-[11px] text-[#6f6047] mt-1">{secim.detay}</p>
           )}
+          {secim.sakinler && (
+            <div className="mt-2 pt-2 border-t border-[#8a7757]/30">
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#6f6047]">Oturanlar</p>
+              {secim.sakinler.length ? (
+                <ul className="mt-1 space-y-0.5">
+                  {secim.sakinler.map(k => (
+                    <li key={k.id} className="flex items-center justify-between gap-2 text-[13px] text-[#0e1c4f]">
+                      <span className="truncate">{k.ad}</span>
+                      {onSelect && (
+                        <button type="button" onClick={() => onSelect(k.id)}
+                          className="shrink-0 text-[11px] px-2 py-0.5 rounded-sm border border-[#0e1c4f]/35 hover:bg-[#0e1c4f] hover:text-[#f3efe8] transition-colors">
+                          vikide aç
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 text-[12px] text-[#6f6047]">Kayıtlı oturan yok.</p>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center gap-2 mt-3">
             {secim.wikiId && onSelect && (
@@ -910,14 +1008,38 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
         </div>
       )}
 
+      {hazir && sakinler && (
+        <div className="hidden sm:block absolute bottom-[3.75rem] right-4 max-w-[15rem] px-3 py-2 rounded-sm bg-[#f4efe4]/94 backdrop-blur-[2px] border border-[#8a7757]/45 text-[#6f6047] pointer-events-none">
+          <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.12em]">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-[#FAF8F5] border border-[#8a7757]/60" />dolu ev</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-[#D6C7A8] border border-[#8a7757]/60" />boş ev</span>
+          </p>
+          <p className="font-mono text-[10px] mt-1">{doluEvSayisi} dolu ev · {oturanSayisi} kişi</p>
+          {sakinler.baglanamayan > 0 && (
+            <p className="text-[10px] mt-0.5 leading-snug">{sakinler.baglanamayan} kişinin künyesinde ev yazılı, haritada bir eve bağlı değil.</p>
+          )}
+        </div>
+      )}
+
       {hazir && (
+        <div className="absolute bottom-4 right-4 flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={bakisiDegistir}
+          aria-pressed={yukaridan}
+          title={yukaridan ? 'Eğik 3B bakışa dön' : 'Haritaya tam yukarıdan bak'}
+          className="text-[10px] font-mono uppercase tracking-[0.12em] px-3 py-2 rounded-sm bg-[#f4efe4]/94 backdrop-blur-[2px] border border-[#8a7757]/45 text-[#6f6047] hover:text-[#0e1c4f] transition-colors"
+        >
+          {yukaridan ? 'eğik bak' : 'yukarıdan bak'}
+        </button>
         <button
           type="button"
           onClick={gorunumuSifirla}
-          className="absolute bottom-4 right-4 text-[10px] font-mono uppercase tracking-[0.12em] px-3 py-2 rounded-sm bg-[#f4efe4]/94 backdrop-blur-[2px] border border-[#8a7757]/45 text-[#6f6047] hover:text-[#0e1c4f] transition-colors"
+          className="text-[10px] font-mono uppercase tracking-[0.12em] px-3 py-2 rounded-sm bg-[#f4efe4]/94 backdrop-blur-[2px] border border-[#8a7757]/45 text-[#6f6047] hover:text-[#0e1c4f] transition-colors"
         >
           görünümü sıfırla
         </button>
+        </div>
       )}
       </>}
     </div>

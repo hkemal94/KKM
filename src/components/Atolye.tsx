@@ -72,8 +72,8 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
   const bolumler = RAY_BOLUMLERI.filter(b => sekmeler.includes(b.id as AtolyeSekmesi));
   const haritaDuzeni = useHaritaDuzeni();
   const haritaMaddesi = useHaritaMaddesi({ items, onAddItem, onMaddeAc });
-  // 2D çalışma, 3D bakış (29 Eylül)
-  const [haritaUc, setHaritaUc] = useState(false);
+  // 2D çalışma, 3D bakış (29 Eylül). 3 Kasım (Kemal): açılış eğik 3B
+  const [haritaUc, setHaritaUc] = useState(true);
   // 2D ↔ 3D geçişinde kamera aynı yere baksın
   const haritaBakisi = useRef<HaritaBakisi | null>(null);
   const bakisiTut = useCallback((b: HaritaBakisi) => { haritaBakisi.current = b; }, []);
@@ -202,6 +202,7 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
                   atmosfer={atmosfer}
                   isaretler={isaretler}
                   katmanlar={katmanlar}
+                  items={items}
                 />
                 <div className="absolute left-3 top-3 z-10">{gorunumDugmesi}</div>
                 {/* Atmosfer düğmeleri sol altta: üstteki ada kartıyla çakışmasın */}

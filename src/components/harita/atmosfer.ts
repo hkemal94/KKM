@@ -484,6 +484,8 @@ export class Atmosfer {
       m.setPaintProperty('binalar', 'fill-extrusion-color', [
         'case',
         ['boolean', ['feature-state', 'uzerinde'], false], YAPI.vurgu,
+        // Dolu ev (3 Kasım): içinde kayıtlı biri oturuyor, gece ışığı hep yanık
+        ['boolean', ['feature-state', 'dolu'], false], karistir('#FAF8F5', '#F2C77A', gece),
         yanar, karistir(YAPI.genel, '#E7B566', gece),
         karistir(YAPI.genel, '#343A52', gece * 0.9)
       ] as never);
