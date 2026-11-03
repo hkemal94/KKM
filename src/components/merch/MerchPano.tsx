@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Link2, Plus } from 'lucide-react';
 import type { Item } from '../../types';
 import { MERCH_ASAMALARI, type MerchAsamasi } from '../../lib/durumOranlari';
+import { KisaListe } from '../kabuk/KisaListe';
 
 /**
  * Merch panosu (Paket 5). Kemal (yapısal 1. set, 4. tur): "Kanon kökü, pano
@@ -81,6 +82,7 @@ export const MerchPano: React.FC<Props> = ({ urunler, items, kapak, onUpdateItem
                 <span className="ml-auto font-mono text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{bunlar.length}</span>
               </div>
               <div className="space-y-2">
+                <KisaListe as="div" className="space-y-2" dugmeClassName="px-1">
                 {bunlar.map(u => {
                   const g = kapak(u);
                   const canva = (u.metadata as Record<string, unknown> | undefined)?.canvaTasarim as string | undefined;
@@ -117,6 +119,7 @@ export const MerchPano: React.FC<Props> = ({ urunler, items, kapak, onUpdateItem
                     </div>
                   );
                 })}
+                </KisaListe>
                 {!bunlar.length && <p className="px-1 py-3 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Bu aşamada ürün yok.</p>}
                 {a === 'Konsept' && (
                   <div className="flex gap-1.5 pt-1">

@@ -235,6 +235,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Bilgisayarda sol menünün altındaki kırmızı "Yaz" düğmesi yeniden açılıyor (Hızlı not, Kems\'e yaz, Notlar); seçim menünün yanında sayfanın üstünde görünür' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
+  { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Merch\'te uzun listeler kısalır: aşama yapılacakları ve panonun sütunları ilk 5 satır, altında "Hepsini göster"', not: 'Yalnız ekranda; açık / kapalı kayda yazılmaz. İşaretleme aynı, sayaç bütün listeyi sayar.' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
   { id: 'buffer', uzak: true, paket: 'M', ad: 'Sosyal medyada Buffer bağlantısı (ücretli plan)', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal planı alınca bağlantı kurulur.' },
   { id: 'site-ingilizce', paket: 'K', ad: 'Sitenin İngilizcesi', nereden: 'yapisal-4, 19', kimde: 'claude', not: 'Yayından sonra.' },
