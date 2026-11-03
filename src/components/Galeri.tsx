@@ -8,6 +8,7 @@ import {
 import { SayfaRayi, type RayBolumu } from './SayfaRayi';
 import { CanvaAynasi } from './galeri/CanvaAynasi';
 import { PinterestPanolari } from './galeri/PinterestPanolari';
+import { GaleriTemizligi } from './galeri/GaleriTemizligi';
 import { GorselImg } from './GorselImg';
 import { gorselYaz, gorselOku, gorselSil, useGorsel } from '../lib/gorselDeposu';
 
@@ -229,6 +230,14 @@ export const Galeri: React.FC<GaleriProps> = ({
       <SayfaBasi baslik="Galeri" />
 
       <SayfaRayi baslik="Galeri" bolumler={RAY_BOLUMLERI} />
+
+      {/* Galeri temizliği (3 Kasım): iş bitince kaldırılır */}
+      <GaleriTemizligi
+        gorseller={gorseller}
+        hedefler={hedefler}
+        onSil={async g => { if (onDeleteItem) await onDeleteItem(g.id); else await onUpdateItem({ ...g, archived: true, updatedAt: Date.now() }); }}
+        onAta={bagla}
+      />
 
       {/* --- yükleme --- */}
       <section id="gal-yukle" className="scroll-mt-24">
