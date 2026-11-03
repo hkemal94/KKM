@@ -378,7 +378,12 @@ export default function App() {
   const handleToggleTheme = async () => {
     if (!user) return;
     const newTheme = settings.theme === 'arşiv' ? 'dark' : 'arşiv';
-    await saveSettings(user.uid, { theme: newTheme });
+    // Tema yazılamazsa sessiz kalmaz; öbür kayıtlar gibi uyarı çıkar
+    try {
+      await saveSettings(user.uid, { theme: newTheme });
+    } catch (e) {
+      kayitHatasiGoster(e);
+    }
   };
 
   // Firestore DB operations wrapper passed down

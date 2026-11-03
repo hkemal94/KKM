@@ -188,6 +188,8 @@ const GorselIsteyenKarti: React.FC<{ items: Item[]; onMaddeAc?: (id: string) => 
   const [durum, setDurum] = useState<string | null>(null);
 
   const iste = async () => {
+    // Gönderim sürerken ikinci basış ikinci isteği yazmasın
+    if (durum === 'Gönderiliyor…') return;
     const anahtar = anahtariOku();
     if (!anahtar) { setDurum("Önce Ajans bağlantısı'nda GitHub anahtarını gir."); return; }
     setDurum('Gönderiliyor…');
@@ -225,7 +227,7 @@ const GorselIsteyenKarti: React.FC<{ items: Item[]; onMaddeAc?: (id: string) => 
             </ul>
           )}
         </div>
-        <button type="button" onClick={() => void iste()} className={`${DOLU} flex items-center gap-1.5`}>
+        <button type="button" disabled={durum === 'Gönderiliyor…'} onClick={() => void iste()} className={`${DOLU} flex items-center gap-1.5`}>
           <Bot className="w-3.5 h-3.5" /> Ajana öneri hazırlat
         </button>
       </div>
