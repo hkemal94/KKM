@@ -56,13 +56,29 @@ async function bosYol(anahtar: string, temel: string): Promise<string> {
   return yol;
 }
 
+/**
+ * Yazı dosyası ajansa gitti ama Kanon Denetçisi notu yazılamadı. Ekran bunu
+ * "Gönderilemedi" diye göstermez ve yeniden gönderimi kapatır; yoksa ikinci
+ * basış yazının -2 kopyasını açar.
+ */
+export class DenetciNotuYazilamadi extends Error {
+  constructor(public adres: string, public zaman: string, neden: unknown) {
+    super(`Yazı gitti, denetçi notu yazılamadı: ${neden instanceof Error ? neden.message : String(neden)}`);
+    this.name = 'DenetciNotuYazilamadi';
+  }
+}
+
 /** Yazıyı ve iş notunu ajansa yazar; yazının GitHub adresini ve gönderim zamanını (ISO) döner */
 export async function yaziyiGonder(anahtar: string, yazi: Item, tur: YaziTuru, zaman = new Date()): Promise<{ adres: string; zaman: string }> {
   const konu = kisaAd(yazi.title);
   const yol = await bosYol(anahtar, `${YAZI_KLASORU}/${gunAdi(zaman)}-${konu}`);
   // gizli depo denetimi burada: depo açıksa hiçbir şey yazılmaz
   const adres = await ajansaDosyaYaz(anahtar, yol, yaziDosyasi(yazi, tur, zaman), `KKM yazısı: ${yazi.title}`, 'yazı');
-  await ajansaGonder(anahtar, `yazi-notu-${konu}`,
-    `# Kanon Denetçisi'ne not\n\nYazım, akış ve tutarlılık notu: ${yol}\n\n- Tür: ${tur}\n- Başlık: ${yazi.title}\n- Gönderen: Kemal (KKM → ${tur === 'blog' ? 'Blog' : 'Kitap'} → Kanon Denetçisi'ne gönder)\n`, zaman);
+  try {
+    await ajansaGonder(anahtar, `yazi-notu-${konu}`,
+      `# Kanon Denetçisi'ne not\n\nYazım, akış ve tutarlılık notu: ${yol}\n\n- Tür: ${tur}\n- Başlık: ${yazi.title}\n- Gönderen: Kemal (KKM → ${tur === 'blog' ? 'Blog' : 'Kitap'} → Kanon Denetçisi'ne gönder)\n`, zaman);
+  } catch (e) {
+    throw new DenetciNotuYazilamadi(adres, zaman.toISOString(), e);
+  }
   return { adres, zaman: zaman.toISOString() };
 }

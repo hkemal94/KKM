@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Send } from 'lucide-react';
 import type { Item } from '../types';
 import { anahtariOku } from '../lib/oyunAyarlari';
-import { yaziTuru, yaziyiGonder } from '../lib/yaziAjansa';
+import { DenetciNotuYazilamadi, yaziTuru, yaziyiGonder } from '../lib/yaziAjansa';
 
 /**
  * "Kanon Denetçisi'ne gönder" düğmesi (Blog ve Kitap ekranlarında, `lib/yaziAjansa.ts`).
@@ -14,6 +14,8 @@ import { yaziTuru, yaziyiGonder } from '../lib/yaziAjansa';
 export const YaziEditorunuGonder: React.FC<{ yazi: Item; onUpdateItem: (item: Item) => Promise<void> }> = ({ yazi, onUpdateItem }) => {
   const [gidiyor, setGidiyor] = useState(false);
   const [hata, setHata] = useState('');
+  // Yazı ajansa gidip sonraki adım düştüyse bu oturumda yeniden gönderilmez: -2 kopya açılmasın
+  const [gitti, setGitti] = useState(false);
   const tur = yaziTuru(yazi);
   if (!tur) return null;
 
@@ -21,14 +23,31 @@ export const YaziEditorunuGonder: React.FC<{ yazi: Item; onUpdateItem: (item: It
   const anahtar = anahtariOku();
 
   const gonder = async () => {
+    if (gidiyor || gitti) return;
     if (!anahtar) { setHata('Önce ajans bağlantısını kur (Ajans bağlantısı\'ndaki GitHub anahtarı).'); return; }
     setGidiyor(true);
     setHata('');
     try {
-      const { zaman } = await yaziyiGonder(anahtar, yazi, tur);
-      await onUpdateItem({ ...yazi, metadata: { ...(yazi.metadata || {}), yaziEditorunuGonderildi: zaman } });
-    } catch (e) {
-      setHata(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}`);
+      // 1. adım: yazı ve denetçi notu ajansa gider
+      let zaman: string;
+      try {
+        ({ zaman } = await yaziyiGonder(anahtar, yazi, tur));
+      } catch (e) {
+        if (e instanceof DenetciNotuYazilamadi) {
+          setGitti(true);
+          setHata('Yazı gitti, denetçi notu yazılamadı. Yeniden gönderme.');
+        } else {
+          setHata(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}`);
+        }
+        return;
+      }
+      // 2. adım: yazının kaydına gönderim işareti
+      try {
+        await onUpdateItem({ ...yazi, metadata: { ...(yazi.metadata || {}), yaziEditorunuGonderildi: zaman } });
+      } catch {
+        setGitti(true);
+        setHata('Yazı ajansa gitti; işaret yazılamadı. Yeniden gönderme.');
+      }
     } finally {
       setGidiyor(false);
     }
@@ -39,13 +58,13 @@ export const YaziEditorunuGonder: React.FC<{ yazi: Item; onUpdateItem: (item: It
       <button
         type="button"
         onClick={() => void gonder()}
-        disabled={gidiyor}
+        disabled={gidiyor || gitti}
         className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#FAF6EE] dark:bg-stone-900 border border-[#CFC5B4] dark:border-stone-850 text-stone-700 dark:text-[#A6B0C9] hover:text-[#F26B6F] text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
         title="Metin ajansın gizli deposuna gider; Kanon Denetçisi yazım, akış ve tutarlılık notu bırakır, metni yeniden yazmaz"
       >
         <Send className="w-3.5 h-3.5" />
         <span>
-          {gidiyor ? 'Gönderiliyor…' : onceki ? `Gönderildi · ${new Date(onceki).toLocaleDateString('tr-TR')} · Yeniden gönder` : 'Kanon Denetçisi\'ne gönder'}
+          {gidiyor ? 'Gönderiliyor…' : gitti ? 'Ajansa gitti' : onceki ? `Gönderildi · ${new Date(onceki).toLocaleDateString('tr-TR')} · Yeniden gönder` : 'Kanon Denetçisi\'ne gönder'}
         </span>
       </button>
       {hata && <span className="text-[11px] text-[#B23A40] font-sans max-w-60">{hata}</span>}
