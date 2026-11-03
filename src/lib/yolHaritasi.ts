@@ -201,6 +201,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 1. adım (temizlik): Ana sayfa, Yüzdeler, Tuval ve Site ekranları kalktı; Notlar Yaz tuşundan kendi sayfasında açılıyor' },
   { id: 'yeni-kadro-kkm', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 2. adım (KKM tarafı): "Kanon Denetçisi\'ne gönder", oyun dosyası Oyun Tasarımcısı\'na, ajans takviminde eski zamanlı işler yok' },
+  { id: 'kkm-ekranlari-son', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'KKM ekranları son PR: İçerik → Sosyal medya → Gönderiler (her gönderi bir kart, ajansın taslakları "Benim listeme al"); Temizlik\'te Kems Company kurulus ve Düzada activeEra eski alanları' },
   { id: 'isler-ve-takvim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
   { id: 'ajansta-asamalar', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

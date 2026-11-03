@@ -56,7 +56,7 @@ export const GonderiKarti: React.FC<Props> = ({ item, items, onUpdateItem, onDel
   const paylasildi = (id: string) => {
     const p = b.paylasilan.includes(id) ? b.paylasilan.filter(k => k !== id) : [...b.paylasilan, id];
     const hepsi = b.kanallar.length > 0 && b.kanallar.every(k => p.includes(k));
-    guncelle({ paylasilan: p }, hepsi ? { status: 'Paylaşıldı' } : asamasi(taslak) === 'Paylaşıldı' ? { status: 'Hazır' } : {});
+    guncelle({ paylasilan: p }, hepsi ? { status: 'Paylaşıldı' } : asamasi(taslak) === 'Paylaşıldı' ? { status: 'Onaylandı' } : {});
   };
 
   const kopyala = () => {

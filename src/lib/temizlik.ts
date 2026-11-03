@@ -111,9 +111,19 @@ export function silmeOzeti(liste: SilmeNedeni[]): string {
  *     doluluk, hava, sabah notu, müdür notu, beklenen çıkışlar
  *   - sitede, sitedeGizli: "sitede göster" ve sitede gizlenen parçalar
  *     (2 Kasım, Site kalktı)
+ *   - eski künye alanları (3 Kasım; 2 Kasım ajans kararlarında atlananlar):
+ *     Kems Company'de `kurulus` (görünen kuruluş yılı `profile.founded`),
+ *     Düzada'da `activeEra` (etkin dönem kalktı, 28 Eylül kararı). Hiçbir
+ *     ekran okumuyor; yalnız bu iki maddede aranır.
  */
 const ESKI_ALANLAR = ['eskiMetin', 'oyunArsivi', 'proposalsSeeded', 'sitede', 'sitedeGizli'];
 const SIMULASYON_ALANLARI = ['operations', 'occupancy', 'weather', 'morningNote', 'memoText', 'memoFrom', 'expectedCheckouts'];
+const KUNYE_ALANLARI = ['kurulus', 'activeEra'];
+const KEMS_KIMLIKLERI = ['kems_company', 'marka_kems'];
+/** Maddeye özel eski künye alanı: Kems Company → kurulus, Düzada (`ada`) → activeEra */
+const kunyeAdaylari = (i: Item): string[] =>
+  KEMS_KIMLIKLERI.includes(i.id) || (i.type === 'marka' && i.title === 'Kems Company') ? ['kurulus']
+    : i.type === 'ada' ? ['activeEra'] : [];
 
 export interface EskiAlan { item: Item; alanlar: string[] }
 
@@ -123,7 +133,7 @@ export function eskiAlanlar(items: Item[]): EskiAlan[] {
     // Silinecek simülasyon günlerinin alanı ayrıca silinmez (kayıt gidiyor)
     if (simulasyonKaydi(i)) continue;
     const m = (i.metadata || {}) as Record<string, unknown>;
-    const adaylar = i.type === 'kitap_bolum' ? [...ESKI_ALANLAR, ...SIMULASYON_ALANLARI] : ESKI_ALANLAR;
+    const adaylar = [...ESKI_ALANLAR, ...(i.type === 'kitap_bolum' ? SIMULASYON_ALANLARI : []), ...kunyeAdaylari(i)];
     const alanlar = adaylar.filter(a => a in m);
     if (alanlar.length) cikti.push({ item: i, alanlar });
   }
@@ -138,6 +148,7 @@ export function eskiAlanOzeti(liste: EskiAlan[]): string {
     [say(a => a === 'oyunArsivi'), 'kayıtta oyun arşivi'],
     [say(a => a === 'proposalsSeeded'), 'kayıtta eski öneri işareti'],
     [say(a => a === 'sitede' || a === 'sitedeGizli'), 'kayıtta site işareti'],
-    [say(a => SIMULASYON_ALANLARI.includes(a)), 'kitap bölümünde otel simülasyonu günü']
+    [say(a => SIMULASYON_ALANLARI.includes(a)), 'kitap bölümünde otel simülasyonu günü'],
+    [say(a => KUNYE_ALANLARI.includes(a)), 'maddede eski künye alanı (kurulus, activeEra)']
   ].filter(([n]) => n).map(([n, ad]) => `${n} ${ad}`).join(' · ');
 }

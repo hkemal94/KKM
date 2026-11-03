@@ -3,12 +3,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Plus, EyeOff, Eye } from 'lucide-react';
 import type { Item } from '../../types';
 import {
-  KANALLAR, TURLER, asamasi, bugunTarih, gonderiBilgisi,
+  ASAMA_RENGI, KANALLAR, TURLER, asamasi, bugunTarih, gonderiBilgisi,
   gonderiler, seriBilgisi, seriler, turBul, turStili, TUR_SINIFI, yeniGonderi,
   type GonderiBilgisi
 } from '../../lib/sosyal';
 import { GonderiKarti } from './GonderiKarti';
 import { SeriListesi } from './Seriler';
+import { GonderiListesi } from './GonderiListesi';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
 /**
@@ -16,13 +17,15 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/s
  *
  * 1 Ekim: takvimi birleşik Takvim sayfasına taşındı ("Takvimde aç").
  * Burada fikir kutusu (tarihsiz gönderiler), seriler ve Instagram ızgarası.
- * Telefon: sekmeler — Fikirler · Seriler · Izgara.
+ * Telefon: sekmeler — Gönderiler · Fikirler · Seriler · Izgara.
+ * 3 Kasım: Gönderiler sekmesi; her gönderi bir kart, ajansın taslakları üstte
+ * (`GonderiListesi`).
  * Hiçbir şey kendiliğinden kaydolmaz: seri boş yerleri yalnız görünür,
  * gönderi Kemal basınca açılır. Paylaşımı Kemal yapar.
  */
 
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'>;
-type Gorunum = 'fikir' | 'seri' | 'izgara';
+type Gorunum = 'gonderi' | 'fikir' | 'seri' | 'izgara';
 
 interface Props {
   items: Item[];
@@ -39,16 +42,9 @@ const IZGARA_ANAHTARI = 'kems_sosyal_izgara';
 const izgaraOku = () => { try { return localStorage.getItem(IZGARA_ANAHTARI) !== 'kapali'; } catch { return true; } };
 const izgaraYaz = (acik: boolean) => { try { localStorage.setItem(IZGARA_ANAHTARI, acik ? 'acik' : 'kapali'); } catch { /* yok */ } };
 
-const ASAMA_RENGI: Record<string, string> = {
-  Fikir: 'bg-[#F3EFE8] text-[#6A5E4C] dark:bg-[#17345A] dark:text-[#A6B0C9]',
-  Taslak: 'bg-[#F3EFE8] text-[#6A5E4C] dark:bg-[#17345A] dark:text-[#A6B0C9]',
-  Hazır: 'bg-[#E5EFE3] text-[#3F6B45] dark:bg-[#23452B] dark:text-[#B9D8BC]',
-  Paylaşıldı: 'bg-[#0E1C4F] text-white dark:bg-[#2C3C72]'
-};
-
 export const Sosyal: React.FC<Props> = ({ items, onAddItem, onUpdateItem, onDeleteItem, onTakvim, acilacakId = null }) => {
   const bugun = bugunTarih();
-  const [gorunum, setGorunum] = useState<Gorunum>('fikir');
+  const [gorunum, setGorunum] = useState<Gorunum>('gonderi');
   const [acikId, setAcikId] = useState<string | null>(null);
   const [izgaraAcik, setIzgaraAcik] = useState(izgaraOku);
   useEffect(() => {
@@ -162,6 +158,7 @@ export const Sosyal: React.FC<Props> = ({ items, onAddItem, onUpdateItem, onDele
   );
 
   const SEKMELER: Array<{ id: Gorunum; ad: string; masaAdi?: string; telefon?: boolean }> = [
+    { id: 'gonderi', ad: 'Gönderiler' },
     { id: 'fikir', ad: `Fikirler${fikirler.length ? ` ${fikirler.length}` : ''}`, masaAdi: 'Fikirler ve ızgara' },
     { id: 'seri', ad: 'Seriler' },
     { id: 'izgara', ad: 'Izgara', telefon: true }
@@ -191,7 +188,9 @@ export const Sosyal: React.FC<Props> = ({ items, onAddItem, onUpdateItem, onDele
         ))}
       </div>
 
-      {masaSeri ? (
+      {gorunum === 'gonderi' ? (
+        <GonderiListesi items={items} onAddItem={onAddItem} onAc={setAcikId} onYeni={() => yeni({})} />
+      ) : masaSeri ? (
         <SeriListesi
           items={items}
           bugun={bugun}
