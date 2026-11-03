@@ -187,6 +187,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 2. adım (KKM tarafı): "Kanon Denetçisi\'ne gönder", oyun dosyası Oyun Tasarımcısı\'na, ajans takviminde eski zamanlı işler yok' },
   { id: 'isler-ve-takvim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 3. adım: Ajans → İşler ve takvim (Kimde ne var · Takvim · Yol haritası); kanıtı birleşen iş kendiliğinden "Bitti"' },
+  { id: 'ajansta-asamalar', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Onay bekleyenler → "Ajansta": Düzenle denen iş listeden kalkar, aşaması görünür (Sırada → Kems aldı → Ajanda → Onayına düştü); aynısı Kimde ne var\'da' },
   { id: 'ajanlar-ve-otomasyonlar', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 4. adım: Ajans → Ajanlar ve otomasyonlar (ajan kartları, zamanlayıcı ayarı, Kems\'in limit uyarısı; Durum → Ajans buraya taşındı)' },
   { id: 'onayli-yazma', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
