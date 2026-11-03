@@ -139,7 +139,7 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
           </div>
         </div>
         <div className="min-w-0">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">Ekran görüntüleri · en fazla {EN_FAZLA_GORSEL}</div>
+          <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">İlham / taslak · en fazla {EN_FAZLA_GORSEL}</div>
           <div className="grid grid-cols-2 gap-2">
             {gorseller.map((g, idx) => (
               <div key={`${idx}-${g.slice(-40)}`} className="relative group rounded-lg overflow-hidden bg-white/10 aspect-video">

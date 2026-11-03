@@ -26,8 +26,11 @@ const Satir: React.FC<{ metin: string }> = ({ metin }) => (
   </>
 );
 
-/** `yollar`: okunacak dosyalar, sırayla denenir (yoksa tasarım belgesi) */
-export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[] }> = ({ depo, yollar }) => {
+/**
+ * `yollar`: okunacak dosyalar, sırayla denenir (yoksa tasarım belgesi).
+ * `bulunamazsa`: dosya depoda yoksa (404) hata yerine gösterilen sakin yazı (3 Kasım).
+ */
+export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[]; bulunamazsa?: string }> = ({ depo, yollar, bulunamazsa }) => {
   const [durum, setDurum] = useState<{ yol: string; metin: string } | 'yukleniyor' | { hata: string }>('yukleniyor');
   const [tur, setTur] = useState(0);
   const [buyuk, setBuyuk] = useState<string | null>(null);
@@ -57,6 +60,9 @@ export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[] }> = ({ dep
   );
 
   if (durum === 'yukleniyor') return <div className="space-y-4">{ust}<p className={`text-[14px] ${IKINCIL}`}>Belge okunuyor…</p></div>;
+  if ('hata' in durum && bulunamazsa && durum.hata === '404') return (
+    <div className="space-y-4">{ust}<p className={`${KART} px-4 py-3 text-[14px] ${IKINCIL}`}>{bulunamazsa}</p></div>
+  );
   if ('hata' in durum) return (
     <div className="space-y-4">
       {ust}
