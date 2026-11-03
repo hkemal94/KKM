@@ -31,6 +31,8 @@ export type ItemType =
   | 'oyun_fikir'
   // Inspiration
   | 'ilham_gorsel'
+  // İlham ve kaynaklar (3 Kasım): bağlantı / görsel / not; marka, madde, drop ve ürüne bağlanır
+  | 'ilham_madde'
   // Komuta types
   | 'channel'
   // Onay bekleyen aday (Paket 4): soru cevabı, atölye taslağı

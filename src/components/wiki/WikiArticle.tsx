@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { KisaListe } from '../kabuk/KisaListe';
+import { BagliIlhamlar } from '../urunler/BagliIlhamlar';
 import { AlertCircle, Bot, ChevronRight, ExternalLink, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
 import { kaynakAdresi, wikipediadanMi } from '../../lib/vikipediKaynagi';
 import { Item, WikiSection } from '../../types';
@@ -589,6 +590,9 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
               </KisaListe>
             </section>
           )}
+
+          {/* --- İlhamlar (3 Kasım): İlham ve kaynaklar'da bu maddeye bağlananlar --- */}
+          <BagliIlhamlar items={allItems} hedefId={item.id} className="mt-8" />
 
           {/* --- Künyelerde anılıyor (3. gece, bağ alanları) --- */}
           {ananlar.length > 0 && (

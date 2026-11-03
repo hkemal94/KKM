@@ -32,6 +32,7 @@ import { Kanallar } from './marka/Kanallar';
 import { ANA_MARKA_KIMLIKLERI } from '../lib/markaYapisi';
 import { maddeGorseli } from '../lib/maddeGorseli';
 import { useGorselSurumu } from '../lib/gorselOnbellek';
+import { BagliIlhamlar } from './urunler/BagliIlhamlar';
 
 interface MarkalarProps {
   items: Item[];
@@ -1714,6 +1715,9 @@ export default function Markalar({
                 </div>
 
               </div>
+
+              {/* İlhamlar (3 Kasım): İlham ve kaynaklar'da bu markaya bağlananlar */}
+              <BagliIlhamlar items={items} hedefId={activeBrand.id} className="bg-stone-50 dark:bg-[#17345A]/50 border border-[#CFC5B4] dark:border-[#2C3C72]/50 p-5 rounded-xl" />
 
             </div>
           ) : (
