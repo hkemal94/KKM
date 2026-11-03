@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Archive, Check, ChevronDown, ChevronRight, Clock, ExternalLink, Pencil, RefreshCw, Trash2, Undo2 } from 'lucide-react';
+import { Archive, Check, ChevronDown, ChevronRight, Clock, ExternalLink, Pencil, RefreshCw, Send, Trash2, Undo2 } from 'lucide-react';
 import type { Item } from '../../types';
 import { bekleyenAdaylar } from '../../lib/adaylar';
 import { eksikleriCikar } from '../../lib/eksikler';
@@ -11,7 +11,7 @@ import {
 import { kimdeAdi } from '../../lib/isler';
 import { tepsiDosyasi, tepsiyiGonder } from '../../lib/tepsiAjansa';
 import {
-  HAZIR_SECENEKLER, bugun, gorunum, gunEkle, onayKayitlari, onaylariYaz, oneriAnahtari, tarihYaz,
+  AJANSA_YOLLA_NOTU, HAZIR_SECENEKLER, bugun, gorunum, gunEkle, onayKayitlari, onaylariYaz, oneriAnahtari, tarihYaz,
   type Gorunum, type OnayKaydi
 } from '../../lib/onaylar';
 import { useBekleyenIsler } from '../anasayfa/BekleyenIsler';
@@ -53,6 +53,12 @@ import { TakipGovdesi } from './AsamaSeridi';
  * uygula" her türde, her satırda o türün kendi Uygula'sı çalışır (PR'larda
  * tek "emin misin"); kapalı satırda başlığın altında kısa özet ve varsa
  * küçük görsel, tam içerik satır açılınca.
+ *
+ * Ajansa yolla (3 Kasım, Kemal): not yazmadan "olduğu gibi yeniden yap".
+ * Düzenle'nin kaydının aynısı hazır notla yazılır (`AJANSA_YOLLA_NOTU`), satır
+ * Ajansta'ya geçer. Ajansın yeniden yapabileceği satırlarda var: öneri tepsisi,
+ * ajanların işleri ("yapamadım" türü hariç) ve ajansın kararları; tek seferlik
+ * işlerde yok (KKM'nin kendi düğmeleri, ajans yapmıyor).
  */
 
 type Suzgec = 'hepsi' | 'isler' | 'oneriler' | 'ajanlar' | 'kararlar' | 'ajansta' | 'bekletilen' | 'arsiv' | 'eksikler';
@@ -78,6 +84,8 @@ interface Satir {
   /** Sil: öneride kaydı siler; işte ve kararda satırı listeden kalıcı kaldırır */
   sil: () => Promise<void>;
   silAciklama: string;
+  /** "Ajansa yolla" var mı: ajansın yeniden yapabileceği satır */
+  yolla?: boolean;
 }
 
 interface Props {
@@ -215,7 +223,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
         zaman: a.createdAt, zamanYazi: neZaman(a.createdAt),
         ozet: oz.metin || undefined, gorsel: oz.gorsel,
         govde: oneri.govde(a, true),
-        uygula: oneri.uygula(a),
+        uygula: oneri.uygula(a), yolla: true,
         sil: async () => { await oneri.sil(a); },
         silAciklama: 'Öneri silinir, geri gelmez. Hiçbir maddeye dokunulmaz.'
       });
@@ -231,6 +239,8 @@ export const OnayBekleyenler: React.FC<Props> = ({
         ozet: `${kimdeAdi(o.ajan)}${o.ozet ? ` · ${o.ozet}` : ''}`,
         gorsel: o.baglanti && GORSEL_ADRESI.test(o.baglanti) ? o.baglanti : undefined,
         pr: o.tur === 'pr' && !!o.baglanti,
+        // "Yapamadım" diyen işte yeniden yap anlamsız: eksik yetenek gelmeden aynı sonuç çıkar
+        yolla: o.tur !== 'eksik',
         govde: (
           <>
             <p className={`text-[12px] leading-snug ${IKINCIL}`}>
@@ -293,7 +303,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
             </ul>
           </>
         ),
-        uygula: { ad: 'Uygula', calistir: () => kararlar.uygula() },
+        uygula: { ad: 'Uygula', calistir: () => kararlar.uygula() }, yolla: true,
         sil: async () => { await yaz({ [k]: { durum: 'silindi', zaman: Date.now() } }); },
         silAciklama: 'Bu karar dosyası listeden kalkar ve ajansa "istemiyorum" diye gider. Kayıtlara dokunulmaz; ajans yeni dosya yazarsa yeniden görünür.'
       });
@@ -390,20 +400,45 @@ export const OnayBekleyenler: React.FC<Props> = ({
     return `"${s.baslik}" silindi.`;
   });
 
+  /**
+   * KKM kaydına yazılan notları tepsiyle ajansa gönderir (ajan işlerinin notu
+   * zaten ajansın dosyasında). Dönen yazı mesajın ikinci yarısıdır.
+   */
+  const tepsiyleGonder = async (r: { guncel?: Item; yeni?: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> }): Promise<string> => {
+    if (!anahtar) return 'Bu tarayıcıda GitHub anahtarı olmadığı için ajansa gitmedi; Ajans bağlantısı\'nda anahtar girince "Tepsiyi ajansa gönder" ile gider.';
+    try {
+      await tepsiyiGonder(anahtar, tepsiDosyasi(yazilmisItems(r)));
+      setTur(t => t + 1); // aşama için tepsiyi yeniden oku
+      return 'Tepsiyle ajansa gitti; ajans bir sonraki çalışmasında ele alır.';
+    } catch (e) {
+      return `Ama ajansa gönderilemedi (${hataYazi(e)}); Ajans bağlantısı → "Tepsiyi ajansa gönder"le yeniden dene.`;
+    }
+  };
+
   const duzenle = (s: Satir) => calistir(s.anahtar, async () => {
     if (!not.trim() && !secenekler.length) throw new Error('bir not yaz ya da bir seçenek seç');
     const r = await yaz({ [s.anahtar]: { durum: 'duzenle', not, secenekler, zaman: Date.now() } });
     setPanel(null);
     setAcik(null);
     if (s.kaynak === 'ajan') return 'Not ajansa gitti; iş "Ajansta" süzgecine geçti. Kems işi notunla ilgili ajana geri verir; yeni hâli buraya gelir.';
-    if (!anahtar) return 'Not kaydedildi; iş "Ajansta" süzgecine geçti. Bu tarayıcıda GitHub anahtarı olmadığı için ajansa gitmedi; Ajans bağlantısı\'nda anahtar girince "Tepsiyi ajansa gönder" ile gider.';
-    try {
-      await tepsiyiGonder(anahtar, tepsiDosyasi(yazilmisItems(r)));
-      setTur(t => t + 1); // aşama için tepsiyi yeniden oku
-      return 'Not kaydedildi ve tepsiyle ajansa gitti; iş "Ajansta" süzgecine geçti. Ajans bir sonraki çalışmasında notuna göre revize eder.';
-    } catch (e) {
-      return `Not kaydedildi ama ajansa gönderilemedi (${hataYazi(e)}); iş "Ajansta" süzgecinde. Ajans bağlantısı → "Tepsiyi ajansa gönder"le yeniden dene.`;
-    }
+    return `Not kaydedildi; iş "Ajansta" süzgecine geçti. ${await tepsiyleGonder(r)}`;
+  });
+
+  /** Ajansa yolla: not yazmadan "olduğu gibi yeniden yap"; Düzenle'nin kaydı, hazır notla */
+  const ajansaYolla = (liste: Satir[]) => calistir(liste.length === 1 ? `yolla:${liste[0].anahtar}` : 'yolla', async () => {
+    const yollanan = liste.filter(s => s.yolla);
+    if (!yollanan.length) throw new Error('seçilenlerin hiçbiri ajansa yollanamıyor');
+    const z = Date.now();
+    const r = await yaz(Object.fromEntries(yollanan.map(s => [s.anahtar, { durum: 'duzenle' as const, not: AJANSA_YOLLA_NOTU, zaman: z }])));
+    setSecili(new Set());
+    setPanel(null);
+    setAcik(null);
+    const atlanan = liste.length - yollanan.length;
+    const ne = yollanan.length > 1 ? `${yollanan.length} satır ajansa yollandı` : `"${yollanan[0].baslik}" ajansa yollandı`;
+    const parcalar = [`${ne}; "Ajansta" süzgecine geçti. Ajans olduğu gibi yeniden yapar, yeni hâli buraya gelir.`];
+    if (yollanan.some(s => s.kaynak !== 'ajan')) parcalar.push(await tepsiyleGonder(r));
+    if (atlanan) parcalar.push(`${atlanan} satır ajansa yollanamadığı için atlandı.`);
+    return parcalar.join(' ');
   });
 
   /**
@@ -492,6 +527,11 @@ export const OnayBekleyenler: React.FC<Props> = ({
                 <button type="button" disabled={mesgul} onClick={() => panelAc(s, 'duzenle')} className={DUGME_BOS} aria-pressed={p === 'duzenle'}>
                   <Pencil className="w-3.5 h-3.5" /> Düzenle
                 </button>
+                {s.yolla && (
+                  <button type="button" disabled={mesgul} onClick={() => void ajansaYolla([s])} className={DUGME_BOS} title="Not yazmadan ajansa geri yollar: olduğu gibi yeniden yap">
+                    <Send className="w-3.5 h-3.5" /> {calisan === `yolla:${s.anahtar}` ? 'Yollanıyor…' : 'Ajansa yolla'}
+                  </button>
+                )}
                 <button type="button" disabled={mesgul} onClick={() => void arsivle([s])} className={DUGME_BOS}>
                   <Archive className="w-3.5 h-3.5" /> Arşivle
                 </button>
@@ -682,6 +722,12 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   <button type="button" disabled={!!calisan} onClick={() => void topluUygula(seciliSatirlar)} className={DUGME_LAC}>
                     <Check className="w-3.5 h-3.5" /> {calisan === 'toplu' ? 'Uygulanıyor…' : 'Seçilenleri uygula'}
                   </button>
+                  {seciliSatirlar.some(s => s.yolla) && (
+                    <button type="button" disabled={!!calisan} onClick={() => void ajansaYolla(seciliSatirlar)} className={DUGME_BOS}
+                      title="Not yazmadan ajansa geri yollar: olduğu gibi yeniden yap (tek seferlik işler ve 'yapamadım' işleri atlanır)">
+                      <Send className="w-3.5 h-3.5" /> {calisan === 'yolla' ? 'Yollanıyor…' : 'Seçilenleri ajansa yolla'}
+                    </button>
+                  )}
                   <button type="button" disabled={!!calisan} onClick={() => void arsivle(seciliSatirlar)} className={DUGME_BOS}>
                     <Archive className="w-3.5 h-3.5" /> Seçilenleri arşivle
                   </button>
@@ -691,10 +737,10 @@ export const OnayBekleyenler: React.FC<Props> = ({
           )}
           {suzgec === 'bekletilen' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Tarihi gelen kendiliğinden listeye döner.</p>}
           {suzgec === 'arsiv' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Arşiv süresiz: sen silmeden hiçbir şey kendiliğinden kalkmaz. "Listeye geri al" deyince yeniden onayına gelir.</p>}
-          {suzgec === 'ajansta' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Düzenle dediğin işler ajansta. Yeni hâli gelince buradan kalkar, listeye yeni satır olarak düşer. "Listeye geri al" notu geri çeker.</p>}
+          {suzgec === 'ajansta' && <p className={`pb-2 text-[12px] ${IKINCIL}`}>Düzenle ya da Ajansa yolla dediğin işler ajansta. Yeni hâli gelince buradan kalkar, listeye yeni satır olarak düşer. "Listeye geri al" notu geri çeker.</p>}
           {gorunen.length ? <ul>{gorunen.map(satirGoster)}</ul> : (
             <p className={`text-[12px] ${IKINCIL}`}>
-              {suzgec === 'bekletilen' ? 'Bekletilen yok.' : suzgec === 'arsiv' ? 'Arşiv boş.' : suzgec === 'ajansta' ? 'Düzenle dediğin bir iş yok.' : 'Onayını bekleyen bir şey yok.'}
+              {suzgec === 'bekletilen' ? 'Bekletilen yok.' : suzgec === 'arsiv' ? 'Arşiv boş.' : suzgec === 'ajansta' ? 'Ajansa geri verdiğin bir iş yok.' : 'Onayını bekleyen bir şey yok.'}
             </p>
           )}
           {/* Bu açılışta biten tek seferlik işler */}

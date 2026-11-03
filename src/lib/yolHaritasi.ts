@@ -207,6 +207,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 5. adım: ajanların işleri (PR, dosya, Drive belgesi, eksik yetenek) Onay bekleyenler\'de; karar ajansa gider, PR olan işte Uygula PR\'ı birleştirir' },
   { id: 'evren-ve-urunler', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 6. adım: Evren → Viki · Kitap · Harita ve Kurucu · Görünümler; Ürünler → Oyunlar · Marka ve merch · İçerik (sosyal medya, blog, fanzin, video); Durum → Eksikler ve ayarlar' },
+  { id: 'ajansa-yolla', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Onay bekleyenler: Düzenle\'nin yanında "Ajansa yolla" (not yazmadan "olduğu gibi yeniden yap"; satır Ajansta\'ya geçer), toplu seçimde "Seçilenleri ajansa yolla"' },
   { id: 'marka-karti-uygula', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: '"Ajansın kararları" marka kartını da işler: renk paleti, yazı, ton, örnek işler, yap / yapma, slogan (markanın bible\'ı kartın kendisi); logo ve moodboard görselleri hariç' },
   { id: 'viki-gorsel-temizligi', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
