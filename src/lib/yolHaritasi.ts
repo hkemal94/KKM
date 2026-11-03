@@ -181,6 +181,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Kart içindeki uzun listelerde ilk 5 satır görünür; "Hepsini göster" ile açılır, "Daha az göster" ile kapanır (PC ve mobil)' },
   { id: 'yeni-menu-1', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yeni yerleşim 1. adım: menü Ajans · Evren · Ürünler, üst çubukta arama-zil-tema, Yaz tuşu (Hızlı not · Kems\'e yaz · Notlar)' },
+  { id: 'galeri-temizligi-kalkti', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Galeri temizliği panosu kalktı (Kemal: "galeri bitti, kart kalksın"); Galeri\'nin kendi bağla ve arşiv düğmeleri duruyor' },
   { id: 'onay-bekleyenler', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yeni yerleşim 2. adım: Onay bekleyenler açılış ekranı (tek seferlik işler, öneriler, ajansın kararları, eksikler; süzgeçli)' },
   { id: 'anahtar-yenile', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
