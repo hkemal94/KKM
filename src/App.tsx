@@ -40,6 +40,7 @@ import {
   KeyRound,
   LogOut,
   Megaphone,
+  Sparkles,
   ArrowLeft,
 } from 'lucide-react';
 import { SAYFA_RAYI_YUVASI } from './components/SayfaRayi';
@@ -102,6 +103,7 @@ const KitapSayfasi = lazyYukle(() => import('./components/KitapSayfasi'));
 const Blog = lazyYukle(() => import('./components/Blog'));
 const MarkaVeMerch = lazyYukle(() => import('./components/urunler/MarkaVeMerch'));
 const Icerik = lazyYukle(() => import('./components/urunler/Icerik'));
+const IlhamVeKaynaklar = lazyYukle(() => import('./components/urunler/IlhamVeKaynaklar'));
 const Galeri = lazyYukle(() => import('./components/Galeri'));
 const Sosyal = lazyYukle(() => import('./components/sosyal/Sosyal'));
 const Takvim = lazyYukle(() => import('./components/takvim/Takvim'));
@@ -130,7 +132,7 @@ import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from '.
  * Uygulamanın sayfaları. 'onay' açılış (2 Kasım); eski Komuta Merkezi 'durum'.
  * 2 Kasım (yol haritası 1. adım): Ana sayfa ve Site kalktı; notlar 'notlar'da.
  */
-type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik';
+type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik' | 'ilham';
 /** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
 const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar', 'studyo']);
 const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'boyut'];
@@ -515,7 +517,7 @@ export default function App() {
     }
     // Galeri kaydı silinince kendi görsel belgeleri de silinir (21 Ekim);
     // başka bir kayıt aynı görseli kullanıyorsa o belge kalır
-    if (silinen?.type === 'ilham_gorsel') {
+    if (silinen?.type === 'ilham_gorsel' || silinen?.type === 'ilham_madde') {
       const baskalari = new Set(items.filter(i => i.id !== itemId).flatMap(i => basvurulari(i.images)));
       const silinecek = basvurulari(silinen.images).filter(r => !baskalari.has(r));
       if (silinecek.length) {
@@ -591,6 +593,9 @@ export default function App() {
     } else if (item.type === 'sosyal_gonderi' || item.type === 'sosyal_seri') {
       // "Son dokunulanlar"dan gönderiye basınca vikiye düşüyordu (30 Eylül)
       yonlendir('sosyal');
+    } else if (item.type === 'ilham_madde') {
+      // İlham ve kaynaklar (3 Kasım)
+      setActiveTab('ilham');
     } else if (item.type === 'ilham_gorsel' || item.type === 'ilham_kaynak') {
       yonlendir('galeri');
     } else if (item.type === 'oyun_is' || item.type === 'gdd_bolum' || item.type === 'oyun_tanitim' || item.type === 'oyun_fikir') {
@@ -901,7 +906,8 @@ export default function App() {
     { grup: 'Ürünler', simge: Package, satirlar: [
       { id: 'oyun', ad: 'Oyunlar', simge: Gamepad2 },
       { id: 'marka', ad: 'Marka ve merch', alt: 'markalar, galeri, droplar, ürünler', simge: Shield },
-      { id: 'icerik', ad: 'İçerik', alt: 'sosyal medya, blog, fanzin, video', simge: Megaphone }
+      { id: 'icerik', ad: 'İçerik', alt: 'sosyal medya, blog, fanzin, video', simge: Megaphone },
+      { id: 'ilham', ad: 'İlham ve kaynaklar', alt: 'bağlantı, görsel, not; markaya ve maddeye bağla', simge: Sparkles }
     ] }
   ];
   /** Açık sayfanın grubu (Notlar hiçbir grupta değil; Yaz tuşundan açılır) */
@@ -914,7 +920,7 @@ export default function App() {
   const SAYFA_ADI: Record<Sayfa, string> = {
     onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
     kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
-    oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', durum: 'Eksikler ve ayarlar'
+    oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', ilham: 'İlham ve kaynaklar', durum: 'Eksikler ve ayarlar'
   };
 
   const logo = hasKemsLogo ? (
@@ -1265,6 +1271,16 @@ export default function App() {
                   />
                 }
                 fanzin={<FanzinSayfasi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onOnay={() => git('onay')} onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }} />}
+              />
+            )}
+
+            {activeTab === 'ilham' && (
+              <IlhamVeKaynaklar
+                items={items}
+                onAddItem={handleAddItem}
+                onUpdateItem={handleUpdateItem}
+                onDeleteItem={handleDeleteItem}
+                onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }}
               />
             )}
 

@@ -209,6 +209,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 4. adım: Ajans → Ajanlar ve otomasyonlar (ajan kartları, zamanlayıcı ayarı, Kems\'in limit uyarısı; Durum → Ajans buraya taşındı)' },
   { id: 'onayli-yazma', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 5. adım: ajanların işleri (PR, dosya, Drive belgesi, eksik yetenek) Onay bekleyenler\'de; karar ajansa gider, PR olan işte Uygula PR\'ı birleştirir' },
+  { id: 'ilham-ekrani', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Ürünler → İlham ve kaynaklar: bağlantı, görsel ve notları madde madde kaydet; viki maddesine, markaya, drop ve ürüne bağla; "Ajana ilham tamamlat" düğmesi' },
   { id: 'evren-ve-urunler', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 6. adım: Evren → Viki · Kitap · Harita ve Kurucu · Görünümler; Ürünler → Oyunlar · Marka ve merch · İçerik (sosyal medya, blog, fanzin, video); Durum → Eksikler ve ayarlar' },
   { id: 'ajansa-yolla', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

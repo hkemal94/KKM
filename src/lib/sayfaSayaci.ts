@@ -12,7 +12,7 @@ export interface SayacDurumu { ilk: number | null; sayilar: Record<string, numbe
 export const SAYFA_ADLARI: Record<string, string> = {
   onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
   kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
-  oyun: 'Oyun', marka: 'Marka ve merch', icerik: 'İçerik', durum: 'Eksikler ve ayarlar', studyo: 'Yapay zekâ'
+  oyun: 'Oyun', marka: 'Marka ve merch', icerik: 'İçerik', ilham: 'İlham ve kaynaklar', durum: 'Eksikler ve ayarlar', studyo: 'Yapay zekâ'
 };
 export const DURUM_SEKME_ADLARI: Record<string, string> = {
   eksikler: 'Eksikler', bosluklar: 'Boşluklar', takvim: 'Takvim',
