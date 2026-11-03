@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, ChevronDown, CircleCheck } from 'lucide-react';
+import { ArrowRight, Bot, ChevronDown, CircleCheck } from 'lucide-react';
 import type { AreaType, Item } from '../types';
 import { TemizlikKarti, EskiAlanKarti } from './TemizlikKarti';
 import { OrtakAlanKarti } from './OrtakAlanKarti';
@@ -13,7 +13,9 @@ import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlem
 import { boslukDoldurma } from '../lib/boslukDoldurma';
 import { kisiAdlariniAyir } from '../lib/kisiAdi';
 import { haritadaAra, maddeTohumu } from '../lib/haritaMaddesi';
-import { eksikleriCikar, type Cozum } from '../lib/eksikler';
+import { eksikleriCikar, eksikIstegi, type Cozum } from '../lib/eksikler';
+import { anahtariOku } from '../lib/oyunAyarlari';
+import { istekEkle } from '../lib/kemalIstekleri';
 
 interface EksiklerProps {
   items: Item[];
@@ -60,6 +62,20 @@ export const Eksikler: React.FC<EksiklerProps> = ({
       }
     } finally {
       setCozuluyor(null);
+    }
+  };
+  /** Ajana öneri hazırlat (3 Kasım, Kemal: "niye bitmiyor, önerileri yok"): başlığın listesi ajansa istek olur */
+  const [istekDurumu, setIstekDurumu] = useState<Record<string, string>>({});
+  const oneriIste = async (e: (typeof eksikler)[number]) => {
+    const anahtar = anahtariOku();
+    if (!anahtar) { setIstekDurumu(d => ({ ...d, [e.anahtar]: 'Önce Ajans bağlantısı\'nda GitHub anahtarını gir.' })); return; }
+    setIstekDurumu(d => ({ ...d, [e.anahtar]: 'Gönderiliyor…' }));
+    try {
+      const { metin, ajan } = eksikIstegi(e);
+      await istekEkle(anahtar, { tur: 'istek', metin, ekran: 'Eksikler', ...(ajan ? { ajan } : {}) });
+      setIstekDurumu(d => ({ ...d, [e.anahtar]: "Gönderildi. Öneriler Onay bekleyenler'e düşer; uygulayınca bu liste kısalır." }));
+    } catch (h) {
+      setIstekDurumu(d => ({ ...d, [e.anahtar]: `Gönderilemedi: ${h instanceof Error ? h.message : String(h)}` }));
     }
   };
   const cozumAdi = (c: Cozum) => c.tur === 'madde-ac' ? 'Madde aç' : c.tur === 'kayda-bagla' ? 'Kayda bağla' : `${c.markaAdi}'ye bağla`;
@@ -198,6 +214,19 @@ export const Eksikler: React.FC<EksiklerProps> = ({
                       </li>
                     ))}
                   </ul>
+                  <div className="sticky bottom-0 flex flex-wrap items-center gap-3 px-4 py-2 border-t border-[#CFC5B4]/50 dark:border-[#2C3C72]/60 bg-[#FAF8F5] dark:bg-[#13204A]">
+                    <button
+                      type="button"
+                      disabled={istekDurumu[e.anahtar] === 'Gönderiliyor…'}
+                      onClick={() => void oneriIste(e)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] hover:opacity-90 disabled:opacity-40 cursor-pointer"
+                    >
+                      <Bot className="w-3.5 h-3.5" /> Ajana öneri hazırlat
+                    </button>
+                    <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9] min-w-0">
+                      {istekDurumu[e.anahtar] || 'Ajan bu listedeki her biri için öneri hazırlar; uydurmaz, karar senin.'}
+                    </span>
+                  </div>
                 </div>
               )}
             </li>

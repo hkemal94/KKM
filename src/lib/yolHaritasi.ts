@@ -203,6 +203,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 9. adım: Ajans Panosu kapandı; işlerin tek kaynağı ajansın iş dosyası (Kimde ne var), sorular Onay bekleyenler\'de' },
   { id: 'telefona-bildirim', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 8. adım: zil ve Onay noktası ajanların işlerini ve ajansın kararlarını da sayıyor; telefona bildirim Kems\'ten (Claude uygulaması, çalışma sonunda tek bildirim)' },
+  { id: 'eksik-ajana', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
+    ad: 'Eksikler: her başlığın listesinin altında "Ajana öneri hazırlat"; liste ajansa istek olur, öneriler Onay bekleyenler\'e ya da Ajansın kararları\'na gelir' },
   { id: 'ajan-dugmesi', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,
     ad: 'Yol haritası 7. adım: ekranların başında "Ajana yaptır" (kendi cümlen + hazır örnekler; sonuç Onay bekleyenler\'e), ajan kartında künye, model seçimi, takvim ve eski işler, İşler ve takvim\'de "Yapılacak ekle"' },
   // sırası belli değil

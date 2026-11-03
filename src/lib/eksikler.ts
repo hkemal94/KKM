@@ -258,3 +258,22 @@ export function eksikleriCikar(items: Item[]): Eksik[] {
   return eksikler.sort((a, b) => b.sayi - a.sayi);
 }
 
+
+/**
+ * "Ajana öneri hazırlat" (3 Kasım, Kemal: "bunlar niye bitmiyor ve önerileri yok").
+ * Eksik başlığını ve listesini ajansa gidecek istek metnine çevirir; ajanı başlığa göre
+ * önerir (yoksa Kems seçer). Kayda hiçbir şey yazılmaz.
+ */
+export function eksikIstegi(e: Eksik): { metin: string; ajan?: string } {
+  const liste = (e.kayitlar || []).slice(0, 40).map(k => `- ${k.ad}${k.not ? ` (${k.not})` : ''}`).join('\n');
+  const fazla = (e.kayitlar || []).length > 40 ? `\n… ve ${(e.kayitlar || []).length - 40} kayıt daha` : '';
+  const b = e.baslik.toLocaleLowerCase('tr');
+  const ajan = /bağlı değil/.test(b) && e.alan !== 'duzada' ? undefined
+    : /bağlı değil|taslak|boşluk|rolü/.test(b) ? 'viki-editoru'
+    : /künye|marka/.test(b) ? 'merch-tasarimcisi'
+    : undefined;
+  return {
+    metin: `Eksikler: ${e.sayi} ${e.baslik}. Her biri için vikide zaten yazan bilgiden öneri hazırla (bağ, alan ya da metin); yeni bilgi uydurma, bilinmeyeni aday cevaplı soru yap. Öneriler Ajansın kararları ya da Onay bekleyenler olarak gelsin.\n${liste}${fazla}`,
+    ...(ajan ? { ajan } : {})
+  };
+}
