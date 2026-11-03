@@ -10,6 +10,7 @@ import { BAG_TURLERI, getRelationLabels, resolveAllRelations, type BagTuru } fro
 import { aileUyeleri, type AileUyeligi } from '../../lib/aileUyeligi';
 import { tamAd } from '../../lib/kisiAdi';
 import { bagUygun, kaynakTurleri, uygunTurler } from '../../lib/bagKurallari';
+import { WIKIPEDIA_KAYNAGI, wikipediadanMi } from '../../lib/vikipediKaynagi';
 
 /**
  * Madde düzenleyici (yapisal-4, 25–28). Vikinin yönetim yüzünde "düzenle"ye
@@ -73,6 +74,10 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
   const [takma, setTakma] = useState<string>(ilkTakma);
   const [baglar, setBaglar] = useState<Bag[]>(() => ((item.metadata?.relations as Bag[]) || []).filter(b => b && b.targetId));
   const [esin, setEsin] = useState<string>(String(item.metadata?.esin || ''));
+  /** Wikipedia'dan (3 Kasım, Kemal): madde yerinde kalır, başında işaret ve kaynak bağlantısı görünür */
+  const [wikipedia, setWikipedia] = useState<boolean>(wikipediadanMi(item));
+  const ilkKaynakUrl = typeof item.metadata?.kaynakUrl === 'string' ? item.metadata.kaynakUrl : '';
+  const [kaynakUrl, setKaynakUrl] = useState<string>(ilkKaynakUrl);
   /** Alan boşsa metindeki künye satırından okunan değer — kutuda soluk görünür */
   const metindeki = useMemo(() => new Map(getKunyeFields(item).map(f => [f.id, f.value])), [item]);
   const ipucu = (id: string, soru: string) => (metindeki.get(id) ? `metinde: ${metindeki.get(id)}` : soru);
@@ -91,7 +96,8 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
   const [siliniyor, setSiliniyor] = useState(false);
   const [bolumler, setBolumler] = useState<WikiSection[]>(() => ((item.metadata?.wikiSections as WikiSection[]) || []).map(b => ({ ...b })));
   // Metin değiştiyse kaydetmeden çıkarken sorulur
-  const metinDegisti = ust !== String(item.metadata?.placeId || '') || yeniAlanlar.length > 0 || takma.trim() !== ilkTakma.trim() || ad.trim() !== item.title.trim() || giris.trim() !== ilkGiris.trim() || ekDegisti || JSON.stringify(bolumler) !== JSON.stringify((item.metadata?.wikiSections as WikiSection[]) || []);
+  const metinDegisti = ust !== String(item.metadata?.placeId || '') || yeniAlanlar.length > 0 || takma.trim() !== ilkTakma.trim() || ad.trim() !== item.title.trim() || giris.trim() !== ilkGiris.trim() || ekDegisti || JSON.stringify(bolumler) !== JSON.stringify((item.metadata?.wikiSections as WikiSection[]) || [])
+    || wikipedia !== wikipediadanMi(item) || kaynakUrl.trim() !== ilkKaynakUrl.trim();
   useKaydedilmemis(metinDegisti);
   const bolumYaz = (n: number, d: Partial<WikiSection>) => setBolumler(bs => bs.map((b, k) => (k === n ? { ...b, ...d } : b)));
   const bolumTasi = (n: number, yon: -1 | 1) => setBolumler(bs => {
@@ -185,6 +191,9 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
         .filter(b => b.title || b.content);
       // Tik kalkınca false yazılır: kayıt birleşerek yazıldığı için anahtarı silmek yetmez
       if (kurumTikiVar && (kurum || metadata[KURUM_TIKI] !== undefined)) metadata[KURUM_TIKI] = kurum;
+      // Wikipedia işareti: kayıt birleşerek yazıldığı için kaldırınca boş yazılır
+      if (wikipedia || metadata.kaynak === WIKIPEDIA_KAYNAGI) metadata.kaynak = wikipedia ? WIKIPEDIA_KAYNAGI : '';
+      if (wikipedia || metadata.kaynakUrl !== undefined) metadata.kaynakUrl = wikipedia ? kaynakUrl.trim() : '';
       const notesTaban = ekDegisti ? { ...item, notes: ekNotlari } : item;
       const notes = giris.trim() === ilkGiris.trim() ? notesTaban.notes : kendiMetniYaz(notesTaban, giris);
       // Boş ad yazılmaz; eski ad kalır
@@ -404,6 +413,23 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
       <div>
         <div className="postmark-label text-gri dark:text-bej/85 mb-1">Esin notu · yalnız sen görürsün</div>
         <textarea value={esin} onChange={e => setEsin(e.target.value)} rows={3} placeholder="Bu madde neyden esinlendi? Sitede ve okuma yüzünde görünmez." className={girdi} />
+      </div>
+
+      <div>
+        <label className="flex items-start gap-3 min-h-11 cursor-pointer">
+          <input type="checkbox" checked={wikipedia} onChange={e => setWikipedia(e.target.checked)} className="mt-1 w-5 h-5 accent-[#0E1C4F] dark:accent-[#F26B6F] shrink-0" />
+          <span>
+            <span className="block text-[14px] font-semibold">Wikipedia'dan</span>
+            <span className="block text-[12px] text-gri dark:text-bej/70">Tiklersen maddenin başında ve viki listesinde "Wikipedia'dan" işareti görünür; gerçek dünyadan gelen bilgi kurgudan ayırt edilir. Madde yerinde kalır.</span>
+          </span>
+        </label>
+        {wikipedia && (
+          <label className="block mt-1 pl-8">
+            <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Kaynak bağlantısı</span>
+            <input value={kaynakUrl} onChange={e => setKaynakUrl(e.target.value)} placeholder="https://tr.wikipedia.org/wiki/…" inputMode="url" className={girdi} />
+            {kaynakUrl.trim() && !/^https?:\/\//i.test(kaynakUrl.trim()) && <span className="block mt-0.5 text-[11px] text-kiremit">Bağlantı https:// ile başlamalı; yoksa işaret bağlantısız görünür.</span>}
+          </label>
+        )}
       </div>
 
       {kurumTikiVar && (
