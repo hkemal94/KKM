@@ -4,7 +4,7 @@ import { BolumBasligi, BosSatir } from '../kabuk/Parcalar';
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import type { Item } from '../../types';
 import {
-  AY_ADLARI, GUN_ADLARI, GUN_KISA, KANALLAR, TURLER, asamasi, ayIzgarasi, bosYerler, bugunTarih, gonderiBilgisi,
+  AY_ADLARI, GUN_ADLARI, GUN_KISA, KANALLAR, TURLER, ASAMA_RENGI, asamasi, ayIzgarasi, bosYerler, bugunTarih, gonderiBilgisi,
   gonderiGuncelle, gonderiler, seriBilgisi, seriler, tarihYaz, turBul, turStili, TUR_SINIFI, yeniGonderi,
   type GonderiBilgisi
 } from '../../lib/sosyal';
@@ -45,13 +45,6 @@ const TUR: Record<TakvimTuru, { ad: string; renk: string }> = {
 
 /** Ajansın düzenli işleri (yalnız ekranda; kayıt değil) */
 const AJANS_RENGI = '#0E1C4F';
-
-const ASAMA_RENGI: Record<string, string> = {
-  Fikir: 'bg-[#F3EFE8] text-[#6A5E4C] dark:bg-[#17345A] dark:text-[#A6B0C9]',
-  Taslak: 'bg-[#F3EFE8] text-[#6A5E4C] dark:bg-[#17345A] dark:text-[#A6B0C9]',
-  Hazır: 'bg-[#E5EFE3] text-[#3F6B45] dark:bg-[#23452B] dark:text-[#B9D8BC]',
-  Paylaşıldı: 'bg-[#0E1C4F] text-white dark:bg-[#2C3C72]'
-};
 
 /** '2026-10-05' ± gün */
 const gunEkle = (t: string, n: number) => {

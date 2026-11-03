@@ -60,7 +60,7 @@ export const MARKA_KUNYELERI: MarkaKunyesi[] = [
       + 'arada tutar.',
     hikayeKoku:
       "Kems, Kemal'in lakabı. Marka bir ürün fikrinden bir evrene dönüştü.",
-    kurulus: '2024',
+    // kurulus yok (3 Kasım): kuruluş yılı vikide `profile.founded`; eski alan Temizlik'te silinir
     merkezi: 'İstanbul',
     armaTarifi: [
       'Çerçeveli kilit: lacivert çerçeve, krem alan, altta kiremit bant',
@@ -231,7 +231,7 @@ export function kunyeyiBirlestir(mevcut: Item, kunye: MarkaKunyesi): Item {
       armaTarifi: mevcut.metadata?.armaTarifi?.length
         ? mevcut.metadata.armaTarifi : kunye.armaTarifi,
       ustMarka: mevcut.metadata?.ustMarka || kunye.ustMarka,
-      kurulus: mevcut.metadata?.kurulus || kunye.kurulus,
+      ...(mevcut.metadata?.kurulus || kunye.kurulus ? { kurulus: mevcut.metadata?.kurulus || kunye.kurulus } : {}),
       merkezi: mevcut.metadata?.merkezi || kunye.merkezi,
       placeId: mevcut.metadata?.placeId || kunye.bagliMekan,
       kunyeKaynagi: 'Canva · 16 Eylül 2026'
@@ -263,7 +263,7 @@ export function kunyedenYeni(
       markaTuru: kunye.tur,
       armaTarifi: kunye.armaTarifi,
       ustMarka: kunye.ustMarka,
-      kurulus: kunye.kurulus,
+      ...(kunye.kurulus ? { kurulus: kunye.kurulus } : {}),
       merkezi: kunye.merkezi,
       placeId: kunye.bagliMekan,
       kunyeKaynagi: 'Canva · 16 Eylül 2026'

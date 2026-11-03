@@ -6,7 +6,10 @@ import type { Item, ItemType } from '../types';
  *   - Ay takvimi; yanında tarihsiz fikir kutusu (güne sürükleyince tarih alır).
  *   - Tek gönderi, çok kanal; her kanal ayrı "paylaşıldı" işaretlenir.
  *     TikTok ile YouTube Shorts aynı içerik: tek kanal.
- *   - Aşama: Fikir → Taslak → Hazır → Paylaşıldı.
+ *   - Aşama: Fikir → Taslak → Onayda → Onaylandı → Paylaşıldı (3 Kasım,
+ *     Kemal: gönderi kartı). "Paylaşıldı"yı yalnız Kemal işaretler; KKM
+ *     paylaşmaz. Eski "Hazır" kayıtta durur, ekranda "Onaylandı" okunur
+ *     (kayda yazılmaz; Kemal aşamayı değiştirince yenisi yazılır).
  *   - Biçim: tek görsel, kaydırmalı, video / reels.
  *   - İçerik türü yalnız KKM içinde (dışarı yansımaz): Ürün · Nostalji ·
  *     Afiş · Hayat · Marka.
@@ -19,8 +22,17 @@ import type { Item, ItemType } from '../types';
  * kabul etmez; bütün diziler düz metin dizisi.
  */
 
-export const ASAMALAR = ['Fikir', 'Taslak', 'Hazır', 'Paylaşıldı'] as const;
+export const ASAMALAR = ['Fikir', 'Taslak', 'Onayda', 'Onaylandı', 'Paylaşıldı'] as const;
 export type Asama = typeof ASAMALAR[number];
+
+/** Aşama rozetinin rengi (Sosyal, gönderi kartı, Takvim) */
+export const ASAMA_RENGI: Record<Asama, string> = {
+  Fikir: 'bg-[#F3EFE8] text-[#6A5E4C] dark:bg-[#17345A] dark:text-[#A6B0C9]',
+  Taslak: 'bg-[#F3EFE8] text-[#6A5E4C] dark:bg-[#17345A] dark:text-[#A6B0C9]',
+  Onayda: 'bg-[#FCE7E2] text-[#B23A40] dark:bg-[#4A2430] dark:text-[#F5B3B5]',
+  Onaylandı: 'bg-[#E5EFE3] text-[#3F6B45] dark:bg-[#23452B] dark:text-[#B9D8BC]',
+  Paylaşıldı: 'bg-[#0E1C4F] text-white dark:bg-[#2C3C72]'
+};
 
 export interface Kanal { id: string; ad: string; kisa: string; platform: string[] }
 export const KANALLAR: Kanal[] = [
@@ -92,7 +104,9 @@ export const BOS_GONDERI: GonderiBilgisi = {
 
 export const gonderiBilgisi = (i: Item): GonderiBilgisi => ({ ...BOS_GONDERI, ...((i.metadata?.gonderi as Partial<GonderiBilgisi>) || {}) });
 
-export const asamasi = (i: Item): Asama => (ASAMALAR as readonly string[]).includes(i.status) ? i.status as Asama : 'Fikir';
+export const asamasi = (i: Item): Asama =>
+  i.status === 'Hazır' ? 'Onaylandı'
+    : (ASAMALAR as readonly string[]).includes(i.status) ? i.status as Asama : 'Fikir';
 
 export type Duzen = 'haftalik' | 'aylik' | 'duzensiz';
 export interface SeriBilgisi {
