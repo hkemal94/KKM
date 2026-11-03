@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Check, Plus, X } from 'lucide-react';
 import type { Item } from '../../types';
+import { KisaListe } from '../kabuk/KisaListe';
 
 /**
  * Aşama yapılacakları (yapisal-4, 34: "hazır liste + düzenlenebilir").
  * Ürünün bulunduğu aşamanın işleri. Liste ürüne kaydedilene kadar hazır
  * listedir; bir işi işaretleyince, ekleyince ya da silince ürüne yazılır
  * (`metadata.yapilacaklar`). Görünüm liste (33: "Liste, şu anki").
+ * Uzun listede ilk 5 iş görünür (KisaListe, 3 Kasım); sayaç bütün listeyi sayar.
  */
 
 export const ASAMALAR = ['Konsept', 'Tasarım', 'Üretim', 'Satışta'] as const;
@@ -47,7 +49,7 @@ export const AsamaYapilacaklari: React.FC<Props> = ({ urun, onUpdateItem }) => {
         <span className="font-bold uppercase tracking-wider">{asama} · yapılacaklar</span>
         <span>{bitenSayi}/{liste.length}</span>
       </div>
-      <ul className="mt-2 space-y-1">
+      <KisaListe className="mt-2 space-y-1" dugmeClassName="mt-1">
         {liste.map(y => (
           <li key={y.id} className="flex items-center gap-2 group">
             <button
@@ -64,7 +66,7 @@ export const AsamaYapilacaklari: React.FC<Props> = ({ urun, onUpdateItem }) => {
             </button>
           </li>
         ))}
-      </ul>
+      </KisaListe>
       <form
         onSubmit={e => {
           e.preventDefault();
