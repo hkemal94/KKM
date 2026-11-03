@@ -7,6 +7,7 @@ import type { Item } from '../types';
 import { SayfaBasi } from './kabuk/SayfaBasi';
 import { SayfaRayi, type RayBolumu } from './SayfaRayi';
 import { useHaritaDuzeni } from '../lib/haritaDuzeni';
+import { oturanlariDegistir } from '../lib/evSakinleri';
 import { useHaritaMaddesi } from './duzada/HaritaMaddesi';
 import { KATMANLAR, haritaIsaretleri, katmanOku, katmanYaz, type KatmanAyari, type KatmanId } from '../lib/haritaIsaretleri';
 
@@ -77,6 +78,14 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
   // 2D ↔ 3D geçişinde kamera aynı yere baksın
   const haritaBakisi = useRef<HaritaBakisi | null>(null);
   const bakisiTut = useCallback((b: HaritaBakisi) => { haritaBakisi.current = b; }, []);
+  // Ev kartında "Oturan ekle" → Kaydet (3 Kasım): yalnız Kemal basınca yazılır
+  const haritaKaydet = haritaDuzeni.kaydet;
+  const sonHaritaDuzeni = useRef(haritaDuzeni.duzen);
+  useEffect(() => { sonHaritaDuzeni.current = haritaDuzeni.duzen; }, [haritaDuzeni.duzen]);
+  const evinOturanlariniKaydet = useCallback(async (evId: string, kisiIdleri: string[]) => {
+    const buluta = await haritaKaydet(oturanlariDegistir(sonHaritaDuzeni.current, evId, kisiIdleri));
+    if (!buluta) throw new Error('Buluta yazılamadı; bu tarayıcıda duruyor, bağlantı gelince gönderilir.');
+  }, [haritaKaydet]);
   // Açılış hızı (3. gece): Atölye'ye her girişte ölçüm baştan
   useEffect(() => { if (sekme === 'harita') isaretle('harita-basladi'); }, [sekme]);
 
@@ -197,6 +206,7 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
                   className={tamEkran ? 'h-[100dvh] overflow-hidden' : 'h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] sm:min-h-[520px] rounded-2xl overflow-hidden border border-[#CFC5B4] dark:border-[#2C3C72]'}
                   onSelect={haritaMaddesi.ac}
                   duzen={haritaDuzeni.duzen}
+                  onOturanlariKaydet={evinOturanlariniKaydet}
                   bakis={haritaBakisi.current}
                   onBakis={bakisiTut}
                   atmosfer={atmosfer}

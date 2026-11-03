@@ -142,8 +142,8 @@ export function haritaKaydiDurumu(d: HaritaDuzeni | null): { sisik: boolean; isl
   const ham = JSON.stringify({ k: d.kurucu ?? null, i: d.kurucuIslenen ?? null }).length;
   const temiz = belgeye(d);
   const yeni = JSON.stringify({ k: temiz.kurucu ?? null, i: temiz.kurucuIslenen ?? null }).length;
-  const islenmemis = !!d.kurucu && JSON.stringify(kurucuyuTemizle(d.kurucu))
-    !== JSON.stringify(d.kurucuIslenen ? kurucuyuTemizle(d.kurucuIslenen) : null);
+  const islenmemis = !!d.kurucu && JSON.stringify(oturansiz(kurucuyuTemizle(d.kurucu)))
+    !== JSON.stringify(d.kurucuIslenen ? oturansiz(kurucuyuTemizle(d.kurucuIslenen)) : null);
   return { sisik: ham > 20000 && yeni < ham * 0.8, islenmemis };
 }
 
@@ -178,6 +178,7 @@ const kurucuyuTemizle = (k: KurucuBelge): KurucuBelge => ({
   baglar: Object.fromEntries(
     Object.entries(nesne(k.baglar)).filter(([, w]) => typeof w === 'string' && w)
   ),
+  oturanlar: oturanlariTemizle(k.oturanlar),
   yolDuzeni: Object.fromEntries(
     Object.entries(nesne(k.yolDuzeni))
       .map(([id, parcalar]) => [id, Object.fromEntries(
@@ -195,6 +196,16 @@ const kurucuyuTemizle = (k: KurucuBelge): KurucuBelge => ({
       }])
   )
 });
+
+/** Ev → kişi kimlikleri: boş liste ve bozuk değer atılır, aynı kişi bir kez */
+export const oturanlariTemizle = (o: unknown): Record<string, string[]> => Object.fromEntries(
+  Object.entries(nesne(o))
+    .map(([id, l]) => [id, Array.isArray(l) ? [...new Set(l.filter((x: unknown): x is string => typeof x === 'string' && !!x))] : []] as const)
+    .filter(([, l]) => l.length)
+);
+
+/** "Haritaya işlenmemiş" sayılmasın diye oturanlar karşılaştırmadan çıkar (harita taslaktan okur) */
+const oturansiz = (k: KurucuBelge): KurucuBelge => { const { oturanlar: _o, ...kalan } = k; return kalan; };
 
 const kurucuTemelAlanlar = (k: KurucuBelge): KurucuBelge => ({
   surum: Number(k.surum) || 1,

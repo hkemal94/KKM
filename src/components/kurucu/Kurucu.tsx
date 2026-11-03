@@ -7,6 +7,8 @@ import { ANIT_KALIPLARI, kalipBul, kalibiYerlestir, alan, merkez as cokgenMerkez
 import { belgelerAyniMi, belgeFarklari } from './kurucuHarita';
 import { DOKULAR, dokuBul, mahalleDoldur, yolYariEni, type DokuTuru, type DoldurAlani } from './mahalleDoldur';
 import type { KurucuBelge } from '../harita/duzenTipi';
+import { kurucuEvMi } from '../../lib/evSakinleri';
+import { kisiMi } from '../../lib/adaSakini';
 import { DUZADA_GEO } from '../../data/duzadaGeo';
 import type { HaritaBakisi } from '../harita/DuzadaHarita';
 import { duzeniUygula, bosDuzen, type HaritaDuzeni } from '../harita/duzenKatmani';
@@ -313,6 +315,8 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
   const [dogaTur, setDogaTur] = useState<DogaTuru>('zeytinlik');
   const [cokgen, setCokgen] = useState<Nokta[]>([]); // metre; özel yapı / doğa çizimi
   const [baglaArama, setBaglaArama] = useState('');
+  const [oturanArama, setOturanArama] = useState('');
+  useEffect(() => { setOturanArama(''); }, [secili]);
   /** Sürüklenen köşe: özel yapının köşesi, bırakılınca taslağa yazılır */
   const [surukKose, setSurukKose] = useState<{ id: string; i: number; m: Nokta } | null>(null);
   /**
@@ -439,6 +443,15 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
     return { ...t, baglar: bg };
   });
 
+  /** Eve oturan ekle / çıkar (3 Kasım): taslağa girer, Kurucu'nun öteki işleri gibi kaydedilir */
+  const oturanDegistir = (evId: string, kisiId: string, ekle: boolean) => degistir(t => {
+    const o = { ...t.oturanlar };
+    const liste = (o[evId] ?? []).filter(x => x !== kisiId);
+    if (ekle) liste.push(kisiId);
+    if (liste.length) o[evId] = liste; else delete o[evId];
+    return { ...t, oturanlar: o };
+  });
+
   // ---- işaretler (5. gece) ----------------------------------------------------
   const isaretSec = (id: string | null) => {
     setSeciliIsaret(id); setNotTaslagi(null); setIsaretDuzen(null); setSilOnayi(false); setSecili(null);
@@ -490,6 +503,8 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
   const baglanabilir = useMemo(() => items.filter(i => !i.archived && !i.isProposal
     && ['yer', 'cadde', 'meydan', 'yer_adi', 'mekân', 'dükkân', 'kulüp', 'marka', 'oda'].includes(i.type)), [items]);
   const maddeAdi = (id?: string | null) => (id ? items.find(i => i.id === id)?.title : undefined);
+  /** Eve oturan olarak eklenebilecek kişi maddeleri */
+  const evKisileri = useMemo(() => items.filter(i => !i.archived && !i.isProposal && kisiMi(i)), [items]);
 
   /** Mıknatısın yakalama yarıçapı (metre): parmakta geniş, farede dar */
   const miknatisEsigi = () => (miknatis ? (dokunmatik.current ? 30 : 16) : 6) / olcek;
@@ -1237,7 +1252,8 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
     && !belgelerAyniMi(taslakBelgesi, yerelIslenen);
   const farklar = useMemo(() => (islenmemis ? belgeFarklari(taslakBelgesi, yerelIslenen ?? haritadaki) : []), [islenmemis, taslakBelgesi, yerelIslenen, haritadaki]);
   /** Taslağı haritadaki hâle döndür (Kemal'in düğmesi; geri alınabilir) */
-  const haritadakineDon = () => degistir(() => belgedenTaslak(yerelIslenen ?? duzen?.kurucuIslenen));
+  // Oturanlar haritaya işlenmeyi beklemediği için geri dönüşte yerinde kalır
+  const haritadakineDon = () => degistir(t => ({ ...belgedenTaslak(yerelIslenen ?? duzen?.kurucuIslenen), oturanlar: t.oturanlar }));
   const [isleOnay, setIsleOnay] = useState(false);
   const [isleniyor, setIsleniyor] = useState(false);
   const [isleRaporu, setIsleRaporu] = useState<string | null>(null);
@@ -1367,6 +1383,51 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
             {!liste.length && <li className="px-2 py-1 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Eşleşen madde yok.</li>}
           </ul>
         )}
+      </div>
+    );
+  };
+
+  /** Oturanlar kutusu — seçili ev için (3 Kasım) */
+  const oturanKutusu = (evId: string) => {
+    const ekli = taslak.oturanlar[evId] ?? [];
+    const q = oturanArama.trim().toLocaleLowerCase('tr');
+    const liste = q ? evKisileri.filter(i => !ekli.includes(i.id) && i.title.toLocaleLowerCase('tr').includes(q)).slice(0, 7) : [];
+    return (
+      <div className="mt-2 pt-2 border-t border-[#CFC5B4] dark:border-[#2C3C72]">
+        <div className={etiket}>Oturanlar</div>
+        {ekli.length ? (
+          <ul className="mt-1 space-y-0.5">
+            {ekli.map(id => (
+              <li key={id} className="flex items-center gap-1.5">
+                <span className="flex-1 min-w-0 truncate text-[12px] font-semibold">{maddeAdi(id) ?? 'kişi bulunamadı'}</span>
+                {onMaddeAc && maddeAdi(id) && <button type="button" onClick={() => onMaddeAc(id)} className={dugmeBos}><ExternalLink className="w-3 h-3" />Aç</button>}
+                <button type="button" onClick={() => oturanDegistir(evId, id, false)} className={dugmeBos} title="Bu evden çıkar"><X className="w-3 h-3" /></button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Eklenmiş oturan yok.</p>
+        )}
+        <input
+          value={oturanArama}
+          onChange={e => setOturanArama(e.target.value)}
+          placeholder="Kişi ara ve ekle…"
+          className="mt-1.5 w-full text-[12px] rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] bg-white dark:bg-[#17345A] px-2 py-1.5 focus:outline-hidden focus:border-[#F26B6F]"
+        />
+        {q && (
+          <ul className="mt-1 max-h-40 overflow-y-auto">
+            {liste.map(i => (
+              <li key={i.id}>
+                <button type="button" onClick={() => { oturanDegistir(evId, i.id, true); setOturanArama(''); }}
+                  className="w-full text-left px-2 py-1 rounded-md text-[12px] cursor-pointer hover:bg-[#F3EFE8] dark:hover:bg-[#17345A]">
+                  {i.title}
+                </button>
+              </li>
+            ))}
+            {!liste.length && <li className="px-2 py-1 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Eşleşen kişi yok.</li>}
+          </ul>
+        )}
+        <p className="mt-1 text-[10px] text-[#6A5E4C] dark:text-[#A6B0C9]">Haritaya işlemeyi beklemez; kayıttan sonra 3B'de görünür.</p>
       </div>
     );
   };
@@ -1877,6 +1938,7 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
                 </>
               )}
               {maddeBagi(b.id, b.wikiId)}
+              {!b.gizli && kurucuEvMi(b.tur, b.haritaTur) && oturanKutusu(b.id)}
               <button type="button" onClick={() => binaGizleGoster(b)}
                 className="mt-2 w-full py-1.5 rounded-lg border border-[#F26B6F] text-[#D6484C] dark:text-[#F26B6F] text-[11px] cursor-pointer hover:bg-[#F26B6F]/10">
                 {b.gizli ? 'Geri getir' : 'Kaldır'}
