@@ -20,6 +20,10 @@ import type { ModelYeri } from './modelYerlesimi';
  */
 
 export const MODEL_ESIGI = 17;
+/** Bir anda en çok kaç park etmiş araba */
+const ARABA_EN_COK = 40;
+/** Teknelerin oturduğu yükseklik (deniz yüzeyi, biraz batık) */
+const DENIZ_KOTU = -0.3;
 /** Bahçeler daha yakında (telefon için: yakın bakışta ekrandaki ev sayısı az) */
 export const BAHCE_ESIGI = 18;
 /** Arsa kenarına dizilen parçalar: modelin başlangıç noktası kenarın üstünde */
@@ -181,8 +185,10 @@ export class ModelKatmani implements CustomLayerInterface {
     const sinir = map.getBounds();
     // Yakın bakışta ekranın birkaç katı; eğik bakışta ufka kadar gitmesin
     const yaricap = 900 * 2 ** (MODEL_ESIGI - map.getZoom());
+    const z = map.getZoom();
+    let araba = 0;
     const adaylar = this.yerler
-      .filter(y => sinir.contains(y.merkez))
+      .filter(y => (!y.esik || z >= y.esik) && sinir.contains(y.merkez))
       .map(y => ({ y, u: uzaklik(merkez, y.merkez) }))
       .filter(a => a.u <= yaricap)
       .sort((a, b) => a.u - b.u);
@@ -194,6 +200,10 @@ export class ModelKatmani implements CustomLayerInterface {
     const indirilecek = new Set<string>();
     const ucgen = (dosya: string, tahmin: number) => this.modeller.get(dosya)?.ucgen ?? tahmin;
     for (const { y } of adaylar) {
+      // Park etmiş arabalar telefon için sınırlı
+      if (y.esik && ++araba > ARABA_EN_COK) continue;
+      // Tekne arazinin üstüne düşüyorsa (kıyı yamacı) çizilmez
+      if (y.deniz && (map.queryTerrainElevation(y.merkez) ?? 0) > 1) continue;
       const u = ucgen(y.dosya, TAHMINI_UCGEN);
       if (toplam + u > UCGEN_BUTCESI) continue;
       toplam += u;
@@ -259,6 +269,19 @@ export class ModelKatmani implements CustomLayerInterface {
         if ((m.w >= m.d) !== (en >= boy) && Math.abs(en - boy) > 0.15 * Math.max(en, boy)) {
           ex = [-ex[1], ex[0]]; [en, boy] = [boy, en];
         }
+        // Önü yola baksın (Kemal, 4 Kasım): uzun kenar hizası korunur, ters çevrilir;
+        // taban kareye yakınsa dört yönden yola en çok bakanı
+        if (y.yol) {
+          const kare = Math.abs(en - boy) <= 0.15 * Math.max(en, boy);
+          const adaylar: Array<{ e: [number, number]; en: number; boy: number }> = [
+            { e: ex, en, boy }, { e: [-ex[0], -ex[1]], en, boy },
+            ...(kare ? [{ e: [-ex[1], ex[0]] as [number, number], en: boy, boy: en }, { e: [ex[1], -ex[0]] as [number, number], en: boy, boy: en }] : [])
+          ];
+          // Model ön = +Z; metre düzleminde +Z yönü (-e.y, e.x)
+          const bakis = (e: [number, number]) => -e[1] * y.yol![0] + e[0] * y.yol![1];
+          const en_iyi = adaylar.reduce((a, b) => (bakis(b.e) > bakis(a.e) ? b : a));
+          ex = en_iyi.e; en = en_iyi.en; boy = en_iyi.boy;
+        }
         sx = sinirla(en / m.w, 0.7, 1.5); sz = sinirla(boy / m.d, 0.7, 1.5); sy = sinirla(Math.sqrt(sx * sz), 0.7, 1.5);
       }
       const kot = this.kotBul(y);
@@ -298,6 +321,7 @@ export class ModelKatmani implements CustomLayerInterface {
 
   /** Arazi: küçük yapı en alçak noktaya oturur (havada kalmasın); Imperial ortalamaya */
   private kotBul(y: ModelYeri): number {
+    if (y.deniz) return DENIZ_KOTU;
     const k = y.ornekler.map(p => this.map?.queryTerrainElevation(p) ?? 0);
     return y.imperial ? k.reduce((t, x) => t + x, 0) / k.length : Math.min(...k);
   }

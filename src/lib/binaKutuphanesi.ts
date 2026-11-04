@@ -161,6 +161,34 @@ export const BINA_MODELLERI: BinaModeli[] = (() => {
  */
 export const IMPERIAL_CAPA = { z: -12, kuleArasi: 48 };
 
+/**
+ * Haritadaki (üreteçten gelen) adlı yapılar → model (Kemal, 4 Kasım). Değer bir dosya
+ * ya da Kurucu türü (o türün modelleri arasından seçilir). Tabloda olmayan "yapı"
+ * türündeki binalar kutu kalır: Merkez Pazarı (pazar binası modeli yok), Liman İdare
+ * Binası, Kemsköy Caddesi'ndeki yapılar, Zeytinyağı Fabrikası, stat soyunma odası.
+ * Haritada karakol yok.
+ */
+export const HARITA_YAPILARI: Record<string, string> = {
+  bina_belediye: 'binalar/belediye.glb',    // Belediye Binası
+  bina_okul: 'binalar/okul.glb',            // Düzada İlkokulu
+  bina_apt1: 'dukkanli',                    // Dükkânlı Ev
+  bina_apt2: 'ev',                          // Müstakil Ev
+  bina_liman_depo: 'depo'                   // Liman Deposu
+};
+
+/** Haritadaki yapı türü → Kurucu türü (üreteçteki evler ve çiftlik depoları) */
+export const HARITA_TURLERI: Record<string, string> = { ev: 'ev', depo: 'depo' };
+
+/** Park etmiş arabalar: binek araçlarının renkli dosyaları (dolmuş, taksi, traktör, iki teker değil) */
+export const ARACLAR: string[] = (KATALOG.araclar ?? []).filter(d => /sedan|hatchback|pikap/.test(d)).flatMap(renkliAc);
+
+/** Liman ve iskele tekneleri (renkli dosyalar) */
+const denizListesi = (ad: RegExp) => Object.values(KATALOG.deniz ?? {})
+  .flatMap(l => (Array.isArray(l) ? l : [l])).filter(d => ad.test(d)).flatMap(renkliAc);
+export const TEKNELER = {
+  balikci: denizListesi(/balikci-teknesi/), girgir: denizListesi(/girgir-teknesi/), sandal: denizListesi(/sandal/)
+};
+
 /** Kurucu türünün okunur adı (galeri etiketi) */
 export const KURUCU_TUR_ADI: Record<string, string> = {
   ev: 'Müstakil ev', yazlik: 'Yazlık', depo: 'Depo / atölye', saha: 'Futbol sahası', tribun: 'Tribün', dukkanli: 'Dükkânlı ev', ciftlik: 'Taş çiftlik evi', kamu: 'Kamu / büyük yapı',
@@ -198,5 +226,9 @@ export function sabitSec<T>(kimlik: string, liste: T[]): T {
 export function sans(kimlik: string): number {
   let h = 2166136261;
   for (let i = 0; i < kimlik.length; i++) { h ^= kimlik.charCodeAt(i); h = Math.imul(h, 16777619); }
+  // Murmur3 son karıştırması: ardışık kimlikler ("ev_224", "ev_225") birbirine benzer sonuç vermesin
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
   return (h >>> 0) / 4294967296;
 }
