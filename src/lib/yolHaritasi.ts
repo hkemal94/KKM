@@ -259,6 +259,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki ajansa kendiliğinden gider: KKM açıkken viki değişince birkaç dakika içinde (açılışta da bir kez); kayda yazmaz' },
   { id: 'galeri-temizligi', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Galeri temizliği: görseller tek tek büyük gelir; Sil · Tut · Ata (kısayol S/T/A). İş bitince kaldırılacak' },
+  { id: 'galeri-sil', paket: 'K', kimde: 'claude', nereden: '4 Kasım · Kemal', bitti: true,
+    ad: 'Depodaki Canva yedeği (17 PNG) ve Dondurmacı Kızlar\'ın üç ekran görseli silindi (Kemal: "Tamamen sil"); resmi olmayan madde ve oyun kartı resimsiz görünür, kırık resim yok' },
   { id: 'eksik-ajana', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Eksikler: her başlığın listesinin altında "Ajana öneri hazırlat"; liste ajansa istek olur, öneriler Onay bekleyenler\'e ya da Ajansın kararları\'na gelir' },
   { id: 'ajan-dugmesi', paket: 'K', kimde: 'claude', nereden: '2 Kasım · Kemal', bitti: true,

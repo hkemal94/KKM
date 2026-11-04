@@ -18,6 +18,7 @@ import { DepoBelgesi } from './DepoBelgesi';
 import { OyunAyarlari } from './OyunAyarlari';
 import { AjansaGonder } from './AjansaGonder';
 import { OyunAssetleri } from './OyunAssetleri';
+import { yasayanGorseller } from '../../lib/silinenGorseller';
 import { EkranGoruntuleri } from './EkranGoruntuleri';
 import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
 import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
@@ -177,7 +178,7 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
           const asama = projeAsamasi(items, o.id);
           const belge = gddBolumleri(items, o.id);
           const dolu = ADIM_SIRASI.filter(id => bolumYapildi(belge.find(k => (k.metadata as any)?.bolumId === id))).length;
-          const kapak = o.kayit?.images?.[0];
+          const kapak = yasayanGorseller(o.kayit?.images)[0];
           const ozet = String((o.kayit?.metadata as any)?.ozet || '').trim();
           return (
             <button key={o.id} type="button" onClick={() => { setOyunId(o.id); window.scrollTo({ top: 0 }); }}
