@@ -32,6 +32,10 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 - Harita verisi (`src/data/duzadaGeo.ts`) üretilir, elle düzenlenmez:
   `python gen/duzada.py` (shapely, numpy, scipy, matplotlib gerekir). Ev ve
   sokak dokusu orada (`_ege_dokusu`, Merkez için `_merkez_dokusu`, evler ve arsaları, Çiftlik arazileri).
+- Kurucu'nun kalıcı hâli (`src/data/kurucuGomulu.ts`) de üretilir:
+  `node scripts/kurucuyuGom.mjs <ajans>/kkm/harita-duzeni.json` (Kemal'in
+  "Haritayı ajansa gönder" dosyası). Harita kayıtta Kurucu işi yoksa bunu
+  açar; kayıt varsa kayıt kazanır, üst üste binmez. Evde oturanlar girmez.
 - Tasarım jetonları `src/index.css` içindeki `@theme` bloğunda. Bütün font
   rolleri (sans, serif, mono, blok…) Poppins; rol adları bilerek duruyor.
   Tek satır değişince ~1000 yer değişir — jetona dokunmadan önce sor.
