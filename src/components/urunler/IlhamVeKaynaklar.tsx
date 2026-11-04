@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Bot, ExternalLink, Image as ImageIcon, Link2, Plus, Save, Trash2, Upload, X } from 'lucide-react';
+import { Bot, ExternalLink, Send, Image as ImageIcon, Link2, Plus, Save, Trash2, Upload, X } from 'lucide-react';
 import type { Item } from '../../types';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { KisaListe } from '../kabuk/KisaListe';
@@ -11,6 +11,7 @@ import { compressImageBase64, compressPngKeepAlpha, dosyayiOku } from '../../lib
 import { ayrilmayaIzinVar, useKaydedilmemis } from '../../lib/kaydedilmemis';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import { istekEkle } from '../../lib/kemalIstekleri';
+import { ilhamDosyasi, ilhamiGonder } from '../../lib/ilhamAjansa';
 import {
   BAG_GRUBU_ADI, ILHAM_TURU_ADI, alanAdi, bagGrubu, bagHedefleri, baglantiDuzelt, etiketleriAyir,
   ilhamBasligi, ilhamBilgisi, ilhamlar as ilhamlariAl, pinterestMi, tamamlatmaIstegi,
@@ -237,7 +238,7 @@ export default function IlhamVeKaynaklar({ items, onAddItem, onUpdateItem, onDel
   const [etiketSuzgeci, setEtiketSuzgeci] = useState<string | null>(null);
   const [markaSuzgeci, setMarkaSuzgeci] = useState('');
   // Hangi istek gidiyor; ikisi aynı dosyaya yazdığı için biri sürerken ikisi de kilitli
-  const [istekGidiyor, setIstekGidiyor] = useState<'' | 'tamamlat' | 'pinterest'>('');
+  const [istekGidiyor, setIstekGidiyor] = useState<'' | 'tamamlat' | 'pinterest' | 'ilham'>('');
   const istekKilidi = useRef(false);
   const [istekMesaji, setIstekMesaji] = useState<string | null>(null);
 
@@ -382,9 +383,28 @@ export default function IlhamVeKaynaklar({ items, onAddItem, onUpdateItem, onDel
     } finally { istekKilidi.current = false; setIstekGidiyor(''); }
   };
 
+  /** "İlhamı ajansa gönder" (4 Kasım, Kemal): liste `kkm/ilham.json`'a; görsel gitmez, kayda yazmaz */
+  const ilhamiYolla = async () => {
+    if (!anahtar || istekKilidi.current) return;
+    istekKilidi.current = true;
+    setIstekGidiyor('ilham');
+    setIstekMesaji(null);
+    try {
+      const dosya = ilhamDosyasi(items);
+      await ilhamiGonder(anahtar, dosya);
+      setIstekMesaji(`Ajansa gitti: ${dosya.sayilar.kayit} kayıt (görseller gitmez, yalnız bağlantı ve not).`);
+    } catch (e) {
+      setIstekMesaji(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}. Tekrar dene.`);
+    } finally { istekKilidi.current = false; setIstekGidiyor(''); }
+  };
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       <SayfaBasi baslik="İlham ve kaynaklar">
+        <button type="button" onClick={() => void ilhamiYolla()} disabled={!anahtar || !!istekGidiyor || !hepsi.length} className={DUGME_BOS}
+          title={anahtar ? 'İlham ve kaynak listesini ajansa gönder (bağlantı, etiket, not; görsel gitmez)' : "GitHub anahtarı yok: Ajanlar ve otomasyonlar → Ajans bağlantısı'nda girilir"}>
+          <Send className="w-3.5 h-3.5" /> {istekGidiyor === 'ilham' ? 'Gönderiliyor…' : 'İlhamı ajansa gönder'}
+        </button>
         <button type="button" onClick={() => void pinterestBak()} disabled={!anahtar || !!istekGidiyor} className={DUGME_BOS}
           title={anahtar ? "Kems'e iste: panolardaki yeni pinlere baksın, kısa not getirsin" : "GitHub anahtarı yok: Ajanlar ve otomasyonlar → Ajans bağlantısı'nda girilir"}>
           <Bot className="w-3.5 h-3.5" /> {istekGidiyor === 'pinterest' ? 'Gönderiliyor…' : "Pinterest'e bak"}
@@ -401,7 +421,7 @@ export default function IlhamVeKaynaklar({ items, onAddItem, onUpdateItem, onDel
       </SayfaBasi>
 
       {istekMesaji && <p className={`px-3 py-2 rounded-lg bg-[#F3EFE8] dark:bg-[#17345A] text-[12px] ${YAZI}`}>{istekMesaji}</p>}
-      {!anahtar && <p className={`text-[11px] ${IKINCIL}`}>"Pinterest'e bak" ve "Ajana ilham tamamlat" için bu tarayıcıda GitHub anahtarı gerekir (Ajanlar ve otomasyonlar → Ajans bağlantısı).</p>}
+      {!anahtar && <p className={`text-[11px] ${IKINCIL}`}>"İlhamı ajansa gönder", "Pinterest'e bak" ve "Ajana ilham tamamlat" için bu tarayıcıda GitHub anahtarı gerekir (Ajanlar ve otomasyonlar → Ajans bağlantısı).</p>}
 
       {ekleAcik && (
         <section className={`${KART} p-4 space-y-2`}>

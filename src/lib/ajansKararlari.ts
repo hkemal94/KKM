@@ -1,11 +1,12 @@
-import type { BrandKit, Item, WikiSection } from '../types';
+import type { BrandKit, Item, ItemType, WikiSection } from '../types';
 import { alanaYaz, bosluklariCikar } from '../components/Bosluklar';
 import { base64, base64Coz, github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
 import { bagEkle } from './bagAgi';
 import { semaAlanlari, takmaAdlar } from './alanSablonu';
-import { getKunyeFields, schemaKeyFor } from '../components/wiki/wikiSchema';
+import { getKunyeFields, schemaKeyFor, TYPE_LABELS, WIKI_TYPES } from '../components/wiki/wikiSchema';
 import type { BagTuru } from '../utils/relations';
+import { bagUygun } from './bagKurallari';
 
 /**
  * Ajansın kararlarını uygula (22 Ekim, Kemal: "Ajans kendi uygulasın ama ben
@@ -36,6 +37,10 @@ import type { BagTuru } from '../utils/relations';
  *     kartının, yani markanın bible'ının bir alanı: renk paleti, yazı, ton, örnek
  *     işler, kullanım kuralları, slogan). Logo ve moodboard görselleri bununla
  *     yazılmaz. `eski` verilirse alan yalnız hâlâ o değerdeyse değişir.
+ *   - 4 Kasım (Kemal: ajans yeni viki maddesi önerebilsin, Kemal tek düğmeyle
+ *     açsın): `yeniMadde` (`baslik` maddenin adı, `maddeTur` türü, `metin` madde
+ *     metni, isteğe bağlı `baglar`: başka maddelere bağ). Aynı ad ve türde canlı
+ *     madde varsa uygulanmış sayılır; aynı adla başka türde madde varsa atlanır.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -54,7 +59,42 @@ export type KararIslemi =
   | { kimlik: string; tur: 'takmaAdSil'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'alaniDegistir'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'metindenSil'; madde: string; eski: string; baslik: string; neden: string }
-  | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string };
+  | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string }
+  | { kimlik: string; tur: 'yeniMadde'; baslik: string; maddeTur: string; metin?: string; baglar?: YeniMaddeBagi[]; neden?: string };
+
+/** `yeniMadde`nin bağı: hedef maddenin kimliği ya da adı; `ikiYonlu` ise bağ hedefe de yazılır */
+export interface YeniMaddeBagi { hedef: string; bag: BagTuru; ikiYonlu?: boolean }
+
+/** `maddeTur` viki türü mü (kimliği ya da ekrandaki adı); değilse null */
+export function maddeTuru(t: string): ItemType | null {
+  const a = kucuk(t || '');
+  return WIKI_TYPES.find(x => kucuk(x) === a || kucuk(TYPE_LABELS[x] || '') === a) || null;
+}
+
+/** Aynı adla canlı viki maddeleri */
+const ayniAdli = (items: Item[], ad: string) =>
+  items.filter(i => !i.archived && !i.isProposal && WIKI_TYPES.includes(i.type) && kucuk(i.title) === kucuk(ad));
+
+/** Yeni maddenin kaydı (saf iş): bağlar çözülür, uymayan ya da bulunamayan bağ `atlanan`a */
+export function yeniMaddeKaydi(items: Item[], islem: Extract<KararIslemi, { tur: 'yeniMadde' }>, id: string) {
+  const tur = maddeTuru(islem.maddeTur) as ItemType;
+  const relations: Array<{ targetId: string; type: BagTuru }> = [];
+  const tersBaglar: Array<{ hedef: Item; bag: BagTuru }> = [];
+  const atlanan: string[] = [];
+  for (const b of Array.isArray(islem.baglar) ? islem.baglar : []) {
+    const h = b && typeof b.hedef === 'string' ? maddeBul(items, b.hedef) : null;
+    if (!h) { atlanan.push(`bağ kurulmadı: ${b?.hedef || '?'} bulunamadı ya da aynı adla birden çok var`); continue; }
+    if (!bagUygun(b.bag, tur, h.type) || (b.ikiYonlu && !bagUygun(b.bag, h.type, tur))) { atlanan.push(`bağ kurulmadı: "${b.bag}" bu iki türe uymuyor (${h.title})`); continue; }
+    if (!relations.some(r => r.targetId === h.id && r.type === b.bag)) relations.push({ targetId: h.id, type: b.bag });
+    if (b.ikiYonlu) tersBaglar.push({ hedef: h, bag: b.bag });
+  }
+  const yeni: Omit<Item, 'createdAt' | 'updatedAt' | 'userId'> & { id: string } = {
+    id, title: islem.baslik.trim(), area: 'duzada', type: tur, status: 'Fikir', priority: 'orta',
+    tags: [], links: [], notes: (islem.metin || '').trim(), images: [], isProposal: false, archived: false,
+    metadata: relations.length ? { relations } : {}
+  };
+  return { yeni, tersBaglar, atlanan };
+}
 
 /** `markaKarti` ile yazılabilen kart alanları; listeler dizi, ötekiler metin */
 export const MARKA_KARTI_ALANLARI = {
@@ -133,6 +173,7 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
   if (i.tur === 'metindenSil') { const m = maddeBul(items, i.madde); return !!m && !!i.eski?.trim() && !metindeVar(m, i.eski); }
   if (i.tur === 'markaKarti') { const m = maddeBul(items, i.marka); const d = kartDegeri(i.alan, i.deger); return !!m && d !== null && kartAyni(kartAlani(m, i.alan), d); }
+  if (i.tur === 'yeniMadde') { const t = maddeTuru(i.maddeTur); return !!t && ayniAdli(items, i.baslik).some(m => m.type === t); }
   return false;
 }
 
@@ -174,6 +215,8 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
       if (m && !kartAyni(v, kartDegeri(i.alan, i.eski) ?? '') && !kartAyni(v, kartDegeri(i.alan, i.deger)) && !(bosMu(v) && bosMu(i.eski))) return false;
     }
     if (i.tur === 'markaKarti') return !yapilmis(items, i);
+    // Adı ya da türü geçersiz yeni madde listede durmaz
+    if (i.tur === 'yeniMadde') return !!i.baslik?.trim() && !!maddeTuru(i.maddeTur) && !yapilmis(items, i);
     if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
       || i.tur === 'takmaAdSil' || i.tur === 'alaniDegistir' || i.tur === 'metindenSil') return !yapilmis(items, i);
     return false;
@@ -188,7 +231,11 @@ export interface Uygulama { uygulanan: KararIslemi[]; atlanan: Array<{ islem: Ka
  */
 export async function kararlariUygula(
   items: Item[], islemler: KararIslemi[],
-  yaz: { guncelle: (i: Item) => Promise<void>; sil: (id: string) => Promise<void> },
+  yaz: {
+    guncelle: (i: Item) => Promise<void>; sil: (id: string) => Promise<void>;
+    /** `yeniMadde` için; verilmezse yeni madde atlanır */
+    ekle?: (i: Omit<Item, 'createdAt' | 'updatedAt' | 'userId'> & { id: string }) => Promise<void>;
+  },
   ilerleme?: (n: number) => void
 ): Promise<Uygulama> {
   const guncel = new Map(items.map(i => [i.id, i]));
@@ -211,6 +258,21 @@ export async function kararlariUygula(
           const h2 = bagEkle(guncel.get(h.id) || h, k.id, islem.bag);
           if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
         }
+      } else if (islem.tur === 'yeniMadde') {
+        if (!yaz.ekle) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan yeni madde açılamıyor; Onay bekleyenler\'den uygula' }); continue; }
+        const liste = [...guncel.values()];
+        if (!islem.baslik?.trim() || !maddeTuru(islem.maddeTur)) { sonuc.atlanan.push({ islem, neden: `ad boş ya da "${islem.maddeTur}" viki türü değil` }); continue; }
+        const ayni = ayniAdli(liste, islem.baslik);
+        if (ayni.length) { sonuc.atlanan.push({ islem, neden: `aynı adla madde zaten var (${ayni.map(m => TYPE_LABELS[m.type] || m.type).join(', ')})` }); continue; }
+        const id = `madde_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        const { yeni, tersBaglar, atlanan } = yeniMaddeKaydi(liste, islem, id);
+        await yaz.ekle(yeni);
+        guncel.set(id, { ...yeni, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
+        for (const t of tersBaglar) {
+          const h2 = bagEkle(guncel.get(t.hedef.id) || t.hedef, id, t.bag);
+          if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
+        }
+        for (const neden of atlanan) sonuc.atlanan.push({ islem, neden });
       } else if (islem.tur === 'markaKarti') {
         const m = maddeBul([...guncel.values()], islem.marka);
         if (!m) { sonuc.atlanan.push({ islem, neden: `marka bulunamadı ya da aynı adla birden çok var (${islem.marka})` }); continue; }

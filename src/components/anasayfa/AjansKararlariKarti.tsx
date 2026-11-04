@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 import type { Item } from '../../types';
-import { gecerliIslemler, kararlariOku, kararlariUygula, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
+import { gecerliIslemler, kararlariOku, kararlariUygula, maddeTuru, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
+import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
 /**
@@ -17,16 +18,18 @@ interface Props {
   tur: number;
   onUpdateItem: (item: Item) => Promise<void>;
   onDeleteItem: (id: string) => Promise<void>;
+  /** Yeni madde kararı için (4 Kasım); yoksa o karar atlanır */
+  onAddItem?: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', markaKarti: 'Marka kartı' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
  * ortak listesi aynı işi kullanır.
  */
-export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteItem }: Props) {
+export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteItem, onAddItem }: Props) {
   const [dosya, setDosya] = useState<KararDosyasi | null | 'yukleniyor' | { hata: string }>('yukleniyor');
   const [calisiyor, setCalisiyor] = useState<number | null>(null);
   const [sonuc, setSonuc] = useState<{ u: Uygulama; makbuz?: string; makbuzHata?: string } | null>(null);
@@ -48,7 +51,7 @@ export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteI
   const uygula = async () => {
     setCalisiyor(0);
     try {
-      const u = await kararlariUygula(items, islemler, { guncelle: onUpdateItem, sil: onDeleteItem }, setCalisiyor);
+      const u = await kararlariUygula(items, islemler, { guncelle: onUpdateItem, sil: onDeleteItem, ...(onAddItem ? { ekle: onAddItem } : {}) }, setCalisiyor);
       try { setSonuc({ u, makbuz: await makbuzYaz(anahtar, u) }); }
       catch (e) { setSonuc({ u, makbuzHata: e instanceof Error ? e.message : String(e) }); }
     } finally { setCalisiyor(null); }
@@ -105,6 +108,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
                     {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <span className="font-semibold line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</span></>}
                     {i.tur === 'markaKarti' && <> → <span className="font-semibold">{i.marka} · {MARKA_KARTI_ALANLARI[i.alan] || i.alan}: {Array.isArray(i.deger) ? i.deger.join(' · ') : i.deger}</span></>}
                     {i.tur === 'bagKur' && <> → <span className="font-semibold">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</span></>}
+                    {i.tur === 'yeniMadde' && <> · <span className="font-semibold">{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</span>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}
                     <span className={`block text-[12px] ${IKINCIL}`}>{i.neden}</span>
                   </li>
                 ))}

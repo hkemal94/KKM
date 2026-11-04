@@ -1106,6 +1106,7 @@ export default function App() {
                 onSekme={setAjanlarSekme}
                 onUpdateItem={handleUpdateItem}
                 onDeleteItem={handleDeleteItem}
+                onAddItem={handleAddItem}
               />
             )}
 

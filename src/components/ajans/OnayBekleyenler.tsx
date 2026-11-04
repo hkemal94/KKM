@@ -15,9 +15,10 @@ import {
   type Gorunum, type OnayKaydi
 } from '../../lib/onaylar';
 import { useBekleyenIsler } from '../anasayfa/BekleyenIsler';
-import { GaleriYedegiKarti } from '../GaleriYedegiKarti';
 import { EksikOzeti } from '../anasayfa/EksikOzeti';
 import { ISLEM_ADI, useAjansKararlari } from '../anasayfa/AjansKararlariKarti';
+import { maddeTuru } from '../../lib/ajansKararlari';
+import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { oneriTuru, useOneriIslemleri } from '../studyo/OneriTepsisi';
 import type { StudyoIslemleri } from '../studyo/StudyoBaglami';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
@@ -130,7 +131,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
   const anahtar = anahtariOku();
   const isler = useBekleyenIsler({ items, onUpdateItem, onAddItem, onDeleteItem, onAlanSil });
   const oneri = useOneriIslemleri(studyo);
-  const kararlar = useAjansKararlari({ items, anahtar: anahtar || '', tur, onUpdateItem, onDeleteItem });
+  const kararlar = useAjansKararlari({ items, anahtar: anahtar || '', tur, onUpdateItem, onDeleteItem, onAddItem });
   /** Ajanların işleri ve Kemal'in onlara verdiği kararlar (ajansın deposundan) */
   const [ajan, setAjan] = useState<{ oneriler: AjanOnerisi[]; kararlar: Record<string, OneriKarari>; hata?: string } | null>(null);
   useEffect(() => {
@@ -297,6 +298,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   {i.tur === 'alaniDegistir' && <> → <b>{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger}</b></>}
                   {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <b className="line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</b></>}
                   {i.tur === 'bagKur' && <> → <b>{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</b></>}
+                  {i.tur === 'yeniMadde' && <> · <b>{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</b>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}
                   <span className={`block text-[11px] ${IKINCIL}`}>{i.neden}</span>
                 </li>
               ))}
@@ -764,7 +766,6 @@ export const OnayBekleyenler: React.FC<Props> = ({
       )}
 
       {/* Galeri görselleri: indirip eklemesi kendi kartında (görselleri tek tek çeker) */}
-      {(suzgec === 'hepsi' || suzgec === 'isler') && isler.galeri.length > 0 && <GaleriYedegiKarti items={items} onAddItem={onAddItem} />}
 
       {(suzgec === 'hepsi' || suzgec === 'eksikler') && <EksikOzeti eksikler={eksikler} dugmeler={dugmeler} onAc={onEksikler} />}
     </div>

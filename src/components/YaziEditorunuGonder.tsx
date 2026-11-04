@@ -30,23 +30,27 @@ export const YaziEditorunuGonder: React.FC<{ yazi: Item; onUpdateItem: (item: It
     try {
       // 1. adım: yazı ve denetçi notu ajansa gider
       let zaman: string;
+      let notYok = false;
       try {
         ({ zaman } = await yaziyiGonder(anahtar, yazi, tur));
       } catch (e) {
-        if (e instanceof DenetciNotuYazilamadi) {
-          setGitti(true);
-          setHata('Yazı gitti, denetçi notu yazılamadı. Yeniden gönderme.');
-        } else {
+        if (!(e instanceof DenetciNotuYazilamadi)) {
           setHata(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}`);
+          return;
         }
-        return;
+        // 4 Kasım: yazı gitti, yalnız not düştü. İşaret yine yazılır; sayfa
+        // yenilense de düğme "Gönderildi" kalsın, yeniden kopya açılmasın.
+        zaman = e.zaman;
+        notYok = true;
       }
+      if (notYok) setGitti(true);
       // 2. adım: yazının kaydına gönderim işareti
       try {
         await onUpdateItem({ ...yazi, metadata: { ...(yazi.metadata || {}), yaziEditorunuGonderildi: zaman } });
+        if (notYok) setHata('Yazı gitti, denetçi notu yazılamadı. Yeniden gönderme.');
       } catch {
         setGitti(true);
-        setHata('Yazı ajansa gitti; işaret yazılamadı. Yeniden gönderme.');
+        setHata(notYok ? 'Yazı gitti; denetçi notu ve işaret yazılamadı. Yeniden gönderme.' : 'Yazı ajansa gitti; işaret yazılamadı. Yeniden gönderme.');
       }
     } finally {
       setGidiyor(false);

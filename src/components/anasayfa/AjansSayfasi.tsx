@@ -29,7 +29,8 @@ export const AjansSayfasi: React.FC<{
   items: Item[];
   onUpdateItem: (item: Item) => Promise<void>;
   onDeleteItem: (id: string) => Promise<void>;
-}> = ({ items, onUpdateItem, onDeleteItem }) => {
+  onAddItem?: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
+}> = ({ items, onUpdateItem, onDeleteItem, onAddItem }) => {
   const [anahtar, setAnahtar] = useState(anahtariOku);
   const [klasorler, setKlasorler] = useState<Record<string, KlasorDurumu>>({});
   const [tur, setTur] = useState(0);
@@ -85,7 +86,7 @@ export const AjansSayfasi: React.FC<{
 
       <TepsiAjansaKarti items={items} anahtar={anahtar} />
       <VikiAjansaKarti items={items} anahtar={anahtar} />
-      <AjansKararlariKarti items={items} anahtar={anahtar} tur={tur} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />
+      <AjansKararlariKarti items={items} anahtar={anahtar} tur={tur} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} onAddItem={onAddItem} />
 
       <div className="grid gap-4 md:grid-cols-2">
         {AJANS_KLASORLERI.map(k => {
