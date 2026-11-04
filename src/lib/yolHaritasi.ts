@@ -163,6 +163,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Takvim: ajansın düzenli işleri görünür; "Takvimime ekle (.ics)" ile kendi takvimine aktarılır' },
   { id: 'ajansa-gonder-hata-iletisi', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Ajansa gönderim: dosya gidip işaret ya da denetçi notu yazılamazsa "Gönderilemedi" yerine doğru uyarı; düğme kilitlenir, kopya dosya açılmaz' },
+  { id: 'harita-ajansa-pinterest', paket: 'K', kimde: 'claude', nereden: '4 Kasım · Kemal', bitti: true,
+    ad: 'Harita ve Kurucu\'da "Haritayı ajansa gönder" (Kurucu düzeni ajansa gider, ajanlar okur); İlham ve kaynaklar\'da "Pinterest\'e bak" (Kems\'e istek düşer)' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır' },
   { id: 'onay-ayarlari', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

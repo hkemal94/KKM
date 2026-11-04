@@ -7,6 +7,7 @@ import type { Item } from '../types';
 import { SayfaBasi } from './kabuk/SayfaBasi';
 import { SayfaRayi, type RayBolumu } from './SayfaRayi';
 import { useHaritaDuzeni } from '../lib/haritaDuzeni';
+import { HaritaAjansaDugmesi } from './harita/HaritaAjansaDugmesi';
 import { oturanlariDegistir } from '../lib/evSakinleri';
 import { useHaritaMaddesi } from './duzada/HaritaMaddesi';
 import { KATMANLAR, haritaIsaretleri, katmanOku, katmanYaz, type KatmanAyari, type KatmanId } from '../lib/haritaIsaretleri';
@@ -171,7 +172,10 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
 
   return (
     <div className="space-y-6">
-      <SayfaBasi baslik={baslik} />
+      <SayfaBasi baslik={baslik}>
+        {/* 4 Kasım (Kemal): Kurucu düzeni ajansa; yalnız basınca */}
+        {sekme === 'harita' && haritaDuzeni.ilkYukleme ? <HaritaAjansaDugmesi duzen={haritaDuzeni.duzen} items={items} /> : null}
+      </SayfaBasi>
       {bolumler.length > 1 && <SayfaRayi baslik={baslik} bolumler={bolumler} aktifId={sekme} onSec={id => setSekme(id as AtolyeSekmesi)} />}
 
 
