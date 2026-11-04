@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1326 1093" font-family="Poppins,system-ui,sans-serif"><rect width="100%" height="100%" fill="#fff"/>
 <defs><marker id="ok" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2B2620"/></marker><marker id="u" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M4,0 L4,8" stroke="#B5603F" stroke-width="1.5"/></marker></defs>
-<text x="20" y="30" font-size="20" font-weight="700" fill="#2B2620">The Imperial Kemsköy · boş kat planı</text>
-<text x="20" y="50" font-size="12" fill="#7A6F60">Kemal’in ölçüleri (4 Kasım): ön cephe 48 m, kollar 48 m, kol genişliği 12 m, kule ø 8 m · 1 kare = 1 m · ön (deniz) aşağıda · içi boş: odaları sen çiz</text>
+<text x="20" y="30" font-size="20" font-weight="700" fill="#2B2620">The Imperial Kemsköy · oda katı (1–4)</text>
+<text x="20" y="50" font-size="12" fill="#7A6F60">Kemal’in çizimi (4 Kasım) · her katta 5 süit · ön cephe 48 m, kollar 48 m, kol 12 m, kule ø 8 m · 1 kare = 1 m · ön (deniz) aşağıda · taslak</text>
 <line x1="0.0" y1="60.0" x2="0.0" y2="1063.0" stroke="#E6E0D4" stroke-width="0.5"/>
 <line x1="17.0" y1="60.0" x2="17.0" y2="1063.0" stroke="#E6E0D4" stroke-width="0.5"/>
 <line x1="34.0" y1="60.0" x2="34.0" y2="1063.0" stroke="#E6E0D4" stroke-width="0.5"/>
