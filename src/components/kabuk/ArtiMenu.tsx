@@ -26,7 +26,9 @@ export const ArtiMenu: React.FC<{
   tetikSinifi?: string;
   /** Tetikte simgenin yanında yazı (sol çubukta açılınca görünür) */
   etiket?: React.ReactNode;
-}> = ({ onNot, onFikir, onNotlar, fikirSayisi = 0, yon = 'asagi', kapsayiciSinifi, tetikSinifi, etiket }) => {
+  /** Seçim açılırken çağrılır (telefonda açık menü grubu kapansın diye; 4 Kasım) */
+  onAcilinca?: () => void;
+}> = ({ onNot, onFikir, onNotlar, fikirSayisi = 0, yon = 'asagi', kapsayiciSinifi, tetikSinifi, etiket, onAcilinca }) => {
   const [acik, setAcik] = useState(false);
   const kutu = useRef<HTMLDivElement | null>(null);
   const tetik = useRef<HTMLButtonElement | null>(null);
@@ -39,6 +41,7 @@ export const ArtiMenu: React.FC<{
       const r = tetik.current.getBoundingClientRect();
       setYer({ left: r.right + 8, bottom: Math.max(8, window.innerHeight - r.bottom) });
     }
+    if (!acik) onAcilinca?.();
     setAcik(a => !a);
   };
 
