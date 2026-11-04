@@ -57,9 +57,10 @@ const icinde = (p: Nokta, h: Nokta[]): boolean => {
   return ic;
 };
 
-const kutle = (halka: Nokta[], alt: number, ust: number, renk: string, tur: string): Feature<Polygon> => ({
+/** `bina`: üstüne oturduğu yapının kimliği (3B model görününce çatı da gizlenir) */
+const kutle = (halka: Nokta[], alt: number, ust: number, renk: string, tur: string, bina?: string): Feature<Polygon> => ({
   type: 'Feature',
-  properties: { katman: 'ayrinti', tur, alt, ust, renk },
+  properties: bina ? { katman: 'ayrinti', tur, alt, ust, renk, bina } : { katman: 'ayrinti', tur, alt, ust, renk },
   geometry: { type: 'Polygon', coordinates: [halka] }
 });
 
@@ -114,10 +115,10 @@ export function ayrintiVerisi(geo: FeatureCollection): FeatureCollection {
         const renk = duz ? DAM[Math.floor(s * 10) % DAM.length] : KIREMIT[Math.floor(s * 97) % KIREMIT.length];
         // Kiremit çatı iki kademe: saçak ve mahya (sivri çatıya yakın görünür)
         if (duz) {
-          cikti.push(kutle(icineCek(halka, 0.92), H, H + 0.5, renk, 'cati'));
+          cikti.push(kutle(icineCek(halka, 0.92), H, H + 0.5, renk, 'cati', id));
         } else {
-          cikti.push(kutle(icineCek(halka, 0.9), H, H + 0.9, renk, 'cati'));
-          cikti.push(kutle(icineCek(halka, 0.55), H + 0.9, H + 1.8, renk, 'cati'));
+          cikti.push(kutle(icineCek(halka, 0.9), H, H + 0.9, renk, 'cati', id));
+          cikti.push(kutle(icineCek(halka, 0.55), H + 0.9, H + 1.8, renk, 'cati', id));
         }
         continue;
       }
@@ -127,17 +128,17 @@ export function ayrintiVerisi(geo: FeatureCollection): FeatureCollection {
         const c = merkez(halka);
         const kx = mBoylam(c[1]);
         const r = halka.reduce((t, q) => t + Math.hypot((q[0] - c[0]) * kx, (q[1] - c[1]) * M_ENLEM), 0) / halka.length;
-        cikti.push(kutle(sekizgen(c, r + 1.1, 12), H - 1.4, H - 0.8, '#2E3A55', 'fener'));
-        cikti.push(kutle(sekizgen(c, r * 0.72, 12), H - 0.8, H + 2.6, '#7FA0B8', 'fener'));
-        cikti.push(kutle(sekizgen(c, r * 0.6, 12), H + 2.6, H + 3.6, '#B5453A', 'fener'));
-        cikti.push(kutle(sekizgen(c, r * 0.2, 6), H + 3.6, H + 4.6, '#2E3A55', 'fener'));
+        cikti.push(kutle(sekizgen(c, r + 1.1, 12), H - 1.4, H - 0.8, '#2E3A55', 'fener', id));
+        cikti.push(kutle(sekizgen(c, r * 0.72, 12), H - 0.8, H + 2.6, '#7FA0B8', 'fener', id));
+        cikti.push(kutle(sekizgen(c, r * 0.6, 12), H + 2.6, H + 3.6, '#B5453A', 'fener', id));
+        cikti.push(kutle(sekizgen(c, r * 0.2, 6), H + 3.6, H + 4.6, '#2E3A55', 'fener', id));
         continue;
       }
 
       // Otel kuleleri ve kuleler: tepede kiremit külah
       if (tur === 'kule' || tur === 'otel') {
-        cikti.push(kutle(icineCek(halka, 0.95), H, H + 0.8, '#E6DCCB', 'cati'));
-        if (tur === 'kule') cikti.push(kutle(icineCek(halka, 0.6), H + 0.8, H + 3, '#A9553A', 'cati'));
+        cikti.push(kutle(icineCek(halka, 0.95), H, H + 0.8, '#E6DCCB', 'cati', id));
+        if (tur === 'kule') cikti.push(kutle(icineCek(halka, 0.6), H + 0.8, H + 3, '#A9553A', 'cati', id));
         continue;
       }
       continue;

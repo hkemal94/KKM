@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { hattiSadelestir } from './hatSadelestir';
@@ -256,6 +256,48 @@ const belgedenHam = (v: Partial<Belge>): HaritaDuzeni => {
   };
 };
 
+// ---- gömülü düzen (4 Kasım) ----------------------------------------------
+
+/**
+ * Kurucu'nun depoya gömülü hâli (`data/kurucuGomulu.ts`,
+ * `scripts/kurucuyuGom.mjs` ile ajansa gönderilen dosyadan üretilir).
+ *
+ * Yalnız kayıt yoksa ya da kayıtta Kurucu işi hiç yoksa yerine geçer; kayıt
+ * varsa kayıt kazanır. Üst üste bindirilmez: harita ya kaydın Kurucu
+ * hâlini ya gömülü hâli çizer, ikisini birden değil. Kendi başına kayda
+ * yazmaz; Kemal bir şeyi kaydedince kayda onun gördüğü hâl yazılır.
+ *
+ * Ayrı parça olarak yüklenir (ana paket büyümesin).
+ */
+let gomuluSozu: Promise<HaritaDuzeni | null> | null = null;
+let gomuluBellek: HaritaDuzeni | null = null;
+
+function gomuluyuYukle(): Promise<HaritaDuzeni | null> {
+  gomuluSozu ??= import('../data/kurucuGomulu')
+    .then(m => {
+      const g = m.GOMULU_DUZEN;
+      gomuluBellek = {
+        surum: DUZEN_SURUMU,
+        guncelleme: 0,
+        hatlar: g.hatlar ?? {},
+        yollar: g.yollar ?? {},
+        mekanlar: mekanlariCoz(g.mekanlar),
+        ...(g.kurucuIslenen ? { kurucuIslenen: kurucuyuTemizle(g.kurucuIslenen) } : {})
+      };
+      return gomuluBellek;
+    })
+    .catch(e => { console.error('[harita düzeni] gömülü düzen yüklenemedi', e); return null; });
+  return gomuluSozu;
+}
+
+/** Kayıt + gömülü düzen → ekranda görünecek düzen (saf iş) */
+export function gomuluyleTamamla(d: HaritaDuzeni | null, g: HaritaDuzeni | null): HaritaDuzeni | null {
+  if (!g) return d;
+  if (!d) return g;
+  if (!d.kurucu && !d.kurucuIslenen && g.kurucuIslenen) return { ...d, kurucuIslenen: g.kurucuIslenen };
+  return d;
+}
+
 let bellekHam: string | null = null;
 let bellekDuzen: HaritaDuzeni | null = null;
 
@@ -321,10 +363,19 @@ export function useHaritaDuzeni() {
   const [hata, setHata] = useState<string | null>(null);
   const [ilkYukleme, setIlkYukleme] = useState(false);
   const sonYazilan = useRef(0);
+  const [gomulu, setGomulu] = useState<HaritaDuzeni | null>(gomuluBellek);
+  const [gomuluHazir, setGomuluHazir] = useState(gomuluBellek !== null);
+  useEffect(() => {
+    let canli = true;
+    gomuluyuYukle().then(g => { if (canli) { setGomulu(g); setGomuluHazir(true); } });
+    return () => { canli = false; };
+  }, []);
+  // Ekranda görünen: kayıt, yoksa gömülü hâl
+  const gorunen = useMemo(() => gomuluyleTamamla(duzen, gomulu), [duzen, gomulu]);
   // Harita düzenleyicisi kaydederken Kurucu taslağını bilmiyor; son hâl
   // burada tutulur ki taslak ezilmesin.
-  const sonDuzen = useRef<HaritaDuzeni | null>(duzen);
-  useEffect(() => { sonDuzen.current = duzen; }, [duzen]);
+  const sonDuzen = useRef<HaritaDuzeni | null>(gorunen);
+  useEffect(() => { sonDuzen.current = gorunen; }, [gorunen]);
 
   useEffect(() => {
     setDuzen(yereldenOku());
@@ -405,7 +456,7 @@ export function useHaritaDuzeni() {
     }
   }, []);
 
-  return { duzen: duzen ?? null, durum, hata, ilkYukleme, kaydet };
+  return { duzen: gorunen ?? null, durum, hata, ilkYukleme: ilkYukleme && gomuluHazir, kaydet };
 }
 
 // ---- yedekleme (K2) -------------------------------------------------------
