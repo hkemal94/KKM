@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Item } from '../types';
 import { anahtariOku } from './oyunAyarlari';
 
@@ -12,6 +12,8 @@ import { anahtariOku } from './oyunAyarlari';
  */
 export const ACILIS_BEKLE = 20_000;
 export const DEGISIM_BEKLE = 3 * 60_000;
+/** Düşen gönderim içerik değişmeden kaç kez daha denensin (her biri DEGISIM_BEKLE sonra) */
+export const TEKRAR_SINIRI = 3;
 
 const oku = (k: string) => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
 const yaz = (k: string, d: string) => { try { localStorage.setItem(k, d); } catch { /* yalnız bu açılışta */ } };
@@ -45,6 +47,8 @@ export const sonGonderim = (zamanYeri: string): string => oku(zamanYeri);
 export function useOtoGonder<D>(items: Item[], hazir: boolean, ayar: OtoGonderim<D>) {
   const ilk = useRef(true);
   const gidiyor = useRef(false);
+  /** Gönderim düşerse içerik değişmeden de yeniden denensin (4 Kasım); en fazla TEKRAR_SINIRI kez */
+  const [tekrar, setTekrar] = useState(0);
 
   useEffect(() => {
     if (!hazir || !items.length) return;
@@ -62,12 +66,15 @@ export function useOtoGonder<D>(items: Item[], hazir: boolean, ayar: OtoGonderim
         await a.gonder(anahtar, dosya);
         yaz(a.ozetYeri, yeniOzet);
         yaz(a.zamanYeri, a.zaman(dosya));
+        if (tekrar) setTekrar(0);
       } catch (e) {
-        console.warn(`${a.ad} ajansa kendiliğinden gönderilemedi; sonraki değişiklikte yeniden denenecek:`, e);
+        const sonra = tekrar < TEKRAR_SINIRI;
+        console.warn(`${a.ad} ajansa kendiliğinden gönderilemedi; ${sonra ? 'birkaç dakika sonra' : 'sonraki değişiklikte'} yeniden denenecek:`, e);
+        if (sonra) setTekrar(t => t + 1);
       } finally {
         gidiyor.current = false;
       }
     }, bekle);
     return () => clearTimeout(zaman);
-  }, [items, hazir, ayar]);
+  }, [items, hazir, ayar, tekrar]);
 }
