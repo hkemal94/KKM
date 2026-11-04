@@ -8,6 +8,12 @@ import { belgelerAyniMi, belgeFarklari } from './kurucuHarita';
 import { DOKULAR, dokuBul, mahalleDoldur, yolYariEni, type DokuTuru, type DoldurAlani } from './mahalleDoldur';
 import type { KurucuBelge } from '../harita/duzenTipi';
 import { kurucuEvMi } from '../../lib/evSakinleri';
+import { anahtariOku } from '../../lib/oyunAyarlari';
+import {
+  bagsizGizle, artikBaglar, artiklariTemizle, ciftBaglar,
+  haritaOnerileriniOku, oneriDurumu, onerileriUygula, yokSay, yokSayilanlar,
+  type HaritaOnerileri, type OneriDurumu
+} from '../../lib/kurucuBaglari';
 import { kisiMi } from '../../lib/adaSakini';
 import { DUZADA_GEO } from '../../data/duzadaGeo';
 import type { HaritaBakisi } from '../harita/DuzadaHarita';
@@ -506,6 +512,47 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
   /** Eve oturan olarak eklenebilecek kişi maddeleri */
   const evKisileri = useMemo(() => items.filter(i => !i.archived && !i.isProposal && kisiMi(i)), [items]);
 
+  // ---- viki bağlarının denetimi ve ajansın önerileri (4 Kasım) ----------------
+  const varOlanlar = useMemo(() => new Set<string>([
+    ...binalar.map(b => b.id), ...ozelYapilar.map(o => o.id), ...dogaAlanlari.map(d => d.id), ...yollar.map(y => y.id)
+  ]), [binalar, ozelYapilar, dogaAlanlari, yollar]);
+  const artik = useMemo(() => artikBaglar(taslak, varOlanlar), [taslak, varOlanlar]);
+  const cift = useMemo(() => ciftBaglar(taslak, [
+    ...binalar.filter(b => !b.gizli).map(b => ({ id: b.id, wikiId: b.wikiId })),
+    ...ozelYapilar.filter(o => !o.gizli).map(o => ({ id: o.id }))
+  ], lider), [taslak, binalar, ozelYapilar, lider]);
+  const artiklariSil = () => {
+    const n = artik.length;
+    degistir(t => artiklariTemizle(t, artikBaglar(t, varOlanlar)));
+    setUyari(`${n} artık bağ kaldırıldı. Geri al ile döner.`);
+  };
+  /** Ajansın harita önerileri: açılışta bir kez okunur (yalnız okuma; dosya yoksa panel çıkmaz) */
+  const [ajansOnerileri, setAjansOnerileri] = useState<HaritaOnerileri | null>(null);
+  const [yokSayilan, setYokSayilan] = useState<Set<string>>(yokSayilanlar);
+  const [denetimAcik, setDenetimAcik] = useState(false);
+  useEffect(() => {
+    const anahtar = anahtariOku();
+    if (!anahtar) return;
+    let iptal = false;
+    void haritaOnerileriniOku(anahtar).then(d => { if (!iptal) setAjansOnerileri(d); });
+    return () => { iptal = true; };
+  }, []);
+  const oneriSatirlari = useMemo(() => {
+    if (!ajansOnerileri) return [];
+    const evler = new Set<string>(binalar.filter(b => !b.gizli && kurucuEvMi(b.tur, b.haritaTur)).map(b => b.id));
+    const kisiler = new Set<string>(evKisileri.map(i => i.id));
+    return ajansOnerileri.oneriler
+      .filter(o => !yokSayilan.has(o.id))
+      .map(o => ({ o, durum: oneriDurumu(taslak, o, evler, kisiler) as OneriDurumu }))
+      .filter(x => x.durum !== 'uygulandi');
+  }, [ajansOnerileri, yokSayilan, binalar, evKisileri, taslak]);
+  const uygulanabilir = oneriSatirlari.filter(x => x.durum === 'bekliyor').map(x => x.o);
+  const oneriUygula = (liste: typeof uygulanabilir) => {
+    if (!liste.length) return;
+    degistir(t => onerileriUygula(t, liste));
+    setUyari(liste.length === 1 ? 'Öneri taslağa eklendi; Kurucu her zamanki gibi kaydeder.' : `${liste.length} öneri taslağa eklendi; Kurucu her zamanki gibi kaydeder.`);
+  };
+
   /** Mıknatısın yakalama yarıçapı (metre): parmakta geniş, farede dar */
   const miknatisEsigi = () => (miknatis ? (dokunmatik.current ? 30 : 16) : 6) / olcek;
 
@@ -959,7 +1006,8 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
     degistir(t => {
       const gizli = t.gizlenen.includes(uyeler[0]);
       const kalan = t.gizlenen.filter(x => !uyeler.includes(x));
-      return { ...t, gizlenen: gizli ? kalan : [...kalan, ...uyeler] };
+      // 4 Kasım (Kemal): kaldırılan yapının viki bağı da kalkar
+      return gizli ? { ...t, gizlenen: kalan } : bagsizGizle({ ...t, gizlenen: kalan }, uyeler);
     });
   }
   const [dolguTur, setDolguTur] = useState<BinaTuru>('ev');
@@ -972,10 +1020,9 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
   });
   const gizleGoster = (y: KurucuYol) => kaldirGeriGetir(y.id);
   function kaldirGeriGetir(id: string) {
-    degistir(t => ({
-      ...t,
-      gizlenen: t.gizlenen.includes(id) ? t.gizlenen.filter(x => x !== id) : [...t.gizlenen, id]
-    }));
+    degistir(t => (t.gizlenen.includes(id)
+      ? { ...t, gizlenen: t.gizlenen.filter(x => x !== id) }
+      : bagsizGizle(t, [id])));
   }
 
   // ---- düzenleme: yol noktası, yol parçası, yapı taşıma (30 Eylül) -----------
@@ -1113,7 +1160,7 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
       const oz = { ...t.ozelYapilar }, dg = { ...t.doga }, bg = { ...t.baglar };
       for (const id of silinecek) { delete oz[id]; delete dg[id]; delete bg[id]; }
       const gz = new Set(t.gizlenen);
-      binaIds.forEach(id => gz.add(id));
+      binaIds.forEach(id => { gz.add(id); delete bg[id]; });
       const yY = { ...t.yeniYollar }, yD = { ...t.yolDuzeni };
       for (const { y, kalan } of yolKes) {
         if (!kalan.length) { gz.add(y.id); continue; }
@@ -2233,6 +2280,65 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
           </button>
         </div>
       </div>
+
+      {/* Viki bağları ve ajansın önerileri (4 Kasım): yalnız iş varken, küçük kart */}
+      {arac !== 'bagla' && (artik.length > 0 || cift.length > 0 || oneriSatirlari.length > 0) && (
+        <div className={`${kart} absolute z-10 left-3 top-16 lg:top-24 w-72 max-w-[calc(100%-1.5rem)] max-h-[calc(100%-14rem)] overflow-y-auto p-2.5 text-[12px] space-y-2`}>
+          <button type="button" onClick={() => setDenetimAcik(a => !a)} className={`${etiket} w-full text-left cursor-pointer`}>
+            {[oneriSatirlari.length ? `Ajansın önerileri · ${oneriSatirlari.length}` : '', artik.length + cift.length ? `Bağ uyarısı · ${artik.length + cift.length}` : ''].filter(Boolean).join(' · ')} {denetimAcik ? '▾' : '▸'}
+          </button>
+          {denetimAcik && oneriSatirlari.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-[11px] font-semibold">Ajansın önerileri</div>
+              <p className="text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">Uygula taslağa ekler; Kurucu her zamanki gibi kaydeder, haritaya sen işlersin.</p>
+              <ul className="space-y-1">
+                {oneriSatirlari.map(({ o, durum: d }) => (
+                  <li key={o.id} className="rounded-lg border border-[#CFC5B4]/70 dark:border-[#2C3C72] px-2 py-1.5">
+                    <div className="flex items-start gap-1.5">
+                      <span className="flex-1 min-w-0">
+                        <b>{maddeAdi(o.kisi) ?? 'kişi bulunamadı'}</b> → <button type="button" onClick={() => { setArac('sec'); setSecili(o.ev); }} className="underline cursor-pointer hover:text-[#F26B6F]">evi göster</button>
+                        {o.not && <span className="block text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">{o.not}</span>}
+                        {d !== 'bekliyor' && <span className="block text-[10.5px] text-[#D6484C] dark:text-[#F26B6F]">{d === 'ev-yok' ? 'Ev Kurucu\'da yok ya da kaldırılmış.' : 'Kişi vikide bulunamadı.'}</span>}
+                      </span>
+                      {d === 'bekliyor' && <button type="button" onClick={() => oneriUygula([o])} className={dugmeBos}>Uygula</button>}
+                      <button type="button" onClick={() => setYokSayilan(yokSay([o.id]))} className={dugmeBos} title="Yok say (bu tarayıcıda gizlenir)"><X className="w-3 h-3" /></button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-1.5">
+                {uygulanabilir.length > 1 && <button type="button" onClick={() => oneriUygula(uygulanabilir)} className={dugmeBos}><Check className="w-3 h-3" />Hepsini uygula ({uygulanabilir.length})</button>}
+                <button type="button" onClick={() => setYokSayilan(yokSay(oneriSatirlari.map(x => x.o.id)))} className={dugmeBos}>Hepsini yok say</button>
+              </div>
+            </div>
+          )}
+          {denetimAcik && artik.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-[11px] font-semibold">{artik.length} artık bağ</div>
+              <p className="text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">Kaldırılmış ya da artık olmayan yapılara bağlı kalmış maddeler:</p>
+              <ul className="text-[11px]">
+                {artik.map(a => <li key={a.yapi} className="truncate">· {maddeAdi(a.madde) ?? a.madde} <span className="text-[#6A5E4C] dark:text-[#A6B0C9]">({a.neden === 'kaldirildi' ? 'yapı kaldırıldı' : 'yapı yok'})</span></li>)}
+              </ul>
+              <button type="button" onClick={artiklariSil} className={dugmeBos}><Trash2 className="w-3 h-3" />Artık bağları temizle</button>
+            </div>
+          )}
+          {denetimAcik && cift.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-[11px] font-semibold">Aynı maddeye bağlı birden çok yapı</div>
+              <p className="text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">Yalnız bilgi; hiçbir şey silinmez. Yanlış olanın bağını yapının kartından kaldırabilirsin.</p>
+              <ul className="text-[11px] space-y-0.5">
+                {cift.map(c => (
+                  <li key={c.madde}>
+                    · {maddeAdi(c.madde) ?? c.madde}: {c.yapilar.map((y, n) => (
+                      <button key={y} type="button" onClick={() => { setArac('sec'); setSecili(y); }} className="underline cursor-pointer hover:text-[#F26B6F] mr-1">{n + 1}. yapı</button>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Ölçek */}
       <div className={`absolute left-3 top-16 z-10 hidden ${arac === 'bagla' ? '' : 'lg:block'} px-2 py-1 rounded-lg bg-[#FAF8F5]/90 text-[10px] font-mono text-[#6A5E4C] pointer-events-none`}>

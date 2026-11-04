@@ -20,6 +20,10 @@ import { istekEkle } from '../lib/kemalIstekleri';
  *   2. Görsel istiyor: görseli olmayan viki maddeleri (yalnız gösterim) ve
  *      "Ajana öneri hazırlat" (ajansa istek gider, kayda yazılmaz).
  * Saf kısım: `lib/vikiGorselTemizligi.ts`.
+ *
+ * 4 Kasım (Kemal): kesin silinecek yokken 1. kart gizli; "Denetle" Eksikler'in
+ * altında küçük bir satır (`SilinmisGaleriDenetle`). 2. kart tek satır.
+ * İkisi aynı durumu paylaşır: `useSilinmisGaleri` Eksikler'de bir kez çağrılır.
  */
 
 const KART = 'mb-2.5 px-4 py-3 rounded-xl border border-[#F26B6F]/40 bg-[#FAF8F5] dark:bg-[#13204A]';
@@ -28,11 +32,8 @@ const ACIKLAMA = 'mt-0.5 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]';
 const DOLU = 'shrink-0 min-h-9 px-3 rounded-lg bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] text-[12px] font-semibold disabled:opacity-40 cursor-pointer';
 const BOS = 'flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer';
 
-const SilinmisGaleriKarti: React.FC<{
-  items: Item[];
-  onUpdateItem: (item: Item) => Promise<void>;
-  onMaddeAc?: (id: string) => void;
-}> = ({ items, onUpdateItem, onMaddeAc }) => {
+/** Silinmiş galeri görsellerinin ortak durumu (kart ve alttaki "Denetle" satırı) */
+export function useSilinmisGaleri(items: Item[], onUpdateItem?: (item: Item) => Promise<void>) {
   const kesin = useMemo(() => kesinAdaylar(items), [items]);
   /** Galeride duranların içerik kimlikleri: "Denetle"ye basınca okunur */
   const [galeriKimlikleri, setGaleriKimlikleri] = useState<Set<string> | null>(null);
@@ -89,7 +90,7 @@ const SilinmisGaleriKarti: React.FC<{
   };
 
   const kaldir = async () => {
-    if (calisiyor || !secilen.length) return;
+    if (calisiyor || !secilen.length || !onUpdateItem) return;
     const maddeSayisi = new Set(secilen.map(a => a.item.id)).size;
     if (!window.confirm(`${secilen.length} görsel ${maddeSayisi} viki maddesinden kaldırılacak. Geri alınmaz (yedek indirdiysen oradan dönebilir). Devam edilsin mi?`)) return;
     setCalisiyor(true);
@@ -109,7 +110,22 @@ const SilinmisGaleriKarti: React.FC<{
     }
   };
 
-  if (!isVar && !rapor) return null;
+  /** Kart yalnız gösterecek görsel ya da rapor varken görünür */
+  const kartGorunur = kesin.length > 0 || belirsiz.length > 0 || !!rapor;
+  return {
+    kesin, belirsiz, hepsi, secilen, seciliMi, setSecim, galeriKimlikleri, okunamayan, denetleniyor,
+    calisiyor, rapor, yedeklendi, isVar, kartGorunur, denetle, yedekIndir, kaldir
+  };
+}
+
+type SilinmisGaleri = ReturnType<typeof useSilinmisGaleri>;
+
+export const SilinmisGaleriKarti: React.FC<{ sg: SilinmisGaleri; onMaddeAc?: (id: string) => void }> = ({ sg, onMaddeAc }) => {
+  const {
+    kesin, belirsiz, hepsi, secilen, seciliMi, setSecim, galeriKimlikleri, okunamayan, denetleniyor,
+    calisiyor, rapor, yedeklendi, kartGorunur, denetle, yedekIndir, kaldir
+  } = sg;
+  if (!kartGorunur) return null;
 
   const satir = (a: Aday) => (
     <label key={a.anahtar} className="flex items-center gap-2.5 py-1.5 border-t border-[#CFC5B4]/50 dark:border-[#2C3C72]/60 cursor-pointer">
@@ -150,7 +166,7 @@ const SilinmisGaleriKarti: React.FC<{
         </div>
       )}
 
-      {galeriKimlikleri && (
+      {galeriKimlikleri && belirsiz.length > 0 && (
         <div className="mt-2.5">
           <p className="text-[11px] font-mono uppercase tracking-widest text-[#6A5E4C] dark:text-[#A6B0C9]">Emin değil · {belirsiz.length}</p>
           <p className={ACIKLAMA}>
@@ -158,13 +174,8 @@ const SilinmisGaleriKarti: React.FC<{
             maddeye doğrudan yüklenmiş de. Seçili gelmez; tanıdıklarını kendin işaretle.
             {okunamayan > 0 && ` ${okunamayan} galeri görseli okunamadı; onların vikideki kopyası burada yanlışlıkla görünebilir.`}
           </p>
-          {belirsiz.length === 0 && <p className="mt-1 text-[12px] text-[#336659] dark:text-[#8FC4A8]">Yok.</p>}
           {belirsiz.map(satir)}
         </div>
-      )}
-
-      {!galeriKimlikleri && !kesin.length && (
-        <p className="mt-2 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]">Kesin olan yok. Eski bağlamaları bulmak için "Denetle"ye bas (galeri görselleri okunur, hiçbir şey yazılmaz).</p>
       )}
 
       {hepsi.length > 0 && (
@@ -182,7 +193,26 @@ const SilinmisGaleriKarti: React.FC<{
   );
 };
 
-const GorselIsteyenKarti: React.FC<{ items: Item[]; onMaddeAc?: (id: string) => void }> = ({ items, onMaddeAc }) => {
+/** Eksikler'in altında küçük satır: eski bağlamaları bulmak için "Denetle" (hiçbir şey yazmaz) */
+export const SilinmisGaleriDenetle: React.FC<{ sg: SilinmisGaleri }> = ({ sg }) => {
+  if (!sg.isVar) return null;
+  const sonuc = sg.galeriKimlikleri && !sg.kartGorunur
+    ? `Denetlendi: vikide galeriden kalmış görsel bulunmadı.${sg.okunamayan > 0 ? ` ${sg.okunamayan} galeri görseli okunamadı.` : ''}`
+    : null;
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">
+      <ImageOff className="w-3.5 h-3.5 shrink-0" />
+      <span className="min-w-0">{sonuc ?? 'Vikide galeriden silinmiş görsel kaldı mı?'}</span>
+      <button type="button" disabled={sg.denetleniyor || sg.calisiyor} onClick={() => void sg.denetle()}
+        className="underline decoration-[#CFC5B4] hover:text-[#F26B6F] disabled:opacity-40 cursor-pointer">
+        {sg.denetleniyor ? 'Denetleniyor…' : sg.galeriKimlikleri ? 'Yeniden denetle' : 'Denetle'}
+      </button>
+    </div>
+  );
+};
+
+/** "N madde görsel istiyor": tek satır; sayıya basınca liste açılır */
+export const GorselIsteyenSatiri: React.FC<{ items: Item[]; onMaddeAc?: (id: string) => void }> = ({ items, onMaddeAc }) => {
   const liste = useMemo(() => gorselIsteyenler(items), [items]);
   const [acik, setAcik] = useState(false);
   const [durum, setDurum] = useState<string | null>(null);
@@ -204,47 +234,31 @@ const GorselIsteyenKarti: React.FC<{ items: Item[]; onMaddeAc?: (id: string) => 
   if (!liste.length) return null;
 
   return (
-    <div className={KART}>
-      <div className="flex items-start gap-3">
-        <ImagePlus className="w-4 h-4 mt-0.5 shrink-0 text-[#D6484C] dark:text-[#F26B6F]" />
-        <div className="flex-1 min-w-0">
-          <p className={BASLIK}>Görsel istiyor · {liste.length} viki maddesi</p>
-          <p className={ACIKLAMA}>Bu maddelerin görseli yok. Ajandan Canva'dan uygun görsel önerisi isteyebilirsin; öneri Onay bekleyenler'e düşer.</p>
-          {durum && <p className="mt-1.5 text-[12px] text-[#336659] dark:text-[#8FC4A8]">{durum}</p>}
-          <button type="button" onClick={() => setAcik(a => !a)} className="mt-1.5 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9] underline cursor-pointer">
-            {acik ? 'Listeyi gizle' : 'Listeyi göster'}
-          </button>
-          {acik && (
-            <ul className="mt-1.5 max-h-64 overflow-y-auto text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
-              {liste.map(i => (
-                <li key={i.id} className="py-0.5">
-                  {onMaddeAc
-                    ? <button type="button" onClick={() => onMaddeAc(i.id)} className="hover:text-[#F26B6F] cursor-pointer text-left">{i.title}</button>
-                    : i.title}
-                  <span className="ml-1.5 text-[#6A5E4C] dark:text-[#A6B0C9]">· {turAdi(i)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <button type="button" disabled={durum === 'Gönderiliyor…'} onClick={() => void iste()} className={`${DOLU} flex items-center gap-1.5`}>
+    <div className="mb-2.5 px-4 py-2 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A]">
+      <div className="flex items-center gap-3">
+        <ImagePlus className="w-4 h-4 shrink-0 text-[#D6484C] dark:text-[#F26B6F]" />
+        <button type="button" onClick={() => setAcik(a => !a)} aria-expanded={acik}
+          className={`flex-1 min-w-0 text-left ${BASLIK} hover:text-[#F26B6F] cursor-pointer`}>
+          {liste.length} madde görsel istiyor
+        </button>
+        <button type="button" disabled={durum === 'Gönderiliyor…'} onClick={() => void iste()}
+          className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] text-[11px] font-semibold disabled:opacity-40 cursor-pointer">
           <Bot className="w-3.5 h-3.5" /> Ajana öneri hazırlat
         </button>
       </div>
+      {durum && <p className="mt-1 text-[12px] text-[#336659] dark:text-[#8FC4A8]">{durum}</p>}
+      {acik && (
+        <ul className="mt-1.5 max-h-64 overflow-y-auto text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
+          {liste.map(i => (
+            <li key={i.id} className="py-0.5">
+              {onMaddeAc
+                ? <button type="button" onClick={() => onMaddeAc(i.id)} className="hover:text-[#F26B6F] cursor-pointer text-left">{i.title}</button>
+                : i.title}
+              <span className="ml-1.5 text-[#6A5E4C] dark:text-[#A6B0C9]">· {turAdi(i)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
-
-/** Eksikler'e tek satırla giren iki kart */
-export const VikiGorselKarti: React.FC<{
-  items: Item[];
-  onUpdateItem: (item: Item) => Promise<void>;
-  onMaddeAc?: (id: string) => void;
-}> = props => (
-  <>
-    <SilinmisGaleriKarti {...props} />
-    <GorselIsteyenKarti items={props.items} onMaddeAc={props.onMaddeAc} />
-  </>
-);
-
-export default VikiGorselKarti;

@@ -5,7 +5,6 @@ import { useHaritaDuzeni, haritaKaydiDurumu } from '../../lib/haritaDuzeni';
 import { silinecekler, eskiAlanlar, silmeOzeti } from '../../lib/temizlik';
 import { mahalleAdDuzeltmeleri } from '../../lib/vikiTemizligi';
 import { boslukDoldurma } from '../../lib/boslukDoldurma';
-import { GaleriYedegiKarti, galeridenEksikler } from '../GaleriYedegiKarti';
 import { gocIsleri, gocOzeti, kbYaz } from '../../lib/galeriGocu';
 import { galeriyiTasi, gocRaporuYaz } from '../../lib/galeriGocuCalistir';
 
@@ -42,7 +41,6 @@ export function useBekleyenIsler({ items, onUpdateItem, onDeleteItem, onAlanSil 
   const eskiAlan = useMemo(() => (onAlanSil ? eskiAlanlar(items) : []), [items, onAlanSil]);
   const bosluk = useMemo(() => boslukDoldurma(items), [items]);
   const adDuzeltme = useMemo(() => mahalleAdDuzeltmeleri(items), [items]);
-  const galeri = useMemo(() => galeridenEksikler(items), [items]);
   const goc = useMemo(() => gocIsleri(items), [items]);
 
   const [calisan, setCalisan] = useState<string | null>(null);
@@ -143,12 +141,11 @@ export function useBekleyenIsler({ items, onUpdateItem, onDeleteItem, onAlanSil 
   };
 
   const raporSatirlari = Object.entries(raporlar).filter(([id]) => bitenler.has(id));
-  return { bekleyen, calistir, calisan, raporlar, raporSatirlari, galeri };
+  return { bekleyen, calistir, calisan, raporlar, raporSatirlari };
 }
 
 export const BekleyenIsler: React.FC<Props> = (props) => {
-  const { items, onAddItem } = props;
-  const { bekleyen, calistir, calisan, raporlar, raporSatirlari, galeri } = useBekleyenIsler(props);
+  const { bekleyen, calistir, calisan, raporlar, raporSatirlari } = useBekleyenIsler(props);
   const [hepsiOnay, setHepsiOnay] = useState(false);
 
   const hepsiniYap = async () => {
@@ -158,7 +155,7 @@ export const BekleyenIsler: React.FC<Props> = (props) => {
     }
   };
 
-  if (!bekleyen.length && !galeri.length && !raporSatirlari.length) return null;
+  if (!bekleyen.length && !raporSatirlari.length) return null;
 
   return (
     <section className={`${KART} p-4 space-y-3`}>
@@ -199,9 +196,6 @@ export const BekleyenIsler: React.FC<Props> = (props) => {
           <Check className="w-3.5 h-3.5 text-[#2F7A45] dark:text-[#9FD3A9]" /> {r}
         </div>
       ))}
-
-      {/* Galeri görselleri: indirip eklemesi kendi kartında (görselleri tek tek çeker) */}
-      {galeri.length > 0 && <GaleriYedegiKarti items={items} onAddItem={onAddItem} />}
     </section>
   );
 };

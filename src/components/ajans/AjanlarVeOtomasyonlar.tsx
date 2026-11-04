@@ -35,6 +35,7 @@ interface Props {
   onSekme: (s: AjanlarSekmesi) => void;
   onUpdateItem: (item: Item) => Promise<void>;
   onDeleteItem: (id: string) => Promise<void>;
+  onAddItem?: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
 }
 
 const BOLUMLER = [
@@ -47,7 +48,7 @@ const hataYazi = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const GIRDI = `min-h-9 px-2 rounded-lg text-[12px] bg-[#FAF8F5] dark:bg-[#13204A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72]`;
 const cip = (on: boolean) => `min-h-9 px-2.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#F26B6F] border-transparent text-white' : 'border-[#CFC5B4] dark:border-[#2C3C72] hover:border-[#F26B6F]'}`;
 
-export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, onUpdateItem, onDeleteItem }) => {
+export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, onUpdateItem, onDeleteItem, onAddItem }) => {
   const anahtar = anahtariOku();
   const [tur, setTur] = useState(0);
   const [ajanlar, setAjanlar] = useState<AjanBilgisi[] | 'yukleniyor' | { hata: string }>('yukleniyor');
@@ -291,7 +292,7 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
         </section>
       )}
 
-      {sekme === 'baglanti' && <AjansSayfasi items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />}
+      {sekme === 'baglanti' && <AjansSayfasi items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} onAddItem={onAddItem} />}
     </div>
   );
 };

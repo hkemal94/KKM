@@ -5,9 +5,6 @@
  * ve madde görseli için duruyor.
  */
 
-/** Galeriye eklenen W5 görsellerinin etiketi */
-export const W5_ETIKETI = 'soru-cevap-w5';
-
 /** The Imperial Kemsköy maddesinin kimliği */
 const OTEL_KIMLIGI = 'kemskoy_hotel';
 

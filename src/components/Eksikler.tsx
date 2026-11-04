@@ -4,13 +4,12 @@ import { ArrowRight, Bot, ChevronDown, CircleCheck } from 'lucide-react';
 import type { AreaType, Item } from '../types';
 import { TemizlikKarti, EskiAlanKarti } from './TemizlikKarti';
 import { OrtakAlanKarti } from './OrtakAlanKarti';
-import { GaleriYedegiKarti } from './GaleriYedegiKarti';
 import { KanonKarti } from './KanonKarti';
 import { AdDegisikligiKarti } from './AdDegisikligiKarti';
 import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
 import { GaleriDisariKarti } from './GaleriDisariKarti';
-import { VikiGorselKarti } from './VikiGorselKarti';
+import { SilinmisGaleriKarti, SilinmisGaleriDenetle, GorselIsteyenSatiri, useSilinmisGaleri } from './VikiGorselKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
 import { boslukDoldurma } from '../lib/boslukDoldurma';
 import { kisiAdlariniAyir } from '../lib/kisiAdi';
@@ -80,6 +79,8 @@ export const Eksikler: React.FC<EksiklerProps> = ({
       setIstekDurumu(d => ({ ...d, [e.anahtar]: `Gönderilemedi: ${h instanceof Error ? h.message : String(h)}` }));
     }
   };
+  /** Vikide kalan silinmiş galeri görselleri: kart üstte, "Denetle" en altta (4 Kasım) */
+  const silinmisGaleri = useSilinmisGaleri(items, onUpdateItem);
   const cozumAdi = (c: Cozum) => c.tur === 'madde-ac' ? 'Madde aç' : c.tur === 'kayda-bagla' ? 'Kayda bağla' : `${c.markaAdi}'ye bağla`;
 
   // Bu satır bütün useMemo/useState'lerin ALTINDA olmalı: üstte dururken veri
@@ -95,12 +96,10 @@ export const Eksikler: React.FC<EksiklerProps> = ({
       {onDeleteItem && <TemizlikKarti items={items} onDeleteItem={onDeleteItem} />}
       {onAlanSil && <EskiAlanKarti items={items} onAlanSil={onAlanSil} />}
 
-      {/* Galeri (29 Eylül): kullanılan görseller galeriye */}
-      {onAddItem && <GaleriYedegiKarti items={items} onAddItem={onAddItem} />}
-
       {/* Galeri görselleri kayıtların dışına (21 Ekim) */}
       {onUpdateItem && <GaleriDisariKarti items={items} onUpdateItem={onUpdateItem} />}
-      {onUpdateItem && <VikiGorselKarti items={items} onUpdateItem={onUpdateItem} onMaddeAc={id => onSelectArea('duzada', id)} />}
+      {onUpdateItem && <SilinmisGaleriKarti sg={silinmisGaleri} onMaddeAc={id => onSelectArea('duzada', id)} />}
+      <GorselIsteyenSatiri items={items} onMaddeAc={id => onSelectArea('duzada', id)} />
 
       {onUpdateItem && <BuyukKayitKarti items={items} onUpdateItem={onUpdateItem} />}
       {onUpdateItem && <AdDegisikligiKarti items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />}
@@ -237,6 +236,8 @@ export const Eksikler: React.FC<EksiklerProps> = ({
           })}
         </ul>
       )}
+
+      {onUpdateItem && <SilinmisGaleriDenetle sg={silinmisGaleri} />}
     </div>
   );
 };
