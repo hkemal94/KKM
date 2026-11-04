@@ -55,6 +55,9 @@ interface Taslak {
   baglar: string[];
 }
 
+/** "Pinterest'e bak" isteğinin metni (Kemal, 4 Kasım) */
+const PINTEREST_ISTEGI = "Pinterest'e bak: 6 panoya bak; yeni pinler, hangi pin hangi bölüme uyar, ortak çizgi — kısa not.";
+
 const BOS: Taslak = { baglanti: '', not: '', tur: 'ilham', etiketler: '', gorsel: '', baglar: [] };
 
 function taslakYap(i: Item): Taslak {
@@ -233,7 +236,9 @@ export default function IlhamVeKaynaklar({ items, onAddItem, onUpdateItem, onDel
   const [turSuzgeci, setTurSuzgeci] = useState<IlhamTuru | 'hepsi'>('hepsi');
   const [etiketSuzgeci, setEtiketSuzgeci] = useState<string | null>(null);
   const [markaSuzgeci, setMarkaSuzgeci] = useState('');
-  const [istekGidiyor, setIstekGidiyor] = useState(false);
+  // Hangi istek gidiyor; ikisi aynı dosyaya yazdığı için biri sürerken ikisi de kilitli
+  const [istekGidiyor, setIstekGidiyor] = useState<'' | 'tamamlat' | 'pinterest'>('');
+  const istekKilidi = useRef(false);
   const [istekMesaji, setIstekMesaji] = useState<string | null>(null);
 
   const hepsi = useMemo(() => ilhamlariAl(items), [items]);
@@ -350,8 +355,9 @@ export default function IlhamVeKaynaklar({ items, onAddItem, onUpdateItem, onDel
 
   const anahtar = anahtariOku();
   const tamamlat = async () => {
-    if (!anahtar) return;
-    setIstekGidiyor(true);
+    if (!anahtar || istekKilidi.current) return;
+    istekKilidi.current = true;
+    setIstekGidiyor('tamamlat');
     setIstekMesaji(null);
     try {
       const metin = tamamlatmaIstegi(etiketSuzgeci ? [etiketSuzgeci] : [], suzulmus);
@@ -359,15 +365,33 @@ export default function IlhamVeKaynaklar({ items, onAddItem, onUpdateItem, onDel
       setIstekMesaji(`Gönderildi${etiketSuzgeci ? ` (${etiketSuzgeci})` : ''}. Merch Konseptçisi bağlantılı adaylar hazırlar; sonuç Onay bekleyenler'e düşer, buraya sen eklersin.`);
     } catch (e) {
       setIstekMesaji(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}. Tekrar dene.`);
-    } finally { setIstekGidiyor(false); }
+    } finally { istekKilidi.current = false; setIstekGidiyor(''); }
+  };
+
+  /** "Pinterest'e bak" (4 Kasım, Kemal): Kems'e istek; ajan seçilmez, Kems dağıtır. Kayda yazmaz. */
+  const pinterestBak = async () => {
+    if (!anahtar || istekKilidi.current) return;
+    istekKilidi.current = true;
+    setIstekGidiyor('pinterest');
+    setIstekMesaji(null);
+    try {
+      await istekEkle(anahtar, { tur: 'istek', metin: PINTEREST_ISTEGI, ekran: 'ilham' });
+      setIstekMesaji("Ajansa gitti. Kems panolara baktırır; kısa not Onay bekleyenler'e düşer.");
+    } catch (e) {
+      setIstekMesaji(`Gönderilemedi: ${e instanceof Error ? e.message : String(e)}. Tekrar dene.`);
+    } finally { istekKilidi.current = false; setIstekGidiyor(''); }
   };
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       <SayfaBasi baslik="İlham ve kaynaklar">
-        <button type="button" onClick={() => void tamamlat()} disabled={!anahtar || istekGidiyor} className={DUGME_BOS}
+        <button type="button" onClick={() => void pinterestBak()} disabled={!anahtar || !!istekGidiyor} className={DUGME_BOS}
+          title={anahtar ? "Kems'e iste: panolardaki yeni pinlere baksın, kısa not getirsin" : "GitHub anahtarı yok: Ajanlar ve otomasyonlar → Ajans bağlantısı'nda girilir"}>
+          <Bot className="w-3.5 h-3.5" /> {istekGidiyor === 'pinterest' ? 'Gönderiliyor…' : "Pinterest'e bak"}
+        </button>
+        <button type="button" onClick={() => void tamamlat()} disabled={!anahtar || !!istekGidiyor} className={DUGME_BOS}
           title={anahtar ? 'Seçili yönelim için eksik ilhamları ajana tamamlat' : "GitHub anahtarı yok: Ajanlar ve otomasyonlar → Ajans bağlantısı'nda girilir"}>
-          <Bot className="w-3.5 h-3.5" /> {istekGidiyor ? 'Gönderiliyor…' : 'Ajana ilham tamamlat'}
+          <Bot className="w-3.5 h-3.5" /> {istekGidiyor === 'tamamlat' ? 'Gönderiliyor…' : 'Ajana ilham tamamlat'}
         </button>
         {!ekleAcik && (
           <button type="button" onClick={() => { setEkleAcik(true); setRapor(null); }} className={DUGME_LAC}>
@@ -377,7 +401,7 @@ export default function IlhamVeKaynaklar({ items, onAddItem, onUpdateItem, onDel
       </SayfaBasi>
 
       {istekMesaji && <p className={`px-3 py-2 rounded-lg bg-[#F3EFE8] dark:bg-[#17345A] text-[12px] ${YAZI}`}>{istekMesaji}</p>}
-      {!anahtar && <p className={`text-[11px] ${IKINCIL}`}>"Ajana ilham tamamlat" için bu tarayıcıda GitHub anahtarı gerekir (Ajanlar ve otomasyonlar → Ajans bağlantısı).</p>}
+      {!anahtar && <p className={`text-[11px] ${IKINCIL}`}>"Pinterest'e bak" ve "Ajana ilham tamamlat" için bu tarayıcıda GitHub anahtarı gerekir (Ajanlar ve otomasyonlar → Ajans bağlantısı).</p>}
 
       {ekleAcik && (
         <section className={`${KART} p-4 space-y-2`}>
