@@ -20,6 +20,8 @@ import type { ModelYeri } from './modelYerlesimi';
  */
 
 export const MODEL_ESIGI = 17;
+/** Hazır arsa modelinde bina yerinin merkezi (modelYerlesimi.ts ile aynı) */
+const BINA_YERI_X = 6.5, BINA_YERI_Z = -4.5;
 /** Bir anda en çok kaç park etmiş araba */
 const ARABA_EN_COK = 40;
 /** Teknelerin oturduğu yükseklik (deniz yüzeyi, biraz batık) */
@@ -266,12 +268,12 @@ export class ModelKatmani implements CustomLayerInterface {
       } else if (y.en > 0 && y.boy > 0) {
         let en = y.en, boy = y.boy;
         // Modelin uzun kenarı tabanın uzun kenarına gelsin
-        if ((m.w >= m.d) !== (en >= boy) && Math.abs(en - boy) > 0.15 * Math.max(en, boy)) {
+        if (!y.yonSabit && (m.w >= m.d) !== (en >= boy) && Math.abs(en - boy) > 0.15 * Math.max(en, boy)) {
           ex = [-ex[1], ex[0]]; [en, boy] = [boy, en];
         }
         // Önü yola baksın (Kemal, 4 Kasım): uzun kenar hizası korunur, ters çevrilir;
         // taban kareye yakınsa dört yönden yola en çok bakanı
-        if (y.yol) {
+        if (y.yol && !y.yonSabit) {
           const kare = Math.abs(en - boy) <= 0.15 * Math.max(en, boy);
           const adaylar: Array<{ e: [number, number]; en: number; boy: number }> = [
             { e: ex, en, boy }, { e: [-ex[0], -ex[1]], en, boy },
@@ -291,7 +293,8 @@ export class ModelKatmani implements CustomLayerInterface {
 
       // Bahçe: hazır arsa evle aynı başlangıç köşesinden; parçalar kendi yerlerinde
       if (!y.bahce || !bahceler.has(y.id)) continue;
-      if (y.bahce.arsa) ekle(y.bahce.arsa, yerlestir(y.merkez, kot, ex, [1, 1, 1], [ax, az]));
+      // Arsa modeli bina yeri tabanın merkezine (sığıp sığmadığı bu yerleşimle denetlendi)
+      if (y.bahce.arsa) ekle(y.bahce.arsa, yerlestir(y.merkez, kot, ex, [1, 1, 1], [BINA_YERI_X, BINA_YERI_Z]));
       for (const p of y.bahce.parcalar) {
         const pm = this.modeller.get(p.dosya)!;
         if (KOSEDEN.has(p.dosya)) {

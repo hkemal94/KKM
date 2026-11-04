@@ -1,6 +1,6 @@
 import type { FeatureCollection } from 'geojson';
 import {
-  ARACLAR, BAHCE, HARITA_TURLERI, HARITA_YAPILARI, IMPERIAL_CAPA, IMPERIAL_MODELI, KALIP_MODELLERI, KURUCU_MODELLERI, TEKNELER,
+  ARACLAR, ARSA_OLCULERI, BAHCE, HARITA_TURLERI, HARITA_YAPILARI, IMPERIAL_CAPA, IMPERIAL_MODELI, KALIP_MODELLERI, KURUCU_MODELLERI, TEKNELER,
   sabitSec, sans
 } from '../../lib/binaKutuphanesi';
 
@@ -46,18 +46,27 @@ export interface ModelYeri {
   esik?: number;
   /** Arazi yerine deniz yüzeyi (tekneler) */
   deniz?: boolean;
+  /** Yön modelYerleri'nde kesinleşti (bahçeli evler): katman çevirmez, en/boy ex'e göre */
+  yonSabit?: boolean;
   /** Komşuluk çeşitlemesi için: aynı gruptaki yapılar yan yana aynı modeli almaz */
   cesit?: { grup: string; liste: string[] };
 }
 
 /** Bahçe parçası: kendi ölçüsünde, ex yönünde; kenar parçasında `sx` boy kısaltması */
-export interface BahceParcasi { dosya: string; merkez: Nokta; ex: Nokta; sx?: number }
+export interface BahceParcasi { dosya: string; merkez: Nokta; ex: Nokta; sx?: number; /** arsa kenarındaki parçalar (tek duvar kuralı için) */ tur?: 'kenar' | 'kapi' }
 /**
  * Evin bahçesi (Kemal, 4 Kasım: "bütün evler bahçeli"). Arsa büyükse hazır bahçe
  * arsası modeli evin altına (evle aynı başlangıç köşesinden) konur; değilse arsanın
  * kenarına 2 m'lik parçalar dizilir, yola bakan kenara kapı, içe birkaç parça ve bitki.
  */
-export interface Bahce { arsa?: string; /** kenar parçası (komşulukla değişebilir) */ kenar?: string; parcalar: BahceParcasi[] }
+export interface Bahce {
+  arsa?: string;
+  /** Evin arsasına sığan hazır arsa modelleri (komşuluk seçimi bunların arasından) */
+  arsaAdaylari?: string[];
+  /** kenar parçası (komşulukla değişebilir) */
+  kenar?: string;
+  parcalar: BahceParcasi[];
+}
 
 const M_ENLEM = 111_320;
 
@@ -128,10 +137,10 @@ const bagBitkileri = (l: string[]) => {
 
 /** Bahçesi olan türler */
 const BAHCELI = ['ev', 'dukkanli', 'yazlik', 'ciftlik'];
-/** Hazır arsa modelinin sığdığı en küçük arsa (metre; modeller 23–33 × 25–34 m) */
-const ARSA_KISA = 20, ARSA_UZUN = 22;
-/** Arsa verisi yoksa evin çevresine bırakılan pay */
-const ARSA_PAYI = 3.5;
+/** Arsa verisi yoksa evin çevresine bırakılan pay; komşuya binerse sırayla küçülür */
+const ARSA_PAYLARI = [3.5, 2.5, 1.5];
+/** İç parçaların arsa kenarından en az uzaklığı (metre) */
+const IC_PAY = 2;
 const KENAR = 2;            // kenar parçası boyu
 const KAPI = 1.2;           // kapı açıklığı
 const YOL_KAFESI = 25;      // yol noktalarının ızgarası (metre)
@@ -197,22 +206,124 @@ function yolIzgarasi(geo: FeatureCollection) {
   };
 }
 
+// ---- çakışma (Kemal, 4 Kasım: "binaların arazileri üst üste geliyor") ----------
+
+/** Bütün ada için tek metre düzlemi (x doğu, y güney); çakışma denetimleri burada */
+const GKX = M_ENLEM * Math.cos((39.6 * Math.PI) / 180);
+const genel = (p: Nokta): Nokta => [p[0] * GKX, -p[1] * M_ENLEM];
+
+function kutuSiniri(h: Nokta[]) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of h) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  return { x0, y0, x1, y1 };
+}
+
+function parcalarKesisir(a: Nokta, b: Nokta, c: Nokta, d: Nokta): boolean {
+  const yon = (p: Nokta, q: Nokta, r: Nokta) => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+  const d1 = yon(c, d, a), d2 = yon(c, d, b), d3 = yon(a, b, c), d4 = yon(a, b, d);
+  return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+}
+
+/** İki çokgen üst üste biniyor mu (kenar teması sayılmaz: `pay` kadar içeri çekilerek bakılır) */
+function cokgenlerBinisir(a: Nokta[], b: Nokta[], pay = 0.3): boolean {
+  const ka = kutuSiniri(a), kb = kutuSiniri(b);
+  if (ka.x1 - pay < kb.x0 || kb.x1 - pay < ka.x0 || ka.y1 - pay < kb.y0 || kb.y1 - pay < ka.y0) return false;
+  const ic = (h: Nokta[]) => { const c = ortalama(h); return h.map(([x, y]) => { const l = Math.hypot(x - c[0], y - c[1]) || 1; return [x - ((x - c[0]) / l) * pay, y - ((y - c[1]) / l) * pay] as Nokta; }); };
+  const A = ic(a), B = ic(b);
+  if (A.some(p => icinde(p, B)) || B.some(p => icinde(p, A))) return true;
+  for (let i = 0; i < A.length; i++) for (let j = 0; j < B.length; j++) {
+    if (parcalarKesisir(A[i], A[(i + 1) % A.length], B[j], B[(j + 1) % B.length])) return true;
+  }
+  return false;
+}
+
+/** Noktanın çokgen kenarlarına en kısa uzaklığı */
+function kenaraUzaklik(q: Nokta, h: Nokta[]): number {
+  let en = Infinity;
+  for (let i = 0; i < h.length; i++) {
+    const a = h[i], b = h[(i + 1) % h.length];
+    const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / l2));
+    en = Math.min(en, Math.hypot(q[0] - a[0] - dx * t, q[1] - a[1] - dy * t));
+  }
+  return en;
+}
+
+/** Yapı tabanları ve arsalar (genel metre düzleminde), ızgarada */
+class Engeller {
+  private kafes = new Map<string, Array<{ sahip: string; h: Nokta[] }>>();
+  private static ADIM = 40;
+  ekle(sahip: string, h: Nokta[]) {
+    const k = kutuSiniri(h), A = Engeller.ADIM;
+    for (let x = Math.floor(k.x0 / A); x <= Math.floor(k.x1 / A); x++) for (let y = Math.floor(k.y0 / A); y <= Math.floor(k.y1 / A); y++) {
+      const l = this.kafes.get(`${x}:${y}`) ?? []; l.push({ sahip, h }); this.kafes.set(`${x}:${y}`, l);
+    }
+  }
+  /** `h` başka sahibin tabanına ya da arsasına biniyor mu */
+  biner(h: Nokta[], sahip: string): boolean {
+    const k = kutuSiniri(h), A = Engeller.ADIM;
+    for (let x = Math.floor(k.x0 / A); x <= Math.floor(k.x1 / A); x++) for (let y = Math.floor(k.y0 / A); y <= Math.floor(k.y1 / A); y++) {
+      for (const e of this.kafes.get(`${x}:${y}`) ?? []) if (e.sahip !== sahip && cokgenlerBinisir(h, e.h)) return true;
+    }
+    return false;
+  }
+}
+
+/**
+ * Bahçeli evin yönü (katmanda değil burada kesinleşir ki bahçe arsası sığıyor mu
+ * bilinsin): ev modellerinin uzun kenarı x, ön +Z. Uzun kenar tabanın uzun kenarına,
+ * ön en yakın yola; taban kareye yakınsa dört yönden yola en çok bakan.
+ */
+function evYonu(kutu: { u: Nokta; a: number; b: number }, yol?: Nokta): { ex: Nokta; en: number; boy: number } {
+  const dik: Nokta = [-kutu.u[1], kutu.u[0]];
+  const ana = kutu.a >= kutu.b ? { ex: kutu.u, en: kutu.a, boy: kutu.b } : { ex: dik, en: kutu.b, boy: kutu.a };
+  if (!yol) return ana;
+  const kare = Math.abs(kutu.a - kutu.b) <= 0.15 * Math.max(kutu.a, kutu.b);
+  const ters = (o: { ex: Nokta; en: number; boy: number }) => ({ ...o, ex: [-o.ex[0], -o.ex[1]] as Nokta });
+  const yan = { ex: ana.ex === kutu.u ? dik : kutu.u, en: ana.boy, boy: ana.en };
+  const adaylar = [ana, ters(ana), ...(kare ? [yan, ters(yan)] : [])];
+  const bakis = (e: Nokta) => -e[1] * yol[0] + e[0] * yol[1];
+  return adaylar.reduce((a, b) => (bakis(b.ex) > bakis(a.ex) ? b : a));
+}
+
+/** Hazır arsa modelinde bina yerinin merkezi (katalog: x 0..13, ön -y; modelde z -9..0) */
+const BINA_YERI = { x: 6.5, z: -4.5 };
+
 /** Evin bahçesi; `ev` evin metre tabanı, `arsa` arsanın metre halkası (yoksa tahmin) */
 function bahceKur(
-  id: string, ev: { c: Nokta; u: Nokta; a: number; b: number }, arsa: Nokta[] | null,
-  d: ReturnType<typeof duzlem>, yolBul: (p: Nokta) => YolNoktasi | null
+  id: string, ev: { c: Nokta; u: Nokta; a: number; b: number }, yon: { ex: Nokta }, arsa: Nokta[] | null,
+  d: ReturnType<typeof duzlem>, yolBul: (p: Nokta) => YolNoktasi | null, engeller: Engeller
 ): Bahce | undefined {
   if (!BAHCE.kenar.length && !BAHCE.arsalar.length) return undefined;
-  const kutu = arsa ? tabanKutusu(arsa) : null;
-  const uzun = kutu ? Math.max(kutu.a, kutu.b) : 0, kisa = kutu ? Math.min(kutu.a, kutu.b) : 0;
-  if (BAHCE.arsalar.length && kisa >= ARSA_KISA && uzun >= ARSA_UZUN) {
-    return { arsa: sabitSec(`${id}#arsa`, BAHCE.arsalar), parcalar: [] };
+  // Hazır arsa modeli yalnız evin kendi arsasına bütünüyle sığıyorsa (taşmaz, kırpılmaz)
+  if (arsa) {
+    const ez: Nokta = [-yon.ex[1], yon.ex[0]];
+    const yerle = (x: number, z: number): Nokta => [
+      ev.c[0] + yon.ex[0] * (x - BINA_YERI.x) + ez[0] * (z - BINA_YERI.z),
+      ev.c[1] + yon.ex[1] * (x - BINA_YERI.x) + ez[1] * (z - BINA_YERI.z)
+    ];
+    const adaylar = BAHCE.arsalar.filter(a => {
+      const o = ARSA_OLCULERI[a];
+      if (!o) return false;
+      const koseler = [yerle(o.x0, o.z0), yerle(o.x1, o.z0), yerle(o.x1, o.z1), yerle(o.x0, o.z1)];
+      return koseler.every(q => icinde(q, arsa) && kenaraUzaklik(q, arsa) >= 0.2);
+    });
+    if (adaylar.length) return { arsa: sabitSec(`${id}#arsa`, adaylar), arsaAdaylari: adaylar, parcalar: [] };
   }
   if (!BAHCE.kenar.length) return undefined;
-  // Arsa yoksa evin çevresine pay bırakan dikdörtgen
+  // Arsa yoksa evin çevresine pay bırakan dikdörtgen; komşu taban ve arsalara binerse
+  // küçültülür, en küçüğü de binerse bahçe konmaz
   const k = (s: number, t: number): Nokta => [ev.c[0] + ev.u[0] * s - ev.u[1] * t, ev.c[1] + ev.u[1] * s + ev.u[0] * t];
-  const ea = ev.a / 2 + ARSA_PAYI, eb = ev.b / 2 + ARSA_PAYI;
-  const halka = arsa ?? [k(-ea, -eb), k(ea, -eb), k(ea, eb), k(-ea, eb)];
+  let halka: Nokta[] | null = arsa;
+  if (!halka) {
+    for (const pay of ARSA_PAYLARI) {
+      const ea = ev.a / 2 + pay, eb = ev.b / 2 + pay;
+      const aday = [k(-ea, -eb), k(ea, -eb), k(ea, eb), k(-ea, eb)];
+      const g = aday.map(q => genel(d.derece(q)));
+      if (!engeller.biner(g, id)) { halka = aday; engeller.ekle(id, g); break; }
+    }
+    if (!halka) return undefined;
+  }
   const r = rastgele(id);
   const kenarModeli = sabitSec(`${id}#kenar`, BAHCE.kenar);
   const parcalar: BahceParcasi[] = [];
@@ -233,21 +344,26 @@ function bahceKur(
     const p = halka[i], q = halka[(i + 1) % halka.length];
     const l = Math.hypot(q[0] - p[0], q[1] - p[1]);
     if (l < 0.3) continue;
-    const ex: Nokta = [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
-    const nokta = (s: number) => d.derece([p[0] + ex[0] * s, p[1] + ex[1] * s]);
+    let ex: Nokta = [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
+    // Duvarın kalınlığı (modelin -Z yanı) arsanın içine düşsün, komşuya taşmasın
+    const orta: Nokta = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+    const ice = icinde([orta[0] + ex[1] * 0.4, orta[1] - ex[0] * 0.4], halka);
+    const bas: Nokta = ice ? p : q;
+    if (!ice) ex = [-ex[0], -ex[1]];
+    const nokta = (s: number) => d.derece([bas[0] + ex[0] * s, bas[1] + ex[1] * s]);
     // Kapı aralığı [k0, k1]
     const kapili = i === kapiKenari && BAHCE.kapi.length > 0;
     const k0 = kapili ? l / 2 - KAPI / 2 : Infinity, k1 = kapili ? l / 2 + KAPI / 2 : -Infinity;
-    if (kapili) parcalar.push({ dosya: sabitSec(`${id}#kapi`, BAHCE.kapi), merkez: nokta(k0), ex });
+    if (kapili) parcalar.push({ dosya: sabitSec(`${id}#kapi`, BAHCE.kapi), merkez: nokta(k0), ex, tur: 'kapi' });
     for (let s = 0; s < l - 0.05; s += KENAR) {
       const son = Math.min(l, s + KENAR);
       if (son > k0 && s < k1) {
         // Kapının iki yanını doldur
-        if (s < k0 - 0.3) parcalar.push({ dosya: kenarModeli, merkez: nokta(s), ex, sx: (k0 - s) / KENAR });
-        if (son > k1 + 0.3) parcalar.push({ dosya: kenarModeli, merkez: nokta(k1), ex, sx: (son - k1) / KENAR });
+        if (s < k0 - 0.3) parcalar.push({ dosya: kenarModeli, merkez: nokta(s), ex, sx: (k0 - s) / KENAR, tur: 'kenar' });
+        if (son > k1 + 0.3) parcalar.push({ dosya: kenarModeli, merkez: nokta(k1), ex, sx: (son - k1) / KENAR, tur: 'kenar' });
         continue;
       }
-      parcalar.push({ dosya: kenarModeli, merkez: nokta(s), ex, ...(son - s < KENAR - 0.01 ? { sx: (son - s) / KENAR } : {}) });
+      parcalar.push({ dosya: kenarModeli, merkez: nokta(s), ex, tur: 'kenar', ...(son - s < KENAR - 0.01 ? { sx: (son - s) / KENAR } : {}) });
     }
   }
 
@@ -262,7 +378,8 @@ function bahceKur(
     for (let deneme = 0; deneme < 24; deneme++) {
       const s = (r() - 0.5) * (ak.a - 3), t = (r() - 0.5) * (ak.b - 3);
       const q: Nokta = [ak.c[0] + ak.u[0] * s - ak.u[1] * t, ak.c[1] + ak.u[1] * s + ak.u[0] * t];
-      if (!icinde(q, halka) || evIcinde(q) || konan.some(o => Math.hypot(o[0] - q[0], o[1] - q[1]) < 3.2)) continue;
+      // Parça (en büyüğü ~3,3 m) arsanın kenarından taşmasın
+      if (!icinde(q, halka) || kenaraUzaklik(q, halka) < IC_PAY || evIcinde(q) || konan.some(o => Math.hypot(o[0] - q[0], o[1] - q[1]) < 3.2)) continue;
       konan.push(q);
       return q;
     }
@@ -290,6 +407,14 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
   for (const f of geo.features) {
     const p = (f.properties ?? {}) as Record<string, unknown>;
     if (p.katman === 'zemin' && p.ev && f.geometry?.type === 'Polygon') arsalar.set(String(p.ev), acik(f.geometry.coordinates[0] as Nokta[]));
+  }
+  // Çakışma denetimi: bütün yapı tabanları ve ev arsaları
+  const engeller = new Engeller();
+  for (const f of geo.features) {
+    const p = (f.properties ?? {}) as Record<string, unknown>;
+    if (f.geometry?.type !== 'Polygon' || !(p.katman === 'bina' || (p.katman === 'zemin' && p.ev))) continue;
+    const sahip = String(p.katman === 'zemin' ? p.ev : p.id ?? '');
+    engeller.ekle(sahip, acik(f.geometry.coordinates[0] as Nokta[]).map(genel));
   }
   let yolBul: ((p: Nokta) => YolNoktasi | null) | null = null;
   const yol = (p: Nokta) => (yolBul ??= yolIzgarasi(geo))(p);
@@ -376,18 +501,20 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
       continue;
     }
 
-    let bahce: Bahce | undefined;
-    const arsa = arsalar.get(id);
-    if (katman === 'bina' && BAHCELI.includes(tur)) bahce = bahceKur(id, kutu, arsa ? arsa.map(d.metre) : null, d, yol);
     // Önü en yakın yola baksın (40 m içinde yol varsa)
     let yolYonu: Nokta | undefined;
     if (katman === 'bina') {
       const y = yol(d.derece(kutu.c));
       if (y && y.u > 0.5 && y.u < 40) { const q = d.metre(y.nokta); const l = Math.hypot(q[0] - kutu.c[0], q[1] - kutu.c[1]); yolYonu = [(q[0] - kutu.c[0]) / l, (q[1] - kutu.c[1]) / l]; }
     }
+    let bahce: Bahce | undefined;
+    const arsa = arsalar.get(id);
+    const bahceli = katman === 'bina' && BAHCELI.includes(tur);
+    const yon = bahceli ? evYonu(kutu, yolYonu) : null;
+    if (bahceli && yon) bahce = bahceKur(id, kutu, yon, arsa ? arsa.map(d.metre) : null, d, yol, engeller);
     cikti.push({
       id, dosya: sabitSec(id, liste), gizle: katman === 'bina' ? [id] : [],
-      merkez: d.derece(kutu.c), ex: kutu.u, en: kutu.a, boy: kutu.b,
+      merkez: d.derece(kutu.c), ...(yon ? { ex: yon.ex, en: yon.en, boy: yon.boy, yonSabit: true } : { ex: kutu.u, en: kutu.a, boy: kutu.b }),
       ornekler: [d.derece(kutu.c), ...koseler], ...(bahce ? { bahce } : {}), ...(yolYonu ? { yol: yolYonu } : {}),
       ...(katman === 'bina' && liste.length > 1 ? { cesit: { grup: tur, liste } } : {})
     });
@@ -405,14 +532,22 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
         let c: Nokta | null = null;
         for (let t = 0; t < l; t += 0.5) {
           const k: Nokta = [q[0] + yan[0] * t, q[1] + yan[1] * t];
-          if (icinde(k, am)) { c = [k[0] + yan[0] * 1.4, k[1] + yan[1] * 1.4]; break; }
+          if (icinde(k, am)) { c = [k[0] + yan[0] * 2, k[1] + yan[1] * 2]; break; }
         }
         // Evin tabanına binmesin
         const evde = (k: Nokta) => {
           const x = k[0] - kutu.c[0], yy = k[1] - kutu.c[1];
           return Math.abs(x * kutu.u[0] + yy * kutu.u[1]) < kutu.a / 2 + 2.5 && Math.abs(-x * kutu.u[1] + yy * kutu.u[0]) < kutu.b / 2 + 2.5;
         };
-        if (c && icinde(c, am) && !evde(c)) {
+        // Arabanın iki ucu ve yanları da arsanın içinde kalsın (komşuya taşmasın)
+        const ucu = (k: Nokta, s: number): Nokta => [k[0] + y.yon[0] * s, k[1] + y.yon[1] * s];
+        const sigar = (k: Nokta) => [ucu(k, 2.5), ucu(k, -2.5), k].every(q => icinde(q, am) && kenaraUzaklik(q, am) >= 1.0);
+        // Sığmazsa yol boyunca biraz kaydırılarak denenir
+        if (c) {
+          const c0 = c;
+          c = [0, 3, -3, 6, -6].map(k => ucu(c0, k)).find(k => sigar(k) && !evde(k)) ?? null;
+        }
+        if (c) {
           const ters = sans(`${id}#yon`) < 0.5 ? -1 : 1;
           cikti.push({ id: `${id}#araba`, dosya: sabitSec(`${id}#arac`, ARACLAR), gizle: [], merkez: d.derece(c),
             ex: [y.yon[0] * ters, y.yon[1] * ters], en: 0, boy: 0, ornekler: [d.derece(c)], esik: 18 });
@@ -553,8 +688,8 @@ function cesitle(cikti: ModelYeri[]) {
   // Yapılar
   sec(cikti.filter(y => y.cesit).map(y => ({ id: y.id, p: metre(y.merkez), grup: y.cesit!.grup, liste: y.cesit!.liste, ata: (d: string) => { y.dosya = d; } })));
   // Bahçe arsaları
-  sec(cikti.filter(y => y.bahce?.arsa && BAHCE.arsalar.length > 1).map(y => ({
-    id: `${y.id}#arsa`, p: metre(y.merkez), grup: 'arsa', liste: BAHCE.arsalar, ata: (d: string) => { y.bahce!.arsa = d; }
+  sec(cikti.filter(y => y.bahce?.arsa && (y.bahce.arsaAdaylari?.length ?? 0) > 1).map(y => ({
+    id: `${y.id}#arsa`, p: metre(y.merkez), grup: 'arsa', liste: y.bahce!.arsaAdaylari!, ata: (d: string) => { y.bahce!.arsa = d; }
   })));
   // Bahçe kenarı (duvar / çit türü)
   sec(cikti.filter(y => y.bahce?.kenar && BAHCE.kenar.length > 1).map(y => ({
@@ -564,5 +699,40 @@ function cesitle(cikti: ModelYeri[]) {
       y.bahce!.kenar = d;
     }
   })));
-  for (const y of cikti) delete y.cesit;
+  for (const y of cikti) { delete y.cesit; if (y.bahce) delete y.bahce.arsaAdaylari; }
+  duvarlariTekle(cikti);
+}
+
+/**
+ * Tek duvar (Kemal, 4 Kasım): iki komşu arsanın ortak kenarına iki kez duvar dizilmez.
+ * Kimlik sırasıyla dolaşılır; önce bütün kapılar yerleşir, sonra her kenar parçası,
+ * ortası daha önce konmuş paralel bir parçaya 0,9 m'den yakınsa atlanır.
+ */
+function duvarlariTekle(cikti: ModelYeri[]) {
+  const evler = cikti.filter(y => y.bahce?.parcalar.some(p => p.tur)).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const kafes = new Map<string, Array<{ o: Nokta; e: Nokta }>>();
+  const anahtar = (x: number, y: number) => `${Math.floor(x)}:${Math.floor(y)}`;
+  const orta = (p: BahceParcasi): Nokta => {
+    const g = genel(p.merkez), l = p.tur === 'kapi' ? KAPI : KENAR * (p.sx ?? 1);
+    return [g[0] + (p.ex[0] * l) / 2, g[1] + (p.ex[1] * l) / 2];
+  };
+  const var_ = (o: Nokta, e: Nokta) => {
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+      for (const q of kafes.get(anahtar(o[0] + i, o[1] + j)) ?? []) {
+        if (Math.hypot(q.o[0] - o[0], q.o[1] - o[1]) < 0.9 && Math.abs(q.e[0] * e[0] + q.e[1] * e[1]) > 0.9) return true;
+      }
+    }
+    return false;
+  };
+  const koy = (o: Nokta, e: Nokta) => { const k = anahtar(o[0], o[1]); const l = kafes.get(k) ?? []; l.push({ o, e }); kafes.set(k, l); };
+  for (const y of evler) for (const p of y.bahce!.parcalar) if (p.tur === 'kapi') koy(orta(p), p.ex);
+  for (const y of evler) {
+    y.bahce!.parcalar = y.bahce!.parcalar.filter(p => {
+      if (p.tur !== 'kenar') return true;
+      const o = orta(p);
+      if (var_(o, p.ex)) return false;
+      koy(o, p.ex);
+      return true;
+    });
+  }
 }
