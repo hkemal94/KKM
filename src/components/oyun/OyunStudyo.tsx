@@ -20,6 +20,7 @@ import { AjansaGonder } from './AjansaGonder';
 import { OyunAssetleri } from './OyunAssetleri';
 import { yasayanGorseller } from '../../lib/silinenGorseller';
 import { EkranGoruntuleri } from './EkranGoruntuleri';
+import { BinaPlanlari } from './BinaPlanlari';
 import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
 import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
@@ -39,6 +40,8 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
  *                        belgesi canlı okunur (14 Ekim; yalnız gösterir)
  *   Yol haritası       — aynı depodan docs/yol-haritasi.md: neredeyiz,
  *                        paketler, bitenler, sırada olanlar (14 Ekim gece)
+ *   Bina ve kat planları — yalnız The Imperial Kemskoy'da: ajansın 3B
+ *                        taslakları (dış görünüş, kat planları, iç görünümler; 4 Kasım)
  *   Ayarlar            — oyunun ayar dosyası (fiyat, süre, oran); değişiklik
  *                        Kemal'in düğmesiyle oyunun deposunda PR olur (15 Ekim)
  *
@@ -47,7 +50,7 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
  * ayrı depoda; oraya yalnız Ayarlar sekmesinin "Oyuna gönder" düğmesi PR açar.
  */
 
-type Sekme = 'kunye' | 'surec' | 'mekanik' | 'ekran' | 'asset' | 'depo' | 'yol' | 'ayar';
+type Sekme = 'kunye' | 'surec' | 'mekanik' | 'ekran' | 'asset' | 'bina' | 'depo' | 'yol' | 'ayar';
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string };
 
 export interface OyunStudyoProps {
@@ -214,6 +217,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   const fikirler = useMemo(() => oyunFikirleri(items, oyunId), [items, oyunId]);
   const oyunKaydi = items.find(i => i.id === oyunId && !i.archived);
   const depo = String((oyunKaydi?.metadata as { depo?: string } | undefined)?.depo || '').trim();
+  /** The Imperial Kemskoy: deposu ya da adı "imperial" içeriyorsa bina ve kat planları sekmesi çıkar */
+  const imperial = /imperial/i.test(depo) || /imperial/i.test(oyunAdi(oyunKaydi) || '');
   const gddSayim = useMemo(() => {
     let dolu = 0, toplam = 0;
     for (const [bolumId, secimler] of Object.entries(GDD_SECIMLERI)) {
@@ -229,7 +234,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
     if (!depo && (sekme === 'ekran' || sekme === 'asset' || sekme === 'depo' || sekme === 'yol' || sekme === 'ayar')) {
       setSekme('kunye');
     }
-  }, [depo, sekme]);
+    if (!imperial && sekme === 'bina') setSekme('kunye');
+  }, [depo, sekme, imperial]);
   const [pdfDurumu, setPdfDurumu] = useState<'' | 'hazirlaniyor' | 'hata'>('');
   const [yeniIs, setYeniIs] = useState<string | null>(null);
   const [yeniBaslik, setYeniBaslik] = useState('');
@@ -537,7 +543,9 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
           { id: 'kunye', label: 'Künye ve konsept' },
           { id: 'surec', label: `Adım adım süreç · ${yapilan}/${ADIM_SIRASI.length}` },
           { id: 'mekanik', label: `Mekanikler ve notlar${fikirler.length ? ` · ${fikirler.length}` : ''}` },
-          ...(depo ? [{ id: 'ekran', label: 'Ekran görüntüleri' }, { id: 'asset', label: 'Assetler' }, { id: 'depo', label: 'Depodaki belge' }, { id: 'yol', label: 'Yol haritası' }, { id: 'ayar', label: 'Ayarlar' }] : [])
+          ...(depo ? [{ id: 'ekran', label: 'Ekran görüntüleri' }, { id: 'asset', label: 'Assetler' }] : []),
+          ...(imperial ? [{ id: 'bina', label: 'Bina ve kat planları' }] : []),
+          ...(depo ? [{ id: 'depo', label: 'Depodaki belge' }, { id: 'yol', label: 'Yol haritası' }, { id: 'ayar', label: 'Ayarlar' }] : [])
         ]}
         aktifId={sekme}
         onSec={id => { if (!ayrilmayaIzinVar()) return; setSekme(id as Sekme); window.scrollTo({ top: 0 }); }}
@@ -549,6 +557,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       {sekme === 'ekran' && depo && <EkranGoruntuleri depo={depo} />}
       {sekme === 'asset' && depo && <OyunAssetleri depo={depo} kaynak={oyunAdi(oyunKaydi) || 'Oyun'} ajan="oyun-gelistiricisi"
         bosYazi="Bu oyunun deposunda görsel ya da 3B model dosyası yok; çizimleri kodla yapılıyor olabilir." />}
+      {sekme === 'bina' && imperial && <BinaPlanlari />}
       {sekme === 'depo' && depo && <DepoBelgesi key="depo" depo={depo} />}
       {sekme === 'yol' && depo && <DepoBelgesi key="yol" depo={depo} yollar={YOL_HARITASI_YOLLARI}
         bulunamazsa="Bu oyunun deposunda henüz yol haritası yok (docs/yol-haritasi.md). Oyun ajanı yazınca burada görünür." />}
