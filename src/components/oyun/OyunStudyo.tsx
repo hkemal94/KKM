@@ -18,6 +18,7 @@ import { DepoBelgesi } from './DepoBelgesi';
 import { OyunAyarlari } from './OyunAyarlari';
 import { AjansaGonder } from './AjansaGonder';
 import { OyunAssetleri } from './OyunAssetleri';
+import { BinaGalerisi } from './BinaGalerisi';
 import { yasayanGorseller } from '../../lib/silinenGorseller';
 import { EkranGoruntuleri } from './EkranGoruntuleri';
 import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
@@ -127,7 +128,9 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
     <div className="space-y-5 animate-in fade-in duration-300">
       <button type="button" onClick={() => { setOrtakAcik(false); window.scrollTo({ top: 0 }); }} className={DUGME_BOS}><ArrowLeft className="w-3.5 h-3.5" /> Oyunlar</button>
       <SayfaBasi baslik="Ortak assetler" />
-      <p className={`text-[13px] ${IKINCIL}`}>Birden fazla yerde kullanılanlar: Kems Company imzası ve logolar, yazı tipi. Binalar ortak bina kütüphanesiyle buraya gelecek; KKM haritası ve oyunlar aynı modelleri kullanacak.</p>
+      <p className={`text-[13px] ${IKINCIL}`}>Birden fazla yerde kullanılanlar: ortak bina kütüphanesi (KKM haritası ve oyunlar aynı modelleri kullanır), Kems Company imzası ve logolar, yazı tipi.</p>
+      <BinaGalerisi />
+      <BolumBasligi baslik="Ajansın ortak klasörü" />
       <OyunAssetleri depo={ORTAK_DEPO} kok={ORTAK_KLASOR} gizli kaynak="Ortak" ajan="merch-tasarimcisi" bosYazi="Ortak klasörde henüz görsel yok." />
     </div>
   );
@@ -159,7 +162,7 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
         <span className="w-12 h-12 rounded-xl bg-[#0E1C4F] dark:bg-[#2C3C72] flex items-center justify-center shrink-0"><Layers className="w-6 h-6 text-[#F26B6F]" /></span>
         <span className="flex-1 min-w-0">
           <span className={`block text-[16px] font-bold ${YAZI}`}>Ortak assetler</span>
-          <span className={`block text-[13px] ${IKINCIL}`}>Birden fazla oyunda ve haritada kullanılanlar: logolar, imza, yazı tipi; binalar yakında</span>
+          <span className={`block text-[13px] ${IKINCIL}`}>Birden fazla oyunda ve haritada kullanılanlar: 3B bina kütüphanesi, logolar, imza, yazı tipi</span>
         </span>
         <ArrowRight className={`w-5 h-5 shrink-0 ${IKINCIL}`} />
       </button>

@@ -1,0 +1,100 @@
+{
+  "aciklama": "Ortak bina kütüphanesi (Kemal, 2 Kasım): KKM haritası kutu yerine bu modelleri, oyunlar uygun olanları kullanır. Yerleştirme KKM'de ve oyun depolarında ayrı PR'la. Modeller taslak; Kemal'in onayı asset panosunda.",
+  "olcu": "metre; glb, Y yukarı",
+  "kurucu_turleri": {
+    "ev": [
+      "binalar/tas-ev.glb",
+      "binalar/cumbali-ev.glb",
+      "binalar/balikci-evi.glb",
+      "binalar/ev-tas-tek-katli.glb",
+      "binalar/ev-tas-dis-merdivenli.glb",
+      "binalar/ev-tas-balkonlu.glb",
+      "binalar/ev-badana-dam.glb",
+      "binalar/ev-badana-iki-katli.glb",
+      "binalar/ev-badana-kirma.glb",
+      "binalar/ev-karisik-cumbali.glb",
+      "binalar/ev-karisik-uzun.glb",
+      "binalar/ev-uc-katli.glb"
+    ],
+    "dukkanli": [
+      "binalar/dukkanli-ev.glb",
+      "binalar/kahvehane-meyhane.glb",
+      "binalar/dukkanli-ev-iki-dukkan.glb",
+      "binalar/dukkanli-ev-tas.glb"
+    ],
+    "ciftlik": [
+      "binalar/koy-evi-dis-merdivenli.glb",
+      "binalar/ciftlik-evi-tas.glb"
+    ],
+    "kamu": [
+      "binalar/belediye.glb",
+      "binalar/karakol.glb",
+      "binalar/okul.glb"
+    ],
+    "meydan": [
+      "sokak/merkez-meydani.glb"
+    ],
+    "cesme": [
+      "sokak/cesme.glb"
+    ],
+    "agac": [
+      "bitkiler/cinar-yasli.glb",
+      "bitkiler/zeytin-yasli.glb",
+      "bitkiler/servi.glb",
+      "bitkiler/fistik-cami.glb",
+      "bitkiler/incir.glb",
+      "bitkiler/limon.glb"
+    ],
+    "bag": [
+      "sokak/bahce-duvari.glb",
+      "bitkiler/zeytin-yasli.glb",
+      "bitkiler/lavanta.glb"
+    ],
+    "yazlik": [
+      "binalar/yazlik.glb",
+      "binalar/yazlik-iki-katli.glb"
+    ],
+    "depo": [
+      "binalar/depo-atolye.glb"
+    ],
+    "saha": [
+      "binalar/futbol-sahasi.glb"
+    ],
+    "tribun": [
+      "binalar/tribun.glb"
+    ]
+  },
+  "ozel": {
+    "the-imperial-kemskoy": "binalar/the-imperial-kemskoy.glb",
+    "haydarpasa-buyuk-olcek": "binalar/haydarpasa-buyuk-olcek.glb"
+  },
+  "sokak": {
+    "karo_m": 10,
+    "parcalar": [
+      "sokak/yol-duz.glb",
+      "sokak/yol-kose.glb",
+      "sokak/yol-t.glb",
+      "sokak/yol-kavsak.glb",
+      "sokak/merdivenli-sokak.glb"
+    ],
+    "dosemeler": [
+      "sokak/sokak-lambasi.glb",
+      "sokak/bank.glb",
+      "sokak/pazar-tezgahi.glb"
+    ]
+  },
+  "eksik": [],
+  "bitkiler": [
+    "bitkiler/begonvil.glb",
+    "bitkiler/cali-maki.glb",
+    "bitkiler/cali-zakkum.glb",
+    "bitkiler/cinar-yasli.glb",
+    "bitkiler/fistik-cami.glb",
+    "bitkiler/incir.glb",
+    "bitkiler/lavanta.glb",
+    "bitkiler/limon.glb",
+    "bitkiler/servi.glb",
+    "bitkiler/zeytin-yasli.glb"
+  ],
+  "not_cesitlilik": "Aynı türde birden çok model var; harita yapı kimliğine göre sabit seçer (tek tip olmasın, Kemal 4 Kasım)."
+}

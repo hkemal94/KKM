@@ -15,19 +15,21 @@ import type { Item } from '../types';
  * Katmanlar yalnız görünümdür; seçim bu tarayıcıda hatırlanır, kayda yazılmaz.
  */
 
-export type KatmanId = 'yollar' | 'binalar' | 'doga' | 'adlar' | 'notlar' | 'maddeler';
+export type KatmanId = 'yollar' | 'binalar' | 'modeller' | 'doga' | 'adlar' | 'notlar' | 'maddeler';
 export type KatmanAyari = Record<KatmanId, boolean>;
 
 export const KATMANLAR: Array<{ id: KatmanId; ad: string }> = [
   { id: 'yollar', ad: 'Yollar' },
   { id: 'binalar', ad: 'Yapılar' },
+  // 3B modeller (4 Kasım): yakın bakışta kutu yerine bina modeli
+  { id: 'modeller', ad: '3B modeller' },
   { id: 'doga', ad: 'Doğa' },
   { id: 'adlar', ad: 'Adlar' },
   { id: 'notlar', ad: 'Notlar' },
   { id: 'maddeler', ad: 'Madde işaretleri' }
 ];
 
-export const KATMANLAR_ACIK: KatmanAyari = { yollar: true, binalar: true, doga: true, adlar: true, notlar: true, maddeler: true };
+export const KATMANLAR_ACIK: KatmanAyari = { yollar: true, binalar: true, modeller: true, doga: true, adlar: true, notlar: true, maddeler: true };
 const ANAHTAR = 'kems_harita_katman';
 
 export function katmanOku(): KatmanAyari {
