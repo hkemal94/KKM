@@ -132,7 +132,7 @@ export function kurucuKatmani(features: Feature[], belge: KurucuBelge): Feature[
     cikti.push(zemin
       ? {
           type: 'Feature',
-          properties: { katman: 'zemin', id, ad: '', tur: zemin, kurucu: true },
+          properties: { katman: 'zemin', id, ad: '', tur: zemin, kurucuTur: b.tur, kurucu: true },
           geometry: { type: 'Polygon', coordinates: [kapali] }
         }
       : {

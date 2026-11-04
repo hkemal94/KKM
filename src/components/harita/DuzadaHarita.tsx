@@ -22,6 +22,11 @@ import { KATMANLAR_ACIK, type KatmanAyari, type HaritaIsareti } from '../../lib/
 import type { Item } from '../../types';
 import { evMi, evNumarasi, evSakinleri, oturanlariOku } from '../../lib/evSakinleri';
 import { kisiMi } from '../../lib/adaSakini';
+import { modelYerleri } from './modelYerlesimi';
+import type { ModelKatmani } from './modelKatmani';
+
+/** 3B modellerin göründüğü yakınlık (`modelKatmani.ts`'teki eşikle aynı; o dosya yalnız gerekince iner) */
+const MODEL_ESIGI = 17;
 
 /**
  * Düzada haritası.
@@ -187,6 +192,9 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
   const [oturanYaziliyor, setOturanYaziliyor] = useState(false);
   const [oturanHata, setOturanHata] = useState<string | null>(null);
   const doluRef = useRef<Set<string>>(new Set());
+  /** 3B model katmanı (yakın bakışta ilk gerekince kurulur) ve kutusu gizlenen yapılar */
+  const modelKatmani = useRef<ModelKatmani | null>(null);
+  const modelliRef = useRef<Set<string>>(new Set());
   // Kurulumda da düzenli hâlle başlasın (harita bir kez kuruluyor)
   const ilkDuzen = useRef(duzen ?? null);
   const ilkBakis = useRef(bakis ?? null);
@@ -645,6 +653,8 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
         source: src,
         filter: ['==', ['get', 'katman'], 'bina'],
         paint: {
+          // 3B modeli görünen yapının gölgesi de gizlenir (yalnız görünüm durumu)
+          'fill-opacity': ['case', ['boolean', ['feature-state', 'model'], false], 0, 1],
           'fill-color': 'rgba(90, 76, 56, 0.30)',
           'fill-translate': [3, 3],
           'fill-translate-anchor': 'viewport'
@@ -681,7 +691,9 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
           // Arazi kotu `taban` özelliğinde saklı ve künyede rakım olarak
           // gösteriliyor; buraya taşınırsa yapı havada asılı kalıyor.
           'fill-extrusion-base': 0,
-          'fill-extrusion-height': ['get', 'yukseklik'],
+          // 3B modeli görünen yapı (4 Kasım): kutu yere yatar, model onun yerinde durur;
+          // taban tıklanabilir kalır
+          'fill-extrusion-height': ['case', ['boolean', ['feature-state', 'model'], false], 0, ['get', 'yukseklik']],
           'fill-extrusion-opacity': 0.97,
           'fill-extrusion-vertical-gradient': true
         }
@@ -918,6 +930,44 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
       for (const id of kimlikler) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', acik ? 'visible' : 'none');
     }
   }, [hazir, katman.yollar, katman.binalar, katman.doga]);
+
+  // 3B modeller (4 Kasım): yakın bakışta ve "3B modeller" açıkken kutu yerine model.
+  // three.js ve modeller yalnız ilk kez yaklaşılınca iner; kayda hiçbir şey yazılmaz.
+  const modellerAcik = !vitrin && katman.modeller && katman.binalar;
+  const yakin = zoom >= MODEL_ESIGI;
+  const yerler = useMemo(() => (cizili ? modelYerleri(cizili) : null), [cizili]);
+  const yerlerRef = useRef(yerler);
+  useEffect(() => {
+    yerlerRef.current = yerler;
+    if (yerler) modelKatmani.current?.veri(yerler);
+  }, [yerler]);
+  useEffect(() => {
+    const map = harita.current;
+    if (!map || !hazir) return;
+    if (modelKatmani.current) { modelKatmani.current.ayarla(modellerAcik); return; }
+    if (!modellerAcik || !yakin) return;
+    let iptal = false;
+    import('./modelKatmani').then(({ ModelKatmani }) => {
+      if (iptal || modelKatmani.current || harita.current !== map) return;
+      const k = new ModelKatmani(kimlikler => {
+        // Modeli görünen yapıların kutusu, gölgesi ve çatısı gizlenir
+        const yeni = new Set(kimlikler);
+        for (const id of modelliRef.current) if (!yeni.has(id)) map.setFeatureState({ source: 'duzada', id }, { model: false });
+        for (const id of yeni) if (!modelliRef.current.has(id)) map.setFeatureState({ source: 'duzada', id }, { model: true });
+        modelliRef.current = yeni;
+        if (map.getLayer('ayrinti-yapi')) {
+          map.setFilter('ayrinti-yapi', yeni.size
+            ? ['all', ['!=', ['get', 'tur'], 'agac'], ['!', ['in', ['coalesce', ['get', 'bina'], ''], ['literal', [...yeni]]]]]
+            : ['!=', ['get', 'tur'], 'agac']);
+        }
+      });
+      modelKatmani.current = k;
+      map.addLayer(k);
+      k.veri(yerlerRef.current ?? modelYerleri(duzeniUygula(DUZADA_GEO, ilkDuzen.current)));
+      k.ayarla(modellerAcik);
+    }).catch(e => console.error('[harita] 3B model katmanı açılamadı', e));
+    return () => { iptal = true; };
+  }, [hazir, modellerAcik, yakin]);
 
   // İşaretler (5. gece): not hardal, madde kiremit iğne; basınca seçim kartı
   useEffect(() => {
