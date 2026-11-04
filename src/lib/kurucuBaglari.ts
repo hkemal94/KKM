@@ -12,9 +12,15 @@ import { AJANS_DEPOSU } from './ajansDeposu';
  *   madde vardı.
  * - Aynı maddeye bağlı iki görünen yapı varsa yalnız uyarı (`ciftBaglar`);
  *   hiçbir şey silinmez.
- * - Ajans `kkm/harita-onerileri.json`'a oturan önerisi (ev → kişi) yazar;
- *   Kurucu "Ajansın önerileri"nde gösterir, Kemal "Uygula" deyince öneri
- *   taslağa girer, Kurucu'nun normal kaydıyla kaydedilir. Dosya yalnız okunur.
+ * - Ajans `kkm/harita-onerileri.json`'a öneri yazar; Kurucu "Ajansın
+ *   önerileri"nde gösterir, Kemal "Uygula" deyince öneri taslağa girer,
+ *   Kurucu'nun normal kaydıyla kaydedilir. Dosya yalnız okunur. İki tür var:
+ *     oturan: {"id","tur":"oturan","ev":"<ev kimliği>","kisi":"<kişi maddesi>","not"?}
+ *     bag:    {"id","tur":"bag","hedef":"<yol ya da yapı kimliği>","hedefTur":"yol"|"yapi",
+ *              "madde":"<madde kimliği>","maddeAd"?:"…","isaretKaldir"?:true,"not"?}
+ *   bag: madde Kurucu'daki yola ya da yapıya bağlanır (taslak.baglar, yapı
+ *   bağıyla aynı yer); isaretKaldir varsa maddenin kırmızı işareti de kalkar
+ *   (işaretin "Kaldır"ıyla aynı iş, maddenin kaydına yazar; yalnız düğmeyle).
  *
  * Bu dosyadaki işler saftır (ağ yalnız `haritaOnerileriniOku`'da).
  */
@@ -78,7 +84,14 @@ export function ciftBaglar(
 export const HARITA_ONERILERI_YOLU = 'kkm/harita-onerileri.json';
 
 export interface OturanOnerisi { id: string; tur: 'oturan'; ev: string; kisi: string; not?: string }
-export interface HaritaOnerileri { olusturuldu: string; oneriler: OturanOnerisi[] }
+export interface BagOnerisi {
+  id: string; tur: 'bag'; hedef: string; hedefTur: 'yol' | 'yapi'; madde: string;
+  maddeAd?: string; isaretKaldir: boolean; not?: string
+}
+export type HaritaOnerisi = OturanOnerisi | BagOnerisi;
+export interface HaritaOnerileri { olusturuldu: string; oneriler: HaritaOnerisi[] }
+
+const yazi = (x: unknown) => (typeof x === 'string' && x.trim() ? x.trim() : '');
 
 /** Dosyadaki geçerli biçimdeki öneriler (bilinmeyen tür ve eksik alan düşer) */
 export function onerileriAyikla(ham: unknown): HaritaOnerileri {
@@ -86,16 +99,26 @@ export function onerileriAyikla(ham: unknown): HaritaOnerileri {
   const liste = Array.isArray(o.oneriler) ? o.oneriler : [];
   return {
     olusturuldu: typeof o.olusturuldu === 'string' ? o.olusturuldu : '',
-    oneriler: liste.flatMap((x): OturanOnerisi[] => {
+    oneriler: liste.flatMap((x): HaritaOnerisi[] => {
       const r = (x && typeof x === 'object' ? x : {}) as Record<string, unknown>;
+      const not = yazi(r.not);
+      if (r.tur === 'bag') {
+        const hedef = yazi(r.hedef), madde = yazi(r.madde);
+        if (!hedef || !madde || (r.hedefTur !== 'yol' && r.hedefTur !== 'yapi')) return [];
+        const maddeAd = yazi(r.maddeAd);
+        return [{
+          id: yazi(r.id) || `bag:${hedef}:${madde}`, tur: 'bag', hedef, hedefTur: r.hedefTur, madde,
+          isaretKaldir: r.isaretKaldir === true, ...(maddeAd ? { maddeAd } : {}), ...(not ? { not } : {})
+        }];
+      }
       if (r.tur !== 'oturan' || typeof r.ev !== 'string' || typeof r.kisi !== 'string' || !r.ev || !r.kisi) return [];
       const id = typeof r.id === 'string' && r.id ? r.id : `${r.ev}:${r.kisi}`;
-      return [{ id, tur: 'oturan', ev: r.ev, kisi: r.kisi, ...(typeof r.not === 'string' && r.not.trim() ? { not: r.not.trim() } : {}) }];
+      return [{ id, tur: 'oturan', ev: r.ev, kisi: r.kisi, ...(not ? { not } : {}) }];
     })
   };
 }
 
-export type OneriDurumu = 'bekliyor' | 'uygulandi' | 'ev-yok' | 'kisi-yok';
+export type OneriDurumu = 'bekliyor' | 'uygulandi' | 'ev-yok' | 'kisi-yok' | 'hedef-yok' | 'madde-yok';
 
 /** Önerinin taslağa göre durumu */
 export function oneriDurumu(t: KurucuTaslak, o: OturanOnerisi, evler: Set<string>, kisiler: Set<string>): OneriDurumu {
@@ -103,6 +126,34 @@ export function oneriDurumu(t: KurucuTaslak, o: OturanOnerisi, evler: Set<string
   if (!evler.has(o.ev)) return 'ev-yok';
   if (!kisiler.has(o.kisi)) return 'kisi-yok';
   return 'bekliyor';
+}
+
+/**
+ * Bağ önerisinin durumu. `hedefler`: görünen yol ve yapı kimlikleri;
+ * `mevcutBag`: hedefin bugünkü maddesi (taslaktaki bağ ya da haritadan gelen);
+ * `isaretli`: işareti hâlâ duran madde kimlikleri. Bağ kurulmuş ve (istendiyse)
+ * işaret kalkmışsa uygulanmıştır; bağ kurulmuş ama işaret durursa yeniden
+ * uygulanabilir (yalnız işaret kalkar).
+ */
+export function bagOnerisiDurumu(
+  o: BagOnerisi, hedefler: Set<string>, mevcutBag: (id: string) => string | undefined,
+  maddeler: Set<string>, isaretli: Set<string>
+): OneriDurumu {
+  const bagli = mevcutBag(o.hedef) === o.madde;
+  if (bagli && !(o.isaretKaldir && isaretli.has(o.madde))) return 'uygulandi';
+  if (!maddeler.has(o.madde)) return 'madde-yok';
+  if (!bagli && !hedefler.has(o.hedef)) return 'hedef-yok';
+  return 'bekliyor';
+}
+
+/** Bağ önerilerini taslağa yazar (yapı kartındaki "bağla" ile aynı iş); kurulu bağ değişmez */
+export function bagOnerileriniUygula(t: KurucuTaslak, oneriler: BagOnerisi[]): KurucuTaslak {
+  let bg = t.baglar;
+  for (const x of oneriler) {
+    if (bg[x.hedef] === x.madde) continue;
+    bg = { ...bg, [x.hedef]: x.madde };
+  }
+  return bg === t.baglar ? t : { ...t, baglar: bg };
 }
 
 /** Önerileri taslağa ekler (Kurucu'nun "oturan ekle"siyle aynı iş); zaten eklenmiş olan değişmez */

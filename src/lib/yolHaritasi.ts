@@ -167,6 +167,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Harita ve Kurucu\'da "Haritayı ajansa gönder" (Kurucu düzeni ajansa gider, ajanlar okur); İlham ve kaynaklar\'da "Pinterest\'e bak" (Kems\'e istek düşer)' },
   { id: 'toplu-4-kasim', paket: 'K', kimde: 'claude', nereden: '4 Kasım · Kemal', bitti: true,
     ad: 'Toplu düzen: Eksikler sadeleşti (galeri kartı kalktı, "Denetle" küçük satır, görsel isteyenler tek satır); Kurucu\'da kaldırılan yapının bağı da kalkar, artık bağ uyarısı ve "Ajansın önerileri"; harita gönderimine notlar, işaretler, son gönderim, büyük dosyada bölme; yeni madde kararı; "İlhamı ajansa gönder"' },
+  { id: 'kurucu-bag-onerisi', paket: 'K', kimde: 'claude', nereden: '4 Kasım · Kemal', bitti: true,
+    ad: 'Kurucu → "Ajansın önerileri"nde bağ önerisi: madde haritadaki bir yola ya da yapıya bağlanır, Uygula deyince kırmızı işareti de kalkar; seçili yolun kartında "Viki maddesi"' },
   { id: 'ajansa-gonder', paket: 'K', kimde: 'claude', nereden: '21 Ekim · ajans', bitti: true,
     ad: '"Ajansa gönder" düğmesi: fikir kutusundaki fikir ajansa gider, CEO dağıtır' },
   { id: 'onay-ayarlari', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

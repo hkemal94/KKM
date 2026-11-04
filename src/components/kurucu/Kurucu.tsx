@@ -11,8 +11,8 @@ import { kurucuEvMi } from '../../lib/evSakinleri';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import {
   bagsizGizle, artikBaglar, artiklariTemizle, ciftBaglar,
-  haritaOnerileriniOku, oneriDurumu, onerileriUygula, yokSay, yokSayilanlar,
-  type HaritaOnerileri, type OneriDurumu
+  haritaOnerileriniOku, oneriDurumu, onerileriUygula, bagOnerisiDurumu, bagOnerileriniUygula, yokSay, yokSayilanlar,
+  type HaritaOnerileri, type HaritaOnerisi, type OneriDurumu, type BagOnerisi, type OturanOnerisi
 } from '../../lib/kurucuBaglari';
 import { kisiMi } from '../../lib/adaSakini';
 import { DUZADA_GEO } from '../../data/duzadaGeo';
@@ -541,16 +541,39 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
     if (!ajansOnerileri) return [];
     const evler = new Set<string>(binalar.filter(b => !b.gizli && kurucuEvMi(b.tur, b.haritaTur)).map(b => b.id));
     const kisiler = new Set<string>(evKisileri.map(i => i.id));
+    // Bağ önerisi (4 Kasım): hedef görünen bir yol ya da yapı olmalı
+    const hedefler = new Set<string>([
+      ...yollar.filter(y => !y.gizli).map(y => y.id), ...binalar.filter(b => !b.gizli).map(b => b.id),
+      ...ozelYapilar.filter(o => !o.gizli).map(o => o.id)
+    ]);
+    const haritadan = new Map(binalar.map(b => [b.id, b.wikiId ?? undefined]));
+    const mevcutBag = (id: string) => taslak.baglar[id] ?? haritadan.get(id);
+    const maddeler = new Set<string>(items.filter(i => !i.archived).map(i => i.id));
+    const isaretli = new Set<string>(items.filter(i => i.metadata?.haritaIsareti).map(i => i.id));
     return ajansOnerileri.oneriler
       .filter(o => !yokSayilan.has(o.id))
-      .map(o => ({ o, durum: oneriDurumu(taslak, o, evler, kisiler) as OneriDurumu }))
+      .map(o => ({ o, durum: (o.tur === 'bag' ? bagOnerisiDurumu(o, hedefler, mevcutBag, maddeler, isaretli) : oneriDurumu(taslak, o, evler, kisiler)) as OneriDurumu }))
       .filter(x => x.durum !== 'uygulandi');
-  }, [ajansOnerileri, yokSayilan, binalar, evKisileri, taslak]);
+  }, [ajansOnerileri, yokSayilan, binalar, evKisileri, taslak, yollar, ozelYapilar, items]);
   const uygulanabilir = oneriSatirlari.filter(x => x.durum === 'bekliyor').map(x => x.o);
-  const oneriUygula = (liste: typeof uygulanabilir) => {
+  /**
+   * Uygula yalnız düğmeyle: oturan ve bağ taslağa girer (Kurucu her zamanki
+   * gibi kaydeder); bağ önerisi isaretKaldir diyorsa maddenin işareti
+   * "Kaldır"daki gibi kaldırılır. Uygulanan öneri listeden kendiliğinden düşer.
+   */
+  const oneriUygula = async (liste: HaritaOnerisi[]) => {
     if (!liste.length) return;
-    degistir(t => onerileriUygula(t, liste));
-    setUyari(liste.length === 1 ? 'Öneri taslağa eklendi; Kurucu her zamanki gibi kaydeder.' : `${liste.length} öneri taslağa eklendi; Kurucu her zamanki gibi kaydeder.`);
+    const oturan = liste.filter((o): o is OturanOnerisi => o.tur === 'oturan');
+    const bag = liste.filter((o): o is BagOnerisi => o.tur === 'bag');
+    degistir(t => bagOnerileriniUygula(onerileriUygula(t, oturan), bag));
+    const silinecek = [...new Set(bag.filter(o => o.isaretKaldir).map(o => o.madde))]
+      .map(id => items.find(i => i.id === id))
+      .filter((i): i is NonNullable<typeof i> => !!i && !!i.metadata?.haritaIsareti);
+    const metin = liste.length === 1 ? 'Öneri taslağa eklendi; Kurucu her zamanki gibi kaydeder.' : `${liste.length} öneri taslağa eklendi; Kurucu her zamanki gibi kaydeder.`;
+    if (silinecek.length && onUpdateItem) {
+      await isaretYaz(async () => { for (const m of silinecek) await onUpdateItem(maddeIsareti(m, null)); },
+        `${metin} ${silinecek.length === 1 ? 'Maddenin işareti' : `${silinecek.length} maddenin işareti`} kaldırıldı.`);
+    } else setUyari(metin);
   };
 
   /** Mıknatısın yakalama yarıçapı (metre): parmakta geniş, farede dar */
@@ -2022,6 +2045,7 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
               {seciliYol.duzenli && (
                 <button type="button" onClick={() => yolSifirla(seciliYol.id)} className={`${dugmeBos} mt-1.5 w-full`}>Eski hâline döndür</button>
               )}
+              {!seciliYol.gizli && maddeBagi(seciliYol.id)}
               <button type="button" onClick={() => gizleGoster(seciliYol)}
                 className="mt-2 w-full py-1.5 rounded-lg border border-[#F26B6F] text-[#D6484C] dark:text-[#F26B6F] text-[11px] cursor-pointer hover:bg-[#F26B6F]/10">
                 {seciliYol.gizli ? 'Geri getir' : 'Bütün yolu kaldır'}
@@ -2290,24 +2314,33 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
           {denetimAcik && oneriSatirlari.length > 0 && (
             <div className="space-y-1">
               <div className="text-[11px] font-semibold">Ajansın önerileri</div>
-              <p className="text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">Uygula taslağa ekler; Kurucu her zamanki gibi kaydeder, haritaya sen işlersin.</p>
+              <p className="text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">Uygula taslağa ekler; Kurucu her zamanki gibi kaydeder, haritaya sen işlersin. Bağ önerisinde maddenin kırmızı işareti de kalkar.</p>
               <ul className="space-y-1">
                 {oneriSatirlari.map(({ o, durum: d }) => (
                   <li key={o.id} className="rounded-lg border border-[#CFC5B4]/70 dark:border-[#2C3C72] px-2 py-1.5">
                     <div className="flex items-start gap-1.5">
-                      <span className="flex-1 min-w-0">
-                        <b>{maddeAdi(o.kisi) ?? 'kişi bulunamadı'}</b> → <button type="button" onClick={() => { setArac('sec'); setSecili(o.ev); }} className="underline cursor-pointer hover:text-[#F26B6F]">evi göster</button>
-                        {o.not && <span className="block text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">{o.not}</span>}
-                        {d !== 'bekliyor' && <span className="block text-[10.5px] text-[#D6484C] dark:text-[#F26B6F]">{d === 'ev-yok' ? 'Ev Kurucu\'da yok ya da kaldırılmış.' : 'Kişi vikide bulunamadı.'}</span>}
-                      </span>
-                      {d === 'bekliyor' && <button type="button" onClick={() => oneriUygula([o])} className={dugmeBos}>Uygula</button>}
+                      {o.tur === 'bag' ? (
+                        <span className="flex-1 min-w-0">
+                          <b>{maddeAdi(o.madde) ?? o.maddeAd ?? 'madde bulunamadı'}</b> → <button type="button" onClick={() => { setArac('sec'); setSecili(o.hedefTur === 'yapi' ? lider(o.hedef) : o.hedef); }} className="underline cursor-pointer hover:text-[#F26B6F]">{o.hedefTur === 'yol' ? 'yolu göster' : 'yapıyı göster'}</button>
+                          <span className="block text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">{o.hedefTur === 'yol' ? 'Yola bağla' : 'Yapıya bağla'}{o.isaretKaldir ? ', kırmızı işaretini kaldır' : ''}</span>
+                          {o.not && <span className="block text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">{o.not}</span>}
+                          {d !== 'bekliyor' && <span className="block text-[10.5px] text-[#D6484C] dark:text-[#F26B6F]">{d === 'hedef-yok' ? (o.hedefTur === 'yol' ? 'Yol Kurucu\'da yok ya da kaldırılmış.' : 'Yapı Kurucu\'da yok ya da kaldırılmış.') : 'Madde vikide bulunamadı.'}</span>}
+                        </span>
+                      ) : (
+                        <span className="flex-1 min-w-0">
+                          <b>{maddeAdi(o.kisi) ?? 'kişi bulunamadı'}</b> → <button type="button" onClick={() => { setArac('sec'); setSecili(o.ev); }} className="underline cursor-pointer hover:text-[#F26B6F]">evi göster</button>
+                          {o.not && <span className="block text-[10.5px] text-[#6A5E4C] dark:text-[#A6B0C9]">{o.not}</span>}
+                          {d !== 'bekliyor' && <span className="block text-[10.5px] text-[#D6484C] dark:text-[#F26B6F]">{d === 'ev-yok' ? 'Ev Kurucu\'da yok ya da kaldırılmış.' : 'Kişi vikide bulunamadı.'}</span>}
+                        </span>
+                      )}
+                      {d === 'bekliyor' && <button type="button" disabled={isaretYaziliyor} onClick={() => void oneriUygula([o])} className={dugmeBos}>Uygula</button>}
                       <button type="button" onClick={() => setYokSayilan(yokSay([o.id]))} className={dugmeBos} title="Yok say (bu tarayıcıda gizlenir)"><X className="w-3 h-3" /></button>
                     </div>
                   </li>
                 ))}
               </ul>
               <div className="flex flex-wrap gap-1.5">
-                {uygulanabilir.length > 1 && <button type="button" onClick={() => oneriUygula(uygulanabilir)} className={dugmeBos}><Check className="w-3 h-3" />Hepsini uygula ({uygulanabilir.length})</button>}
+                {uygulanabilir.length > 1 && <button type="button" disabled={isaretYaziliyor} onClick={() => void oneriUygula(uygulanabilir)} className={dugmeBos}><Check className="w-3 h-3" />Hepsini uygula ({uygulanabilir.length})</button>}
                 <button type="button" onClick={() => setYokSayilan(yokSay(oneriSatirlari.map(x => x.o.id)))} className={dugmeBos}>Hepsini yok say</button>
               </div>
             </div>
