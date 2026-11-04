@@ -28,11 +28,27 @@ const oval = (rx: number, ry: number, n = 20): Nokta[] =>
     return [Math.cos(a) * rx, Math.sin(a) * ry] as Nokta;
   });
 
+/** Ön köşedeki ø 8 m kulenin dış yayı (metre, SVG: y aşağı). a0 → a1 derece, y yukarı ölçülür. */
+const kuleYayi = (cx: number, cy: number, a0: number, a1: number, n = 8): Nokta[] =>
+  Array.from({ length: n - 1 }, (_, i) => {
+    const a = ((a0 + ((a1 - a0) * (i + 1)) / n) * Math.PI) / 180;
+    return [cx + 4 * Math.cos(a), cy - 4 * Math.sin(a)] as Nokta;
+  });
+
 export const ANIT_KALIPLARI: AnitKalibi[] = [
   {
-    id: 'otel', ad: 'Otel (avlulu)', kat: 4,
-    aciklama: 'U biçimli, ortada avlu — 70 × 42 m',
-    koseler: [[-35, -21], [35, -21], [35, 21], [21, 21], [21, -5], [-21, -5], [-21, 21], [-35, 21]]
+    // Kemal'in ölçüleri (4 Kasım): ön cephe 48 m, kollar 48 m, kol ve ön blok 12 m, avlu 24 × 36 m,
+    // önde 10 m orta çıkma (1,2 m), ön köşelerde ø 8 m kule; giriş katı + 4 oda katı.
+    // Ön (deniz) güneyde: SVG'de y aşağı, avlunun ağzı kuzeyde.
+    id: 'otel', ad: 'Otel (avlulu)', kat: 5,
+    aciklama: 'U biçimli, ortada avlu, ön köşelerde kule — 48 × 48 m',
+    koseler: [
+      [-5, 24], [-5, 25.2], [5, 25.2], [5, 24], [20, 24],
+      ...kuleYayi(24, 24, 180, 450),
+      [24, 20], [24, -24], [12, -24], [12, 12], [-12, 12], [-12, -24], [-24, -24], [-24, 20],
+      ...kuleYayi(-24, 24, 90, 360),
+      [-20, 24]
+    ]
   },
   {
     id: 'fener', ad: 'Fener', kat: 6,
