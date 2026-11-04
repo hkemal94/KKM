@@ -5,6 +5,7 @@ import type { Item } from '../../types';
 import { compressImageBase64 } from '../../lib/imageCompressor';
 import type { Asama } from './OyunSureci';
 import { depoAdi } from '../../lib/depoBelgesi';
+import { yasayanGorseller } from '../../lib/silinenGorseller';
 
 /**
  * Oyunun tanıtım künyesi (Paket 5). Kemal (yapısal 1. set): oyun "bir künye
@@ -30,7 +31,8 @@ interface Props {
 export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gddToplam, onAddItem, onUpdateItem }) => {
   const kayit = items.find(i => i.id === oyunId && !i.archived);
   const meta = (kayit?.metadata || {}) as { ozet?: string; aciklama?: string; ad?: string; depo?: string };
-  const gorseller = kayit?.images || [];
+  // Depodan silinen görseller (galeri/oyun, 4 Kasım) gösterilmez
+  const gorseller = yasayanGorseller(kayit?.images);
   const [ad, setAd] = useState(meta.ad || '');
   const [ozet, setOzet] = useState(meta.ozet || '');
   const [aciklama, setAciklama] = useState(meta.aciklama || '');

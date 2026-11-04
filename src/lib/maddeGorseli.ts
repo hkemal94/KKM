@@ -1,6 +1,6 @@
 import type { Item } from '../types';
-import { ANA_MARKA_KIMLIKLERI, kurumMu } from './markaYapisi';
-import { W5_GORSELLERI, w5GorselAdresi } from './w5Gorselleri';
+import { kurumMu } from './markaYapisi';
+import { silinenGorselMi } from './silinenGorseller';
 import { basvuruMu } from './gorselBasvuru';
 import { gorselAnlik } from './gorselOnbellek';
 
@@ -17,14 +17,15 @@ import { gorselAnlik } from './gorselOnbellek';
  *      belgesinde duruyorsa (`gorsel:<id>`, 21 Ekim) bellek önbelleğinden
  *      okunur — App bağlı görselleri önceden yükler, yüklenene kadar bu adım
  *      atlanır. Çağıran ekranlar `useGorselSurumu()` ile yenilenir.
- *   4. depodaki Canva yedeği (public/galeri/canva) — W5 eşleşmesiyle
- *   5. marka kitindeki internet adresi (en son: adres ölmüş olabilir)
+ *   4. marka kitindeki internet adresi (en son: adres ölmüş olabilir)
+ * Depodaki Canva yedeği (public/galeri/canva) 4 Kasım'da silindi (Kemal:
+ * "Tamamen sil"); görseli olmayan madde resimsiz görünür.
  * Eski tohumlardaki hazır internet fotoğrafları (images içindeki http)
  * gösterilmez.
  */
 
 const gorselMi = (s: unknown): s is string =>
-  typeof s === 'string' && (s.startsWith('data:image/') || /^https?:\/\//.test(s) || s.startsWith('/'));
+  typeof s === 'string' && !silinenGorselMi(s) && (s.startsWith('data:image/') || /^https?:\/\//.test(s) || s.startsWith('/'));
 
 export function maddeGorseli(item: Item, items: Item[] = []): string | undefined {
   // SVG veriler güvenilmez: eski bir otomatik kod marka kitine açılmayan
@@ -35,7 +36,7 @@ export function maddeGorseli(item: Item, items: Item[] = []): string | undefined
 
   // Marka / kurumda birincil logo önce gelir (1 Ekim: Markalar'da "Birincil yap").
   // Depodaki logo da olabilir (8 Ekim, logo kartı: "/galeri/logolar/…")
-  const depoda = (x: unknown): x is string => typeof x === 'string' && x.startsWith('/');
+  const depoda = (x: unknown): x is string => typeof x === 'string' && x.startsWith('/') && !silinenGorselMi(x);
   if ((item.type === 'marka' || item.type === 'kulüp' || kurumMu(item))
     && (veriMi(kit?.logoBase64) || depoda(kit?.logoBase64))) return kit!.logoBase64;
 
@@ -53,19 +54,10 @@ export function maddeGorseli(item: Item, items: Item[] = []): string | undefined
   if (galeride) {
     const g = galeride.images[0];
     const adres = basvuruMu(g) ? gorselAnlik(g) : g;
-    if (adres) return adres;
+    if (adres && !silinenGorselMi(adres)) return adres;
   }
 
-  // 4. Depodaki Canva yedeği
-  const yedek = W5_GORSELLERI.find(g => {
-    if (g.hedefKimlik === 'kems') return ANA_MARKA_KIMLIKLERI.includes(item.id)
-      || (item.type === 'marka' && !kurumMu(item) && item.title.trim().toLocaleLowerCase('tr') === 'kems company');
-    if (g.hedefKimlik) return g.hedefKimlik === item.id;
-    return !!g.hedefAd && kurumMu(item) && g.hedefAd.test(item.title);
-  });
-  if (yedek) return w5GorselAdresi(yedek);
-
-  // 5. Marka kitindeki internet adresi — en son; adres ölmüş olabilir
+  // 4. Marka kitindeki internet adresi — en son; adres ölmüş olabilir
   if (gorselMi(kit?.logoBase64)) return kit!.logoBase64;
   if (gorselMi(kit?.selectedLogo)) return kit!.selectedLogo;
   return undefined;
