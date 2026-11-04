@@ -80,6 +80,11 @@ export function anahtariYaz(anahtar: string) {
   } catch { /* tarayıcı izin vermezse yalnız bu açılışta */ }
 }
 
+/** GitHub'ın reddettiği istek; `durum` HTTP kodudur (409 = dosya ya da dal bu arada değişti) */
+export class GithubHatasi extends Error {
+  constructor(public durum: number, mesaj: string) { super(mesaj); this.name = 'GithubHatasi'; }
+}
+
 /** GitHub'a anahtarla istek (Ajansa gönder de kullanır, `lib/ajansaGonder.ts`) */
 export async function github<T>(anahtar: string, yol: string, secenek: { method?: string; govde?: unknown } = {}): Promise<T> {
   const r = await fetch(`https://api.github.com${yol}`, {
@@ -94,11 +99,11 @@ export async function github<T>(anahtar: string, yol: string, secenek: { method?
     cache: 'no-store',
   });
   if (!r.ok) {
-    if (r.status === 401) throw new Error('GitHub anahtarı geçersiz ya da süresi dolmuş');
-    if (r.status === 403 || r.status === 404) throw new Error('Anahtarın bu depoya yazma izni yok (Contents ve Pull requests: Read and write)');
+    if (r.status === 401) throw new GithubHatasi(401, 'GitHub anahtarı geçersiz ya da süresi dolmuş');
+    if (r.status === 403 || r.status === 404) throw new GithubHatasi(r.status, 'Anahtarın bu depoya yazma izni yok (Contents ve Pull requests: Read and write)');
     let ayrinti = '';
     try { ayrinti = ((await r.json()) as { message?: string }).message || ''; } catch { /* boş */ }
-    throw new Error(`GitHub ${r.status}${ayrinti ? `: ${ayrinti}` : ''}`);
+    throw new GithubHatasi(r.status, `GitHub ${r.status}${ayrinti ? `: ${ayrinti}` : ''}`);
   }
   return r.json() as Promise<T>;
 }

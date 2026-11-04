@@ -1319,6 +1319,7 @@ export default function App() {
         })}
         {arti({
           yon: 'yukari',
+          onAcilinca: () => { if (acikGrup) grubuKapat(); },
           kapsayiciSinifi: 'flex-1 flex my-1.5 mx-0.5',
           tetikSinifi: 'flex-1 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] text-[#A6B0C9] cursor-pointer',
           etiket: 'Yaz'

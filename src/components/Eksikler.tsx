@@ -3,7 +3,6 @@ import { KisaListe } from './kabuk/KisaListe';
 import { ArrowRight, Bot, ChevronDown, CircleCheck } from 'lucide-react';
 import type { AreaType, Item } from '../types';
 import { TemizlikKarti, EskiAlanKarti } from './TemizlikKarti';
-import { OrtakAlanKarti } from './OrtakAlanKarti';
 import { KanonKarti } from './KanonKarti';
 import { AdDegisikligiKarti } from './AdDegisikligiKarti';
 import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
@@ -90,7 +89,6 @@ export const Eksikler: React.FC<EksiklerProps> = ({
   return (
     <div className="mb-8">
       {/* Ortak alan (1 Ekim): eski ortak alanda kayıt kaldıysa tek seferlik taşıma */}
-      {onUpdateItem && <OrtakAlanKarti items={items} onUpdateItem={onUpdateItem} />}
 
       {/* Temizlik (29 Eylül): kullanılmayan kayıtlar silinir, önce yedek */}
       {onDeleteItem && <TemizlikKarti items={items} onDeleteItem={onDeleteItem} />}
