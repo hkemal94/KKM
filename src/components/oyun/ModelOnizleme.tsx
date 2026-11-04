@@ -24,13 +24,15 @@ function cizici(): THREE.WebGLRenderer {
 
 interface Props {
   dosya: string;
+  /** Aynı sahneye, aynı başlangıç noktasıyla ikinci model (bahçe arsası + ev) */
+  ekDosya?: string;
   baslik: string;
   /** Büyük görünüm: sayfa kaymaz, parmak yalnız modeli çevirir */
   buyuk?: boolean;
   className?: string;
 }
 
-const ModelOnizleme: React.FC<Props> = ({ dosya, baslik, buyuk, className }) => {
+const ModelOnizleme: React.FC<Props> = ({ dosya, ekDosya, baslik, buyuk, className }) => {
   const tuval = useRef<HTMLCanvasElement | null>(null);
   const [gorunur, setGorunur] = useState(!!buyuk);
   const [durum, setDurum] = useState<'bekliyor' | 'yukleniyor' | 'hazir' | 'hata'>('bekliyor');
@@ -49,14 +51,16 @@ const ModelOnizleme: React.FC<Props> = ({ dosya, baslik, buyuk, className }) => 
     let iptal = false;
     let temizle = () => {};
     setDurum('yukleniyor');
-    modelYukle(dosya).then(gltf => {
+    Promise.all([modelYukle(dosya), ...(ekDosya ? [modelYukle(ekDosya)] : [])]).then(([gltf, ek]) => {
       if (iptal) return;
       const sahne = new THREE.Scene();
       sahne.add(new THREE.HemisphereLight(0xfffaf0, 0x8c7a5c, 2.2));
       const gunes = new THREE.DirectionalLight(0xffffff, 1.8);
       gunes.position.set(-4, 8, 6);
       sahne.add(gunes);
-      const model = gltf.scene.clone(true);
+      const model = new THREE.Group();
+      model.add(gltf.scene.clone(true));
+      if (ek) model.add(ek.scene.clone(true));
       sahne.add(model);
 
       const kutu = new THREE.Box3().setFromObject(model);
@@ -102,7 +106,7 @@ const ModelOnizleme: React.FC<Props> = ({ dosya, baslik, buyuk, className }) => 
       };
     }).catch(() => { if (!iptal) setDurum('hata'); });
     return () => { iptal = true; temizle(); };
-  }, [gorunur, dosya, buyuk]);
+  }, [gorunur, dosya, ekDosya, buyuk]);
 
   return (
     <div className={`relative ${className ?? ''}`}>

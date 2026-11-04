@@ -66,7 +66,8 @@
   },
   "ozel": {
     "the-imperial-kemskoy": "binalar/the-imperial-kemskoy.glb",
-    "haydarpasa-buyuk-olcek": "binalar/haydarpasa-buyuk-olcek.glb"
+    "haydarpasa-buyuk-olcek": "binalar/haydarpasa-buyuk-olcek.glb",
+    "deniz-feneri": "deniz/deniz-feneri.glb"
   },
   "sokak": {
     "karo_m": 10,
@@ -96,5 +97,156 @@
     "bitkiler/servi.glb",
     "bitkiler/zeytin-yasli.glb"
   ],
-  "not_cesitlilik": "Aynı türde birden çok model var; harita yapı kimliğine göre sabit seçer (tek tip olmasın, Kemal 4 Kasım)."
+  "not_cesitlilik": "Aynı türde birden çok model var; harita yapı kimliğine göre sabit seçer (tek tip olmasın, Kemal 4 Kasım).",
+  "bahce": {
+    "aciklama": "Bütün evler bahçeli (Kemal, 4 Kasım). Bahçe arsaları binasız: her ev her arsaya oturur (8 arsa x 17 ev). Arsalar 23-33 m geniş, 25-34 m derin. Ayrıca modüler parçalar: kenar 2 m, kapı, iç parçalar; arsası farklı ölçüde olan evler için harita bunları dizer.",
+    "kenar": [
+      "bahce/bahce-ahsap-cit-2m.glb",
+      "bahce/bahce-badana-duvar-2m.glb",
+      "bahce/bahce-tas-duvar-2m.glb",
+      "bahce/bahce-yesil-cit-2m.glb"
+    ],
+    "kapi": [
+      "bahce/bahce-kapisi-ahsap.glb",
+      "bahce/bahce-kapisi-asmali.glb",
+      "bahce/bahce-kapisi-demir.glb"
+    ],
+    "ic": [
+      "bahce/camasir-ipi.glb",
+      "bahce/cardak-asmali.glb",
+      "bahce/kuyu.glb",
+      "bahce/odun-yigini.glb",
+      "bahce/oturma-kosesi.glb",
+      "bahce/sebze-tarhi.glb",
+      "bahce/tavuk-kumesi.glb"
+    ],
+    "bitki": [
+      "bitkiler/zeytin-yasli.glb",
+      "bitkiler/limon.glb",
+      "bitkiler/incir.glb",
+      "bitkiler/servi.glb",
+      "bitkiler/cali-zakkum.glb",
+      "bitkiler/cali-maki.glb",
+      "bitkiler/lavanta.glb"
+    ],
+    "arsalar": [
+      "bahce/bahce-arsasi-avlulu.glb",
+      "bahce/bahce-arsasi-camli.glb",
+      "bahce/bahce-arsasi-cardakli.glb",
+      "bahce/bahce-arsasi-ciftlik.glb",
+      "bahce/bahce-arsasi-kose.glb",
+      "bahce/bahce-arsasi-sebzeli.glb",
+      "bahce/bahce-arsasi-servili.glb",
+      "bahce/bahce-arsasi-zeytinli.glb"
+    ],
+    "bina_yeri": {
+      "x": [
+        0,
+        13
+      ],
+      "y": [
+        0,
+        9
+      ],
+      "not": "Her bahçe arsasında bina yeri x 0..13, y 0..9 (ön -y). Evler bu köşeden kurulur (en büyük ev 12 x 8), yani herhangi bir ev herhangi bir arsaya aynı başlangıç noktasıyla konur: kombinasyon = arsa + ev (Kemal, 4 Kasım)."
+    }
+  },
+  "kaliplar": {
+    "otel": "binalar/the-imperial-kemskoy.glb",
+    "fener": "deniz/deniz-feneri.glb"
+  },
+  "deniz": {
+    "aciklama": "Künye: Deniz Feneri 19. yy, Liman'ın kuzeybatı ucunda, yanında bekçi evi. Liman: mendirek, yat iskeleleri (marina yok), çekek yeri, arabalı feribot, yolcu motoru, deniz taksisi, sahil güvenlik; büyük balıkçı tekneleri Liman'da, küçükler İskele'de.",
+    "liman": [
+      "deniz/cekek-yeri.glb",
+      "deniz/feribot-rampasi.glb",
+      "deniz/mendirek-duz.glb",
+      "deniz/mendirek-ucu.glb",
+      "deniz/rihtim.glb",
+      "deniz/yat-iskelesi.glb"
+    ],
+    "iskele": [
+      "deniz/ahsap-iskele-t.glb",
+      "deniz/ahsap-iskele-duz.glb"
+    ],
+    "tekneler": [
+      "deniz/arabali-feribot.glb",
+      "deniz/balikci-teknesi.glb",
+      "deniz/deniz-taksisi.glb",
+      "deniz/girgir-teknesi.glb",
+      "deniz/sahil-guvenlik-botu.glb",
+      "deniz/sandal.glb",
+      "deniz/yelkenli.glb",
+      "deniz/yolcu-motoru.glb"
+    ]
+  },
+  "araclar": [
+    "araclar/bisiklet.glb",
+    "araclar/dolmus.glb",
+    "araclar/hatchback.glb",
+    "araclar/motosiklet.glb",
+    "araclar/pikap.glb",
+    "araclar/sedan.glb",
+    "araclar/taksi.glb",
+    "araclar/traktor.glb"
+  ],
+  "renkli": {
+    "deniz/balikci-teknesi.glb": [
+      "deniz/balikci-teknesi-beyaz-kirmizi.glb",
+      "deniz/balikci-teknesi-beyaz-mavi.glb",
+      "deniz/balikci-teknesi-mavi.glb",
+      "deniz/balikci-teknesi-yesil.glb"
+    ],
+    "deniz/girgir-teknesi.glb": [
+      "deniz/girgir-teknesi-beyaz.glb",
+      "deniz/girgir-teknesi-mavi.glb",
+      "deniz/girgir-teknesi-yesil.glb"
+    ],
+    "deniz/sandal.glb": [
+      "deniz/sandal-beyaz-mavi.glb",
+      "deniz/sandal-mavi.glb",
+      "deniz/sandal-sari.glb",
+      "deniz/sandal-yesil.glb"
+    ],
+    "araclar/bisiklet.glb": [
+      "araclar/bisiklet-deniz-mavisi.glb",
+      "araclar/bisiklet-hardal.glb",
+      "araclar/bisiklet-kiremit.glb",
+      "araclar/bisiklet-yesil.glb"
+    ],
+    "araclar/dolmus.glb": [
+      "araclar/dolmus-beyaz.glb"
+    ],
+    "araclar/hatchback.glb": [
+      "araclar/hatchback-beyaz.glb",
+      "araclar/hatchback-bordo.glb",
+      "araclar/hatchback-deniz-mavisi.glb",
+      "araclar/hatchback-hardal.glb",
+      "araclar/hatchback-zeytin.glb"
+    ],
+    "araclar/motosiklet.glb": [
+      "araclar/motosiklet-kiremit.glb",
+      "araclar/motosiklet-lacivert.glb",
+      "araclar/motosiklet-zeytin.glb"
+    ],
+    "araclar/pikap.glb": [
+      "araclar/pikap-beyaz.glb",
+      "araclar/pikap-gri.glb",
+      "araclar/pikap-kiremit.glb",
+      "araclar/pikap-yesil.glb"
+    ],
+    "araclar/sedan.glb": [
+      "araclar/sedan-beyaz.glb",
+      "araclar/sedan-deniz-mavisi.glb",
+      "araclar/sedan-kiremit.glb",
+      "araclar/sedan-krem.glb",
+      "araclar/sedan-lacivert.glb",
+      "araclar/sedan-zeytin.glb"
+    ],
+    "araclar/traktor.glb": [
+      "araclar/traktor-deniz-mavisi.glb",
+      "araclar/traktor-kiremit.glb",
+      "araclar/traktor-yesil.glb"
+    ]
+  }
 }

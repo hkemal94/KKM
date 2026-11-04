@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import * as maplibregl from 'maplibre-gl';
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
 import { modelYukle } from '../../lib/modelYukle';
-import { IMPERIAL_CAPA } from '../../lib/binaKutuphanesi';
+import { BAHCE, IMPERIAL_CAPA } from '../../lib/binaKutuphanesi';
 import type { ModelYeri } from './modelYerlesimi';
 
 /**
@@ -20,6 +20,10 @@ import type { ModelYeri } from './modelYerlesimi';
  */
 
 export const MODEL_ESIGI = 17;
+/** Bahçeler daha yakında (telefon için: yakın bakışta ekrandaki ev sayısı az) */
+export const BAHCE_ESIGI = 18;
+/** Arsa kenarına dizilen parçalar: modelin başlangıç noktası kenarın üstünde */
+const KOSEDEN = new Set([...BAHCE.kenar, ...BAHCE.kapi]);
 /** Bir anda çizilen en çok üçgen (telefon için) */
 const UCGEN_BUTCESI = 1_400_000;
 /** Bilinmeyen (henüz inmemiş) modelin tahmini üçgen sayısı */
@@ -183,15 +187,30 @@ export class ModelKatmani implements CustomLayerInterface {
       .filter(a => a.u <= yaricap)
       .sort((a, b) => a.u - b.u);
 
+    // Bütçe: önce yapılar (yakından uzağa), sonra yakın bakışta bahçeleri
+    const bahceli = map.getZoom() >= BAHCE_ESIGI;
     let toplam = 0;
     const secilen: ModelYeri[] = [];
     const indirilecek = new Set<string>();
+    const ucgen = (dosya: string, tahmin: number) => this.modeller.get(dosya)?.ucgen ?? tahmin;
     for (const { y } of adaylar) {
-      const m = this.modeller.get(y.dosya);
-      const u = m ? m.ucgen : TAHMINI_UCGEN;
+      const u = ucgen(y.dosya, TAHMINI_UCGEN);
       if (toplam + u > UCGEN_BUTCESI) continue;
       toplam += u;
-      if (m) secilen.push(y); else indirilecek.add(y.dosya);
+      if (this.modeller.has(y.dosya)) secilen.push(y); else indirilecek.add(y.dosya);
+    }
+    const bahceler = new Set<string>();
+    if (bahceli) {
+      for (const y of secilen) {
+        if (!y.bahce) continue;
+        const dosyalar = [...(y.bahce.arsa ? [y.bahce.arsa] : []), ...y.bahce.parcalar.map(p => p.dosya)];
+        const u = dosyalar.reduce((t, d) => t + ucgen(d, d === y.bahce?.arsa ? TAHMINI_UCGEN : 400), 0);
+        if (toplam + u > UCGEN_BUTCESI) continue;
+        toplam += u;
+        const eksik = dosyalar.filter(d => !this.modeller.has(d));
+        eksik.forEach(d => indirilecek.add(d));
+        if (!eksik.length) bahceler.add(y.id);
+      }
     }
     for (const dosya of indirilecek) {
       if (this.inenler.has(dosya)) continue;
@@ -210,12 +229,30 @@ export class ModelKatmani implements CustomLayerInterface {
     const matrisler = new Map<string, THREE.Matrix4[]>();
     const gizlenen: string[] = [];
     const yeniKotlar = new Map<string, number>();
-    const B = new THREE.Matrix4(), S = new THREE.Matrix4(), T = new THREE.Matrix4(), A = new THREE.Matrix4();
+    const ekle = (dosya: string, m: THREE.Matrix4) => {
+      const l = matrisler.get(dosya) ?? [];
+      l.push(m);
+      matrisler.set(dosya, l);
+    };
+    /** Yerel konum (metre) */
+    const yerel = (p: [number, number]) => {
+      const mc = maplibregl.MercatorCoordinate.fromLngLat(p, 0);
+      return [(mc.x - koken.x) / s, (mc.y - koken.y) / s] as const;
+    };
+    /** Döndürme: modelin +X'i ex yönüne (metre düzleminde x doğu, y güney) */
+    const donus = (ex: [number, number]) => new THREE.Matrix4().set(ex[0], 0, -ex[1], 0, 0, 1, 0, 0, ex[1], 0, ex[0], 0, 0, 0, 0, 1);
+    const yerlestir = (p: [number, number], kot: number, ex: [number, number], olcek: [number, number, number], capa: [number, number]) => {
+      const [px, pz] = yerel(p);
+      return new THREE.Matrix4().makeTranslation(px, kot, pz).multiply(donus(ex))
+        .multiply(new THREE.Matrix4().makeScale(...olcek)).multiply(new THREE.Matrix4().makeTranslation(-capa[0], 0, -capa[1]));
+    };
     for (const y of secilen) {
       const m = this.modeller.get(y.dosya)!;
       let ex = y.ex, sx = 1, sy = 1, sz = 1, ax = m.cx, az = m.cz;
       if (y.imperial) {
         sx = sy = sz = y.imperial.olcek; ax = 0; az = IMPERIAL_CAPA.z;
+      } else if (y.kokten) {
+        ax = 0; az = 0;
       } else if (y.en > 0 && y.boy > 0) {
         let en = y.en, boy = y.boy;
         // Modelin uzun kenarı tabanın uzun kenarına gelsin
@@ -226,17 +263,22 @@ export class ModelKatmani implements CustomLayerInterface {
       }
       const kot = this.kotBul(y);
       yeniKotlar.set(y.id, kot);
-      const mc = maplibregl.MercatorCoordinate.fromLngLat(y.merkez, 0);
-      const px = (mc.x - koken.x) / s, pz = (mc.y - koken.y) / s;
-      B.set(ex[0], 0, -ex[1], 0, 0, 1, 0, 0, ex[1], 0, ex[0], 0, 0, 0, 0, 1);
-      S.makeScale(sx, sy, sz);
-      A.makeTranslation(-ax, 0, -az);
-      T.makeTranslation(px, kot, pz);
-      const son = new THREE.Matrix4().multiplyMatrices(T, B).multiply(S).multiply(A);
-      const l = matrisler.get(y.dosya) ?? [];
-      l.push(son);
-      matrisler.set(y.dosya, l);
+      ekle(y.dosya, yerlestir(y.merkez, kot, ex, [sx, sy, sz], [ax, az]));
       gizlenen.push(...y.gizle);
+
+      // Bahçe: hazır arsa evle aynı başlangıç köşesinden; parçalar kendi yerlerinde
+      if (!y.bahce || !bahceler.has(y.id)) continue;
+      if (y.bahce.arsa) ekle(y.bahce.arsa, yerlestir(y.merkez, kot, ex, [1, 1, 1], [ax, az]));
+      for (const p of y.bahce.parcalar) {
+        const pm = this.modeller.get(p.dosya)!;
+        if (KOSEDEN.has(p.dosya)) {
+          // Kenar ve kapı: x 0'dan başlar, arsa kenarı boyunca; kendi noktasında araziye
+          const k = this.map?.queryTerrainElevation(p.merkez) ?? kot;
+          ekle(p.dosya, yerlestir(p.merkez, k, p.ex, [p.sx ?? 1, 1, 1], [0, 0]));
+        } else {
+          ekle(p.dosya, yerlestir(p.merkez, kot, p.ex, [1, 1, 1], [pm.cx, pm.cz]));
+        }
+      }
     }
     for (const [dosya, l] of matrisler) {
       const m = this.modeller.get(dosya)!;
