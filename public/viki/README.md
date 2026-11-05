@@ -26,3 +26,9 @@ Kemal'in seçim sayfasında seçtiği bina görüntüleri. Kaynak: Kems Ajans 3B
 - \`sade-meyhane.jpg\` → Sade Meyhane (yeni 3B bina)
 - \`taraftar-birahanesi.jpg\` → Taraftar Birahanesi (yeni 3B bina)
 - \`dirlik-stadi.jpg\` → Dirlik Stadı (birleşik 3B model)
+
+## 5 Kasım 2026 (silüetler)
+
+Kemal kişi ve aile maddeleri için yüz yerine silüeti seçti (Canva, Kems Ajans taslağı). Tek renk lacivert, krem zemin, yazı yok.
+- `siluet-kisi.png` → 7 kişi maddesi (hepsi aynı)
+- `siluet-aile.png` → 5 aile maddesi (hepsi aynı)
