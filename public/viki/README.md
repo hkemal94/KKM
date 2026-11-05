@@ -23,3 +23,6 @@ Kemal'in seçim sayfasında seçtiği bina görüntüleri. Kaynak: Kems Ajans 3B
 - `karakol.jpg` → Düzada Jandarma Karakolu
 - `okul.jpg` → Düzada İlkokulu
 - `kahvehane-meyhane.jpg` → Merkez Kahvehanesi
+- \`sade-meyhane.jpg\` → Sade Meyhane (yeni 3B bina)
+- \`taraftar-birahanesi.jpg\` → Taraftar Birahanesi (yeni 3B bina)
+- \`dirlik-stadi.jpg\` → Dirlik Stadı (birleşik 3B model)

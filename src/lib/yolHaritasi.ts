@@ -278,7 +278,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'gorsel-karari', paket: 'W', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
     ad: 'Ajansın kararları: yeni "Görsel" kararı (maddeye sitedeki görseli ekler); vikide künyede birden çok görsel küçük resimlerle görünür; Dondurmacı Kızlar ve Deniz Feneri taslak görselleri public/viki altında' },
   { id: 'bina-gorselleri', paket: 'W', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
-    ad: 'Viki: Belediye Binası, Jandarma Karakolu, İlkokul ve Merkez Kahvehanesi maddelerine 3B model görüntüleri (taslak görsel)' },
+    ad: 'Viki: Belediye, Jandarma Karakolu, İlkokul, Merkez Kahvehanesi, Sade Meyhane, Taraftar Birahanesi ve Dirlik Stadı maddelerine 3B model görüntüleri (taslak görsel)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
