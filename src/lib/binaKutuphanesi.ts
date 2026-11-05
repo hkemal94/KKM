@@ -179,6 +179,22 @@ export const HARITA_YAPILARI: Record<string, string> = {
 /** Haritadaki yapı türü → Kurucu türü (üreteçteki evler ve çiftlik depoları) */
 export const HARITA_TURLERI: Record<string, string> = { ev: 'ev', depo: 'depo' };
 
+/**
+ * Hazır bahçe arsalarının taban sınırı (modelin kendi ölçüsü, metre; ön +Z). Haritada
+ * arsa modeli yalnız evin kendi arsasına bütünüyle sığıyorsa konur. Ölçüler ajansın
+ * dosyalarından okundu (4 Kasım); tabloda olmayan arsa haritada kullanılmaz.
+ */
+export const ARSA_OLCULERI: Record<string, { x0: number; x1: number; z0: number; z1: number }> = {
+  'bahce/bahce-arsasi-avlulu.glb': { x0: -4.0, x1: 17.6, z0: -14.0, z1: 8.1 },
+  'bahce/bahce-arsasi-camli.glb': { x0: -7.0, x1: 20.1, z0: -16.0, z1: 9.1 },
+  'bahce/bahce-arsasi-cardakli.glb': { x0: -6.0, x1: 19.0, z0: -14.0, z1: 11.1 },
+  'bahce/bahce-arsasi-ciftlik.glb': { x0: -10.0, x1: 21.0, z0: -17.0, z1: 10.1 },
+  'bahce/bahce-arsasi-kose.glb': { x0: -9.4, x1: 17.4, z0: -18.4, z1: 8.5 },
+  'bahce/bahce-arsasi-sebzeli.glb': { x0: -8.0, x1: 19.0, z0: -17.0, z1: 9.1 },
+  'bahce/bahce-arsasi-servili.glb': { x0: -5.5, x1: 18.5, z0: -15.4, z1: 12.4 },
+  'bahce/bahce-arsasi-zeytinli.glb': { x0: -5.0, x1: 18.0, z0: -15.0, z1: 10.1 }
+};
+
 /** Park etmiş arabalar: binek araçlarının renkli dosyaları (dolmuş, taksi, traktör, iki teker değil) */
 export const ARACLAR: string[] = (KATALOG.araclar ?? []).filter(d => /sedan|hatchback|pikap/.test(d)).flatMap(renkliAc);
 

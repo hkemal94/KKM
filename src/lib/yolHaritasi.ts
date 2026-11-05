@@ -261,6 +261,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Galeri temizliği: görseller tek tek büyük gelir; Sil · Tut · Ata (kısayol S/T/A). İş bitince kaldırılacak' },
   { id: 'galeri-sil', paket: 'K', kimde: 'claude', nereden: '4 Kasım · Kemal', bitti: true,
     ad: 'Depodaki Canva yedeği (17 PNG) ve Dondurmacı Kızlar\'ın üç ekran görseli silindi (Kemal: "Tamamen sil"); resmi olmayan madde ve oyun kartı resimsiz görünür, kırık resim yok' },
+  { id: 'arsa-cakisma', paket: 'H', kimde: 'claude', nereden: '4 Kasım · Kemal', bitti: true,
+    ad: 'Harita 3B: bahçeler komşu arsaya taşmıyor; hazır arsa modeli yalnız evin arsasına sığarsa, arsasız evin bahçesi komşuya binerse küçülür, ortak kenarda tek duvar, araba ve bahçe parçaları arsanın içinde; yollara dokunulmadı' },
   { id: 'harita-3b-modeller', paket: 'H', kimde: 'claude', nereden: '4 Kasım · Kemal', bitti: true,
     ad: 'Harita 3B: yakınlaşınca kutular yerine ajansın Blender modelleri (türe göre çeşitli, evlere bahçe), Imperial ve Deniz Feneri modeli, Merkez meydanı; Kurucu otel kalıbı 48 × 48 U; Kurucu işi haritaya gömüldü; Ortak assetler\'de 3B galeri ve asset kararları; Imperial sayfasında kat planları' },
   { id: 'eksik-ajana', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
