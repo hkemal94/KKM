@@ -1,4 +1,5 @@
 import type { FeatureCollection } from 'geojson';
+import type { AraziDuzlemi } from './duzadaArazi';
 import {
   ARACLAR, ARSA_OLCULERI, BAHCE, DIRLIK_STADI, HARITA_TURLERI, HARITA_YAPILARI, IMPERIAL_CAPA, IMPERIAL_MODELI, KALIP_MODELLERI,
   KENDI_OLCUSUNDE, KURUCU_MODELLERI, MADDE_MODELLERI, TEKNELER, sabitSec, sans
@@ -635,6 +636,31 @@ function statKoy(geo: FeatureCollection, cikti: ModelYeri[]) {
     capa: { ...S.capa, olcek },
     ornekler: [d.derece(kutu.c), kose(-kutu.a / 2, -kutu.b / 2), kose(kutu.a / 2, -kutu.b / 2), kose(kutu.a / 2, kutu.b / 2), kose(-kutu.a / 2, kutu.b / 2)]
   });
+}
+
+/**
+ * Arazinin düzleneceği tabanlar (5 Kasım, Kemal: "harita binaların üzerine çıkıyor"):
+ * modeli kutusunun yerine geçen her yapı (evler, özel binalar, stat). Imperial ve
+ * kalıp modelleri (fener) kendi kayalıklarına göre çizildi, düzlenmez; ağaç, araba,
+ * tekne gibi kutusuz parçalar da düzlenmez.
+ */
+export function araziDuzlemleri(yerler: ModelYeri[]): AraziDuzlemi[] {
+  const cikti: AraziDuzlemi[] = [];
+  for (const y of yerler) {
+    if (!y.gizle.length || y.imperial || y.kokten) continue;
+    if (y.capa) {
+      const K = DIRLIK_STADI.kapsam, o = y.capa.olcek;
+      // Kapsamın ortası modelde; metre düzleminde model +X = ex, +Z = (-ex.y, ex.x)
+      const mx = ((K.x0 + K.x1) / 2 - y.capa.x) * o, mz = ((K.z0 + K.z1) / 2 - y.capa.z) * o;
+      const kx = 111_320 * Math.cos((y.merkez[1] * Math.PI) / 180);
+      const dx = mx * y.ex[0] - mz * y.ex[1], dy = mx * y.ex[1] + mz * y.ex[0];
+      cikti.push({ merkez: [y.merkez[0] + dx / kx, y.merkez[1] - dy / 111_320], ex: y.ex,
+        a: ((K.x1 - K.x0) / 2) * o, b: ((K.z1 - K.z0) / 2) * o });
+      continue;
+    }
+    if (y.en > 0 && y.boy > 0) cikti.push({ merkez: y.merkez, ex: y.ex, a: y.en / 2, b: y.boy / 2 });
+  }
+  return cikti;
 }
 
 /**

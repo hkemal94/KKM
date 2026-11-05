@@ -219,7 +219,9 @@ export const DIRLIK_STADI = {
   parcalar: ['bina_stad_tribun', 'bina_stad_cati', 'bina_stad_acik', 'bina_stad_soyunma',
     'bina_stad_isik_1', 'bina_stad_isik_2', 'bina_stad_isik_3', 'bina_stad_isik_4'],
   capa: { x: 45, z: -29 },
-  sahaEn: 90, sahaBoy: 58
+  sahaEn: 90, sahaBoy: 58,
+  /** Modelin bütün tabanı (duvar, ağaçlar dahil): altındaki arazi düzlenir */
+  kapsam: { x0: -24, x1: 112, z0: -80, z1: 24 }
 };
 
 /** Haritadaki yapı türü → Kurucu türü (üreteçteki evler ve çiftlik depoları) */

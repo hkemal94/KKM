@@ -10,7 +10,7 @@ import {
 } from './haritaStili';
 import { PusulaGulu, OlcekCubugu } from './haritaSusleri';
 import {
-  araziProtokolunuKur, araziKaynagi, ARAZI_KAYNAK, ARAZI_ABARTI
+  araziProtokolunuKur, araziKaynagi, araziKarolari, araziDuzlemleriniAyarla, yolCizgileri, ARAZI_KAYNAK, ARAZI_ABARTI
 } from './duzadaArazi';
 import { duzeniUygula, type HaritaDuzeni } from './duzenKatmani';
 import { ayrintiVerisi } from './ayrintiKatmani';
@@ -22,7 +22,7 @@ import { KATMANLAR_ACIK, type KatmanAyari, type HaritaIsareti } from '../../lib/
 import type { Item } from '../../types';
 import { evMi, evNumarasi, evSakinleri, oturanlariOku } from '../../lib/evSakinleri';
 import { kisiMi } from '../../lib/adaSakini';
-import { modelYerleri } from './modelYerlesimi';
+import { araziDuzlemleri, modelYerleri } from './modelYerlesimi';
 import type { ModelKatmani } from './modelKatmani';
 
 /** 3B modellerin göründüğü yakınlık (`modelKatmani.ts`'teki eşikle aynı; o dosya yalnız gerekince iner) */
@@ -950,7 +950,11 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
   useEffect(() => {
     yerlerRef.current = yerler;
     if (yerler) modelKatmani.current?.veri(yerler);
-  }, [yerler]);
+    // Modelli yapıların altındaki arazi düzlenir (5 Kasım); değiştiyse arazi karoları yeniden iner
+    if (yerler && cizili && !vitrin && araziDuzlemleriniAyarla(araziDuzlemleri(yerler), yolCizgileri(cizili))) {
+      harita.current?.getSource<maplibregl.RasterDEMTileSource>(ARAZI_KAYNAK)?.setTiles(araziKarolari());
+    }
+  }, [yerler, cizili, vitrin]);
   useEffect(() => {
     const map = harita.current;
     if (!map || !hazir) return;
