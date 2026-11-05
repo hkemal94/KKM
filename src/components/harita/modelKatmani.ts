@@ -263,6 +263,8 @@ export class ModelKatmani implements CustomLayerInterface {
       let ex = y.ex, sx = 1, sy = 1, sz = 1, ax = m.cx, az = m.cz;
       if (y.imperial) {
         sx = sy = sz = y.imperial.olcek; ax = 0; az = IMPERIAL_CAPA.z;
+      } else if (y.capa) {
+        sx = sy = sz = y.capa.olcek; ax = y.capa.x; az = y.capa.z;
       } else if (y.kokten) {
         ax = 0; az = 0;
       } else if (y.en > 0 && y.boy > 0) {
@@ -284,7 +286,12 @@ export class ModelKatmani implements CustomLayerInterface {
           const en_iyi = adaylar.reduce((a, b) => (bakis(b.e) > bakis(a.e) ? b : a));
           ex = en_iyi.e; en = en_iyi.en; boy = en_iyi.boy;
         }
-        sx = sinirla(en / m.w, 0.7, 1.5); sz = sinirla(boy / m.d, 0.7, 1.5); sy = sinirla(Math.sqrt(sx * sz), 0.7, 1.5);
+        if (y.tekOlcek) {
+          // Özel bina: kendi boyunda, tabana sığmazsa orantılı küçülür
+          sx = sy = sz = sinirla(Math.min(en / m.w, boy / m.d), 0.7, 1);
+        } else {
+          sx = sinirla(en / m.w, 0.7, 1.5); sz = sinirla(boy / m.d, 0.7, 1.5); sy = sinirla(Math.sqrt(sx * sz), 0.7, 1.5);
+        }
       }
       const kot = this.kotBul(y);
       yeniKotlar.set(y.id, kot);
@@ -322,11 +329,14 @@ export class ModelKatmani implements CustomLayerInterface {
     map.triggerRepaint();
   };
 
-  /** Arazi: küçük yapı en alçak noktaya oturur (havada kalmasın); Imperial ortalamaya */
+  /**
+   * Arazi: küçük yapı en alçak noktaya oturur (havada kalmasın); Imperial, stat ve
+   * özel binalar (5 Kasım) ortalamaya: büyük tabanda en alçak nokta yamaçta yapıyı gömüyordu
+   */
   private kotBul(y: ModelYeri): number {
     if (y.deniz) return DENIZ_KOTU;
     const k = y.ornekler.map(p => this.map?.queryTerrainElevation(p) ?? 0);
-    return y.imperial ? k.reduce((t, x) => t + x, 0) / k.length : Math.min(...k);
+    return y.imperial || y.capa || y.tekOlcek ? k.reduce((t, x) => t + x, 0) / k.length : Math.min(...k);
   }
 
   /**

@@ -7,7 +7,9 @@
  * panosunda. Ölçü metre, Y yukarı, ön cephe +Z.
  *
  * Başlıklar dosya adından okunur hâle getirilmiş tür adlarıdır, özel ad değildir.
- * Tek istisna The Imperial Kemskoy: oyunun ve otelin kanondaki adı.
+ * İstisnalar kanonda adı konmuş yapılar: The Imperial Kemskoy (oyunun ve otelin adı)
+ * ve 5 Kasım'da gelen özel binalar (Sade Meyhane, Taraftar Birahanesi, Dirlik Stadı,
+ * Merkez Pazarı, Liman İdare Binası, Zeytinyağı Fabrikası; adlar haritadan ve vikiden).
  */
 
 import katalogMetni from '../data/binaKatalogu.json?raw';
@@ -80,7 +82,9 @@ const BASLIKLAR: Record<string, string> = {
   'sahil-guvenlik-botu': 'Sahil güvenlik botu', sandal: 'Sandal', yelkenli: 'Yelkenli', 'yolcu-motoru': 'Yolcu motoru',
   bisiklet: 'Bisiklet', dolmus: 'Dolmuş', hatchback: 'Hatchback', motosiklet: 'Motosiklet', pikap: 'Pikap', sedan: 'Sedan',
   taksi: 'Taksi', traktor: 'Traktör',
-  yazlik: 'Yazlık', 'depo-atolye': 'Depo / atölye', 'futbol-sahasi': 'Futbol sahası', tribun: 'Tribün'
+  yazlik: 'Yazlık', 'depo-atolye': 'Depo / atölye', 'futbol-sahasi': 'Futbol sahası', tribun: 'Tribün',
+  'sade-meyhane': 'Sade Meyhane', 'taraftar-birahanesi': 'Taraftar Birahanesi', 'dirlik-stadi': 'Dirlik Stadı',
+  'merkez-pazari': 'Merkez Pazarı', 'liman-idare': 'Liman İdare Binası', 'zeytinyagi-fabrikasi': 'Zeytinyağı Fabrikası'
 };
 
 export const modelKimligi = (dosya: string) => (dosya.split('/').pop() || dosya).replace(/\.glb$/i, '');
@@ -161,11 +165,16 @@ export const BINA_MODELLERI: BinaModeli[] = (() => {
  */
 export const IMPERIAL_CAPA = { z: -12, kuleArasi: 48 };
 
+/** Katalogdaki özel model; katalogda yoksa verilen yol */
+const ozelModel = (ad: string, yedek: string) => KATALOG.ozel?.[ad] ?? yedek;
+
 /**
  * Haritadaki (üreteçten gelen) adlı yapılar → model (Kemal, 4 Kasım). Değer bir dosya
- * ya da Kurucu türü (o türün modelleri arasından seçilir). Tabloda olmayan "yapı"
- * türündeki binalar kutu kalır: Merkez Pazarı (pazar binası modeli yok), Liman İdare
- * Binası, Kemsköy Caddesi'ndeki yapılar, Zeytinyağı Fabrikası, stat soyunma odası.
+ * ya da Kurucu türü (o türün modelleri arasından seçilir). 5 Kasım (Kemal: "haritadaki
+ * kutu binalara özel bina yap"): Sade Meyhane, Merkez Pazarı, Liman İdare Binası ve
+ * Zeytinyağı Fabrikası kendi modellerini aldı. Tabloda olmayan "yapı" türündeki
+ * binalar kutu kalır: Kemsköy Caddesi'ndeki yapılar. Dirlik Stadı'nın parçaları
+ * (tribünler, soyunma, ışık direkleri) tek modelle çizilir: `DIRLIK_STADI`.
  * Haritada karakol yok.
  */
 export const HARITA_YAPILARI: Record<string, string> = {
@@ -173,7 +182,44 @@ export const HARITA_YAPILARI: Record<string, string> = {
   bina_okul: 'binalar/okul.glb',            // Düzada İlkokulu
   bina_apt1: 'dukkanli',                    // Dükkânlı Ev
   bina_apt2: 'ev',                          // Müstakil Ev
-  bina_liman_depo: 'depo'                   // Liman Deposu
+  bina_liman_depo: 'depo',                  // Liman Deposu
+  bina_meyhane: ozelModel('sade-meyhane', 'binalar/sade-meyhane.glb'),                  // Sade Meyhane
+  bina_pazar: ozelModel('merkez-pazari', 'binalar/merkez-pazari.glb'),                  // Merkez Pazarı
+  bina_liman_ofis: ozelModel('liman-idare', 'binalar/liman-idare.glb'),                 // Liman İdare Binası
+  bina_zeytinyagi: ozelModel('zeytinyagi-fabrikasi', 'binalar/zeytinyagi-fabrikasi.glb') // Zeytinyağı Fabrikası
+};
+
+/**
+ * Viki maddesine bağlı yapı → model (5 Kasım). Haritada kimliği olmayan, Kurucu'da
+ * konup maddeye bağlanan yapılar için: bağ hangi yapıdaysa model oraya gelir.
+ * Taraftar Birahanesi Kurucu'da Stadyum Mahallesi'nde (gömülü düzende bağlı).
+ */
+export const MADDE_MODELLERI: Record<string, string> = {
+  mekan_1791406293719_6ki1i: ozelModel('taraftar-birahanesi', 'binalar/taraftar-birahanesi.glb') // Taraftar Birahanesi
+};
+
+/**
+ * Kendi ölçüsünde çizilen özel binalar (5 Kasım): kutunun tabanına tek ölçekle sığar
+ * (en çok kendi boyu, gerekirse küçülür; enine boyuna ayrı gerilmez).
+ */
+export const KENDI_OLCUSUNDE = new Set<string>([...Object.values(MADDE_MODELLERI),
+  ...['bina_meyhane', 'bina_pazar', 'bina_liman_ofis', 'bina_zeytinyagi'].map(id => HARITA_YAPILARI[id])]);
+
+/**
+ * Dirlik Stadı (5 Kasım): saha, kapalı ana tribün, açık tribün, duvar, soyunma ve dört
+ * ışık direği tek modelde. Haritadaki parçaların kutuları gizlenir, model sahanın
+ * (`stad_saha`) ortasına oturur. Modelde saha x 0..90, z -58..0 (orta x 45, z -29);
+ * kapalı tribün +Z yanında. Uzun kenar sahanın uzun kenarına, kapalı tribün haritadaki
+ * ana tribünün (`bina_stad_cati`) yanına gelir. Saha haritadakinden büyükse orantılı küçülür.
+ */
+export const DIRLIK_STADI = {
+  dosya: ozelModel('dirlik-stadi', 'binalar/dirlik-stadi.glb'),
+  saha: 'stad_saha',
+  anaTribun: 'bina_stad_cati',
+  parcalar: ['bina_stad_tribun', 'bina_stad_cati', 'bina_stad_acik', 'bina_stad_soyunma',
+    'bina_stad_isik_1', 'bina_stad_isik_2', 'bina_stad_isik_3', 'bina_stad_isik_4'],
+  capa: { x: 45, z: -29 },
+  sahaEn: 90, sahaBoy: 58
 };
 
 /** Haritadaki yapı türü → Kurucu türü (üreteçteki evler ve çiftlik depoları) */

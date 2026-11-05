@@ -67,7 +67,13 @@
   "ozel": {
     "the-imperial-kemskoy": "binalar/the-imperial-kemskoy.glb",
     "haydarpasa-buyuk-olcek": "binalar/haydarpasa-buyuk-olcek.glb",
-    "deniz-feneri": "deniz/deniz-feneri.glb"
+    "deniz-feneri": "deniz/deniz-feneri.glb",
+    "sade-meyhane": "binalar/sade-meyhane.glb",
+    "taraftar-birahanesi": "binalar/taraftar-birahanesi.glb",
+    "dirlik-stadi": "binalar/dirlik-stadi.glb",
+    "merkez-pazari": "binalar/merkez-pazari.glb",
+    "liman-idare": "binalar/liman-idare.glb",
+    "zeytinyagi-fabrikasi": "binalar/zeytinyagi-fabrikasi.glb"
   },
   "sokak": {
     "karo_m": 10,

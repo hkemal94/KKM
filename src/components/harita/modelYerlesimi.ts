@@ -1,7 +1,7 @@
 import type { FeatureCollection } from 'geojson';
 import {
-  ARACLAR, ARSA_OLCULERI, BAHCE, HARITA_TURLERI, HARITA_YAPILARI, IMPERIAL_CAPA, IMPERIAL_MODELI, KALIP_MODELLERI, KURUCU_MODELLERI, TEKNELER,
-  sabitSec, sans
+  ARACLAR, ARSA_OLCULERI, BAHCE, DIRLIK_STADI, HARITA_TURLERI, HARITA_YAPILARI, IMPERIAL_CAPA, IMPERIAL_MODELI, KALIP_MODELLERI,
+  KENDI_OLCUSUNDE, KURUCU_MODELLERI, MADDE_MODELLERI, TEKNELER, sabitSec, sans
 } from '../../lib/binaKutuphanesi';
 
 /**
@@ -36,6 +36,10 @@ export interface ModelYeri {
   ornekler: Nokta[];
   /** Kalıp modeli (fener…): modelin kendi başlangıç noktası tabanın merkezine, kendi ölçüsünde */
   kokten?: boolean;
+  /** Birleşik model (Dirlik Stadı): modeldeki (x, z) noktası merkeze, tek ölçek; yön ex */
+  capa?: { x: number; z: number; olcek: number };
+  /** Özel bina: tabana tek ölçekle sığar (en çok kendi boyu), enine boyuna ayrı gerilmez */
+  tekOlcek?: boolean;
   /** Hesap sırasında: haritadaki kalıp yapısının eklerini de gizle */
   ekler?: boolean;
   /** Evin bahçesi (yalnız daha yakın bakışta çizilir) */
@@ -468,9 +472,11 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
     }
 
     // Kurucu türü; üreteçten gelen evler `tur: 'ev'` taşır
-    // Üreteçten gelen yapılar: önce ad/kimlik tablosu (Belediye → belediye…), sonra tür (ev, depo)
-    const yapi = katman === 'bina' && !kt ? HARITA_YAPILARI[id] : undefined;
-    const tur = kt || (yapi && !yapi.includes('/') ? yapi : '')
+    // Önce maddeye bağlı özel model (Taraftar Birahanesi), sonra üreteçten gelen yapıların
+    // ad/kimlik tablosu (Belediye → belediye…), sonra tür (ev, depo)
+    const maddeModeli = katman === 'bina' && p.wikiId ? MADDE_MODELLERI[String(p.wikiId)] : undefined;
+    const yapi = maddeModeli ?? (katman === 'bina' && !kt ? HARITA_YAPILARI[id] : undefined);
+    const tur = (maddeModeli ? '' : kt) || (yapi && !yapi.includes('/') ? yapi : '')
       || (katman === 'bina' && !yapi ? HARITA_TURLERI[String(p.tur ?? '')] ?? '' : '')
       || (id === MERKEZ_MEYDANI ? 'meydan' : '');
     const liste = yapi?.includes('/') ? [yapi] : KURUCU_MODELLERI[tur];
@@ -516,7 +522,8 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
       id, dosya: sabitSec(id, liste), gizle: katman === 'bina' ? [id] : [],
       merkez: d.derece(kutu.c), ...(yon ? { ex: yon.ex, en: yon.en, boy: yon.boy, yonSabit: true } : { ex: kutu.u, en: kutu.a, boy: kutu.b }),
       ornekler: [d.derece(kutu.c), ...koseler], ...(bahce ? { bahce } : {}), ...(yolYonu ? { yol: yolYonu } : {}),
-      ...(katman === 'bina' && liste.length > 1 ? { cesit: { grup: tur, liste } } : {})
+      ...(katman === 'bina' && liste.length > 1 ? { cesit: { grup: tur, liste } } : {}),
+      ...(liste.length === 1 && KENDI_OLCUSUNDE.has(liste[0]) ? { tekOlcek: true } : {})
     });
     // Park etmiş araba: her 3–4 evden birinin arsasında, yola bakan kenarın içinde, yola paralel.
     // Yollar yalnız okunur; araba yol çizgisinin üstüne konmaz.
@@ -586,9 +593,48 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
         ornekler: [d.derece(c), ...govde.halka.filter((_, i) => i % 3 === 0)] });
     }
   }
+  statKoy(geo, cikti);
   teknelerKoy(geo, cikti);
   cesitle(cikti);
   return cikti;
+}
+
+/**
+ * Dirlik Stadı (5 Kasım, Kemal: "haritadaki kutu binalara özel bina yap"): parçaların
+ * kutuları yerine tek model. Saha zemini, çevresi ve yollar olduğu gibi kalır; model
+ * yalnız sahanın üstüne oturur. Parçalardan biri yoksa (Kurucu'da silinmiş) yine
+ * kalanlar gizlenir; saha yoksa model konmaz.
+ */
+function statKoy(geo: FeatureCollection, cikti: ModelYeri[]) {
+  const S = DIRLIK_STADI;
+  const halkasi = (id: string) => {
+    const f = geo.features.find(x => (x.properties as Record<string, unknown> | null)?.id === id);
+    return f?.geometry?.type === 'Polygon' ? acik(f.geometry.coordinates[0] as Nokta[]) : null;
+  };
+  const saha = halkasi(S.saha);
+  if (!saha || saha.length < 3) return;
+  const c0 = ortalama(saha);
+  const d = duzlem(c0[1], c0[0]);
+  const kutu = tabanKutusu(saha.map(d.metre));
+  // Uzun kenar boyunca
+  let ex: Nokta = kutu.a >= kutu.b ? kutu.u : [-kutu.u[1], kutu.u[0]];
+  const uzun = Math.max(kutu.a, kutu.b), kisa = Math.min(kutu.a, kutu.b);
+  // Model +Z (kapalı tribün) metre düzleminde (-ex.y, ex.x); haritadaki ana tribünün yanına
+  const tribun = halkasi(S.anaTribun);
+  if (tribun) {
+    const t = ortalama(tribun.map(d.metre));
+    if (-ex[1] * (t[0] - kutu.c[0]) + ex[0] * (t[1] - kutu.c[1]) < 0) ex = [-ex[0], -ex[1]];
+  }
+  const olcek = Math.min(1, uzun / S.sahaEn, kisa / S.sahaBoy);
+  const kose = (s: number, t: number): Nokta => d.derece([
+    kutu.c[0] + kutu.u[0] * s - kutu.u[1] * t, kutu.c[1] + kutu.u[1] * s + kutu.u[0] * t
+  ]);
+  const varOlan = new Set(geo.features.map(f => String((f.properties as Record<string, unknown> | null)?.id ?? '')));
+  cikti.push({
+    id: 'bina_stad', dosya: S.dosya, gizle: S.parcalar.filter(p => varOlan.has(p)), merkez: d.derece(kutu.c), ex, en: 0, boy: 0,
+    capa: { ...S.capa, olcek },
+    ornekler: [d.derece(kutu.c), kose(-kutu.a / 2, -kutu.b / 2), kose(kutu.a / 2, -kutu.b / 2), kose(kutu.a / 2, kutu.b / 2), kose(-kutu.a / 2, kutu.b / 2)]
+  });
 }
 
 /**
