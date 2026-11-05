@@ -699,6 +699,16 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
         }
       });
 
+      // Seçim tabanı (5 Kasım): görünmez. Modeli görünen yapının kutusu hiç çizilmez
+      // (yamaçta yassı kutu kaide gibi görünüyordu); tıklama ve üzerine gelme bununla sürer.
+      map.addLayer({
+        id: 'bina-secim',
+        type: 'fill',
+        source: src,
+        filter: ['==', ['get', 'katman'], 'bina'],
+        paint: { 'fill-opacity': 0, 'fill-color': '#000000' }
+      });
+
       // ---- ayrıntı: çatılar, fenerin tepesi, ağaçlar (2 Ekim) ----
       // Süs katmanı; tıklanmaz. Ağaçlar yakına gelince görünür.
       map.addSource('ayrinti', { type: 'geojson', data: ayrintiVerisi(duzeniUygula(DUZADA_GEO, ilkDuzen.current)) as never });
@@ -782,14 +792,14 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
       uzerindeki = null;
     };
 
-    ['binalar', 'mahalle-dolgu'].forEach(katman => {
+    ['binalar', 'bina-secim', 'mahalle-dolgu'].forEach(katman => {
       map.on('mousemove', katman, uzerineGel);
       map.on('mouseleave', katman, uzerindenCik);
     });
 
     map.on('click', e => {
       const bulunan = map.queryRenderedFeatures(e.point, {
-        layers: ['binalar', 'mahalle-dolgu']
+        layers: ['binalar', 'bina-secim', 'mahalle-dolgu']
       });
       const f = bulunan[0];
       if (!f) {
@@ -923,7 +933,7 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
     if (!map || !hazir) return;
     const gruplar: Array<[boolean, string[]]> = [
       [katman.yollar, ['yol-kaplama', 'yol-dolgu', 'merdiven', 'toprak-yol', 'patika']],
-      [katman.binalar, ['binalar', 'bina-golge', 'ayrinti-yapi', 'zemin-plaka', 'zemin-kenar', 'bahce-duvari']],
+      [katman.binalar, ['binalar', 'bina-secim', 'bina-golge', 'ayrinti-yapi', 'zemin-plaka', 'zemin-kenar', 'bahce-duvari']],
       [katman.doga, ['ayrinti-agac']]
     ];
     for (const [acik, kimlikler] of gruplar) {
@@ -955,6 +965,12 @@ export const DuzadaHarita: React.FC<DuzadaHaritaProps> = ({ onSelect, className,
         for (const id of modelliRef.current) if (!yeni.has(id)) map.setFeatureState({ source: 'duzada', id }, { model: false });
         for (const id of yeni) if (!modelliRef.current.has(id)) map.setFeatureState({ source: 'duzada', id }, { model: true });
         modelliRef.current = yeni;
+        // Kutu (yassılmış hâli dahil) hiç çizilmez; seçim `bina-secim`le sürer
+        if (map.getLayer('binalar')) {
+          map.setFilter('binalar', yeni.size
+            ? ['all', ['==', ['get', 'katman'], 'bina'], ['!', ['in', ['coalesce', ['get', 'id'], ''], ['literal', [...yeni]]]]]
+            : ['==', ['get', 'katman'], 'bina']);
+        }
         if (map.getLayer('ayrinti-yapi')) {
           map.setFilter('ayrinti-yapi', yeni.size
             ? ['all', ['!=', ['get', 'tur'], 'agac'], ['!', ['in', ['coalesce', ['get', 'bina'], ''], ['literal', [...yeni]]]]]
