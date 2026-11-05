@@ -5,6 +5,7 @@ import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from
 import { modelYukle } from '../../lib/modelYukle';
 import { BAHCE, IMPERIAL_CAPA } from '../../lib/binaKutuphanesi';
 import type { ModelYeri } from './modelYerlesimi';
+import { ARAZI_KAYNAK } from './duzadaArazi';
 
 /**
  * Haritada 3B modeller (4 Kasım). MapLibre'nin özel katmanı, three.js ile çizer.
@@ -135,12 +136,22 @@ export class ModelKatmani implements CustomLayerInterface {
     this.renderer.autoClear = false;
     map.on('moveend', this.tazele);
     map.on('idle', this.kotDenetle);
+    map.on('sourcedata', this.araziIndi);
     this.tazele();
   }
+
+  /** Arazi karoları (setler dahil) inince kotlar yeniden okunur; art arda inişlerde bir kez */
+  private araziBekliyor = 0;
+  private araziIndi = (e: { sourceId?: string }) => {
+    if (e.sourceId !== ARAZI_KAYNAK || this.araziBekliyor) return;
+    this.araziBekliyor = window.setTimeout(() => { this.araziBekliyor = 0; this.kotDenetle(); }, 400);
+  };
 
   onRemove() {
     this.map?.off('moveend', this.tazele);
     this.map?.off('idle', this.kotDenetle);
+    this.map?.off('sourcedata', this.araziIndi);
+    if (this.araziBekliyor) { window.clearTimeout(this.araziBekliyor); this.araziBekliyor = 0; }
     this.temizle();
     this.onGizle([]);
     this.renderer?.dispose();
@@ -330,13 +341,16 @@ export class ModelKatmani implements CustomLayerInterface {
   };
 
   /**
-   * Arazi: küçük yapı en alçak noktaya oturur (havada kalmasın); Imperial, stat ve
-   * özel binalar (5 Kasım) ortalamaya: büyük tabanda en alçak nokta yamaçta yapıyı gömüyordu
+   * Arazi: setli yapılar (5 Kasım) setin kotuna, Imperial ortalamaya, öbürleri (ağaç,
+   * araba, kalıp) en alçak noktaya oturur (havada kalmasın)
    */
   private kotBul(y: ModelYeri): number {
     if (y.deniz) return DENIZ_KOTU;
+    // Setli yapı (kutusunun yerine model): arazi tabanında düz; set kotu tabanın ortasında
+    // okunur (köşesi yola taşan yapıda köşe yolun kotunu verir)
+    if (y.gizle.length && !y.imperial && !y.kokten) return this.map?.queryTerrainElevation(y.ornekler[0]) ?? 0;
     const k = y.ornekler.map(p => this.map?.queryTerrainElevation(p) ?? 0);
-    return y.imperial || y.capa || y.tekOlcek ? k.reduce((t, x) => t + x, 0) / k.length : Math.min(...k);
+    return y.imperial ? k.reduce((t, x) => t + x, 0) / k.length : Math.min(...k);
   }
 
   /**

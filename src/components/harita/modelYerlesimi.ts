@@ -41,6 +41,8 @@ export interface ModelYeri {
   capa?: { x: number; z: number; olcek: number };
   /** Özel bina: tabana tek ölçekle sığar (en çok kendi boyu), enine boyuna ayrı gerilmez */
   tekOlcek?: boolean;
+  /** Evin arsası [boylam, enlem]: arazi seti bütün arsayı kaplar */
+  arsaHalka?: Nokta[];
   /** Hesap sırasında: haritadaki kalıp yapısının eklerini de gizle */
   ekler?: boolean;
   /** Evin bahçesi (yalnız daha yakın bakışta çizilir) */
@@ -524,7 +526,8 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
       merkez: d.derece(kutu.c), ...(yon ? { ex: yon.ex, en: yon.en, boy: yon.boy, yonSabit: true } : { ex: kutu.u, en: kutu.a, boy: kutu.b }),
       ornekler: [d.derece(kutu.c), ...koseler], ...(bahce ? { bahce } : {}), ...(yolYonu ? { yol: yolYonu } : {}),
       ...(katman === 'bina' && liste.length > 1 ? { cesit: { grup: tur, liste } } : {}),
-      ...(liste.length === 1 && KENDI_OLCUSUNDE.has(liste[0]) ? { tekOlcek: true } : {})
+      ...(liste.length === 1 && KENDI_OLCUSUNDE.has(liste[0]) ? { tekOlcek: true } : {}),
+      ...(katman === 'bina' && arsa ? { arsaHalka: arsa } : {})
     });
     // Park etmiş araba: her 3–4 evden birinin arsasında, yola bakan kenarın içinde, yola paralel.
     // Yollar yalnız okunur; araba yol çizgisinin üstüne konmaz.
@@ -639,10 +642,10 @@ function statKoy(geo: FeatureCollection, cikti: ModelYeri[]) {
 }
 
 /**
- * Arazinin düzleneceği tabanlar (5 Kasım, Kemal: "harita binaların üzerine çıkıyor"):
- * modeli kutusunun yerine geçen her yapı (evler, özel binalar, stat). Imperial ve
- * kalıp modelleri (fener) kendi kayalıklarına göre çizildi, düzlenmez; ağaç, araba,
- * tekne gibi kutusuz parçalar da düzlenmez.
+ * Arazide set olacak tabanlar (5 Kasım, Kemal: "set–yol–ev"): modeli kutusunun yerine
+ * geçen her yapı (evler arsalarıyla, özel binalar, stat). Imperial ve kalıp modelleri
+ * (fener) kendi kayalıklarına göre çizildi, setlenmez; ağaç, araba, tekne gibi kutusuz
+ * parçalar da setlenmez, bulundukları yerin arazisine oturur.
  */
 export function araziDuzlemleri(yerler: ModelYeri[]): AraziDuzlemi[] {
   const cikti: AraziDuzlemi[] = [];
@@ -658,7 +661,7 @@ export function araziDuzlemleri(yerler: ModelYeri[]): AraziDuzlemi[] {
         a: ((K.x1 - K.x0) / 2) * o, b: ((K.z1 - K.z0) / 2) * o });
       continue;
     }
-    if (y.en > 0 && y.boy > 0) cikti.push({ merkez: y.merkez, ex: y.ex, a: y.en / 2, b: y.boy / 2 });
+    if (y.en > 0 && y.boy > 0) cikti.push({ merkez: y.merkez, ex: y.ex, a: y.en / 2, b: y.boy / 2, ...(y.arsaHalka ? { arsa: y.arsaHalka } : {}) });
   }
   return cikti;
 }

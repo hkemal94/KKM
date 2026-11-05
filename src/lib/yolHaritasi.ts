@@ -280,7 +280,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'bina-gorselleri', paket: 'W', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
     ad: 'Viki: Belediye, Jandarma Karakolu, İlkokul, Merkez Kahvehanesi, Sade Meyhane, Taraftar Birahanesi ve Dirlik Stadı maddelerine 3B model görüntüleri (taslak görsel)' },
   { id: 'ozel-binalar', paket: 'H', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
-    ad: 'Harita 3B: kutu kalan özel yapılara kendi modelleri (Sade Meyhane, Merkez Pazarı, Liman İdare Binası, Zeytinyağı Fabrikası, Taraftar Birahanesi); Dirlik Stadı parçaları tek modelde; modeli görünen yapının kutusu artık hiç çizilmez (yamaçtaki kaide kalktı); modelli yapıların altında arazi düzlenir, yollar doğal yamaçta kalır', not: 'Yol, arsa ve parsel geometrileri değişmedi; yalnız modeller, yerleşim, kutunun gizlenmesi ve arazinin yapı altlarında düzlenmesi.' },
+    ad: 'Harita 3B: kutu kalan özel yapılara kendi modelleri (Sade Meyhane, Merkez Pazarı, Liman İdare Binası, Zeytinyağı Fabrikası, Taraftar Birahanesi); Dirlik Stadı parçaları tek modelde; modeli görünen yapının kutusu artık hiç çizilmez (yamaçtaki kaide kalktı); yamaçta set–yol–ev: yollar yumuşak profilli ve enine düz, evler arsalarıyla önündeki yolun seviyesinde, aralarında dik set', not: 'Yol, arsa ve parsel geometrileri değişmedi; yalnız arazinin yüksekliği. Taş duvar şeridi yok (setin yüzü arazi dokusunda).' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
