@@ -15,3 +15,11 @@ Hepsi **taslak görsel** (oyun ekranı ya da ajansın 3B modeli). Tarih: 5 Kası
 | `deniz-feneri.jpg` | Kems Ajans, `assetler/3b/deniz/deniz-feneri-yakin.png` | Taslak görsel (ajans 3B modeli) |
 
 En çok 1200 piksel; fotoğraflar JPG (kalite 82), logo PNG.
+
+## 5 Kasım 2026 (ikinci tur)
+
+Kemal'in seçim sayfasında seçtiği bina görüntüleri. Kaynak: Kems Ajans 3B modelleri (`assetler/3b/binalar/`), taslak görsel.
+- `belediye.jpg` → Belediye Binası
+- `karakol.jpg` → Düzada Jandarma Karakolu
+- `okul.jpg` → Düzada İlkokulu
+- `kahvehane-meyhane.jpg` → Merkez Kahvehanesi
