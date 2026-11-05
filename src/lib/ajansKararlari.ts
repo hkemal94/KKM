@@ -329,7 +329,8 @@ export async function kararlariUygula(
           yeni = { ...m, notes: metin.trim() ? `${metin.trimEnd()}\n\n${islem.deger.trim()}` : islem.deger.trim() };
         } else {
           if (!metin.includes(islem.eski)) { sonuc.atlanan.push({ islem, neden: 'değişecek cümle metinde yok' }); continue; }
-          yeni = { ...m, notes: metin.replace(islem.eski, islem.deger.trim()) };
+          // Cümle metinde birden çok kez geçiyorsa hepsi değişir; yoksa karar her uygulamada geri gelir (5 Kasım, Fener Burnu)
+          yeni = { ...m, notes: metin.split(islem.eski).join(islem.deger.trim()) };
         }
         yeni = { ...yeni, updatedAt: Date.now() };
         await yaz.guncelle(yeni);
