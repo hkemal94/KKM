@@ -22,7 +22,17 @@ import { gorselAnlik } from './gorselOnbellek';
  * "Tamamen sil"); görseli olmayan madde resimsiz görünür.
  * Eski tohumlardaki hazır internet fotoğrafları (images içindeki http)
  * gösterilmez.
+ *
+ * 5 Kasım: ajansın `gorselEkle` kararıyla gelen görseller sitenin kendi
+ * dosyasıdır (`public/viki/`, kayıtta `/viki/…` yolu). 1. adımda yüklenen
+ * görsellerle aynı sırada sayılır.
  */
+
+/** Sitedeki viki görsel klasörü (`public/viki/`) */
+export const VIKI_GORSEL_ONEKI = '/viki/';
+/** Değer sitedeki viki klasöründe bir görsel yolu mu */
+export const vikiGorseliMi = (s: unknown): s is string =>
+  typeof s === 'string' && s.startsWith(VIKI_GORSEL_ONEKI) && s.length > VIKI_GORSEL_ONEKI.length && !s.includes('..');
 
 const gorselMi = (s: unknown): s is string =>
   typeof s === 'string' && !silinenGorselMi(s) && (s.startsWith('data:image/') || /^https?:\/\//.test(s) || s.startsWith('/'));
@@ -41,7 +51,7 @@ export function maddeGorseli(item: Item, items: Item[] = []): string | undefined
     && (veriMi(kit?.logoBase64) || depoda(kit?.logoBase64))) return kit!.logoBase64;
 
   // 1–2. Uygulamaya yüklenmiş görseller (dosyanın kendisi kayıtta)
-  const yuklenen = (item.images || []).find(veriMi);
+  const yuklenen = (item.images || []).find(x => veriMi(x) || vikiGorseliMi(x));
   if (yuklenen) return yuklenen;
   if (veriMi(kit?.logoBase64)) return kit!.logoBase64;
   if (veriMi(kit?.selectedLogo)) return kit!.selectedLogo;
@@ -61,4 +71,16 @@ export function maddeGorseli(item: Item, items: Item[] = []): string | undefined
   if (gorselMi(kit?.logoBase64)) return kit!.logoBase64;
   if (gorselMi(kit?.selectedLogo)) return kit!.selectedLogo;
   return undefined;
+}
+
+/**
+ * Künyede gösterilecek bütün görseller (5 Kasım): önce `maddeGorseli`, sonra
+ * maddenin görsel listesindeki öbür yüklenmiş ya da viki klasöründeki görseller.
+ * Ajansın kararıyla bir maddeye birden çok görsel girince hepsi görünsün diye.
+ */
+export function maddeGorselleri(item: Item, items: Item[] = []): string[] {
+  const ana = maddeGorseli(item, items);
+  const ek = (item.images || []).filter((x): x is string =>
+    (typeof x === 'string' && x.startsWith('data:image/') && !x.startsWith('data:image/svg')) || vikiGorseliMi(x));
+  return [...new Set([...(ana ? [ana] : []), ...ek])];
 }

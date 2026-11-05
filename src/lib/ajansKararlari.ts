@@ -7,6 +7,7 @@ import { semaAlanlari, takmaAdlar } from './alanSablonu';
 import { getKunyeFields, schemaKeyFor, TYPE_LABELS, WIKI_TYPES } from '../components/wiki/wikiSchema';
 import type { BagTuru } from '../utils/relations';
 import { bagUygun } from './bagKurallari';
+import { vikiGorseliMi } from './maddeGorseli';
 
 /**
  * Ajansın kararlarını uygula (22 Ekim, Kemal: "Ajans kendi uygulasın ama ben
@@ -41,6 +42,11 @@ import { bagUygun } from './bagKurallari';
  *     açsın): `yeniMadde` (`baslik` maddenin adı, `maddeTur` türü, `metin` madde
  *     metni, isteğe bağlı `baglar`: başka maddelere bağ). Aynı ad ve türde canlı
  *     madde varsa uygulanmış sayılır; aynı adla başka türde madde varsa atlanır.
+ *   - 5 Kasım (Kemal viki maddelerine görsel seçti): `gorselEkle` (`deger`
+ *     sitedeki görselin yolu, ör. `/viki/dondurmaci-kizlar-tabela.jpg`; görsel
+ *     dosyası `public/viki/` altında durur). Maddenin görsel listesinin sonuna
+ *     eklenir; aynısı zaten varsa uygulanmış sayılır. Yol `/viki/` ile
+ *     başlamıyorsa atlanır.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -55,6 +61,7 @@ export type KararIslemi =
   | { kimlik: string; tur: 'bagKur'; kaynak: string; hedef: string; bag: BagTuru; ikiYonlu?: boolean; baslik: string; neden: string }
   | { kimlik: string; tur: 'takmaAdEkle'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'metneEkle'; madde: string; deger: string; baslik: string; neden: string }
+  | { kimlik: string; tur: 'gorselEkle'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'metniDegistir'; madde: string; eski: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'takmaAdSil'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'alaniDegistir'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
@@ -168,6 +175,7 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
     return !!m && (kucuk(m.title) === kucuk(i.deger) || takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)));
   }
   if (i.tur === 'metneEkle') { const m = maddeBul(items, i.madde); return !!m && (m.notes || '').includes(i.deger.trim()); }
+  if (i.tur === 'gorselEkle') { const m = maddeBul(items, i.madde); return !!m && (m.images || []).includes(i.deger.trim()); }
   if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !(m.notes || '').includes(i.eski) && (m.notes || '').includes(i.deger.trim()); }
   if (i.tur === 'takmaAdSil') { const m = maddeBul(items, i.madde); return !!m && !takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)); }
   if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
@@ -217,6 +225,8 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
     if (i.tur === 'markaKarti') return !yapilmis(items, i);
     // Adı ya da türü geçersiz yeni madde listede durmaz
     if (i.tur === 'yeniMadde') return !!i.baslik?.trim() && !!maddeTuru(i.maddeTur) && !yapilmis(items, i);
+    // Sitedeki viki klasöründe olmayan yol listede durmaz
+    if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
     if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
       || i.tur === 'takmaAdSil' || i.tur === 'alaniDegistir' || i.tur === 'metindenSil') return !yapilmis(items, i);
     return false;
@@ -317,6 +327,18 @@ export async function kararlariUygula(
         yeni = { ...yeni, updatedAt: Date.now() };
         await yaz.guncelle(yeni);
         guncel.set(yeni.id, yeni);
+      } else if (islem.tur === 'gorselEkle') {
+        const m = maddeBul([...guncel.values()], islem.madde);
+        if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }
+        const yol = (islem.deger || '').trim();
+        if (!vikiGorseliMi(yol)) { sonuc.atlanan.push({ islem, neden: `görsel yolu /viki/ ile başlamıyor (${yol || 'boş'})` }); continue; }
+        const eski = m.images || [];
+        // Aynı görsel zaten varsa ikinci kez eklenmez
+        if (!eski.includes(yol)) {
+          const yeni: Item = { ...m, images: [...eski, yol], updatedAt: Date.now() };
+          await yaz.guncelle(yeni);
+          guncel.set(yeni.id, yeni);
+        }
       } else if (islem.tur === 'takmaAdEkle' || islem.tur === 'metneEkle' || islem.tur === 'metniDegistir') {
         const m = maddeBul([...guncel.values()], islem.madde);
         if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }

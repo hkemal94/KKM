@@ -5,7 +5,7 @@ import { GorselImg } from './GorselImg';
 import { gorselOku } from '../lib/gorselDeposu';
 import {
   kesinAdaylar, belirsizAdaylar, galeriBasvurulari, galeriIcerikKimlikleri, temizlenmisKayitlar,
-  vikiMaddeleri, gorselIsteyenler, gorselIstegi, turAdi, type Aday
+  vikiMaddeleri, gorselIsteyenler, kopyaOlabilir, gorselIstegi, turAdi, type Aday
 } from '../lib/vikiGorselTemizligi';
 import { anahtariOku } from '../lib/oyunAyarlari';
 import { istekEkle } from '../lib/kemalIstekleri';
@@ -50,8 +50,7 @@ export function useSilinmisGaleri(items: Item[], onUpdateItem?: (item: Item) => 
   const [yedeklendi, setYedeklendi] = useState(false);
 
   /** Vikide galeriden gelmiş olabilecek görsel var mı (kart yalnız o zaman görünür) */
-  const isVar = useMemo(() => vikiMaddeleri(items).some(i => (i.images || []).some(g =>
-    typeof g === 'string' && (g.startsWith('data:image/') || g.startsWith('/')))), [items]);
+  const isVar = useMemo(() => vikiMaddeleri(items).some(i => (i.images || []).some(kopyaOlabilir)), [items]);
 
   const hepsi = useMemo(() => [...kesin, ...belirsiz], [kesin, belirsiz]);
   const seciliMi = (a: Aday) => secim[a.anahtar] ?? a.kesin;
