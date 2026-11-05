@@ -14,7 +14,7 @@ import { WikiPeople } from './WikiPeople';
 import { WikiHarita, haritaKarsiligiVar } from './WikiHarita';
 import { KunyeDegeri } from './KunyeDegeri';
 import { BAG_GRUPLARI, adiCoz, bagParcalari, kunyeBaglari, semaAlanlari, takmaAdlar, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
-import { maddeGorseli } from '../../lib/maddeGorseli';
+import { maddeGorselleri } from '../../lib/maddeGorseli';
 import { useGorselSurumu } from '../../lib/gorselOnbellek';
 import { bosAlanlar, taslakIstegi } from '../../lib/taslakIstegi';
 import { anahtariOku } from '../../lib/oyunAyarlari';
@@ -207,7 +207,15 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
    * verisindeki görseller (galeriden bağlanan ya da yüklenen); eski
    * tohumlardaki hazır internet fotoğrafları gösterilmez.
    */
-  const gorsel = useMemo(() => maddeGorseli(item, allItems), [item, allItems, gorselSurumu]);
+  /**
+   * 5 Kasım: maddenin birden çok görseli varsa (ajansın `gorselEkle` kararı)
+   * künyede büyük görselin altında küçükleri sıralanır; basılan büyükte açılır.
+   * Yalnız ekranda; kayda yazılmaz.
+   */
+  const gorseller = useMemo(() => maddeGorselleri(item, allItems), [item, allItems, gorselSurumu]);
+  const [secilenGorsel, setSecilenGorsel] = useState(0);
+  useEffect(() => { setSecilenGorsel(0); }, [item.id]);
+  const gorsel = gorseller[Math.min(secilenGorsel, gorseller.length - 1)] || gorseller[0];
 
   /** Bu mekâna bağlı odalar — ayrı ve katlanmış gösterilir */
   const rooms = useMemo(
@@ -685,6 +693,21 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                     alt={item.title}
                     className="block mx-auto w-full max-h-64 object-contain"
                   />
+                  {gorseller.length > 1 && (
+                    <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                      {gorseller.map((g, n) => (
+                        <button
+                          key={`${n}-${g.slice(0, 40)}`}
+                          type="button"
+                          onClick={() => setSecilenGorsel(n)}
+                          aria-label={`${item.title}, ${n + 1}. görsel`}
+                          className={`w-12 h-12 rounded-md overflow-hidden border cursor-pointer ${g === gorsel ? 'border-[#0E1C4F] dark:border-[#F26B6F]' : 'border-bej/60 opacity-70 hover:opacity-100'}`}
+                        >
+                          <img src={g} alt="" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               <dl

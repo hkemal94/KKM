@@ -23,7 +23,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
@@ -104,6 +104,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
                   <li key={i.kimlik} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72] pt-1.5">
                     <span className="font-semibold">{ISLEM_ADI[i.tur]}:</span> {i.baslik}
                     {(i.tur === 'alanaYaz' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') && <> → <span className="font-semibold">{i.deger}</span></>}
+                    {i.tur === 'gorselEkle' && <> → <img src={i.deger} alt="" loading="lazy" className="inline-block h-10 max-w-20 object-cover rounded align-middle" /> <span className="font-semibold">{i.deger}</span></>}
                     {i.tur === 'alaniDegistir' && <> → <span className="font-semibold">{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger}</span></>}
                     {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <span className="font-semibold line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</span></>}
                     {i.tur === 'markaKarti' && <> → <span className="font-semibold">{i.marka} · {MARKA_KARTI_ALANLARI[i.alan] || i.alan}: {Array.isArray(i.deger) ? i.deger.join(' · ') : i.deger}</span></>}

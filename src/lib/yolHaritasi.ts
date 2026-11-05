@@ -275,6 +275,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Künye: Dirlik\'in rakibi Küçükkuyu Gençlerbirliği (gerçek kulüp, easter egg); "adı yok" satırları düzeldi (kanon denetimi 2. tur, 4. soru)' },
   { id: 'karar-tum-gecenler', paket: 'K', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
     ad: 'Ajansın kararları: değişecek cümle maddede birden çok kez yazılıysa hepsi değişir; Fener Burnu kararı artık her uygulamada geri gelmiyor' },
+  { id: 'gorsel-karari', paket: 'W', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
+    ad: 'Ajansın kararları: yeni "Görsel" kararı (maddeye sitedeki görseli ekler); vikide künyede birden çok görsel küçük resimlerle görünür; Dondurmacı Kızlar ve Deniz Feneri taslak görselleri public/viki altında' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

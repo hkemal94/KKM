@@ -295,6 +295,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                 <li key={i.kimlik}>
                   <span className="font-semibold">{ISLEM_ADI[i.tur]}:</span> {i.baslik}
                   {(i.tur === 'alanaYaz' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') && <> → <b>{i.deger}</b></>}
+                  {i.tur === 'gorselEkle' && <> → <img src={i.deger} alt="" loading="lazy" className="inline-block h-10 max-w-20 object-cover rounded align-middle" /> <b>{i.deger}</b></>}
                   {i.tur === 'alaniDegistir' && <> → <b>{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger}</b></>}
                   {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <b className="line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</b></>}
                   {i.tur === 'bagKur' && <> → <b>{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</b></>}

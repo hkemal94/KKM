@@ -1,7 +1,7 @@
 import type { Item } from '../types';
 import { WIKI_TYPES, TYPE_LABELS } from '../components/wiki/wikiSchema';
 import { basvuruMu, icerikKimligi } from './gorselBasvuru';
-import { maddeGorseli } from './maddeGorseli';
+import { maddeGorseli, vikiGorseliMi } from './maddeGorseli';
 import { hazirFotoMu } from './gorselSecimi';
 
 /**
@@ -37,9 +37,12 @@ export function izEkle(hedef: Item, galeriId: string, veri: string): GaleriIzi[]
 export const vikiMaddeleri = (items: Item[]) =>
   items.filter(i => WIKI_TYPES.includes(i.type) && !i.archived && !i.isProposal);
 
-/** Galeriden kopyalanmış olabilecek değer: dosyanın kendisi ya da depodaki yol */
-const kopyaOlabilir = (s: unknown): s is string =>
-  typeof s === 'string' && (s.startsWith('data:image/') || s.startsWith('/')) && !basvuruMu(s);
+/**
+ * Galeriden kopyalanmış olabilecek değer: dosyanın kendisi ya da depodaki yol.
+ * Ajansın kararıyla gelen viki görselleri (`/viki/…`, 5 Kasım) galeriden değil; aday olmaz.
+ */
+export const kopyaOlabilir = (s: unknown): s is string =>
+  typeof s === 'string' && (s.startsWith('data:image/') || s.startsWith('/')) && !basvuruMu(s) && !vikiGorseliMi(s);
 
 export interface Aday {
   /** Seçim anahtarı */
