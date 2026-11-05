@@ -8,9 +8,9 @@ import * as maplibregl from 'maplibre-gl';
 // derlemesinde.)
 import isciAdresi from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { DEM_PNG, DEM_SINIR } from '../../data/duzadaDem';
-import { AraziSetleri, type AraziDuzlemi, type YolCizgisi } from './araziSetleri';
+import { AraziSetleri, type AraziDuzlemi, type DuvarParcasi, type YolCizgisi } from './araziSetleri';
 
-export { yolCizgileri, type AraziDuzlemi } from './araziSetleri';
+export { yolCizgileri, type AraziDuzlemi, type DuvarParcasi } from './araziSetleri';
 
 maplibregl.setWorkerUrl(isciAdresi);
 
@@ -52,6 +52,8 @@ const [BATI, GUNEY, DOGU, KUZEY] = DEM_SINIR;
  */
 interface Rakimlar { en: number; boy: number; m: Float32Array }
 let rakimlar: Promise<Rakimlar> | null = null;
+/** Çözülmüş rakımlar (duvar hesabı eşzamanlı okur) */
+let cozulmus: Rakimlar | null = null;
 let kayitli = false;
 
 function rakimlariYukle(): Promise<Rakimlar> {
@@ -72,7 +74,8 @@ function rakimlariYukle(): Promise<Rakimlar> {
         for (let i = 0; i < en * boy; i++) {
           m[i] = v[i * 4] * 256 + v[i * 4 + 1] + v[i * 4 + 2] / 256 - 32768;
         }
-        coz({ en, boy, m });
+        cozulmus = { en, boy, m };
+        coz(cozulmus);
       };
       im.onerror = () => hata(new Error('DEM görüntüsü yüklenemedi'));
       im.src = DEM_PNG;
@@ -111,7 +114,7 @@ let duzlemSurumu = 0;
 export function araziDuzlemleriniAyarla(liste: AraziDuzlemi[], yollar: YolCizgisi[] = []): boolean {
   let ozet = yollar.length * 3 + liste.length;
   for (const y of yollar) for (const n of y.noktalar) ozet += n[0] * 7 + n[1] * 13;
-  for (const d of liste) { ozet += d.merkez[0] * 3 + d.merkez[1] * 5 + d.a + d.b + d.ex[0]; for (const n of d.arsa ?? []) ozet += n[0] + n[1]; }
+  for (const d of liste) { ozet += d.merkez[0] * 3 + d.merkez[1] * 5 + d.a + d.b + d.ex[0]; for (const n of [...(d.arsa ?? []), ...(d.bina ?? [])]) ozet += n[0] + n[1]; }
   const anahtar = ozet.toFixed(6);
   if (anahtar === duzlemAnahtari) return false;
   duzlemAnahtari = anahtar;
@@ -134,6 +137,19 @@ function setleriKur(r: Rakimlar): AraziSetleri | null {
   }
   return setler;
 }
+
+/**
+ * Setlerin taş duvarları (5 Kasım akşam): verilen alandaki basamak yüzleri. Rakımlar ya da
+ * düzen henüz hazır değilse null (model katmanı sonra yeniden sorar). Yükseklikler abartısız.
+ */
+export function setDuvarlari(bati: number, guney: number, dogu: number, kuzey: number): { surum: number; parcalar: DuvarParcasi[] } | null {
+  if (!setGirdisi || !cozulmus) return null;
+  const s = setleriKur(cozulmus);
+  return s ? { surum: duzlemSurumu, parcalar: s.duvarlar(bati, guney, dogu, kuzey) } : null;
+}
+
+/** Duvarlar hesaplanabiliyorsa set düzeninin sürümü, değilse -1 */
+export const setSurumu = () => (setGirdisi && cozulmus ? duzlemSurumu : -1);
 
 /** Web Mercator karo numarasından enlem (derece) */
 function karoEnlem(y: number, z: number): number {

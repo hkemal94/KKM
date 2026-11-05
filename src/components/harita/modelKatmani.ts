@@ -3,9 +3,9 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import * as maplibregl from 'maplibre-gl';
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
 import { modelYukle } from '../../lib/modelYukle';
-import { BAHCE, IMPERIAL_CAPA } from '../../lib/binaKutuphanesi';
+import { BAHCE, IMPERIAL_CAPA, modelOlcegi } from '../../lib/binaKutuphanesi';
 import type { ModelYeri } from './modelYerlesimi';
-import { ARAZI_KAYNAK } from './duzadaArazi';
+import { ARAZI_ABARTI, ARAZI_KAYNAK, setDuvarlari, setSurumu, type DuvarParcasi } from './duzadaArazi';
 
 /**
  * Haritada 3B modeller (4 Kasım). MapLibre'nin özel katmanı, three.js ile çizer.
@@ -38,6 +38,80 @@ const TAHMINI_UCGEN = 15_000;
 /** Zemin altında kalan parçalar haritada çizilmez (arsa, deniz, kayalık) */
 const ZEMIN_ESIGI = 0.15;
 
+/** Taş duvarların çizildiği en uzak mesafe (metre, bakış merkezinden; telefon için) */
+const DUVAR_YARICAP = 450;
+/** Ajansın taş tonları: harç (koyu), taşlar, duvar şapkası (açık) */
+const TAS_HARC = new THREE.Color('#A8977A');
+const TAS_RENKLERI = ['#C9B48F', '#BFA987', '#D6C7A8'].map(r => new THREE.Color(r));
+const TAS_SAPKA = new THREE.Color('#D6C7A8');
+/** Taş sırasının yüksekliği ve taşın en çok boyu (metre) */
+const TAS_SIRA = 0.55, TAS_BOY = 1.1;
+
+/** Sabit sözde rastgele (aynı duvar her çizimde aynı taşları alsın) */
+function tasSayisi(a: number, b: number, c: number): number {
+  const x = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/**
+ * Set yüzlerinin taş duvarı (5 Kasım akşam, Kemal: "set yüzlerine taş duvar"). Bütün
+ * duvarlar tek parça: koyu harç yüzü, önünde biraz dışarı çıkan düzensiz taşlar (sıralar
+ * şaşırtmalı, tonlar ajansın taş renklerinden), üstte basamağın eğimini örten açık şapka.
+ * `yerel` derece → katmanın metre düzlemi (x doğu, z güney).
+ */
+function duvarGeometrisi(parcalar: DuvarParcasi[], yerel: (p: [number, number]) => readonly [number, number]): THREE.BufferGeometry | null {
+  const konum: number[] = [], renk: number[] = [];
+  const dortgen = (a: number[], b: number[], c: number[], d: number[], r: THREE.Color) => {
+    konum.push(...a, ...b, ...c, ...a, ...c, ...d);
+    for (let i = 0; i < 6; i++) renk.push(r.r, r.g, r.b);
+  };
+  const tasRengi = new THREE.Color();
+  for (const d of parcalar) {
+    const [px, pz] = yerel(d.p), [qx, qz] = yerel(d.q);
+    const L = Math.hypot(qx - px, qz - pz);
+    if (L < 0.05) continue;
+    const ix = d.ic[0], iz = d.ic[1];
+    // Uçlarda dip ve üst (abartılı); arası doğrusal
+    const a0 = d.alt[0] * ARAZI_ABARTI - 0.6, a1 = d.alt[1] * ARAZI_ABARTI - 0.6;
+    const u0 = d.ust[0] * ARAZI_ABARTI + 0.08, u1 = d.ust[1] * ARAZI_ABARTI + 0.08;
+    const ux = (qx - px) / L, uz = (qz - pz) / L;
+    /** s boyunca, f (0 dip, 1 üst) yükseklikte, yüzden `cik` dışarıda nokta */
+    const k = (s: number, f: number, cik = 0) => {
+      const t = s / L, y0 = a0 + (a1 - a0) * t, y1 = u0 + (u1 - u0) * t;
+      return [px + ux * s - ix * cik, y0 + (y1 - y0) * f, pz + uz * s - iz * cik];
+    };
+    // Harç yüzü ve şapka; komşu parçayla aralık kalmasın diye iki uçta biraz uzar
+    const e = 0.12;
+    dortgen(k(-e, 0), k(L + e, 0), k(L + e, 1), k(-e, 1), TAS_HARC);
+    const w = d.sapka, [sx0, sy0, sz0] = k(-e, 1), [sx1, sy1, sz1] = k(L + e, 1);
+    dortgen([sx0, sy0, sz0], [sx1, sy1, sz1], [sx1 + ix * w, sy1, sz1 + iz * w], [sx0 + ix * w, sy0, sz0 + iz * w], TAS_SAPKA);
+    // Taşlar: sıra sıra, her sırada parça boyunca bir ya da iki taş (şaşırtmalı)
+    const tohum = d.p[0] * 1e4 + d.p[1] * 3e4;
+    const sira = Math.max(1, Math.round(Math.max(u0 - a0, u1 - a1) / TAS_SIRA));
+    const fy = 0.035 / Math.max(0.3, Math.min(u0 - a0, u1 - a1));
+    for (let r = 0; r < sira; r++) {
+      const kes = L > TAS_BOY || r % 2 ? 0.3 + 0.4 * tasSayisi(tohum, r, 1) : 1;
+      const araliklar = kes < 1 ? [[0, kes * L], [kes * L, L]] : [[0, L]];
+      for (let a = 0; a < araliklar.length; a++) {
+        const [s0, s1] = araliklar[a];
+        if (s1 - s0 < 0.12) continue;
+        const n = tasSayisi(tohum, r, a + 2);
+        const cik = 0.03 + 0.06 * n;
+        const fa = r / sira + fy, fb = (r + 1) / sira - fy;
+        const sa = s0 + 0.04, sb = s1 - 0.04;
+        tasRengi.copy(TAS_RENKLERI[Math.floor(n * 7.3) % TAS_RENKLERI.length]).offsetHSL(0, 0, (tasSayisi(tohum, r, a + 9) - 0.5) * 0.06);
+        dortgen(k(sa, fa, cik), k(sb, fa, cik), k(sb, fb, cik), k(sa, fb, cik), tasRengi);
+      }
+    }
+  }
+  if (!konum.length) return null;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(konum, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(renk, 3));
+  g.computeVertexNormals();
+  return g;
+}
+
 interface HaritaModeli {
   parcalar: Array<{ geo: THREE.BufferGeometry; mat: THREE.Material }>;
   /** Taban kutusunun merkezi ve ölçüleri (metre) */
@@ -45,7 +119,6 @@ interface HaritaModeli {
   ucgen: number;
 }
 
-const sinirla = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 
 /** Modeli haritaya hazırlar: zemin altı parçalar atılır, aynı renkler tek parçada birleşir */
 function hazirla(sahne: THREE.Object3D): HaritaModeli {
@@ -118,6 +191,10 @@ export class ModelKatmani implements CustomLayerInterface {
   private modeller = new Map<string, HaritaModeli>();
   private inenler = new Set<string>();
   private orneklemeler: THREE.InstancedMesh[] = [];
+  /** Taş duvarlar (tek parça) ve hesaplandıkları set sürümü (-1: henüz hesaplanamadı) */
+  private duvar: THREE.Mesh | null = null;
+  private duvarMalzemesi = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+  private duvarSurumu = -1;
   private gizli = '';
   private tazeleBekliyor = 0;
   /** Çizilen yerlerin arazi kotu: arazi karoları sonradan inince yeniden oturtmak için */
@@ -175,6 +252,7 @@ export class ModelKatmani implements CustomLayerInterface {
   private temizle() {
     for (const o of this.orneklemeler) { this.sahne.remove(o); o.dispose(); }
     this.orneklemeler = [];
+    if (this.duvar) { this.sahne.remove(this.duvar); this.duvar.geometry.dispose(); this.duvar = null; }
   }
 
   private gizliBildir(kimlikler: string[]) {
@@ -297,12 +375,8 @@ export class ModelKatmani implements CustomLayerInterface {
           const en_iyi = adaylar.reduce((a, b) => (bakis(b.e) > bakis(a.e) ? b : a));
           ex = en_iyi.e; en = en_iyi.en; boy = en_iyi.boy;
         }
-        if (y.tekOlcek) {
-          // Özel bina: kendi boyunda, tabana sığmazsa orantılı küçülür
-          sx = sy = sz = sinirla(Math.min(en / m.w, boy / m.d), 0.7, 1);
-        } else {
-          sx = sinirla(en / m.w, 0.7, 1.5); sz = sinirla(boy / m.d, 0.7, 1.5); sy = sinirla(Math.sqrt(sx * sz), 0.7, 1.5);
-        }
+        // Özel bina kendi boyunda, tabana sığmazsa orantılı küçülür; öbürleri tabana göre
+        [sx, sy, sz] = modelOlcegi(m.w, m.d, en, boy, y.tekOlcek);
       }
       const kot = this.kotBul(y);
       yeniKotlar.set(y.id, kot);
@@ -335,6 +409,20 @@ export class ModelKatmani implements CustomLayerInterface {
         this.orneklemeler.push(o);
       }
     }
+    // Set yüzlerinin taş duvarları: bakış merkezine yakın, görünen alanda
+    const r = Math.min(yaricap, DUVAR_YARICAP);
+    const kxm = 111_320 * Math.cos((merkez[1] * Math.PI) / 180);
+    const dl = r / kxm, de = r / 111_320;
+    const duvarlar = setDuvarlari(
+      Math.max(sinir.getWest(), merkez[0] - dl), Math.max(sinir.getSouth(), merkez[1] - de),
+      Math.min(sinir.getEast(), merkez[0] + dl), Math.min(sinir.getNorth(), merkez[1] + de));
+    this.duvarSurumu = duvarlar ? duvarlar.surum : -1;
+    const dg = duvarlar ? duvarGeometrisi(duvarlar.parcalar, yerel) : null;
+    if (dg) {
+      this.duvar = new THREE.Mesh(dg, this.duvarMalzemesi);
+      this.duvar.frustumCulled = false;
+      this.sahne.add(this.duvar);
+    }
     this.kotlar = yeniKotlar;
     this.gizliBildir(gizlenen);
     map.triggerRepaint();
@@ -358,6 +446,11 @@ export class ModelKatmani implements CustomLayerInterface {
    * yeniden okunur, değiştiyse modeller yeniden oturtulur (değişmediyse hiçbir şey olmaz).
    */
   private kotDenetle = () => {
+    // Duvarlar henüz hesaplanamadıysa ya da set düzeni değiştiyse yeniden
+    if (this.map && this.acik && this.map.getZoom() >= MODEL_ESIGI) {
+      const surum = setSurumu();
+      if (surum >= 0 && surum !== this.duvarSurumu) { this.tazele(); return; }
+    }
     if (!this.kotlar.size) return;
     const yerler = new Map(this.yerler.map(y => [y.id, y]));
     for (const [id, eski] of this.kotlar) {
@@ -373,7 +466,7 @@ export class ModelKatmani implements CustomLayerInterface {
   }
 
   render(_gl: WebGLRenderingContext | WebGL2RenderingContext, args: CustomRenderMethodInput) {
-    if (!this.renderer || !this.orneklemeler.length) return;
+    if (!this.renderer || (!this.orneklemeler.length && !this.duvar)) return;
     const { x, y, s } = this.koken;
     const ana = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix as unknown as number[]);
     const yerel = new THREE.Matrix4().makeTranslation(x, y, 0)

@@ -221,7 +221,9 @@ export const DIRLIK_STADI = {
   capa: { x: 45, z: -29 },
   sahaEn: 90, sahaBoy: 58,
   /** Modelin bütün tabanı (duvar, ağaçlar dahil): altındaki arazi düzlenir */
-  kapsam: { x0: -24, x1: 112, z0: -80, z1: 24 }
+  kapsam: { x0: -24, x1: 112, z0: -80, z1: 24 },
+  /** Yapının kendisi (saha, tribünler, duvar; çevredeki ağaçlar hariç): komşu evler buna binmez */
+  yapi: { x0: -14, x1: 104, z0: -72, z1: 20 }
 };
 
 /** Haritadaki yapı türü → Kurucu türü (üreteçteki evler ve çiftlik depoları) */
@@ -242,6 +244,56 @@ export const ARSA_OLCULERI: Record<string, { x0: number; x1: number; z0: number;
   'bahce/bahce-arsasi-servili.glb': { x0: -5.5, x1: 18.5, z0: -15.4, z1: 12.4 },
   'bahce/bahce-arsasi-zeytinli.glb': { x0: -5.0, x1: 18.0, z0: -15.0, z1: 10.1 }
 };
+
+/**
+ * Bina modellerinin taban ölçüsü (metre; w modelin x'i, ön cephe boyu; d z'si, derinlik).
+ * Haritada evin yola dik durup arsasına sığıp sığmadığı bununla denetlenir (5 Kasım akşam,
+ * Kemal: "araziler sığsın, binme yapmasın"). Ölçüler model dosyalarından okundu (zemin
+ * altındaki parçalar hariç; `modelKatmani.ts` de onları çizmez). Tabloda olmayan model
+ * sığma denetiminden geçmez, eski yerleşimle çizilir.
+ */
+export const MODEL_TABANLARI: Record<string, { w: number; d: number }> = {
+  'binalar/balikci-evi.glb': { w: 7.8, d: 9.1 },
+  'binalar/belediye.glb': { w: 19.9, d: 16.08 },
+  'binalar/ciftlik-evi-tas.glb': { w: 14.79, d: 11.95 },
+  'binalar/cumbali-ev.glb': { w: 8.47, d: 11.01 },
+  'binalar/depo-atolye.glb': { w: 16.95, d: 10.94 },
+  'binalar/dukkanli-ev-iki-dukkan.glb': { w: 11.7, d: 12.13 },
+  'binalar/dukkanli-ev-tas.glb': { w: 8.47, d: 11.84 },
+  'binalar/dukkanli-ev.glb': { w: 8.47, d: 11.54 },
+  'binalar/ev-badana-dam.glb': { w: 10.1, d: 11.72 },
+  'binalar/ev-badana-iki-katli.glb': { w: 11.09, d: 10.79 },
+  'binalar/ev-badana-kirma.glb': { w: 11.4, d: 11.25 },
+  'binalar/ev-karisik-cumbali.glb': { w: 12.29, d: 11.13 },
+  'binalar/ev-karisik-uzun.glb': { w: 16.44, d: 11.41 },
+  'binalar/ev-tas-balkonlu.glb': { w: 12.62, d: 11.78 },
+  'binalar/ev-tas-dis-merdivenli.glb': { w: 11.42, d: 12.79 },
+  'binalar/ev-tas-tek-katli.glb': { w: 11.26, d: 10.88 },
+  'binalar/ev-uc-katli.glb': { w: 11.02, d: 11.27 },
+  'binalar/kahvehane-meyhane.glb': { w: 15.9, d: 14.19 },
+  'binalar/karakol.glb': { w: 16.3, d: 14.8 },
+  'binalar/koy-evi-dis-merdivenli.glb': { w: 13.17, d: 9.79 },
+  'binalar/liman-idare.glb': { w: 20.6, d: 16.49 },
+  'binalar/merkez-pazari.glb': { w: 43.39, d: 25.26 },
+  'binalar/okul.glb': { w: 24.97, d: 17.3 },
+  'binalar/sade-meyhane.glb': { w: 23.49, d: 17.35 },
+  'binalar/taraftar-birahanesi.glb': { w: 18.4, d: 18.2 },
+  'binalar/tas-ev.glb': { w: 9.14, d: 10.29 },
+  'binalar/yazlik-iki-katli.glb': { w: 11.23, d: 10.97 },
+  'binalar/yazlik.glb': { w: 13.77, d: 11.56 },
+  'binalar/zeytinyagi-fabrikasi.glb': { w: 35.92, d: 24.27 }
+};
+
+/**
+ * Modelin haritadaki ölçeği: tabanın enine (ex) ve boyuna göre, modelin kendi ölçüsünün
+ * 0,7–1,5 katı (özel binalar tek ölçekle 0,7–1). Model katmanı ve yerleşim aynı kuralı kullanır.
+ */
+export function modelOlcegi(w: number, d: number, en: number, boy: number, tekOlcek?: boolean): [number, number, number] {
+  const sinirla = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
+  if (tekOlcek) { const s = sinirla(Math.min(en / w, boy / d), 0.7, 1); return [s, s, s]; }
+  const sx = sinirla(en / w, 0.7, 1.5), sz = sinirla(boy / d, 0.7, 1.5);
+  return [sx, sinirla(Math.sqrt(sx * sz), 0.7, 1.5), sz];
+}
 
 /** Park etmiş arabalar: binek araçlarının renkli dosyaları (dolmuş, taksi, traktör, iki teker değil) */
 export const ARACLAR: string[] = (KATALOG.araclar ?? []).filter(d => /sedan|hatchback|pikap/.test(d)).flatMap(renkliAc);
