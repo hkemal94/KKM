@@ -271,6 +271,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Yol haritası 7. adım: ekranların başında "Ajana yaptır" (kendi cümlen + hazır örnekler; sonuç Onay bekleyenler\'e), ajan kartında künye, model seçimi, takvim ve eski işler, İşler ve takvim\'de "Yapılacak ekle"' },
   { id: 'yaz-dugmesi-pc', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
     ad: 'Bilgisayarda sol menünün altındaki kırmızı "Yaz" düğmesi yeniden açılıyor (Hızlı not, Kems\'e yaz, Notlar); seçim menünün yanında sayfanın üstünde görünür' },
+  { id: 'kunye-dirlik-rakip', paket: 'H', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
+    ad: 'Künye: Dirlik\'in rakibi Küçükkuyu Gençlerbirliği (gerçek kulüp, easter egg); "adı yok" satırları düzeldi (kanon denetimi 2. tur, 4. soru)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

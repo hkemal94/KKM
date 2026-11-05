@@ -208,8 +208,8 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   Kemal onayladı; logodaki "12 Mayıs"). Ad "birlik ve dirlik"ten:
   mahallelerin çocukları tek takımda. Renkler logodan: Kolej Laciverti
   `#0E1C4F`, kiremit `#F26B6F`, krem `#F3EFE8`. Logodaki yelkenli ada
-  kimliği (futbol ana branş). Rakibi anakaradan, Küçükkuyu tarafından bir
-  kulüp (adı yok). Su sporları için İskele koyunda yalnız bir iskele.
+  kimliği (futbol ana branş). Rakibi anakaradan, Küçükkuyu'nun gerçek
+  kulübü Küçükkuyu Gençlerbirliği (easter egg; 29 Eylül, 5 Kasım). Su sporları için İskele koyunda yalnız bir iskele.
   Forma: Kemal'in 22 Ekim kararları (açık sorular).
 - **Kooperatif** — Çiftlik'teki zeytinyağı fabrikasının sahibi **Düzada
   Ziraat İşletmeleri Kurumu** (Kemal 8 Ekim; eski kanonda "Kemsköy Ziraat
@@ -258,7 +258,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 - **Antik yerleşim** — dönemi açık. Amfora alanında rehberli dalış yapılır.
 - **Küçükçetmi Çiftliği** (Sürek Kulübü'nün evi) — Çiftlik'in iç tarafında,
   tepeye yakın, kıyıdan uzak.
-- **Dirlik'in rakibi** — Küçükkuyu tarafından bir kulüp (adı yok); rekabet
+- **Dirlik'in rakibi** — Küçükkuyu Gençlerbirliği (gerçek kulüp, easter egg); rekabet
   sevgi–nefret ilişkisi.
 - **Kooperatifin fabrikası** — zeytinyağı. Kuruluş 1950–1970'ler (Kemal, 22 Ekim).
 - **Fener** — eskiden bekçili, 1970'lerde otomatiğe geçti; bekçiye kişi
