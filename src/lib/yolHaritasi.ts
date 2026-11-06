@@ -281,6 +281,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: Belediye, Jandarma Karakolu, İlkokul, Merkez Kahvehanesi, Sade Meyhane, Taraftar Birahanesi ve Dirlik Stadı maddelerine 3B model görüntüleri (taslak görsel)' },
   { id: 'viki-siluetler', paket: 'W', kimde: 'claude', nereden: '5 Kasım · Kemal', bitti: true,
     ad: 'Viki: 7 kişi ve 5 aile maddesine yüzsüz silüet görseli (Kemal seçti; taslak)' },
+  { id: 'resepsiyon-dizisi', paket: 'K', kimde: 'claude', nereden: '6 Kasım · Kemal', bitti: true,
+    ad: 'Resepsiyon dizisi: ajansın yeni "Kitap bölümü" kararı (senaryo kitabı, her bölüm bir bölüm; Kemal tek düğmeyle uygular); İçerik → Video\'da dizi kartı; Mehmet Yılmaz taslak görseli public/viki altında' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

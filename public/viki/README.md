@@ -32,3 +32,8 @@ Kemal'in seçim sayfasında seçtiği bina görüntüleri. Kaynak: Kems Ajans 3B
 Kemal kişi ve aile maddeleri için yüz yerine silüeti seçti (Canva, Kems Ajans taslağı). Tek renk lacivert, krem zemin, yazı yok.
 - `siluet-kisi.png` → 7 kişi maddesi (hepsi aynı)
 - `siluet-aile.png` → 5 aile maddesi (hepsi aynı)
+
+## 6 Kasım 2026 (Resepsiyon dizisi)
+
+Kems Ajans'ın Resepsiyon dizisi için Canva'da çizdiği karakter (taslak görsel). 1400 pikselden 1200'e küçültüldü, PNG.
+- `mehmet-yilmaz.png` → Mehmet Yılmaz

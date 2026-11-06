@@ -47,6 +47,13 @@ import { vikiGorseliMi } from './maddeGorseli';
  *     dosyası `public/viki/` altında durur). Maddenin görsel listesinin sonuna
  *     eklenir; aynısı zaten varsa uygulanmış sayılır. Yol `/viki/` ile
  *     başlamıyorsa atlanır.
+ *   - 6 Kasım (Kemal: "senaryo kitabı, her bölüm bir bölüm"): `kitapBolumu`
+ *     (`kitap` kitabın başlığı, `sira` bölümün sırası, `baslik` bölümün adı,
+ *     `metin` bölümün yazısı). Kitap Kitap ekranındaki kitap kaydıdır
+ *     (`kitap_proje`); o başlıkta kitap yoksa açılır. Aynı kitapta aynı adlı
+ *     bölüm varsa metni ve sırası güncellenir, yoksa yeni bölüm (`kitap_bolum`,
+ *     `metadata.bookId` + `chapterIndex`) eklenir. Bölümün adı Kitap ekranı
+ *     gibi "Bölüm 3: Ad" diye yazılır; karşılaştırmada "Bölüm 3:" kısmı sayılmaz.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -67,7 +74,47 @@ export type KararIslemi =
   | { kimlik: string; tur: 'alaniDegistir'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'metindenSil'; madde: string; eski: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string }
-  | { kimlik: string; tur: 'yeniMadde'; baslik: string; maddeTur: string; metin?: string; baglar?: YeniMaddeBagi[]; neden?: string };
+  | { kimlik: string; tur: 'yeniMadde'; baslik: string; maddeTur: string; metin?: string; baglar?: YeniMaddeBagi[]; neden?: string }
+  | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; neden?: string };
+
+type KitapBolumuIslemi = Extract<KararIslemi, { tur: 'kitapBolumu' }>;
+
+/** "Bölüm 3: Devir teslim" → "Devir teslim" (Kitap ekranı bölüme sırasını önüne yazar) */
+const bolumAdi = (t: string) => (t || '').replace(/^\s*bölüm\s+\d+\s*[:.\-–—]\s*/i, '').trim();
+/** Bölümün kayıttaki başlığı */
+export const bolumBasligi = (sira: number, baslik: string) => `Bölüm ${sira}: ${bolumAdi(baslik)}`;
+
+/** Aynı başlıklı canlı kitaplar (Kitap ekranının listesiyle aynı süzgeç) */
+const kitaplar = (items: Item[], ad: string) =>
+  items.filter(i => i.area === 'kitap' && i.type === 'kitap_proje' && !i.archived && kucuk(i.title) === kucuk(ad));
+/** Kitaptaki aynı adlı canlı bölümler */
+const bolumler = (items: Item[], kitapId: string, ad: string) =>
+  items.filter(i => i.area === 'kitap' && i.type === 'kitap_bolum' && !i.archived && i.metadata?.bookId === kitapId
+    && kucuk(bolumAdi(i.title)) === kucuk(bolumAdi(ad)));
+
+const kitapBolumuGecerli = (i: KitapBolumuIslemi) =>
+  !!i.kitap?.trim() && !!bolumAdi(i.baslik || '') && typeof i.metin === 'string' && !!i.metin.trim()
+  && typeof i.sira === 'number' && Number.isInteger(i.sira) && i.sira > 0;
+
+/** Ne değişecek (saf iş): kitap açılacak mı, bölüm yeni mi, güncellenecek mi */
+export function kitapBolumuPlani(items: Item[], i: KitapBolumuIslemi) {
+  const k = kitaplar(items, i.kitap);
+  const kitap = k.length === 1 ? k[0] : null;
+  const b = kitap ? bolumler(items, kitap.id, i.baslik) : [];
+  return { kitap, cokKitap: k.length > 1, bolum: b.length === 1 ? b[0] : null, cokBolum: b.length > 1 };
+}
+
+/** Önizleme satırı: ne değişecek ve metnin başı (uzun senaryo kısaltılır) */
+export function kitapBolumuOnizleme(items: Item[], i: KitapBolumuIslemi, sinir = 180): string {
+  const p = kitapBolumuPlani(items, i);
+  const kitap = p.cokKitap ? `"${i.kitap}" adıyla birden çok kitap var, atlanır`
+    : p.kitap ? `"${i.kitap}" kitabına` : `"${i.kitap}" kitabı yeni açılır;`;
+  const bolum = p.cokBolum ? 'aynı adla birden çok bölüm var, atlanır'
+    : p.bolum ? `${i.sira}. bölümün metni güncellenir` : `${i.sira}. bölüm eklenir`;
+  const m = (i.metin || '').replace(/\s+/g, ' ').trim();
+  const kisa = m.length > sinir ? `${m.slice(0, sinir).trimEnd()}… (${m.length} harf)` : m;
+  return `${kitap} ${bolum} → ${kisa}`;
+}
 
 /** `yeniMadde`nin bağı: hedef maddenin kimliği ya da adı; `ikiYonlu` ise bağ hedefe de yazılır */
 export interface YeniMaddeBagi { hedef: string; bag: BagTuru; ikiYonlu?: boolean }
@@ -182,6 +229,10 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'metindenSil') { const m = maddeBul(items, i.madde); return !!m && !!i.eski?.trim() && !metindeVar(m, i.eski); }
   if (i.tur === 'markaKarti') { const m = maddeBul(items, i.marka); const d = kartDegeri(i.alan, i.deger); return !!m && d !== null && kartAyni(kartAlani(m, i.alan), d); }
   if (i.tur === 'yeniMadde') { const t = maddeTuru(i.maddeTur); return !!t && ayniAdli(items, i.baslik).some(m => m.type === t); }
+  if (i.tur === 'kitapBolumu') {
+    const { bolum } = kitapBolumuPlani(items, i);
+    return !!bolum && (bolum.notes || '').trim() === (i.metin || '').trim() && bolum.metadata?.chapterIndex === i.sira;
+  }
   return false;
 }
 
@@ -225,6 +276,8 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
     if (i.tur === 'markaKarti') return !yapilmis(items, i);
     // Adı ya da türü geçersiz yeni madde listede durmaz
     if (i.tur === 'yeniMadde') return !!i.baslik?.trim() && !!maddeTuru(i.maddeTur) && !yapilmis(items, i);
+    // Kitabı, adı ya da metni boş bölüm listede durmaz
+    if (i.tur === 'kitapBolumu') return kitapBolumuGecerli(i) && !yapilmis(items, i);
     // Sitedeki viki klasöründe olmayan yol listede durmaz
     if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
     if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
@@ -243,7 +296,7 @@ export async function kararlariUygula(
   items: Item[], islemler: KararIslemi[],
   yaz: {
     guncelle: (i: Item) => Promise<void>; sil: (id: string) => Promise<void>;
-    /** `yeniMadde` için; verilmezse yeni madde atlanır */
+    /** `yeniMadde` ve `kitapBolumu` için; verilmezse yeni madde ve yeni kitap / bölüm atlanır */
     ekle?: (i: Omit<Item, 'createdAt' | 'updatedAt' | 'userId'> & { id: string }) => Promise<void>;
   },
   ilerleme?: (n: number) => void
@@ -283,6 +336,42 @@ export async function kararlariUygula(
           if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
         }
         for (const neden of atlanan) sonuc.atlanan.push({ islem, neden });
+      } else if (islem.tur === 'kitapBolumu') {
+        if (!kitapBolumuGecerli(islem)) { sonuc.atlanan.push({ islem, neden: 'kitap, bölüm adı, metin ya da sıra eksik' }); continue; }
+        const liste = [...guncel.values()];
+        const p = kitapBolumuPlani(liste, islem);
+        if (p.cokKitap) { sonuc.atlanan.push({ islem, neden: `"${islem.kitap}" adıyla birden çok kitap var` }); continue; }
+        if (p.cokBolum) { sonuc.atlanan.push({ islem, neden: `kitapta "${bolumAdi(islem.baslik)}" adıyla birden çok bölüm var` }); continue; }
+        if ((!p.kitap || !p.bolum) && !yaz.ekle) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan kitap ya da bölüm açılamıyor; Onay bekleyenler\'den uygula' }); continue; }
+        const metin = islem.metin.trim();
+        const baslik = bolumBasligi(islem.sira, islem.baslik);
+        let kitap = p.kitap;
+        if (!kitap) {
+          const id = `book_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          // Kitap ekranının "Yeni kitap" kaydıyla aynı biçim; notu boş (kurgu metni yazılmaz)
+          const yeni = {
+            id, title: islem.kitap.trim(), area: 'kitap' as const, type: 'kitap_proje' as const, status: 'Planlandı', priority: 'orta' as const,
+            tags: ['kitap-projesi'], links: [], notes: '', images: [], isProposal: false, archived: false, metadata: {},
+          };
+          await yaz.ekle!(yeni);
+          kitap = { ...yeni, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item;
+          guncel.set(id, kitap);
+        }
+        if (p.bolum) {
+          const yeni: Item = { ...p.bolum, title: baslik, notes: metin, metadata: { ...(p.bolum.metadata || {}), bookId: kitap.id, chapterIndex: islem.sira }, updatedAt: Date.now() };
+          await yaz.guncelle(yeni);
+          guncel.set(yeni.id, yeni);
+        } else {
+          const id = `chapter_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          // Kitap ekranının "Yeni bölüm" kaydıyla aynı biçim
+          const yeni = {
+            id, title: baslik, area: 'kitap' as const, type: 'kitap_bolum' as const, status: 'taslak', priority: 'orta' as const,
+            tags: ['bölüm', 'kitap-bölümü'], links: [kitap.id], notes: metin, images: [], isProposal: false, archived: false,
+            metadata: { bookId: kitap.id, chapterIndex: islem.sira, chapterTodos: [] },
+          };
+          await yaz.ekle!(yeni);
+          guncel.set(id, { ...yeni, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
+        }
       } else if (islem.tur === 'markaKarti') {
         const m = maddeBul([...guncel.values()], islem.marka);
         if (!m) { sonuc.atlanan.push({ islem, neden: `marka bulunamadı ya da aynı adla birden çok var (${islem.marka})` }); continue; }

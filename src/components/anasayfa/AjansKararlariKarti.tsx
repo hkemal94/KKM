@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 import type { Item } from '../../types';
-import { gecerliIslemler, kararlariOku, kararlariUygula, maddeTuru, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
+import { gecerliIslemler, kararlariOku, kararlariUygula, kitapBolumuOnizleme, maddeTuru, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
@@ -23,7 +23,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', kitapBolumu: 'Kitap bölümü' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
@@ -46,7 +46,8 @@ export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteI
 
   const islemler = useMemo(() => (dosya && typeof dosya === 'object' && 'islemler' in dosya ? gecerliIslemler(items, dosya.islemler) : []), [dosya, items]);
   const silSayisi = islemler.filter(i => i.tur === 'sil').length;
-  const yazSayisi = islemler.length - silSayisi;
+  const kitapSayisi = islemler.filter(i => i.tur === 'kitapBolumu').length;
+  const yazSayisi = islemler.length - silSayisi - kitapSayisi;
 
   const uygula = async () => {
     setCalisiyor(0);
@@ -57,13 +58,13 @@ export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteI
     } finally { setCalisiyor(null); }
   };
 
-  return { dosya, islemler, silSayisi, yazSayisi, calisiyor, sonuc, uygula };
+  return { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, calisiyor, sonuc, uygula };
 }
 
 export const AjansKararlariKarti: React.FC<Props> = (props) => {
   const { anahtar } = props;
   const [acik, setAcik] = useState(false);
-  const { dosya, islemler, silSayisi, yazSayisi, calisiyor, sonuc, uygula } = useAjansKararlari(props);
+  const { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, calisiyor, sonuc, uygula } = useAjansKararlari(props);
 
   if (!anahtar) return null;
 
@@ -95,7 +96,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
         islemler.length ? (
           <>
             <p className={`text-[14px] ${YAZI}`}>
-              {silSayisi ? `${silSayisi} öneri tepsiden silinecek` : ''}{silSayisi && yazSayisi ? ', ' : ''}{yazSayisi ? `${yazSayisi} cevap vikiye işlenecek` : ''}.
+              {[silSayisi ? `${silSayisi} öneri tepsiden silinecek` : '', yazSayisi ? `${yazSayisi} cevap vikiye işlenecek` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a yazılacak` : ''].filter(Boolean).join(', ')}.
             </p>
             <button type="button" className={DUGME_BOS} onClick={() => setAcik(a => !a)}>{acik ? 'Listeyi gizle' : 'Listeyi göster'}</button>
             {acik && (
@@ -110,6 +111,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
                     {i.tur === 'markaKarti' && <> → <span className="font-semibold">{i.marka} · {MARKA_KARTI_ALANLARI[i.alan] || i.alan}: {Array.isArray(i.deger) ? i.deger.join(' · ') : i.deger}</span></>}
                     {i.tur === 'bagKur' && <> → <span className="font-semibold">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</span></>}
                     {i.tur === 'yeniMadde' && <> · <span className="font-semibold">{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</span>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}
+                    {i.tur === 'kitapBolumu' && <> → <span className="font-semibold">{kitapBolumuOnizleme(props.items, i)}</span></>}
                     <span className={`block text-[12px] ${IKINCIL}`}>{i.neden}</span>
                   </li>
                 ))}
