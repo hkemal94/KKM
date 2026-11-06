@@ -17,7 +17,7 @@ import {
 import { useBekleyenIsler } from '../anasayfa/BekleyenIsler';
 import { EksikOzeti } from '../anasayfa/EksikOzeti';
 import { ISLEM_ADI, useAjansKararlari } from '../anasayfa/AjansKararlariKarti';
-import { maddeTuru } from '../../lib/ajansKararlari';
+import { kitapBolumuOnizleme, maddeTuru } from '../../lib/ajansKararlari';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { oneriTuru, useOneriIslemleri } from '../studyo/OneriTepsisi';
 import type { StudyoIslemleri } from '../studyo/StudyoBaglami';
@@ -276,18 +276,18 @@ export const OnayBekleyenler: React.FC<Props> = ({
     if (anahtar && d && typeof d === 'object' && 'islemler' in d && kararlar.islemler.length && !kararlar.sonuc) {
       const k = `karar:${d.olusturuldu || 'dosya'}`;
       const zaman = Date.parse(d.olusturuldu) || simdi;
-      const { silSayisi, yazSayisi } = kararlar;
+      const { silSayisi, yazSayisi, kitapSayisi } = kararlar;
       liste.push({
         anahtar: k, kaynak: 'karar', etiket: 'KARAR', zaman, zamanYazi: neZaman(zaman),
         baslik: `Ajansın kararları: ${kararlar.islemler.length} iş`,
         ozet: [
-          [silSayisi ? `${silSayisi} öneri silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye` : ''].filter(Boolean).join(', '),
+          [silSayisi ? `${silSayisi} öneri silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a` : ''].filter(Boolean).join(', '),
           kararlar.islemler.slice(0, 3).map(i => i.baslik).join(' · ')
         ].filter(Boolean).join(' · '),
         govde: (
           <>
             <p className={`text-[12px] ${IKINCIL}`}>
-              {silSayisi ? `${silSayisi} öneri tepsiden silinecek` : ''}{silSayisi && yazSayisi ? ', ' : ''}{yazSayisi ? `${yazSayisi} düzeltme vikiye işlenecek` : ''}.
+              {[silSayisi ? `${silSayisi} öneri tepsiden silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye işlenecek` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a yazılacak` : ''].filter(Boolean).join(', ')}.
               Uygula hepsini birden işler; makbuz ajansın deposuna düşer.
             </p>
             <ul className={`${KUTU} space-y-1.5 max-h-72 overflow-y-auto`}>
@@ -300,6 +300,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <b className="line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</b></>}
                   {i.tur === 'bagKur' && <> → <b>{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</b></>}
                   {i.tur === 'yeniMadde' && <> · <b>{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</b>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}
+                  {i.tur === 'kitapBolumu' && <> → <b>{kitapBolumuOnizleme(items, i)}</b></>}
                   <span className={`block text-[11px] ${IKINCIL}`}>{i.neden}</span>
                 </li>
               ))}

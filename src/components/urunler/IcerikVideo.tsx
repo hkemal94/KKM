@@ -4,6 +4,8 @@ import { ExternalLink, FolderOpen } from 'lucide-react';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import { DURUM_ADI, isleriOku, kimdeAdi, type AjansIsi } from '../../lib/isler';
 import { DUGME_BOS, IKINCIL, KART, YAZI } from '../anasayfa/stil';
+import { dizileriOku, type DiziDosyasi } from '../../lib/diziler';
+import { DiziKarti } from './DiziKarti';
 
 /**
  * İçerik → Video (2 Kasım, Kemal: "sade bir sekme"). Eylül Altunkaya'nın
@@ -11,6 +13,10 @@ import { DUGME_BOS, IKINCIL, KART, YAZI } from '../anasayfa/stil';
  * yazıya döker ve başlık, açıklama, bölüm hazırlar; çıktılar Drive'da
  * videonun yanına. Burada klasörün bağlantısı ve ajansın iş dosyasındaki
  * video işleri durur. Yalnız okur; onay Onay bekleyenler'de.
+ *
+ * 6 Kasım (Kemal: "Video sekmesinde dizi kartı"): ajansın dizileri
+ * (`kkm/diziler.json`, `lib/diziler.ts`) burada kart olarak görünür. Dosya
+ * yoksa kart çıkmaz, yerine "henüz dizi yok" yazar.
  */
 const HAM_KLASOR = 'https://drive.google.com/drive/folders/1YyvsvBbtaMT8nA9jP_9VcoH_ImjKD9VV';
 const VIDEO_ISI = /video|vlog|youtube|eylül|eylul/i;
@@ -19,6 +25,8 @@ export function IcerikVideo({ onAjans }: { onAjans: () => void }) {
   const anahtar = anahtariOku();
   const [isler, setIsler] = useState<AjansIsi[] | null>(null);
   const [hata, setHata] = useState<string | null>(null);
+  const [diziler, setDiziler] = useState<DiziDosyasi | null | 'yukleniyor'>('yukleniyor');
+  const [diziHata, setDiziHata] = useState<string | null>(null);
 
   useEffect(() => {
     if (!anahtar) return;
@@ -26,6 +34,9 @@ export function IcerikVideo({ onAjans }: { onAjans: () => void }) {
     isleriOku(anahtar)
       .then(d => { if (!iptal) setIsler((d?.isler || []).filter(i => VIDEO_ISI.test(`${i.metin} ${i.konu || ''}`) || i.kimde.startsWith('video-'))); })
       .catch(e => { if (!iptal) setHata(e instanceof Error ? e.message : String(e)); });
+    dizileriOku(anahtar)
+      .then(d => { if (!iptal) setDiziler(d); })
+      .catch(e => { if (!iptal) setDiziHata(e instanceof Error ? e.message : String(e)); });
     return () => { iptal = true; };
   }, [anahtar]);
 
@@ -41,6 +52,12 @@ export function IcerikVideo({ onAjans }: { onAjans: () => void }) {
           <FolderOpen className="w-3.5 h-3.5" /> Eylül Vlog Ham klasörü <ExternalLink className="w-3 h-3" />
         </a>
       </section>
+
+      {anahtar && (diziHata ? (
+        <p className={`text-[12px] ${IKINCIL} px-1`}>Diziler okunamadı ({diziHata}).</p>
+      ) : diziler === 'yukleniyor' ? null : !diziler || !diziler.diziler.length ? (
+        <p className={`text-[12px] ${IKINCIL} px-1`}>Henüz dizi yok.</p>
+      ) : diziler.diziler.map(d => <DiziKarti key={d.id} dizi={d} dal={diziler.dal} />))}
 
       <section className={`${KART} p-4 space-y-2`}>
         <p className={`text-[13px] font-semibold ${YAZI}`}>Ajanstaki video işleri</p>
