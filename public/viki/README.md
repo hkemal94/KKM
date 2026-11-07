@@ -70,3 +70,7 @@ Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfas
 - `cizim-kuzey-plaji.jpg` → Kuzey Plajı
 - `cizim-amfora-alani.jpg` → Amfora Alanı
 - `cizim-guney-burnu.jpg` → Güney Burnu
+
+## 7 Kasım 2026 (Cloudflare görsel havuzu)
+
+`havuz-*.jpg`: Kemal'in Cloudflare görsel havuzundan seçtiği 20 görsel (eski afiş tarzı, yapay zekâ taslağı, kanon değil). Maddelere ajansın `gorselEkle` kararıyla ek görsel olarak girer. Sağlık Ocağı görselindeki İngilizce tabela yazısı silindi.
