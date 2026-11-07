@@ -74,3 +74,7 @@ Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfas
 ## 7 Kasım 2026 (Cloudflare görsel havuzu)
 
 `havuz-*.jpg`: Kemal'in Cloudflare görsel havuzundan seçtiği 20 görsel (eski afiş tarzı, yapay zekâ taslağı, kanon değil). Maddelere ajansın `gorselEkle` kararıyla ek görsel olarak girer. Sağlık Ocağı görselindeki İngilizce tabela yazısı silindi.
+
+## 7 Kasım 2026 (Eylül Alimyeri)
+
+`cizim-eylul-alimyeri.jpg`: Eylül Alimyeri karakter sayfası (kalem-suluboya, yapay zekâ taslağı). Kemal seçti ve vikiye girmesini onayladı (7 Kasım).
