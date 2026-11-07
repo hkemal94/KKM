@@ -37,3 +37,36 @@ Kemal kişi ve aile maddeleri için yüz yerine silüeti seçti (Canva, Kems Aja
 
 Kems Ajans'ın Resepsiyon dizisi için Canva'da çizdiği karakter (taslak görsel). 1400 pikselden 1200'e küçültüldü, PNG.
 - `mehmet-yilmaz.png` → Mehmet Yılmaz
+
+## 7 Kasım 2026 (viki çizimleri)
+
+Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfasında seçti. Uzun kenar 1200 piksel, JPG.
+- `cizim-sahil-yolu.jpg` → Sahil Yolu
+- `cizim-duzada.jpg` → Düzada
+- `cizim-kems-company.jpg` → Kems Company
+- `cizim-the-imperial-kemskoy.jpg` → The Imperial Kemsköy
+- `cizim-kucukcetmi-ciftligi.jpg` → Küçükçetmi Çiftliği
+- `cizim-ada-tepesi.jpg` → Ada Tepesi
+- `cizim-erdal-ozturk.jpg` → Erdal Öztürk
+- `cizim-zeynep-ozturk-yilmaz.jpg` → Zeynep Öztürk Yılmaz
+- `cizim-duzada-merkez-camii.jpg` → Düzada Merkez Camii
+- `cizim-merkez-kahvehanesi.jpg` → Merkez Kahvehanesi
+- `cizim-duzada-jandarma-karakolu.jpg` → Düzada Jandarma Karakolu
+- `cizim-merkez-postanesi.jpg` → Merkez Postanesi
+- `cizim-eski-kilise.jpg` → Eski Kilise
+- `cizim-liman-balik-hali.jpg` → Liman Balık Hali
+- `cizim-taraftar-birahanesi.jpg` → Taraftar Birahanesi
+- `cizim-duzada-ilkokulu.jpg` → Düzada İlkokulu
+- `cizim-merkez-pazari.jpg` → Merkez Pazarı
+- `cizim-merkez-meydani.jpg` → Merkez Meydanı
+- `cizim-belediye-binasi.jpg` → Belediye Binası
+- `cizim-deniz-feneri.jpg` → Deniz Feneri
+- `cizim-liman-idare-binasi.jpg` → Liman İdare Binası
+- `cizim-sade-meyhane.jpg` → Sade Meyhane
+- `cizim-ciftlik-mahallesi.jpg` → Çiftlik Mahallesi
+- `cizim-kuzey-sirti.jpg` → Kuzey Sırtı
+- `cizim-cetmi-sirti.jpg` → Çetmi Sırtı
+- `cizim-fener-burnu.jpg` → Fener Burnu
+- `cizim-kuzey-plaji.jpg` → Kuzey Plajı
+- `cizim-amfora-alani.jpg` → Amfora Alanı
+- `cizim-guney-burnu.jpg` → Güney Burnu
