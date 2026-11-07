@@ -287,6 +287,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: Kemal\'in seçtiği 29 kalem-suluboya çizim public/viki altında (maddelere ikinci görsel; ajansın kararıyla tek düğmeyle eklenir, taslak)' },
   { id: 'viki-havuz-gorselleri', paket: 'W', kimde: 'claude', nereden: '7 Kasım · Kemal', bitti: true,
     ad: 'Viki: Kemal\'in Cloudflare görsel havuzundan seçtiği 20 görsel public/viki altında (maddelere ek görsel; ajansın kararıyla tek düğmeyle eklenir, taslak)' },
+  { id: 'viki-eylul', paket: 'W', kimde: 'claude', nereden: '7 Kasım · Kemal', bitti: true,
+    ad: 'Viki: Eylül Alimyeri karakter sayfası (kalem-suluboya) public/viki altında; ajansın kararıyla maddeye görsel olur (taslak)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
