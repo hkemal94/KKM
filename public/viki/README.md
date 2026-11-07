@@ -86,3 +86,9 @@ Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfas
 ## 7 Kasım 2026 (Kübra Yılmaz)
 
 `cizim-kubra-yilmaz.jpg`: Kübra Yılmaz karakter sayfası (kalem-suluboya, yapay zekâ taslağı; ressam). Kemal izinli olduğunu söyledi ve vikiye girmesini istedi (7 Kasım). Köşedeki el yazısı silindi.
+
+## 8 Kasım 2026 (Ada Alimyeri, Kübra Yılmaz yenilendi)
+
+`cizim-ada-alimyeri.jpg`: Ada Alimyeri karakter sayfası (kalem-suluboya, yapay zekâ taslağı). Kemal izinli olduğunu söyledi ve vikiye girmesini istedi; yaş fotoğraftaki gibi (vikideki yaş bilgisi Kemal'in kararıyla ayrıca güncellenir).
+
+`cizim-kubra-yilmaz.jpg` yenilendi: yüz fotoğrafa daha çok benzetildi (Kemal onayladı, 8 Kasım).
