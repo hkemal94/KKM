@@ -78,3 +78,7 @@ Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfas
 ## 7 Kasım 2026 (Eylül Alimyeri)
 
 `cizim-eylul-alimyeri.jpg`: Eylül Alimyeri karakter sayfası (kalem-suluboya, yapay zekâ taslağı). Kemal seçti ve vikiye girmesini onayladı (7 Kasım).
+
+## 7 Kasım 2026 (Göksel Yılmaz)
+
+`cizim-goksel-yilmaz.jpg`: Göksel Yılmaz karakter sayfası (kalem-suluboya, yapay zekâ taslağı). Kemal seçti ve vikiye girmesini onayladı (7 Kasım).
