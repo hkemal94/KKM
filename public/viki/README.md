@@ -82,3 +82,7 @@ Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfas
 ## 7 Kasım 2026 (Göksel Yılmaz)
 
 `cizim-goksel-yilmaz.jpg`: Göksel Yılmaz karakter sayfası (kalem-suluboya, yapay zekâ taslağı). Kemal seçti ve vikiye girmesini onayladı (7 Kasım).
+
+## 7 Kasım 2026 (Kübra Yılmaz)
+
+`cizim-kubra-yilmaz.jpg`: Kübra Yılmaz karakter sayfası (kalem-suluboya, yapay zekâ taslağı; ressam). Kemal izinli olduğunu söyledi ve vikiye girmesini istedi (7 Kasım). Köşedeki el yazısı silindi.
