@@ -98,3 +98,10 @@ Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfas
 `cizim-cagri-babacan.jpg`: Çağrı Babacan karakter sayfası (kalem-suluboya, yapay zekâ taslağı; bıyıklı düzeltilmiş sürüm). Kemal 8 Kasım'da vikiye girmesini onayladı.
 
 `cizim-ali-eskibey.jpg`: Ali Eskibey karakter sayfası (kalem-suluboya, yapay zekâ taslağı; toparlanmış sürüm). Kemal 8 Kasım'da vikiye girmesini onayladı.
+
+## 8 Kasım 2026 (kalan 9 viki çizimi)
+
+Kalem-suluboya, yapay zekâ taslağı; Kemal 8 Kasım'da dokuzunu da seçti. Ajansın kararıyla maddelere ek görsel olur:
+`cizim-dirlik-stadi.jpg`, `cizim-stadyum-mahallesi.jpg`, `cizim-rum-mezarligi.jpg`, `cizim-sahil-merdiveni.jpg`,
+`cizim-kemskoy-caddesi.jpg`, `cizim-duzada-saglik-ocagi.jpg`, `cizim-liman-mahallesi.jpg`, `cizim-merkez-mahallesi.jpg`,
+`cizim-liman-balik-lokantasi.jpg`.
