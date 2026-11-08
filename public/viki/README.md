@@ -92,3 +92,9 @@ Kems Ajans'ın Canva'da çizdiği kalem-suluboya görseller; Kemal seçim sayfas
 `cizim-ada-alimyeri.jpg`: Ada Alimyeri karakter sayfası (kalem-suluboya, yapay zekâ taslağı). Kemal izinli olduğunu söyledi ve vikiye girmesini istedi; yaş fotoğraftaki gibi (vikideki yaş bilgisi Kemal'in kararıyla ayrıca güncellenir).
 
 `cizim-kubra-yilmaz.jpg` yenilendi: yüz fotoğrafa daha çok benzetildi (Kemal onayladı, 8 Kasım).
+
+## 8 Kasım 2026 (Çağrı Babacan, Ali Eskibey)
+
+`cizim-cagri-babacan.jpg`: Çağrı Babacan karakter sayfası (kalem-suluboya, yapay zekâ taslağı; bıyıklı düzeltilmiş sürüm). Kemal 8 Kasım'da vikiye girmesini onayladı.
+
+`cizim-ali-eskibey.jpg`: Ali Eskibey karakter sayfası (kalem-suluboya, yapay zekâ taslağı; toparlanmış sürüm). Kemal 8 Kasım'da vikiye girmesini onayladı.

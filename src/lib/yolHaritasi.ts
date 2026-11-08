@@ -299,6 +299,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: Ada Alimyeri karakter sayfası (kalem-suluboya) public/viki altında; ajansın kararıyla maddeye görsel olur (taslak)' },
   { id: 'harita-3b-deneme', paket: 'W', kimde: 'claude', nereden: '8 Kasım · Kemal', bitti: true,
     ad: 'Harita: Blender arazi parçalarıyla 3B deneme görünümü (telefon denemesi için; ayrı depodan akar)' },
+  { id: 'viki-cagri-ali', paket: 'W', kimde: 'claude', nereden: '8 Kasım · Kemal', bitti: true,
+    ad: 'Viki: Çağrı Babacan ve Ali Eskibey karakter sayfaları (kalem-suluboya) public/viki altında; ajansın kararıyla maddeye görsel olur (taslak)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
