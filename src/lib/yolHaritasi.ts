@@ -303,6 +303,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: Çağrı Babacan ve Ali Eskibey karakter sayfaları (kalem-suluboya) public/viki altında; ajansın kararıyla maddeye görsel olur (taslak)' },
   { id: 'viki-cizimleri-3', paket: 'W', kimde: 'claude', nereden: '8 Kasım · Kemal', bitti: true,
     ad: 'Viki: kalan 9 kalem-suluboya çizim (Dirlik Stadı, Stadyum ve Liman ve Merkez Mahallesi, Rum Mezarlığı, Sahil Merdiveni, Kemsköy Caddesi, Sağlık Ocağı, Balık Lokantası) public/viki altında (taslak)' },
+  { id: 'kunye-otel-meyhane', paket: 'W', kimde: 'claude', nereden: '8 Kasım · Kemal', bitti: true,
+    ad: 'Künye: otelin restoranı sol kulede (ayrı yapı yok); Sade Meyhane otelin yanında, koya bakan yamaçta (cadde değil)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

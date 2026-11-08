@@ -297,11 +297,13 @@ Ayrıntı: `docs/soru-cevap/madde-1.md`.
   döneminden; **eczane** 1980 sonrası.
 - **Okul** — maddesi "Düzada İlkokulu" (ilk ve ortaokul), 1920–1940'lar.
 - **Eski Kilise** — maddenin adı; gerçek adı bilinmiyor.
-- **Kemsköy Caddesi** — Kems Company dükkânı, Sade Meyhane, Eski Kilise,
-  barlar ve meyhaneler bu caddede.
+- **Kemsköy Caddesi** — Kems Company dükkânı, Eski Kilise, barlar ve
+  meyhaneler bu caddede. **Sade Meyhane** caddede değil: otelin yanında,
+  koya bakan yamaçta (Kemal, 8 Kasım 2026: harita doğru).
 - **Otel** — Sahil Merdiveni otelden uçurum boyunca inen taş merdiven;
-  dipte otelin kum cebi ve tahta iskele; Otel Yolu otele çıkar. Yanındaki
-  kırmızı çatılı, teraslı yapı otelin restoranı.
+  dipte otelin kum cebi ve tahta iskele; Otel Yolu otele çıkar. Otelin
+  restoranı otelin içinde, sol kulede; ayrı bir restoran yapısı yok (Kemal,
+  7 Kasım 2026).
 - **Adların kökeni** — Çetmi Sırtı ← Küçükçetmi; Fener Burnu ← Deniz
   Feneri; Kuzey Sırtı ← yön.
 - **Sahil Yolu** — adayı dolanan halka (vikide maddesi bu adla).
