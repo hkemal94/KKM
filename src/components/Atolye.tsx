@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check } from 'lucide-react';
+import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check, Box } from 'lucide-react';
+import { DUGME_BOS } from './anasayfa/stil';
 import { isaretle } from '../lib/olcumler';
 import type { HaritaBakisi } from './harita/DuzadaHarita';
 import { ATMOSFER_KAPALI, type AtmosferAyari } from './harita/atmosferAyari';
@@ -41,6 +42,8 @@ const ZamanCizgisi = lazy(() => import('./atolye/ZamanCizgisi').then(m => ({ def
 const DuzadaHarita = lazy(() =>
   import('./harita/DuzadaHarita').then(m => ({ default: m.DuzadaHarita }))
 );
+// 3B deneme (8 Kasım): Blender arazi parçaları, three.js; yalnız düğmeye basınca iner
+const UcBoyutDeneme = lazy(() => import('./harita/UcBoyutDeneme'));
 // Kurucu (şehir kurucu): harita verisini kullanır, sayfa açılınca yüklenir
 const Kurucu = lazy(() =>
   import('./kurucu/Kurucu').then(m => ({ default: m.Kurucu }))
@@ -110,6 +113,9 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
     return y;
   });
   const [tamEkran, setTamEkran] = useState(false);
+  // 3B deneme görünümü açık mı (yalnız görünüm; kayda yazılmaz)
+  const [ucBoyutDeneme, setUcBoyutDeneme] = useState(false);
+  const ucBoyutuKapat = useCallback(() => setUcBoyutDeneme(false), []);
   const tamEkranDegistir = useCallback(() => {
     const el = haritaKabi.current;
     if (!tamEkran) {
@@ -175,7 +181,18 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
       <SayfaBasi baslik={baslik}>
         {/* 4 Kasım (Kemal): Kurucu düzeni ajansa; yalnız basınca */}
         {sekme === 'harita' && haritaDuzeni.ilkYukleme ? <HaritaAjansaDugmesi duzen={haritaDuzeni.duzen} items={items} /> : null}
+        {/* 8 Kasım (Kemal): Blender arazi parçalarıyla 3B deneme; tam ekran açılır, "Kapat" ile harita geri gelir */}
+        {sekme === 'harita' && (
+          <button type="button" onClick={() => setUcBoyutDeneme(true)} className={DUGME_BOS} title="Blender'da üretilen arazi parçalarıyla tam ekran 3B deneme">
+            <Box className="w-3.5 h-3.5" /> 3B deneme
+          </button>
+        )}
       </SayfaBasi>
+      {ucBoyutDeneme && (
+        <Suspense fallback={<div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">3B deneme yükleniyor…</div>}>
+          <UcBoyutDeneme onKapat={ucBoyutuKapat} />
+        </Suspense>
+      )}
       {bolumler.length > 1 && <SayfaRayi baslik={baslik} bolumler={bolumler} aktifId={sekme} onSec={id => setSekme(id as AtolyeSekmesi)} />}
 
 
