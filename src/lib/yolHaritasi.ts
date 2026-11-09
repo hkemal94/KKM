@@ -308,7 +308,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'viki-siluet-gizle', paket: 'W', kimde: 'claude', nereden: '9 Kasım · Kemal', bitti: true,
     ad: 'Viki: görseli olan maddede yer tutucu silüet gösterilmez (yalnız silüeti olan maddede kalır)' },
   { id: 'viki-dizi-gorselleri', paket: 'W', kimde: 'claude', nereden: '9 Kasım · Kemal', bitti: true,
-    ad: 'Viki: resepsiyon dizisinin 8 karakteri ile Eylül ve Ada (abla-kardeş) görselleri public/viki altında (taslak)' },
+    ad: 'Viki: resepsiyon dizisinin 8 karakteri ile Eylül ve Ada (abla-kardeş) görselleri; 16 karakter portresi; künyede portre ilk görsel, öbürleri galeride (taslak)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
