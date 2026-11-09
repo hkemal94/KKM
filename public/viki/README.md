@@ -105,3 +105,13 @@ Kalem-suluboya, yapay zekâ taslağı; Kemal 8 Kasım'da dokuzunu da seçti. Aja
 `cizim-dirlik-stadi.jpg`, `cizim-stadyum-mahallesi.jpg`, `cizim-rum-mezarligi.jpg`, `cizim-sahil-merdiveni.jpg`,
 `cizim-kemskoy-caddesi.jpg`, `cizim-duzada-saglik-ocagi.jpg`, `cizim-liman-mahallesi.jpg`, `cizim-merkez-mahallesi.jpg`,
 `cizim-liman-balik-lokantasi.jpg`.
+
+## 9 Kasım 2026 (dizi karakterleri, Eylül ve Ada)
+
+Resepsiyon dizisi karakter sayfaları (kalem-suluboya, yapay zekâ taslağı; Canva "Resepsiyon dizisi karakter çalışma sayfası", göz düzeltmeli sürümler):
+`cizim-selim-sarikaya.jpg`, `cizim-nermin-celik.jpg`, `cizim-nusret-demir.jpg`, `cizim-hasan-ercan.jpg`, `cizim-derya-ozdemir.jpg`,
+`cizim-necdet-soydan.jpg`, `cizim-yasar-dogan.jpg` ve `cizim-burcu-sonmez.jpg` (son ikisi grup sayfalarından kesildi).
+`cizim-eylul-ve-ada.jpg`: Eylül ve Ada Alimyeri, abla-kardeş (Alimyeri Ailesi maddesi için). Kemal 9 Kasım'da istedi.
+
+Portreler (9 Kasım, Kemal: "künyede portre birinci görsel, diğerleri galeride"; "biyometrik fotoğraf gibi"): tek kalıpta çizilmiş vesikalık `portre-<ad>.jpg` (karşıdan, baş ve omuz, krem zemin, nokta göz; Canva DAHaLKy60n0 s.50–68)
+(16 kişi). `src/lib/maddeGorseli.ts` künyede `portre-` ile başlayan görseli her zaman ilk sıraya koyar.

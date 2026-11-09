@@ -40,6 +40,9 @@ export const vikiGorseliMi = (s: unknown): s is string =>
  */
 export const siluetMi = (s: unknown): boolean => typeof s === 'string' && s.startsWith(`${'/viki/'}siluet-`);
 
+/** Karakter portresi (`/viki/portre-…`, 9 Kasım): künyede her zaman ilk görsel */
+export const portreMi = (s: unknown): boolean => typeof s === 'string' && s.startsWith(`${'/viki/'}portre-`);
+
 const gorselMi = (s: unknown): s is string =>
   typeof s === 'string' && !silinenGorselMi(s) && (s.startsWith('data:image/') || /^https?:\/\//.test(s) || s.startsWith('/'));
 
@@ -58,7 +61,7 @@ export function maddeGorseli(item: Item, items: Item[] = []): string | undefined
 
   // 1–2. Uygulamaya yüklenmiş görseller (dosyanın kendisi kayıtta)
   const yuklenenler = (item.images || []).filter(x => veriMi(x) || vikiGorseliMi(x));
-  const yuklenen = yuklenenler.find(x => !siluetMi(x)) ?? yuklenenler[0];
+  const yuklenen = yuklenenler.find(portreMi) ?? yuklenenler.find(x => !siluetMi(x)) ?? yuklenenler[0];
   if (yuklenen) return yuklenen;
   if (veriMi(kit?.logoBase64)) return kit!.logoBase64;
   if (veriMi(kit?.selectedLogo)) return kit!.selectedLogo;
@@ -91,5 +94,7 @@ export function maddeGorselleri(item: Item, items: Item[] = []): string[] {
     (typeof x === 'string' && x.startsWith('data:image/') && !x.startsWith('data:image/svg')) || vikiGorseliMi(x));
   const hepsi = [...new Set([...(ana ? [ana] : []), ...ek])];
   // Gerçek görsel varsa silüet hiç gösterilmez; yalnız silüet varsa o kalır
-  return hepsi.some(g => !siluetMi(g)) ? hepsi.filter(g => !siluetMi(g)) : hepsi;
+  const gercek = hepsi.some(g => !siluetMi(g)) ? hepsi.filter(g => !siluetMi(g)) : hepsi;
+  // 9 Kasım, Kemal: karakterde künyedeki ilk görsel portre olur, öbürleri galeride arkasından gelir
+  return [...gercek.filter(portreMi), ...gercek.filter(g => !portreMi(g))];
 }
