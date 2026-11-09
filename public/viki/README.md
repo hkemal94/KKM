@@ -113,5 +113,5 @@ Resepsiyon dizisi karakter sayfaları (kalem-suluboya, yapay zekâ taslağı; Ca
 `cizim-necdet-soydan.jpg`, `cizim-yasar-dogan.jpg` ve `cizim-burcu-sonmez.jpg` (son ikisi grup sayfalarından kesildi).
 `cizim-eylul-ve-ada.jpg`: Eylül ve Ada Alimyeri, abla-kardeş (Alimyeri Ailesi maddesi için). Kemal 9 Kasım'da istedi.
 
-Portreler (9 Kasım, Kemal: "künyede portre birinci görsel, diğerleri galeride"): karakter sayfalarından kesilen `portre-<ad>.jpg`
+Portreler (9 Kasım, Kemal: "künyede portre birinci görsel, diğerleri galeride"; "biyometrik fotoğraf gibi"): tek kalıpta çizilmiş vesikalık `portre-<ad>.jpg` (karşıdan, baş ve omuz, krem zemin, nokta göz; Canva DAHaLKy60n0 s.50–68)
 (16 kişi). `src/lib/maddeGorseli.ts` künyede `portre-` ile başlayan görseli her zaman ilk sıraya koyar.
