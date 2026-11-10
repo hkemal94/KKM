@@ -78,6 +78,8 @@ const ATLANAN_ALAN = new Set(['title']);
 
 /** Mahallesi sorulan türler; marka (Kems Company) adanın dışında */
 const MAHALLELI = new Set<ItemType>(['mekân', 'dükkân', 'kulüp', 'olay', 'kisi', 'karakter', 'aile']);
+/** Adada oturmayan misafirler için mahalle yerine yazılan değer; eşleşmese de dolu sayılır (10 Kasım). */
+const ADADA_OTURMAZ = /^adada (oturmaz|yaşamaz)\.?$/i;
 
 /** Mahalleler: başka bir yere bağlı olmayan 'yer' kayıtları */
 const mahalleBasliklari = (items: Item[]) => {
@@ -127,7 +129,7 @@ export function bosluklariCikar(items: Item[]): Bosluk[] {
       if (s.id === 'region' && MAHALLELI.has(item.type as ItemType) && mahalleler.length) {
         const yazili = yazilanMahalle(item);
         const ustuVar = !!(item.metadata?.placeId && kimlik.has(item.metadata.placeId));
-        if (yazili && !ustuVar && !mahalleListesi.some(m => mahalleEslesir(yazili, m.eslesme))) {
+        if (yazili && !ustuVar && !ADADA_OTURMAZ.test(yazili.trim()) && !mahalleListesi.some(m => mahalleEslesir(yazili, m.eslesme))) {
           cikti.push({ anahtar: `${item.id}::region`, item, alanId: 'region', etiket: s.label, soru: `"${yazili}" bir mahalleyle eşleşmiyor. Hangi mahallede? (${mahalleler.join(', ')})`, yol: s.fieldPath });
           continue;
         }
