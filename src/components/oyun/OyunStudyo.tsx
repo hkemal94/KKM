@@ -16,6 +16,8 @@ import { OyunVitrini } from './OyunVitrini';
 import { GddBolumu } from './GddBolumu';
 import { DepoBelgesi } from './DepoBelgesi';
 import { OyunAyarlari } from './OyunAyarlari';
+import { DkLitePaneli } from './DkLitePaneli';
+import { dkLiteMi } from '../../lib/dkLiteAyarlari';
 import { AjansaGonder } from './AjansaGonder';
 import { OyunAssetleri } from './OyunAssetleri';
 import { BinaGalerisi } from './BinaGalerisi';
@@ -564,7 +566,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       {sekme === 'depo' && depo && <DepoBelgesi key="depo" depo={depo} />}
       {sekme === 'yol' && depo && <DepoBelgesi key="yol" depo={depo} yollar={YOL_HARITASI_YOLLARI}
         bulunamazsa="Bu oyunun deposunda henüz yol haritası yok (docs/yol-haritasi.md). Oyun ajanı yazınca burada görünür." />}
-      {sekme === 'ayar' && depo && <OyunAyarlari depo={depo} />}
+      {/* DK Lite'ın ayarları kendi panelinde (9 Kasım, Kemal: hediyeler, lokasyonlar, mağaza, bölümler) */}
+      {sekme === 'ayar' && depo && (dkLiteMi(depo) ? <DkLitePaneli depo={depo} /> : <OyunAyarlari depo={depo} />)}
 
       {fikirPenceresi && (
         <FikirNotu

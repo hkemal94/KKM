@@ -5,6 +5,16 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
+## DK Lite paneli (10 Kasım, Kemal)
+
+Kemal (9 Kasım): DK Lite'ın bölümlerini, arka planlarını, hediyelerini "sürükle bırakla" değiştirebileceği
+bir panel; yeri **Oyunlar ekranı**, ilk etapta hediyeler, lokasyonlar, mağaza, bölüm ayarları. Oyunlar →
+DK Lite → **Ayarlar** sekmesi artık bu paneli açar (`components/oyun/DkLitePaneli.tsx`,
+`lib/dkLiteAyarlari.ts`). Panel DK Lite deposundaki `src/veri/oyun-ayarlari.json`'u canlı okur; "Oyuna
+gönder" DK Lite deposunda `ajans/panel-…` dalında öneri (PR) açar, birleştiren Kemal. KKM kayıtlarına
+hiçbir şey yazılmaz. Dosyanın biçimi DK Lite'ta `docs/ayar-dosyasi.md`. Öbür oyunların Ayarlar sekmesi
+eskisi gibi. Yeni çizim ve yeni tema görünüşü panelden yapılmaz, ekipten gelir.
+
 ## Yeni yerleşim (2 Kasım, Kemal)
 
 KKM üç başlığa geçiyor: **Ajans · Evren · Ürünler**. Kararlar ajans
