@@ -315,6 +315,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: 16 karakterin vesikalık portresi (tek kalıp) ve aynı ölçekte tam boyu (taslak)' },
   { id: 'bosluk-adada-oturmaz', paket: 'K', kimde: 'claude', nereden: '10 Kasım · Kemal', bitti: true,
     ad: 'Boşluklar: mahallesine "Adada oturmaz" yazılan misafirler listeden düşer' },
+  { id: 'soy-agaci-buyuk', paket: 'W', kimde: 'claude', nereden: '10 Kasım · Kemal', bitti: true,
+    ad: 'Görünümler → Soy ağacı büyüdü: aile çerçeveleri, portreli kutular, sürükle-yakınlaştır, kişi arama; eş ve iş yeri künyeden okunur, bağı olmayan kişi çıkmaz, iş ve arkadaşlık kapalı başlar' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
