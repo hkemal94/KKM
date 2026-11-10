@@ -311,6 +311,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: resepsiyon dizisinin 8 karakteri ile Eylül ve Ada (abla-kardeş) görselleri; 16 karakter portresi; künyede portre ilk görsel, öbürleri galeride (taslak)' },
   { id: 'dk-lite-paneli', paket: 'K', kimde: 'claude', nereden: '10 Kasım · Kemal', bitti: true,
     ad: 'Oyunlar → DK Lite → Ayarlar: DK Lite paneli (hediyeler sürükle bırak, lokasyonlar, mağaza, bölüm ayarları); "Oyuna gönder" DK Lite deposunda öneri açar' },
+  { id: 'viki-vesikalik-tamboy', paket: 'W', kimde: 'claude', nereden: '10 Kasım · Kemal', bitti: true,
+    ad: 'Viki: 16 karakterin vesikalık portresi (tek kalıp) ve aynı ölçekte tam boyu (taslak)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

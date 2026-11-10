@@ -115,3 +115,9 @@ Resepsiyon dizisi karakter sayfaları (kalem-suluboya, yapay zekâ taslağı; Ca
 
 Portreler (9 Kasım, Kemal: "künyede portre birinci görsel, diğerleri galeride"; "biyometrik fotoğraf gibi"): tek kalıpta çizilmiş vesikalık `portre-<ad>.jpg` (karşıdan, baş ve omuz, krem zemin, nokta göz; Canva DAHaLKy60n0 s.50–68)
 (16 kişi). `src/lib/maddeGorseli.ts` künyede `portre-` ile başlayan görseli her zaman ilk sıraya koyar.
+
+## 10 Kasım 2026 (vesikalık portreler ve standart tam boylar)
+
+Kemal: "biyometrik fotoğraf gibi" ve "boylarını, kalıplarını mantıklı ölçülerde yap". `portre-<ad>.jpg` (16 kişi) tek kalıpta
+çizilmiş vesikalıklarla değişti (karşıdan, baş-omuz, krem zemin, nokta göz). `tamboy-<ad>.jpg` (16 kişi): vesikalıktan yola
+çıkan tam boylar; hepsi aynı ölçekte ve aynı taban çizgisinde. Künyede portre ilk, tam boy galeride ardından gelir.
