@@ -1,11 +1,12 @@
-import React, { useRef, useState } from 'react';
-import { ImagePlus, Save, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronRight, ImagePlus, Save, X } from 'lucide-react';
 import { useKaydedilmemis } from '../../lib/kaydedilmemis';
 import type { Item } from '../../types';
 import { compressImageBase64 } from '../../lib/imageCompressor';
 import type { Asama } from './OyunSureci';
 import { depoAdi } from '../../lib/depoBelgesi';
 import { yasayanGorseller } from '../../lib/silinenGorseller';
+import { oyunKimliginiOku, type OyunKimligi } from '../../lib/oyunKimligi';
 
 /**
  * Oyunun tanıtım künyesi (Paket 5). Kemal (yapısal 1. set): oyun "bir künye
@@ -39,6 +40,17 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
   const [depo, setDepo] = useState(meta.depo || '');
   const depoTemiz = depo.trim() ? depoAdi(depo) : '';
   const [buyuk, setBuyuk] = useState<string | null>(null);
+  // Oyunun logosu ve kapağı depodan (11 Kasım, Kemal: "ilham yerine oyunun logosunun
+  // bulunduğu görselleri koy, ilham direkt görünen yerde olmasın")
+  const [kimlik, setKimlik] = useState<OyunKimligi>({});
+  const [ilhamAcik, setIlhamAcik] = useState(false);
+  useEffect(() => {
+    let iptal = false;
+    setKimlik({});
+    if (meta.depo) void oyunKimliginiOku(meta.depo).then(k => { if (!iptal) setKimlik(k); });
+    return () => { iptal = true; };
+  }, [meta.depo]);
+  const resmi = [kimlik.logo, kimlik.kapak].filter((x): x is string => !!x);
   const dosya = useRef<HTMLInputElement | null>(null);
 
   const yaz = async (degisen: Partial<Item> & { metadata?: Record<string, unknown> }) => {
@@ -140,8 +152,28 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
             <span className="text-[13px] text-[#C9D0E3]">{mesaj ?? (degisti ? 'Kaydedilmemiş değişiklik var' : '')}</span>
           </div>
         </div>
-        <div className="min-w-0">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">İlham / taslak · en fazla {EN_FAZLA_GORSEL}</div>
+        <div className="min-w-0 space-y-3">
+          {resmi.length > 0 && (
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">Oyunun görselleri · depodan</div>
+              <div className="grid grid-cols-2 gap-2">
+                {resmi.map(g => (
+                  <button key={g} type="button" onClick={() => setBuyuk(g)} className={`block rounded-lg overflow-hidden aspect-video cursor-zoom-in ${g === kimlik.logo ? 'bg-[#5B2A86] p-2' : 'bg-white/10'}`}>
+                    <img src={g} alt="" className={`w-full h-full ${g === kimlik.logo ? 'object-contain' : 'object-cover'}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+          {resmi.length > 0 && (
+            <button type="button" onClick={() => setIlhamAcik(a => !a)} aria-expanded={ilhamAcik}
+              className="w-full min-h-11 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] hover:text-[#F3EFE8] cursor-pointer">
+              {ilhamAcik ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />} İlham / taslak · {gorseller.length}
+            </button>
+          )}
+          {(ilhamAcik || resmi.length === 0) && <>
+          {resmi.length === 0 && <div className="text-[10px] font-mono uppercase tracking-wider text-[#A6B0C9] mb-1">İlham / taslak · en fazla {EN_FAZLA_GORSEL}</div>}
           <div className="grid grid-cols-2 gap-2">
             {gorseller.map((g, idx) => (
               <div key={`${idx}-${g.slice(-40)}`} className="relative group rounded-lg overflow-hidden bg-white/10 aspect-video">
@@ -155,7 +187,9 @@ export const OyunVitrini: React.FC<Props> = ({ items, oyunId, asama, gddDolu, gd
               </button>
             )}
           </div>
+          </>}
           <input ref={dosya} type="file" accept="image/*" multiple className="hidden" onChange={e => { void gorselEkle(e.target.files); e.target.value = ''; }} />
+          </div>
         </div>
       </div>
       {buyuk && (

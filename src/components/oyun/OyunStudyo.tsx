@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { BolumBasligi, BosSatir, IlerlemeHalkasi, Rozet } from '../kabuk/Parcalar';
 import {
-  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, Gamepad2, ArrowRight, Send, Layers
+  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, ArrowRight, Send, Layers
 } from 'lucide-react';
 import type { Item, AreaType } from '../../types';
 import {
@@ -23,6 +23,7 @@ import { OyunAssetleri } from './OyunAssetleri';
 import { BinaGalerisi } from './BinaGalerisi';
 import { yasayanGorseller } from '../../lib/silinenGorseller';
 import { EkranGoruntuleri } from './EkranGoruntuleri';
+import { DurumOzeti, OyunKapagi } from './DurumOzeti';
 import { BinaPlanlari } from './BinaPlanlari';
 import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
 import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
@@ -186,14 +187,14 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
           const asama = projeAsamasi(items, o.id);
           const belge = gddBolumleri(items, o.id);
           const dolu = ADIM_SIRASI.filter(id => bolumYapildi(belge.find(k => (k.metadata as any)?.bolumId === id))).length;
-          const kapak = yasayanGorseller(o.kayit?.images)[0];
+          // Kapak (11 Kasım): oyunun deposundaki kapak ekran görüntüsü; depo yoksa eski görsel
+          const kapakDeposu = String((o.kayit?.metadata as any)?.depo || '').trim() || undefined;
+          const yedekKapak = yasayanGorseller(o.kayit?.images)[0];
           const ozet = String((o.kayit?.metadata as any)?.ozet || '').trim();
           return (
             <button key={o.id} type="button" onClick={() => { setOyunId(o.id); window.scrollTo({ top: 0 }); }}
               className={`${KART} p-4 flex gap-4 text-left cursor-pointer hover:ring-2 hover:ring-[#F26B6F]/40`}>
-              {kapak
-                ? <img src={kapak} alt="" className="w-24 h-24 rounded-xl object-cover shrink-0" />
-                : <span className="w-24 h-24 rounded-xl bg-[#0E1C4F] dark:bg-[#2C3C72] flex items-center justify-center shrink-0"><Gamepad2 className="w-8 h-8 text-[#F26B6F]" /></span>}
+              <OyunKapagi depo={kapakDeposu} yedek={kapakDeposu ? undefined : yedekKapak} className="w-24 h-24 rounded-xl shrink-0" />
               <span className="flex-1 min-w-0 space-y-1.5">
                 <span className="flex flex-wrap gap-1.5">
                   {asama ? <Rozet renk="dikkat">{asama.ad}</Rozet> : <Rozet renk="bekliyor">başlamadı</Rozet>}
@@ -540,6 +541,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
         <button type="button" onClick={() => setNpcAcik(true)} className={DUGME_BOS}><UserPlus className="w-3.5 h-3.5" /> NPC yarat</button>
         <button type="button" onClick={() => setAjansAcik(a => !a)} className={DUGME_BOS} title="Oyunun dosyası ve notun Kems Ajans'a gider"><Send className="w-3.5 h-3.5" /> Ajansa gönder</button>
       </SayfaBasi>
+      {depo && <DurumOzeti depo={depo} />}
       {ajansAcik && <AjansaGonder items={items} oyunId={oyunId} oyunAdi={oyunAdi(oyunKaydi) || 'Adsız oyun'} onKapat={() => setAjansAcik(false)} />}
 
       <SayfaRayi
