@@ -156,9 +156,9 @@ const AJAN_EKRANI: Partial<Record<string, string>> = {
 };
 const SEKMEYE_GECENLER = ['fanzin', 'takvim', 'yolharitasi', 'galeri', 'atolye', 'yazi', 'markalar', 'merch', 'sosyal', 'blog'];
 const MARKA_SEKMELERI: MarkaSekmesi[] = ['markalar', 'merch'];
-const ICERIK_SEKMELERI: IcerikSekmesi[] = ['sosyal', 'blog', 'fanzin', 'video'];
+const ICERIK_SEKMELERI: IcerikSekmesi[] = ['profiller', 'sosyal', 'blog', 'fanzin', 'video'];
 const markaSekmesi = (s: unknown): MarkaSekmesi => (MARKA_SEKMELERI.includes(s as MarkaSekmesi) ? s as MarkaSekmesi : 'markalar');
-const icerikSekmesi = (s: unknown): IcerikSekmesi => (ICERIK_SEKMELERI.includes(s as IcerikSekmesi) ? s as IcerikSekmesi : 'sosyal');
+const icerikSekmesi = (s: unknown): IcerikSekmesi => (ICERIK_SEKMELERI.includes(s as IcerikSekmesi) ? s as IcerikSekmesi : 'profiller');
 
 export interface WorkspaceUser {
   uid: string;
