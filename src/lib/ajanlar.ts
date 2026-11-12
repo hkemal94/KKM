@@ -10,8 +10,10 @@ import { ajansaDosyaYaz } from './tepsiAjansa';
  * Hat ve KKM ekranı aşağıdaki tablodan (Kemal'in kadrosu, 2 Kasım).
  *
  * Zamanlayıcı ayarı `kkm/zamanlayici.json`: Kemal "Kaydet"e basınca KKM
- * yazar. Ayar kendi başına bir şey çalıştırmaz; Kemal "başla" deyince Kems
- * onu Claude'da zamanlı görevlere çevirir. KKM kayıtlarına hiçbir şey yazılmaz.
+ * yazar. 12 Kasım (Kemal: "gerçekten çalışsın"): her gece tek gece turu var;
+ * tur başlarken bu dosyayı okur ve o gece sırası gelen ajanları çalıştırır.
+ * Ekranda yapılan değişiklik ertesi gece geçerli olur. KKM kayıtlarına
+ * hiçbir şey yazılmaz.
  */
 
 export const AJANLAR_KLASORU = '.claude/agents';
@@ -108,66 +110,135 @@ export async function ajanlariOku(anahtar: string): Promise<AjanBilgisi[]> {
 // ---------------------------------------------------------------- zamanlayıcı
 
 export type GunKodu = 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU';
-export const GUNLER: Array<{ kod: GunKodu; ad: string }> = [
-  { kod: 'MO', ad: 'Pzt' }, { kod: 'TU', ad: 'Sal' }, { kod: 'WE', ad: 'Çar' }, { kod: 'TH', ad: 'Per' },
-  { kod: 'FR', ad: 'Cum' }, { kod: 'SA', ad: 'Cmt' }, { kod: 'SU', ad: 'Paz' }
+export const GUNLER: Array<{ kod: GunKodu; ad: string; uzun: string }> = [
+  { kod: 'MO', ad: 'Pzt', uzun: 'Pazartesi' }, { kod: 'TU', ad: 'Sal', uzun: 'Salı' }, { kod: 'WE', ad: 'Çar', uzun: 'Çarşamba' }, { kod: 'TH', ad: 'Per', uzun: 'Perşembe' },
+  { kod: 'FR', ad: 'Cum', uzun: 'Cuma' }, { kod: 'SA', ad: 'Cmt', uzun: 'Cumartesi' }, { kod: 'SU', ad: 'Paz', uzun: 'Pazar' }
 ];
 
 export interface AjanZamani {
   acik: boolean;
-  /** her gün · haftanın seçili günleri · tek bir tarih */
-  tur: 'hergun' | 'gunler' | 'tarih';
-  /** 'SS:DD', İstanbul */
-  saat: string;
+  /**
+   * hergun · gunler (haftanın günleri; `hafta` ile iki haftada bir) ·
+   * ayda (ayın son `gunler[0]` günü) · kosul (yalnız iş olunca, her gece
+   * bakılır) · tarih (tek seferlik)
+   */
+  tur: 'hergun' | 'gunler' | 'ayda' | 'kosul' | 'tarih';
+  /** Eski alan (ajan başına saat); 12 Kasım'dan beri tur saati geçerli */
+  saat?: string;
   gunler?: GunKodu[];
+  /** gunler için: her hafta · tek haftalar · çift haftalar (ISO hafta numarası) */
+  hafta?: 'her' | 'tek' | 'cift';
   /** YYYY-AA-GG */
   tarih?: string;
 }
 
-export interface Zamanlayici { guncellendi?: string; ajanlar: Record<string, AjanZamani> }
+export interface Zamanlayici {
+  guncellendi?: string;
+  /** Gece turunun saati, 'SS:DD' İstanbul (12 Kasım: tek tur) */
+  turSaati?: string;
+  ajanlar: Record<string, AjanZamani>;
+}
 
-/** Ayar yoksa: hepsi kapalı; evren ajanlarına önerilen saat gece 01:00 */
-export const varsayilanZaman = (ad: string): AjanZamani => ({ acik: false, tur: 'hergun', saat: EVREN_AJANLARI.includes(ad) ? '01:00' : '09:00' });
+export const VARSAYILAN_TUR_SAATI = '01:00';
+
+/** "İş olunca" seçeneğinde ajanın neye baktığı (gece turu da aynısını okur) */
+export const KOSULLAR: Record<string, string> = {
+  'viki-editoru': 'Cevapladığın ve işlenmemiş bir viki sorusu varsa',
+  'video-editoru': "Drive'a yeni çekim düştüyse",
+  'sosyal-medya-dagitimcisi': 'Onayladığın ve uyarlanmamış bir gönderi taslağı varsa',
+  'merch-tasarimcisi': 'Seçtiğin bir merch fikri varsa',
+};
+
+/** Ayar yoksa: kapalı */
+export const varsayilanZaman = (ad: string): AjanZamani => ({ acik: false, tur: KOSULLAR[ad] ? 'kosul' : 'gunler', gunler: [], hafta: 'her' });
+
+/** ISO hafta numarası (tek / çift hafta için) */
+export function isoHafta(t = new Date()): number {
+  const d = new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()));
+  const gun = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - gun);
+  const yilBasi = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yilBasi.getTime()) / 86400000 + 1) / 7);
+}
+
+const GUN_SIRASI: GunKodu[] = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+/** Ajan o gün (İstanbul günü) sıradaysa true; "iş olunca" ajanları her gece bakılır */
+export function bugunSirada(z: AjanZamani, t = new Date()): boolean {
+  if (!z.acik) return false;
+  const gun = GUN_SIRASI[t.getDay()];
+  if (z.tur === 'hergun' || z.tur === 'kosul') return true;
+  if (z.tur === 'gunler') {
+    if (!(z.gunler || []).includes(gun)) return false;
+    const h = isoHafta(t) % 2 === 1 ? 'tek' : 'cift';
+    return !z.hafta || z.hafta === 'her' || z.hafta === h;
+  }
+  if (z.tur === 'ayda') {
+    const hedef = (z.gunler || [])[0];
+    if (!hedef || gun !== hedef) return false;
+    const yediSonra = new Date(t); yediSonra.setDate(t.getDate() + 7);
+    return yediSonra.getMonth() !== t.getMonth();  // ayın son o günü
+  }
+  if (z.tur === 'tarih') {
+    const y = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    return z.tarih === y;
+  }
+  return false;
+}
 
 export async function zamanlayiciOku(anahtar: string): Promise<Zamanlayici> {
   try {
     const d = await github<{ content: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${ZAMANLAYICI_YOLU}`);
     const j = JSON.parse(base64Coz(d.content)) as Partial<Zamanlayici>;
-    return { guncellendi: j.guncellendi, ajanlar: (j.ajanlar && typeof j.ajanlar === 'object') ? j.ajanlar : {} };
+    return {
+      guncellendi: j.guncellendi,
+      turSaati: typeof j.turSaati === 'string' && /^\d{2}:\d{2}$/.test(j.turSaati) ? j.turSaati : VARSAYILAN_TUR_SAATI,
+      ajanlar: (j.ajanlar && typeof j.ajanlar === 'object') ? j.ajanlar : {}
+    };
   } catch {
-    return { ajanlar: {} }; // ilk kez: dosya yok
+    return { turSaati: VARSAYILAN_TUR_SAATI, ajanlar: {} }; // ilk kez: dosya yok
   }
 }
 
 /** Ayarı ajansın deposuna yazar (Kemal "Kaydet"e basınca); GitHub adresini döner */
-export function zamanlayiciYaz(anahtar: string, ajanlar: Record<string, AjanZamani>): Promise<string> {
+export function zamanlayiciYaz(anahtar: string, ajanlar: Record<string, AjanZamani>, turSaati = VARSAYILAN_TUR_SAATI): Promise<string> {
   const temiz: Record<string, AjanZamani> = {};
   for (const [ad, z] of Object.entries(ajanlar)) {
     temiz[ad] = {
-      acik: !!z.acik, tur: z.tur, saat: /^\d{2}:\d{2}$/.test(z.saat) ? z.saat : '09:00',
-      ...(z.tur === 'gunler' && z.gunler?.length ? { gunler: z.gunler } : {}),
+      acik: !!z.acik, tur: z.tur,
+      ...((z.tur === 'gunler' || z.tur === 'ayda') && z.gunler?.length ? { gunler: z.tur === 'ayda' ? z.gunler.slice(0, 1) : z.gunler } : {}),
+      ...(z.tur === 'gunler' && z.hafta && z.hafta !== 'her' ? { hafta: z.hafta } : {}),
       ...(z.tur === 'tarih' && z.tarih ? { tarih: z.tarih } : {})
     };
   }
   const dosya = {
-    _aciklama: "Ajanların zamanlayıcısı. Kemal KKM → Ajanlar ve otomasyonlar → Zamanlayıcı'da 'Kaydet'e basınca yazılır. Kendi başına bir şey çalıştırmaz; Kemal 'başla' deyince Kems Claude'da zamanlı görevlere çevirir. Saatler İstanbul.",
+    _aciklama: "Ajanların zamanlayıcısı. Kemal KKM → Ajanlar ve otomasyonlar → Zamanlayıcı'da 'Kaydet'e basınca yazılır. Her gece turSaati'nde tek gece turu çalışır; tur bu dosyayı okur ve o gece sırası gelen ajanları çalıştırır (değişiklik ertesi gece geçerli). Saatler İstanbul; hafta tek/çift ISO hafta numarasıdır.",
     guncellendi: new Date().toISOString(),
+    turSaati: /^\d{2}:\d{2}$/.test(turSaati) ? turSaati : VARSAYILAN_TUR_SAATI,
     ajanlar: temiz
   };
   const acik = Object.values(temiz).filter(z => z.acik).length;
   return ajansaDosyaYaz(anahtar, ZAMANLAYICI_YOLU, `${JSON.stringify(dosya, null, 2)}\n`, `KKM zamanlayıcı: ${acik} ajan açık`, 'zamanlayıcı');
 }
 
-/** "Her gün 01:00", "Pzt, Çar 09:00", "5 Kasım 10:00", "Kapalı" */
+const gunAdlari = (g?: GunKodu[]) => (g || []).map(k => GUNLER.find(x => x.kod === k)?.ad).filter(Boolean).join(', ');
+
+/** "Pzt, Per", "Cuma · tek haftalar", "Ayın son Pazar'ı", "İş olunca", "Kapalı" */
 export function zamanOzeti(z: AjanZamani): string {
-  if (!z.acik) return 'Kapalı';
-  if (z.tur === 'gunler') return `${(z.gunler || []).map(g => GUNLER.find(x => x.kod === g)?.ad).filter(Boolean).join(', ') || 'gün seçilmedi'} ${z.saat}`;
-  if (z.tur === 'tarih') {
-    if (!z.tarih) return `tarih seçilmedi ${z.saat}`;
-    const [y, a, g] = z.tarih.split('-').map(Number);
-    return `${new Date(y, a - 1, g).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} ${z.saat}`;
+  if (!z.acik) return 'Yalnız iş verince';
+  if (z.tur === 'hergun') return 'Her gece';
+  if (z.tur === 'kosul') return 'İş olunca';
+  if (z.tur === 'gunler') {
+    const g = gunAdlari(z.gunler) || 'gün seçilmedi';
+    return z.hafta === 'tek' ? `${g} · tek haftalar` : z.hafta === 'cift' ? `${g} · çift haftalar` : g;
   }
-  return `Her gün ${z.saat}`;
+  if (z.tur === 'ayda') return z.gunler?.[0] ? `Ayın son ${GUNLER.find(x => x.kod === z.gunler![0])?.uzun}` : 'Ayda bir · gün seçilmedi';
+  if (z.tur === 'tarih') {
+    if (!z.tarih) return 'tarih seçilmedi';
+    const [y, a, g] = z.tarih.split('-').map(Number);
+    return new Date(y, a - 1, g).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+  }
+  return 'Kapalı';
 }
 
 // ---------------------------------------------------------------- model seçimi
