@@ -66,6 +66,12 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
   const [secili, setSecili] = useState<string | null>(null);
   /** Zamanlayıcıda ayarı açık satır (kompakt liste; 12 Kasım) */
   const [duzenlenen, setDuzenlenen] = useState<string | null>(null);
+  /** Limit uyarısı aç / kapa (12 Kasım, Kemal); yalnız bu tarayıcıda, kayda yazılmaz */
+  const [limitGoster, setLimitGoster] = useState(() => { try { return localStorage.getItem('kkm-limit-uyarisi') !== 'kapali'; } catch { return true; } });
+  const limitDegistir = () => setLimitGoster(g => {
+    try { localStorage.setItem('kkm-limit-uyarisi', g ? 'kapali' : 'acik'); } catch { /* yok */ }
+    return !g;
+  });
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [mesaj, setMesaj] = useState<string | null>(null);
 
@@ -246,7 +252,14 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
           <p className={`flex-1 min-w-0 text-[12px] ${IKINCIL}`}>Gece turu açık (12 Kasım): her gece {saatKayitli}'de zamanlayıcıdaki sıraya göre çalışır; getirdikleri sabah tepsine düşer.</p>
           <button type="button" onClick={() => setTur(t => t + 1)} className={DUGME_BOS}><RefreshCw className="w-3.5 h-3.5" /> Yenile</button>
         </div>
-        {isler?.limit && (
+        <div className={`flex flex-wrap items-center gap-2 text-[12px] ${IKINCIL}`}>
+          <AlertTriangle className={`w-4 h-4 ${limitGoster ? 'text-[#F26B6F]' : 'text-[#CFC5B4]'}`} />
+          <span>Limit uyarısı</span>
+          <button type="button" onClick={limitDegistir} aria-pressed={limitGoster} className={cip(limitGoster)}>{limitGoster ? 'Açık' : 'Kapalı'}</button>
+          {!isler?.limit && <span>· şu an uyarı yok</span>}
+          {isler?.limit && !limitGoster && <span>· bir uyarı var, gizli</span>}
+        </div>
+        {isler?.limit && limitGoster && (
           <p className={`${KART} p-3 flex items-start gap-2 text-[12px] ${YAZI} border-[#F26B6F]`}>
             <AlertTriangle className="w-4 h-4 shrink-0 text-[#F26B6F]" />
             <span><b>Limit:</b> {isler.limit.uyari}{isler.limit.tarih ? ` · ${neZaman(Date.parse(isler.limit.tarih))}` : ''}</span>
