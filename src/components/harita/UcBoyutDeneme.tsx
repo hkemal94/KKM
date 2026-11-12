@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { X } from 'lucide-react';
+import { Map as HaritaSimgesi, Maximize2, X } from 'lucide-react';
 import { GOK } from './haritaStili';
 import { parcaKoku } from '../../lib/parcaKaynagi';
 import { IptalHatasi, ParcaYukleyici } from '../../lib/parcaYukle';
@@ -47,7 +47,12 @@ const yakinDosya = (p: ParcaSatiri) => `parca/${p.ad}-yakin.glb`;
 
 const sayi = (n: number, basamak = 0) => n.toLocaleString('tr-TR', { minimumFractionDigits: basamak, maximumFractionDigits: basamak });
 
-export const UcBoyutDeneme: React.FC<{ onKapat: () => void }> = ({ onKapat }) => {
+/**
+ * gomulu (12 Kasım, Kemal: harita açılınca yeni harita gelsin): sayfanın içinde
+ * kutu olarak durur; "Eski harita · Kurucu" düğmesi eski haritaya geçer,
+ * "Tam ekran" ayrı bir katmanda açar. Ölçü sayaçları yalnız tam ekranda.
+ */
+export const UcBoyutDeneme: React.FC<{ onKapat: () => void; gomulu?: boolean; className?: string; onTamEkran?: () => void }> = ({ onKapat, gomulu, className, onTamEkran }) => {
   const kap = useRef<HTMLDivElement>(null);
   const [sayac, setSayac] = useState<Sayac>({ mb: 0, yakin: 0, uzak: 0, toplam: 0, ucgen: 0, fps: 0 });
   const [hata, setHata] = useState('');
@@ -285,30 +290,47 @@ export const UcBoyutDeneme: React.FC<{ onKapat: () => void }> = ({ onKapat }) =>
   }, []);
 
   useEffect(() => {
+    if (gomulu) return;
     const tus = (e: KeyboardEvent) => { if (e.key === 'Escape') onKapat(); };
     window.addEventListener('keydown', tus);
     return () => window.removeEventListener('keydown', tus);
-  }, [onKapat]);
+  }, [onKapat, gomulu]);
 
+  const dugme = 'pointer-events-auto inline-flex items-center gap-1.5 min-h-11 lg:min-h-0 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#FAF8F5]/95 text-[#0E1C4F] border border-[#CFC5B4] cursor-pointer hover:border-[#F26B6F]';
   return (
-    <div className="fixed inset-0 z-[95] font-sans" style={{ background: GOK.pus }}>
+    <div className={gomulu ? `relative font-sans ${className || ''}` : 'fixed inset-0 z-[95] font-sans'} style={{ background: GOK.pus }}>
       <div ref={kap} className="absolute inset-0 touch-none" />
-      <div className="absolute left-3 top-3 flex items-start gap-2 pointer-events-none">
-        <button type="button" onClick={onKapat}
-          className="pointer-events-auto inline-flex items-center gap-1.5 min-h-11 lg:min-h-0 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#FAF8F5]/95 text-[#0E1C4F] border border-[#CFC5B4] cursor-pointer hover:border-[#F26B6F]">
-          <X className="w-3.5 h-3.5" /> Kapat
-        </button>
-        <div className="px-2.5 py-1.5 rounded-lg bg-[#FAF8F5]/90 border border-[#CFC5B4] text-[11px] leading-[1.45] text-[#0E1C4F] tabular-nums">
-          <div className="font-semibold">3B deneme</div>
-          {hata ? <div>{hata}</div> : (
-            <>
-              <div>İndirilen: {sayi(sayac.mb, 1)} MB</div>
-              <div>Parça: yakın {sayac.yakin} · uzak {sayac.uzak}{sayac.toplam ? ` / ${sayac.toplam}` : ''}</div>
-              <div>Üçgen: {sayi(sayac.ucgen)}</div>
-              <div>Akıcılık: {sayi(sayac.fps)} kare/sn</div>
-            </>
-          )}
-        </div>
+      <div className="absolute left-3 top-3 flex flex-wrap items-start gap-2 pointer-events-none">
+        {gomulu ? (
+          <>
+            <button type="button" onClick={onKapat} className={dugme} title="Eski haritayı ve Kurucu araçlarını aç">
+              <HaritaSimgesi className="w-3.5 h-3.5" /> Eski harita · Kurucu
+            </button>
+            {onTamEkran && (
+              <button type="button" onClick={onTamEkran} className={dugme} title="Tam ekran">
+                <Maximize2 className="w-3.5 h-3.5" /> Tam ekran
+              </button>
+            )}
+            {hata && <div className="px-2.5 py-1.5 rounded-lg bg-[#FAF8F5]/90 border border-[#CFC5B4] text-[11px] text-[#0E1C4F]">{hata}</div>}
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={onKapat} className={dugme}>
+              <X className="w-3.5 h-3.5" /> Kapat
+            </button>
+            <div className="px-2.5 py-1.5 rounded-lg bg-[#FAF8F5]/90 border border-[#CFC5B4] text-[11px] leading-[1.45] text-[#0E1C4F] tabular-nums">
+              <div className="font-semibold">3B harita</div>
+              {hata ? <div>{hata}</div> : (
+                <>
+                  <div>İndirilen: {sayi(sayac.mb, 1)} MB</div>
+                  <div>Parça: yakın {sayac.yakin} · uzak {sayac.uzak}{sayac.toplam ? ` / ${sayac.toplam}` : ''}</div>
+                  <div>Üçgen: {sayi(sayac.ucgen)}</div>
+                  <div>Akıcılık: {sayi(sayac.fps)} kare/sn</div>
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
