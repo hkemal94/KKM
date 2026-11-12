@@ -319,6 +319,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Görünümler → Soy ağacı büyüdü: aile çerçeveleri, portreli kutular, sürükle-yakınlaştır, kişi arama; eş ve iş yeri künyeden okunur, bağı olmayan kişi çıkmaz, iş ve arkadaşlık kapalı başlar' },
   { id: 'oyun-sayfalari-toparla', paket: 'K', kimde: 'claude', nereden: '11 Kasım · Kemal', bitti: true,
     ad: 'Oyunlar: kapak oyunun deposundaki seçili ekran görüntüsünden; oyun sayfasının başında durum özeti (neredeyiz, sırada, senden beklenen, Oyunu aç); künyede ilham yerine oyunun logosu ve kapağı, ilham kapalı kutuda' },
+  { id: 'viki-gorselsiz-3', paket: 'W', kimde: 'claude', nereden: '11 Kasım · Kemal', bitti: true,
+    ad: 'Viki: İskele Koyu, Otel Yolu (3B harita) ve Resepsiyon dizisi (1. bölüm karesi) görselleri (taslak)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
