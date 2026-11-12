@@ -121,3 +121,10 @@ Portreler (9 Kasım, Kemal: "künyede portre birinci görsel, diğerleri galerid
 Kemal: "biyometrik fotoğraf gibi" ve "boylarını, kalıplarını mantıklı ölçülerde yap". `portre-<ad>.jpg` (16 kişi) tek kalıpta
 çizilmiş vesikalıklarla değişti (karşıdan, baş-omuz, krem zemin, nokta göz). `tamboy-<ad>.jpg` (16 kişi): vesikalıktan yola
 çıkan tam boylar; hepsi aynı ölçekte ve aynı taban çizgisinde. Künyede portre ilk, tam boy galeride ardından gelir.
+
+## 12 Kasım 2026 (görseli olmayan maddeler)
+
+Kemal'in KKM isteği (görseli olmayan viki maddeleri) ve 11 Kasım seçimi. Hepsi taslak, kanon değil.
+`iskele-koyu.jpg` (İskele Koyu) ve `otel-yolu.jpg` (Otel Yolu): ajansın 3B haritasından (Blender) görüntü.
+`resepsiyon-dizisi.jpg` (Resepsiyon dizisi): 1. bölümden resepsiyon masası karesi (Nermin ve Selim).
+Efendi Kuruyemiş ve Merkez Eczanesi bilerek boş: haritada yerleri belli olunca 3B görüntüleri alınacak.
