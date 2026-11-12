@@ -42,6 +42,7 @@ import {
   Megaphone,
   Sparkles,
   ArrowLeft,
+  Home,
 } from 'lucide-react';
 import { SAYFA_RAYI_YUVASI } from './components/SayfaRayi';
 import type { StudyoIslemleri } from './components/studyo/StudyoBaglami';
@@ -122,6 +123,7 @@ import { Yedekleme } from './components/Yedekleme';
 import HizliNotModal from './components/HizliNotModal';
 import AramaModal from './components/AramaModal';
 import { NotlarSayfasi } from './components/anasayfa/NotlarSayfasi';
+import { AnaSayfa } from './components/anasayfa/AnaSayfa';
 import { IslerVeTakvim, type IslerSekmesi } from './components/ajans/IslerVeTakvim';
 import { AjanlarVeOtomasyonlar, type AjanlarSekmesi } from './components/ajans/AjanlarVeOtomasyonlar';
 import { OnayBekleyenler } from './components/ajans/OnayBekleyenler';
@@ -129,10 +131,11 @@ import { Zil } from './components/kabuk/Zil';
 import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from './lib/bildirimler';
 
 /**
- * Uygulamanın sayfaları. 'onay' açılış (2 Kasım); eski Komuta Merkezi 'durum'.
+ * Uygulamanın sayfaları. 'ana' açılış (12 Kasım: tepsi, onaylar, notlar tek ekranda);
+ * 'onay' 2 Kasım'dan 12 Kasım'a kadar açılıştı; eski Komuta Merkezi 'durum'.
  * 2 Kasım (yol haritası 1. adım): Ana sayfa ve Site kalktı; notlar 'notlar'da.
  */
-type Sayfa = 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik' | 'ilham';
+type Sayfa = 'ana' | 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik' | 'ilham';
 /** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
 const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar', 'studyo']);
 const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'boyut'];
@@ -190,7 +193,7 @@ export default function App() {
     const d = typeof history !== 'undefined' ? (history.state as Record<string, any> | null) : null;
     return d?.kkm && typeof d.tab === 'string' ? d : null;
   });
-  const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab && !KALKAN_SAYFALAR.has(ilkEkran.tab) ? ilkEkran.tab as Sayfa : 'onay'));
+  const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab && !KALKAN_SAYFALAR.has(ilkEkran.tab) ? ilkEkran.tab as Sayfa : 'ana'));
   /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kurucu, Kitap) */
   const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(() =>
     ilkEkran?.tab === 'duzada' && (ilkEkran.duzada === 'wiki' || ilkEkran.duzada === 'rapor') ? { sekme: ilkEkran.duzada, n: Date.now() } : null);
@@ -693,7 +696,7 @@ export default function App() {
       case 'zamanlayici': setAjanlarSekme('zamanlayici'); setActiveTab('ajanlar'); break;
       case 'galeri': setMarkaGaleri(true); setMarkaSekme('markalar'); setActiveTab('marka'); break;
       case 'markalar': setMarkaGaleri(false); setMarkaSekme('markalar'); setActiveTab('marka'); break;
-      default: setActiveTab(KALKAN_SAYFALAR.has(hedef) ? 'onay' : hedef as Sayfa);
+      default: setActiveTab(KALKAN_SAYFALAR.has(hedef) ? 'ana' : hedef as Sayfa);
     }
   };
 
@@ -719,7 +722,7 @@ export default function App() {
   /* Eski adla gelen sayfa isteği (ör. bir alt ekrandan 'galeri') yeni yerine gider */
   useEffect(() => {
     if (SEKMEYE_GECENLER.includes(activeTab as string)) yonlendir(activeTab as string);
-    else if (KALKAN_SAYFALAR.has(activeTab as string)) setActiveTab('onay');
+    else if (KALKAN_SAYFALAR.has(activeTab as string)) setActiveTab('ana');
   }, [activeTab]);
 
   /*
@@ -754,7 +757,7 @@ export default function App() {
         return;
       }
       sonEkran.current = d;
-      setActiveTab(KALKAN_SAYFALAR.has(d.tab) ? 'onay' : d.tab as Sayfa);
+      setActiveTab(KALKAN_SAYFALAR.has(d.tab) ? 'ana' : d.tab as Sayfa);
       setActiveItemId(d.item ?? null);
       if (d.marka) setMarkaSekme(markaSekmesi(d.marka));
       if (d.icerik) setIcerikSekme(icerikSekmesi(d.icerik));
@@ -778,7 +781,7 @@ export default function App() {
   const geriGit = () => {
     const d = history.state as Record<string, unknown> | null;
     if (d?.kkm && Number(d.derinlik ?? 0) > 0) history.back();
-    else git('onay');
+    else git('ana');
   };
 
   /** Kanon uyarısında "Yanlış alarm": anahtar maddeye yazılır (Kemal'in düğmesiyle) */
@@ -897,6 +900,7 @@ export default function App() {
   type RaySatiri = { id: Sayfa; ad: string; alt?: string; simge: React.ElementType; nokta?: boolean };
   const RAY: Array<{ grup: string; simge: React.ElementType; satirlar: RaySatiri[] }> = [
     { grup: 'Ajans', simge: Briefcase, satirlar: [
+      { id: 'ana', ad: 'Ana sayfa', alt: 'sabah tepsisi, onaylar, notlar, bu gece', simge: Home },
       { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') || bildirimVar('ajan') },
       { id: 'isler', ad: 'İşler ve takvim', alt: 'kimde ne var, takvim, yol haritası', simge: CalendarDays },
       { id: 'ajanlar', ad: 'Ajanlar ve otomasyonlar', alt: 'ajan kartları, zamanlayıcı, ajans bağlantısı', simge: Bot },
@@ -923,7 +927,7 @@ export default function App() {
   const RAY_ADI = 'min-w-0 whitespace-nowrap opacity-0 group-hover/ray:opacity-100 group-has-[:focus-visible]/ray:opacity-100 transition-opacity duration-150';
 
   const SAYFA_ADI: Record<Sayfa, string> = {
-    onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
+    ana: 'Ana sayfa', onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
     kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
     oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', ilham: 'İlham ve kaynaklar', durum: 'Eksikler ve ayarlar'
   };
@@ -958,7 +962,7 @@ export default function App() {
 
       {/* MASAÜSTÜ: ince simge çubuğu; üstüne gelince açılır, adlar görünür */}
       <nav className="group/ray hidden lg:flex fixed inset-y-0 left-0 z-40 w-16 hover:w-60 has-[:focus-visible]:w-60 hover:delay-150 transition-[width,box-shadow] duration-200 hover:shadow-2xl flex-col py-3 overflow-x-hidden overflow-y-auto [scrollbar-width:none] bg-[#0E1C4F] dark:bg-[#081029]">
-        <button type="button" onClick={() => git('onay')} aria-label="Onay bekleyenler" className="mx-3 mb-2 flex items-center gap-3 cursor-pointer">
+        <button type="button" onClick={() => git('ana')} aria-label="Ana sayfa" className="mx-3 mb-2 flex items-center gap-3 cursor-pointer">
           {logo}
           <span className={RAY_ADI}><b className="block text-[13px] text-white">Kems Komuta</b><span className="block text-[10px] text-[#A6B0C9]">Merkezi</span></span>
         </button>
@@ -1021,12 +1025,12 @@ export default function App() {
           Arama, zil, karanlık / aydınlık. Telefonda geri oku ve logo da burada.
         */}
         <header className="sticky top-0 z-30 flex items-center gap-2 px-4 lg:px-6 py-2 bg-[#F3EFE8]/95 dark:bg-[#13204A]/95 backdrop-blur-xs border-b border-[#CFC5B4] dark:border-[#2C3C72]">
-          {activeTab !== 'onay' && (
+          {activeTab !== 'ana' && (
             <button type="button" onClick={geriGit} aria-label="Geri" className="lg:hidden -ml-2 w-11 h-11 rounded-full flex items-center justify-center text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer active:bg-[#E4DCCD] dark:active:bg-[#17345A]">
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <button type="button" onClick={() => git('onay')} aria-label="Onay bekleyenler" className="lg:hidden mr-1 cursor-pointer">{logo}</button>
+          <button type="button" onClick={() => git('ana')} aria-label="Ana sayfa" className="lg:hidden mr-1 cursor-pointer">{logo}</button>
           <span className="flex-1 min-w-0 leading-tight">
             <span className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#6A5E4C] dark:text-[#A6B0C9] truncate">{aktifGrup ?? 'Komuta Merkezi'}</span>
             <span className="block truncate font-bold text-[16px]">{SAYFA_ADI[activeTab]}</span>
@@ -1053,6 +1057,17 @@ export default function App() {
 
           <main className="flex-1 min-w-0 overflow-x-clip">
             {/* Google girişi şimdilik kapatıldı */}
+
+            {activeTab === 'ana' && (
+              <AnaSayfa
+                items={items}
+                bildirimler={bildirimler}
+                onGit={h => git(h)}
+                onAddItem={handleAddItem}
+                onUpdateItem={handleUpdateItem}
+                onMaddeAc={maddeyiAc}
+              />
+            )}
 
             {activeTab === 'onay' && (
               <OnayBekleyenler
@@ -1081,7 +1096,7 @@ export default function App() {
 
             {AJAN_EKRANI[activeTab] && <div className="mb-3"><AjanDugmesi key={activeTab} ekran={AJAN_EKRANI[activeTab]!} /></div>}
 
-            <HataKapsayici onReset={() => git('onay')}>
+            <HataKapsayici onReset={() => git('ana')}>
             <Suspense fallback={<SayfaYukleniyor />}>
             {activeTab === 'durum' && (
               <Durum
