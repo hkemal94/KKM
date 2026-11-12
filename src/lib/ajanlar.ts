@@ -136,7 +136,27 @@ export interface Zamanlayici {
   guncellendi?: string;
   /** Gece turunun saati, 'SS:DD' İstanbul (12 Kasım: tek tur) */
   turSaati?: string;
+  /** false: bütün tur durdu (ayarlar kalır) */
+  turAcik?: boolean;
+  /** Atlanacak gecelerin tarihi (turun çalıştığı gün, YYYY-AA-GG) */
+  atla?: string[];
+  /** O gece günü olmasa da bir kerelik çalışacak ajanlar: { 'YYYY-AA-GG': ['ajan', …] } */
+  ekstra?: Record<string, string[]>;
   ajanlar: Record<string, AjanZamani>;
+}
+
+export type TurAyari = Omit<Zamanlayici, 'guncellendi' | 'ajanlar'>;
+
+/** Tarihi 'YYYY-AA-GG' yazar (yerel gün) */
+export const gunYaz = (t: Date) => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+
+/** Sıradaki turun günü: tur saati geçtiyse yarın */
+export function siradakiTurGunu(turSaati: string, simdi = new Date()): Date {
+  const [s, d] = turSaati.split(':').map(Number);
+  const t = new Date(simdi);
+  if (simdi.getHours() * 60 + simdi.getMinutes() >= s * 60 + d) t.setDate(t.getDate() + 1);
+  t.setHours(12, 0, 0, 0);
+  return t;
 }
 
 export const VARSAYILAN_TUR_SAATI = '01:00';
@@ -192,6 +212,9 @@ export async function zamanlayiciOku(anahtar: string): Promise<Zamanlayici> {
     const j = JSON.parse(base64Coz(d.content)) as Partial<Zamanlayici>;
     return {
       guncellendi: j.guncellendi,
+      turAcik: j.turAcik !== false,
+      atla: Array.isArray(j.atla) ? j.atla : [],
+      ekstra: j.ekstra && typeof j.ekstra === 'object' ? j.ekstra : {},
       turSaati: typeof j.turSaati === 'string' && /^\d{2}:\d{2}$/.test(j.turSaati) ? j.turSaati : VARSAYILAN_TUR_SAATI,
       ajanlar: (j.ajanlar && typeof j.ajanlar === 'object') ? j.ajanlar : {}
     };
@@ -201,7 +224,12 @@ export async function zamanlayiciOku(anahtar: string): Promise<Zamanlayici> {
 }
 
 /** Ayarı ajansın deposuna yazar (Kemal "Kaydet"e basınca); GitHub adresini döner */
-export function zamanlayiciYaz(anahtar: string, ajanlar: Record<string, AjanZamani>, turSaati = VARSAYILAN_TUR_SAATI): Promise<string> {
+export function zamanlayiciYaz(anahtar: string, ajanlar: Record<string, AjanZamani>, tur: TurAyari = {}): Promise<string> {
+  const turSaati = tur.turSaati || VARSAYILAN_TUR_SAATI;
+  const bugun = gunYaz(new Date());
+  // Geçmiş geceler dosyada birikmesin
+  const atla = (tur.atla || []).filter(g => g >= bugun);
+  const ekstra = Object.fromEntries(Object.entries(tur.ekstra || {}).filter(([g, l]) => g >= bugun && l.length));
   const temiz: Record<string, AjanZamani> = {};
   for (const [ad, z] of Object.entries(ajanlar)) {
     temiz[ad] = {
@@ -212,9 +240,12 @@ export function zamanlayiciYaz(anahtar: string, ajanlar: Record<string, AjanZama
     };
   }
   const dosya = {
-    _aciklama: "Ajanların zamanlayıcısı. Kemal KKM → Ajanlar ve otomasyonlar → Zamanlayıcı'da 'Kaydet'e basınca yazılır. Her gece turSaati'nde tek gece turu çalışır; tur bu dosyayı okur ve o gece sırası gelen ajanları çalıştırır (değişiklik ertesi gece geçerli). Saatler İstanbul; hafta tek/çift ISO hafta numarasıdır.",
+    _aciklama: "Ajanların zamanlayıcısı. Kemal KKM → Ajanlar ve otomasyonlar → Zamanlayıcı'da 'Kaydet'e basınca yazılır. Her gece turSaati'nde tek gece turu çalışır (turAcik false ise hiç çalışmaz, atla'daki gecelerde çalışmaz); tur bu dosyayı okur ve o gece sırası gelen ajanları ve ekstra'daki bir kerelik ajanları çalıştırır (değişiklik ertesi gece geçerli). Saatler İstanbul; hafta tek/çift ISO hafta numarasıdır.",
     guncellendi: new Date().toISOString(),
     turSaati: /^\d{2}:\d{2}$/.test(turSaati) ? turSaati : VARSAYILAN_TUR_SAATI,
+    turAcik: tur.turAcik !== false,
+    ...(atla.length ? { atla } : {}),
+    ...(Object.keys(ekstra).length ? { ekstra } : {}),
     ajanlar: temiz
   };
   const acik = Object.values(temiz).filter(z => z.acik).length;
