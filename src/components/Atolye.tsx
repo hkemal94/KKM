@@ -116,6 +116,10 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
   // 3B deneme görünümü açık mı (yalnız görünüm; kayda yazılmaz)
   const [ucBoyutDeneme, setUcBoyutDeneme] = useState(false);
   const ucBoyutuKapat = useCallback(() => setUcBoyutDeneme(false), []);
+  // 12 Kasım (Kemal): harita açılınca yeni 3B harita gelir; eski harita Kurucu için düğmede
+  const [eskiHarita, setEskiHarita] = useState(false);
+  const eskiHaritayaGec = useCallback(() => setEskiHarita(true), []);
+  const tamEkran3B = useCallback(() => setUcBoyutDeneme(true), []);
   const tamEkranDegistir = useCallback(() => {
     const el = haritaKabi.current;
     if (!tamEkran) {
@@ -181,15 +185,15 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
       <SayfaBasi baslik={baslik}>
         {/* 4 Kasım (Kemal): Kurucu düzeni ajansa; yalnız basınca */}
         {sekme === 'harita' && haritaDuzeni.ilkYukleme ? <HaritaAjansaDugmesi duzen={haritaDuzeni.duzen} items={items} /> : null}
-        {/* 8 Kasım (Kemal): Blender arazi parçalarıyla 3B deneme; tam ekran açılır, "Kapat" ile harita geri gelir */}
-        {sekme === 'harita' && (
-          <button type="button" onClick={() => setUcBoyutDeneme(true)} className={DUGME_BOS} title="Blender'da üretilen arazi parçalarıyla tam ekran 3B deneme">
-            <Box className="w-3.5 h-3.5" /> 3B deneme
+        {/* 12 Kasım (Kemal): eski haritadayken yeni 3B haritaya dönüş */}
+        {sekme === 'harita' && eskiHarita && (
+          <button type="button" onClick={() => setEskiHarita(false)} className={DUGME_BOS} title="Blender'da üretilen yeni 3B haritaya dön">
+            <Box className="w-3.5 h-3.5" /> Yeni 3B harita
           </button>
         )}
       </SayfaBasi>
       {ucBoyutDeneme && (
-        <Suspense fallback={<div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">3B deneme yükleniyor…</div>}>
+        <Suspense fallback={<div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">3B harita yükleniyor…</div>}>
           <UcBoyutDeneme onKapat={ucBoyutuKapat} />
         </Suspense>
       )}
@@ -218,7 +222,13 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
         kontrol edebileceğim bir şey." 2D: çalışma ekranı (araçlar altta).
         3D: aynı ada eğik bakışla, yapılar kat sayısıyla yükselir.
       */}
-      {sekme === 'harita' && (haritaDuzeni.ilkYukleme ? (
+      {sekme === 'harita' && !eskiHarita && !ucBoyutDeneme && (
+        <Suspense fallback={<div className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] flex items-center justify-center rounded-2xl bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">3B harita yükleniyor…</div>}>
+          <UcBoyutDeneme gomulu onKapat={eskiHaritayaGec} onTamEkran={tamEkran3B}
+            className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] sm:min-h-[520px] rounded-2xl overflow-hidden border border-[#CFC5B4] dark:border-[#2C3C72]" />
+        </Suspense>
+      )}
+      {sekme === 'harita' && eskiHarita && (haritaDuzeni.ilkYukleme ? (
         <div ref={haritaKabi} className={tamEkran ? 'fixed inset-0 z-[80] bg-[#1C4E8C]' : ''}>
           <Suspense fallback={<div className="h-[80vh] flex items-center justify-center rounded-2xl bg-[#1C4E8C] font-mono text-xs text-[#F3EFE8]">Harita yükleniyor…</div>}>
             {haritaUc ? (

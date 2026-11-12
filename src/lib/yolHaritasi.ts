@@ -323,6 +323,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: İskele Koyu, Otel Yolu (3B harita) ve Resepsiyon dizisi (1. bölüm karesi) görselleri (taslak)' },
   { id: 'github-otomatik-yayin', paket: 'K', kimde: 'claude', nereden: '12 Kasım · Kemal', bitti: true,
     ad: 'Yayın: KKM GitHub\'dan kendiliğinden yayına çıkar (Cloud Run kurulum tarifi); birleşen PR canlıya geçer', not: 'Google Cloud\'da bir kez GitHub bağlantısı kurulur (Kemal, adım adım).' },
+  { id: 'harita-yeni-varsayilan', paket: 'W', kimde: 'claude', nereden: '12 Kasım · Kemal', bitti: true,
+    ad: 'Harita: sayfa açılınca yeni 3B harita gelir; eski harita ve Kurucu "Eski harita · Kurucu" düğmesinde' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
