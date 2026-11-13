@@ -532,7 +532,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
 
             {k?.durum === 'duzenle' && (
               <p className={`text-[11px] ${IKINCIL}`}>
-                <b className={YAZI}>Düzenleme notun:</b> {[...(k.secenekler || []), k.not].filter(Boolean).join(' · ')}
+                <b className={YAZI}>{s.kaynak === 'ajan' ? 'Yorumun:' : 'Düzenleme notun:'}</b> {[...(k.secenekler || []), k.not].filter(Boolean).join(' · ')}
               </p>
             )}
 
@@ -543,7 +543,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   <Check className="w-3.5 h-3.5" /> {bu ? 'Yapılıyor…' : s.uygula?.ad || 'Uygula'}
                 </button>
                 <button type="button" disabled={mesgul} onClick={() => panelAc(s, 'duzenle')} className={DUGME_BOS} aria-pressed={p === 'duzenle'}>
-                  <Pencil className="w-3.5 h-3.5" /> Düzenle
+                  <Pencil className="w-3.5 h-3.5" /> {s.kaynak === 'ajan' ? 'Yorum yaz' : 'Düzenle'}
                 </button>
                 {s.yolla && (
                   <button type="button" disabled={mesgul} onClick={() => void ajansaYolla([s])} className={DUGME_BOS} title="Not yazmadan ajansa geri yollar: olduğu gibi yeniden yap">
@@ -573,7 +573,9 @@ export const OnayBekleyenler: React.FC<Props> = ({
 
             {p === 'duzenle' && (
               <div className={`${KUTU} space-y-2`}>
-                <p className={IKINCIL}>Ne değişsin? Not yaz ya da hazır seçeneklerden seç (ikisi birden olur). Ajans notuna göre yeniden hazırlar; yeni hâli buraya gelir.</p>
+                <p className={IKINCIL}>{s.kaynak === 'ajan'
+                  ? 'Yorumun ne? Yaz ya da hazır seçeneklerden seç (ikisi birden olur). Yorumun ajana gider; ajan ona göre yeniden yapar, yeni hâli buraya gelir.'
+                  : 'Ne değişsin? Not yaz ya da hazır seçeneklerden seç (ikisi birden olur). Ajans notuna göre yeniden hazırlar; yeni hâli buraya gelir.'}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {HAZIR_SECENEKLER.map(h => {
                     const on = secenekler.includes(h);
@@ -586,12 +588,12 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   })}
                 </div>
                 <textarea
-                  rows={3} value={not} onChange={e => setNot(e.target.value)} placeholder="Örnek: ikinci paragrafı çıkar, daha sade anlat"
+                  rows={3} value={not} onChange={e => setNot(e.target.value)} placeholder={s.kaynak === 'ajan' ? 'Örnek: renkler daha soğuk olsun, tekneler daha küçük' : 'Örnek: ikinci paragrafı çıkar, daha sade anlat'}
                   className={`w-full text-[13px] bg-[#FAF8F5] dark:bg-[#13204A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg p-2 focus:outline-hidden focus:border-[#F26B6F]`}
                 />
                 <div className="flex flex-wrap gap-2">
                   <button type="button" disabled={mesgul} onClick={() => void duzenle(s)} className={DUGME_LAC}>
-                    {bu ? 'Kaydediliyor…' : anahtar ? 'Kaydet ve ajansa gönder' : 'Kaydet'}
+                    {bu ? 'Kaydediliyor…' : s.kaynak === 'ajan' ? 'Yorumu ajana gönder' : anahtar ? 'Kaydet ve ajansa gönder' : 'Kaydet'}
                   </button>
                   <button type="button" onClick={() => setPanel(null)} className={DUGME_BOS}>Vazgeç</button>
                 </div>
