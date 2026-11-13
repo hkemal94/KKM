@@ -183,7 +183,12 @@ function kunyeAlani(m: Item, alan: string) {
   const a = kucuk(alan);
   const f = semaAlanlari(schemaKeyFor(m.type) || '').find(x => (kucuk(x.id) === a || kucuk(x.label) === a) && x.fieldPath.startsWith('metadata.'));
   if (!f) return null;
-  const deger = getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
+  // 14 Kasım: ekrandaki değer değil kayıttaki ham değer (Mahalle ekranda "Çiftlik Mahallesi", kayıtta "çiftlik";
+  // karşılaştırma ekrandakine bakınca karar uygulandıktan sonra da listede dönüp duruyordu)
+  const ham = f.fieldPath.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), m as unknown);
+  const deger = typeof ham === 'string' || typeof ham === 'number'
+    ? String(ham)
+    : getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
   return { yol: f.fieldPath, deger };
 }
 
