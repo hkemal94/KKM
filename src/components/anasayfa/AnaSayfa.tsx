@@ -120,7 +120,7 @@ export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onIsAc, o
     let iptal = false;
     void geceTurunuOku(anahtar).then(t => { if (!iptal) setTur(t); });
     void isleriOku(anahtar).then(i => { if (!iptal) setIsler(i); }).catch(() => { /* yok */ });
-    void zamanlayiciOku(anahtar).then(z => { if (!iptal) setZaman(z); });
+    void zamanlayiciOku(anahtar).then(z => { if (!iptal) setZaman(z); }).catch(() => { /* okunamazsa kart "—" kalır */ });
     return () => { iptal = true; };
   }, [anahtar]);
 

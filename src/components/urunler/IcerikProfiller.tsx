@@ -35,12 +35,13 @@ export const IcerikProfiller: React.FC<{ onAjans: () => void }> = ({ onAjans }) 
   const [mesgul, setMesgul] = useState<string | null>(null);
   const [mesaj, setMesaj] = useState<string | null>(null);
   const [silinecek, setSilinecek] = useState<string | null>(null);
+  const [okumaHatasi, setOkumaHatasi] = useState<string | null>(null);
   const [yeni, setYeni] = useState<{ baslik: string; tur: IcerikTuru; kanallar: Platform[] } | null>(null);
 
   useEffect(() => {
     if (!anahtar) return;
     let iptal = false;
-    void icerikOku(anahtar).then(d => { if (!iptal) setVeri(d); });
+    icerikOku(anahtar).then(d => { if (!iptal) setVeri(d); }).catch(e => { if (!iptal) setOkumaHatasi(hata(e)); });
     return () => { iptal = true; };
   }, [anahtar]);
 
@@ -62,6 +63,7 @@ export const IcerikProfiller: React.FC<{ onAjans: () => void }> = ({ onAjans }) 
       </section>
     );
   }
+  if (okumaHatasi) return <p className={`${KART} p-4 text-[13px] ${YAZI}`}>Profiller okunamadı: {okumaHatasi}. Bir şey yazılmadı; sayfayı yenileyip yeniden dene.</p>;
   if (!veri) return <p className={`text-[13px] ${IKINCIL}`}>Profiller okunuyor…</p>;
 
   // ---------------------------------------------------------------- profil kartları

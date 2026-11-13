@@ -1,4 +1,4 @@
-import { base64Coz, github } from './oyunAyarlari';
+import { base64Coz, github, GithubHatasi } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
 import { ajansaDosyaYaz } from './tepsiAjansa';
 
@@ -218,8 +218,11 @@ export async function zamanlayiciOku(anahtar: string): Promise<Zamanlayici> {
       turSaati: typeof j.turSaati === 'string' && /^\d{2}:\d{2}$/.test(j.turSaati) ? j.turSaati : VARSAYILAN_TUR_SAATI,
       ajanlar: (j.ajanlar && typeof j.ajanlar === 'object') ? j.ajanlar : {}
     };
-  } catch {
-    return { turSaati: VARSAYILAN_TUR_SAATI, ajanlar: {} }; // ilk kez: dosya yok
+  } catch (e) {
+    // Yalnız dosya gerçekten yoksa boş başlar (13 Kasım, Kod Bakımcısı: okuma
+    // hatasında boş ayarla "Kaydet" dosyanın üstüne yazıyordu)
+    if (e instanceof GithubHatasi && e.durum === 404) return { turSaati: VARSAYILAN_TUR_SAATI, ajanlar: {} };
+    throw e;
   }
 }
 
@@ -288,8 +291,9 @@ export async function modelleriOku(anahtar: string): Promise<Record<string, Mode
     const d = await github<{ content: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${MODELLER_YOLU}`);
     const j = JSON.parse(base64Coz(d.content)) as { ajanlar?: Record<string, string> };
     return Object.fromEntries(Object.entries(j.ajanlar || {}).filter(([, m]) => MODELLER.some(x => x.kod === m))) as Record<string, ModelKodu>;
-  } catch {
-    return {}; // ilk kez: dosya yok
+  } catch (e) {
+    if (e instanceof GithubHatasi && e.durum === 404) return {}; // ilk kez: dosya yok
+    throw e;
   }
 }
 

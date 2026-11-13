@@ -1,4 +1,4 @@
-import { base64Coz, github } from './oyunAyarlari';
+import { base64Coz, github, GithubHatasi } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
 import { ajansaDosyaYaz } from './tepsiAjansa';
 import { istekEkle } from './kemalIstekleri';
@@ -78,8 +78,10 @@ export async function icerikOku(anahtar: string): Promise<IcerikDosyasi> {
       profiller: Array.isArray(j.profiller) && j.profiller.length ? j.profiller : VARSAYILAN.profiller,
       icerikler: Array.isArray(j.icerikler) ? j.icerikler.filter(i => i && typeof i.id === 'string' && typeof i.baslik === 'string') : [],
     };
-  } catch {
-    return VARSAYILAN; // ilk kez: dosya yok
+  } catch (e) {
+    // Yalnız dosya gerçekten yoksa varsayılan; başka hatada yazma yapılmasın diye hata (13 Kasım, Kod Bakımcısı)
+    if (e instanceof GithubHatasi && e.durum === 404) return VARSAYILAN;
+    throw e;
   }
 }
 
