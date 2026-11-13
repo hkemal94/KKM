@@ -43,7 +43,17 @@ export interface AjanOnerisi {
   kaynak?: string;
   /** ISO */
   tarih: string;
+  /**
+   * 13 Kasım (Kemal: "tepsimde okuyup karar vereyim"): işin kendisi KKM'de
+   * okunsun diye kısa metin (markdown) ve tıklamalı sorular. Metin yoksa ve
+   * bağlantı ajansın deposundaki .md ise KKM onu okuyup gösterir.
+   */
+  metin?: string;
+  sorular?: AjanSorusu[];
 }
+
+/** Ajanın sorusu: adaylar düğme olur, önerilen önce seçili gelir */
+export interface AjanSorusu { id: string; soru: string; neden?: string; adaylar: string[]; onerilen?: number }
 
 export type OneriKararDurumu = 'uygula' | 'duzenle' | 'arsiv' | 'bekle' | 'silindi';
 
@@ -57,6 +67,8 @@ export interface OneriKarari {
   zaman: number;
   /** Uygula sonucu (ör. "PR birleşti") */
   sonuc?: string;
+  /** Sorulara cevaplar (soru kimliği → cevap); 13 Kasım */
+  cevaplar?: Record<string, string>;
 }
 
 export const TUR_ETIKETI: Record<OneriTuru, string> = { pr: 'PR', dosya: 'DOSYA', drive: 'DRIVE', eksik: 'EKSİK YETENEK' };
@@ -81,7 +93,12 @@ export async function onerileriOku(anahtar: string): Promise<AjanOnerisi[]> {
   const j = await jsonOku<{ oneriler?: unknown[] }>(anahtar, ONERILER_YOLU);
   return (Array.isArray(j?.oneriler) ? j!.oneriler : [])
     .filter((o): o is AjanOnerisi => !!o && typeof (o as AjanOnerisi).id === 'string' && typeof (o as AjanOnerisi).baslik === 'string')
-    .map(o => ({ ...o, ajan: o.ajan || 'Kems', tur: TURLER.has(o.tur) ? o.tur : 'dosya', tarih: o.tarih || '' }));
+    .map(o => ({
+      ...o, ajan: o.ajan || 'Kems', tur: TURLER.has(o.tur) ? o.tur : 'dosya', tarih: o.tarih || '',
+      metin: typeof o.metin === 'string' ? o.metin : undefined,
+      sorular: Array.isArray(o.sorular) ? o.sorular.filter(s => s && typeof s.id === 'string' && typeof s.soru === 'string' && Array.isArray(s.adaylar))
+        .map(s => ({ ...s, adaylar: s.adaylar.filter(a => typeof a === 'string') })) : undefined,
+    }));
 }
 
 /** Kemal'in verdiği kararlar (öneri kimliğine göre); bozuklar atlanır */
@@ -96,6 +113,7 @@ export async function kararlariOku(anahtar: string): Promise<Record<string, Oner
       ...(typeof k.not === 'string' && k.not ? { not: k.not } : {}),
       ...(Array.isArray(k.secenekler) && k.secenekler.length ? { secenekler: k.secenekler.filter(s => typeof s === 'string') } : {}),
       ...(typeof k.sonuc === 'string' ? { sonuc: k.sonuc } : {}),
+      ...(k.cevaplar && typeof k.cevaplar === 'object' ? { cevaplar: Object.fromEntries(Object.entries(k.cevaplar).filter(([, v]) => typeof v === 'string')) as Record<string, string> } : {}),
     };
   }
   return sonuc;

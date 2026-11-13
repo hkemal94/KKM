@@ -34,6 +34,8 @@ interface Props {
   items: Item[];
   bildirimler: Bildirim[];
   onGit: (hedef: Hedef) => void;
+  /** Tepsideki işe basınca Onay bekleyenler o iş açık gelir (13 Kasım) */
+  onIsAc?: (anahtar: string) => void;
   onAddItem: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
   onUpdateItem: (item: Item) => Promise<void>;
   onMaddeAc: (item: Item) => void;
@@ -105,7 +107,7 @@ const Galeri: React.FC<{ anahtar: string; veri: GeceTuruDosyasi; gun: string; on
   );
 };
 
-export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onAddItem, onUpdateItem, onMaddeAc }) => {
+export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onIsAc, onAddItem, onUpdateItem, onMaddeAc }) => {
   const anahtar = anahtariOku();
   const [tur, setTur] = useState<GeceTuruDosyasi | null | undefined>(undefined);
   const [isler, setIsler] = useState<IsDosyasi | null>(null);
@@ -179,7 +181,12 @@ export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onAddItem
                 {uretenler.length ? (
                   <ul className="space-y-1">
                     {uretenler.map(a => (
-                      <li key={a.ajan} className={`${satir} ${YAZI}`}><b>{ajanAdi(a.ajan)}</b>{a.ozet ? ` · ${a.ozet}` : ''}</li>
+                      <li key={a.ajan}>
+                        <button type="button" onClick={() => (a.oneri && onIsAc ? onIsAc(`ajan:${a.oneri}`) : onGit('onay'))}
+                          className={`w-full text-left ${satir} ${YAZI} hover:text-[#F26B6F] cursor-pointer`}>
+                          <b>{ajanAdi(a.ajan)}</b>{a.ozet ? ` · ${a.ozet}` : ''} <span className="text-[11px] font-semibold text-[#F26B6F] whitespace-nowrap">Oku ve karar ver →</span>
+                        </button>
+                      </li>
                     ))}
                   </ul>
                 ) : <p className={`${satir} ${IKINCIL}`}>Bu gece kimse iş getirmedi.</p>}

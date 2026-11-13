@@ -193,6 +193,8 @@ export default function App() {
     const d = typeof history !== 'undefined' ? (history.state as Record<string, any> | null) : null;
     return d?.kkm && typeof d.tab === 'string' ? d : null;
   });
+  /** Ana sayfadaki tepsiden açılan iş (13 Kasım) */
+  const [onayAcik, setOnayAcik] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab && !KALKAN_SAYFALAR.has(ilkEkran.tab) ? ilkEkran.tab as Sayfa : 'ana'));
   /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kurucu, Kitap) */
   const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(() =>
@@ -1063,6 +1065,7 @@ export default function App() {
                 items={items}
                 bildirimler={bildirimler}
                 onGit={h => git(h)}
+                onIsAc={k => { setOnayAcik(k); git('onay'); }}
                 onAddItem={handleAddItem}
                 onUpdateItem={handleUpdateItem}
                 onMaddeAc={maddeyiAc}
@@ -1080,6 +1083,7 @@ export default function App() {
                 onAlanSil={handleAlanSil}
                 onEksikler={x => git('eksikler', x)}
                 onAjans={() => git('ajans')}
+                ilkAcik={onayAcik}
               />
             )}
 

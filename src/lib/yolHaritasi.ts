@@ -331,6 +331,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Ana sayfa (açılış): sabah tepsisi (gece turunun getirdikleri, iş bulamayanlar, günün görselleri → galeri), onaylar, notlarım, senden beklenenler, bu gece, projeler' },
   { id: 'icerik-profiller', paket: 'K', kimde: 'claude', nereden: '12 Kasım · Kemal', bitti: true,
     ad: 'İçerik → Profiller: Kems Company ve Eylül Altunkaya; kanalları ve Fikir · Taslak · Hazır · Paylaşıldı panosu, türe ve kanala göre süzülür; taslağa alınan fikir ajana istek olur' },
+  { id: 'onay-oku-cevapla', paket: 'K', kimde: 'claude', nereden: '13 Kasım · Kemal', bitti: true,
+    ad: 'Onay bekleyenler: ajanın işi KKM\'de okunur (metin, görsel; ajans deposundaki .md kendiliğinden açılır), sorular tıklamalı cevaplanır ("Cevapları gönder"); ana sayfadaki tepsiden iş açık gelir' },
   { id: 'okuma-hatasi-koruma', paket: 'K', kimde: 'claude', nereden: '13 Kasım · Kod Bakımcısı', bitti: true,
     ad: 'Koruma: zamanlayıcı, ajan modelleri ve içerik dosyası okunamazsa boş sayılmaz; kayıt yapılmaz, hata görünür (yalnız dosya hiç yoksa boş başlar)' },
   // sırası belli değil
