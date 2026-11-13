@@ -206,6 +206,35 @@ export function bugunSirada(z: AjanZamani, t = new Date()): boolean {
   return false;
 }
 
+/**
+ * Ajanın çalışacağı sıradaki tur (13 Kasım, Kemal: "Taslağa al" deyince sıradaki
+ * geceyi söylesin). Tur durduysa, atlanan geceler, "Bu gece de" eklemeleri ve
+ * ajanın günleri gece turuyla (araclar/gece_turu.py sirada) aynı kurala göre.
+ * 'kapali': tur durdu ya da ajanın iki ay içinde günü yok.
+ */
+export function ajaninSiradakiTuru(z: Zamanlayici, ajan: string, simdi = new Date()): Date | 'kapali' {
+  if (z.turAcik === false) return 'kapali';
+  const ayar = z.ajanlar[ajan];
+  const ilk = siradakiTurGunu(z.turSaati || VARSAYILAN_TUR_SAATI, simdi);
+  for (let i = 0; i < 62; i++) {
+    const t = new Date(ilk); t.setDate(ilk.getDate() + i);
+    const g = gunYaz(t);
+    if ((z.atla || []).includes(g)) continue;
+    if ((ayar && bugunSirada(ayar, t)) || (z.ekstra?.[g] || []).includes(ajan)) return t;
+  }
+  return 'kapali';
+}
+
+/** "bu gece (01:00)" · "yarın gece" · "Salı 18 Kasım gecesi" — tur günü 01:00'de, yani bir önceki günün gecesi */
+export function turGecesiYazisi(tur: Date, turSaati: string, simdi = new Date()): string {
+  const once = new Date(tur); once.setDate(tur.getDate() - 1);
+  const fark = Math.round((new Date(once.getFullYear(), once.getMonth(), once.getDate()).getTime()
+    - new Date(simdi.getFullYear(), simdi.getMonth(), simdi.getDate()).getTime()) / 86400000);
+  if (tur.getTime() === siradakiTurGunu(turSaati, simdi).getTime()) return `bu gece (${turSaati})`;
+  if (fark === 1) return `yarın gece (${turSaati})`;
+  return `${once.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })} gecesi (${turSaati})`;
+}
+
 export async function zamanlayiciOku(anahtar: string): Promise<Zamanlayici> {
   try {
     const d = await github<{ content: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${ZAMANLAYICI_YOLU}`);

@@ -335,6 +335,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Onay bekleyenler: ajanın işi KKM\'de okunur (metin, görsel; ajans deposundaki .md kendiliğinden açılır), sorular tıklamalı cevaplanır ("Cevapları gönder"); ana sayfadaki tepsiden iş açık gelir' },
   { id: 'okuma-hatasi-koruma', paket: 'K', kimde: 'claude', nereden: '13 Kasım · Kod Bakımcısı', bitti: true,
     ad: 'Koruma: zamanlayıcı, ajan modelleri ve içerik dosyası okunamazsa boş sayılmaz; kayıt yapılmaz, hata görünür (yalnız dosya hiç yoksa boş başlar)' },
+  { id: 'sade-ana-sayfa-onaylar', paket: 'K', kimde: 'claude', nereden: '13 Kasım · Kemal', bitti: true,
+    ad: 'Sade ve kompakt: Ana sayfada Notlarım tek kart; onaylarda Onayla · Yorum yaz · Diğer; birden çok seçilen sorular; tepside "Cevapladın" işareti; "Taslağa al" ajanın sıradaki gecesini söyler' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

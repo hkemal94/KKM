@@ -80,25 +80,31 @@ const Metin: React.FC<{ md: string }> = ({ md }) => {
 const cip = (on: boolean) => `text-left min-h-9 px-3 py-1.5 rounded-xl text-[12px] border cursor-pointer ${on ? 'bg-[#0E1C4F] dark:bg-[#2C3C72] border-transparent text-[#F3EFE8]' : `border-[#CFC5B4] dark:border-[#2C3C72] ${YAZI} hover:border-[#F26B6F]`}`;
 
 const Sorular: React.FC<{ sorular: AjanSorusu[]; onGonder: (cevaplar: Record<string, string>) => Promise<void> }> = ({ sorular, onGonder }) => {
-  const [secim, setSecim] = useState<Record<string, string>>(() => Object.fromEntries(
-    sorular.filter(s => typeof s.onerilen === 'number' && s.adaylar[s.onerilen!]).map(s => [s.id, s.adaylar[s.onerilen!]])));
+  const onerilenler = (s: AjanSorusu) => (Array.isArray(s.onerilen) ? s.onerilen : typeof s.onerilen === 'number' ? [s.onerilen] : [])
+    .filter(k => typeof k === 'number' && s.adaylar[k] !== undefined);
+  const [secim, setSecim] = useState<Record<string, string[]>>(() => Object.fromEntries(
+    sorular.map(s => [s.id, (s.coklu ? onerilenler(s) : onerilenler(s).slice(0, 1)).map(k => s.adaylar[k])])));
   const [serbest, setSerbest] = useState<Record<string, string>>({});
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
-  const cevap = (id: string) => (serbest[id]?.trim() || secim[id] || '').trim();
+  const cevap = (id: string) => {
+    const adaylar = sorular.find(s => s.id === id)?.adaylar || [];
+    return (serbest[id]?.trim() || adaylar.filter(a => (secim[id] || []).includes(a)).join(' · ')).trim();
+  };
   const sayi = sorular.filter(s => cevap(s.id)).length;
   return (
     <div className="space-y-3">
       {sorular.map((s, n) => (
         <div key={s.id} className="rounded-xl border border-[#CFC5B4]/80 dark:border-[#2C3C72] p-2.5 space-y-1.5">
           <div className={`text-[13px] font-semibold ${YAZI}`}>{n + 1}. <Satir metin={s.soru} /></div>
+          {s.coklu && <p className={`text-[11px] ${IKINCIL}`}>Birden çok seçebilirsin.</p>}
           {s.neden && <p className={`text-[11.5px] leading-snug ${IKINCIL}`}><Satir metin={s.neden} /></p>}
           <div className="flex flex-col gap-1.5">
             {s.adaylar.map((a, k) => {
-              const on = !serbest[s.id]?.trim() && secim[s.id] === a;
+              const on = !serbest[s.id]?.trim() && (secim[s.id] || []).includes(a);
               return (
-                <button key={k} type="button" onClick={() => { setSecim(x => ({ ...x, [s.id]: a })); setSerbest(x => ({ ...x, [s.id]: '' })); }} aria-pressed={on} className={cip(on)}>
-                  {on && <Check className="inline w-3 h-3 mr-1" />}<Satir metin={a} />{k === s.onerilen && <span className="opacity-70"> · önerilen</span>}
+                <button key={k} type="button" onClick={() => { setSecim(x => ({ ...x, [s.id]: s.coklu ? (on ? (x[s.id] || []).filter(y => y !== a) : [...(x[s.id] || []).filter(y => y !== a), a]) : [a] })); setSerbest(x => ({ ...x, [s.id]: '' })); }} aria-pressed={on} className={cip(on)}>
+                  {on && <Check className="inline w-3 h-3 mr-1" />}<Satir metin={a} />{onerilenler(s).includes(k) && <span className="opacity-70"> · önerilen</span>}
                 </button>
               );
             })}
