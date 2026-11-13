@@ -28,11 +28,14 @@ interface Props {
   onYeniSayfaAcildi?: () => void;
   /** #madde bağına basınca maddeyi açar */
   onMaddeAc?: (item: Item) => void;
+  /** Ana sayfa (13 Kasım, Kemal: "notlar basit olmalı"): çerçevesiz, sayfa seçimi tek açılır liste,
+   *  yazım paneli ve kaldırma Notlar sayfasında kalır */
+  sade?: boolean;
 }
 
 const bugunAdi = () => new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-export const NotDefteri: React.FC<Props> = ({ items, onAddItem, onUpdateItem, uzun = false, yeniSayfaBekliyor = false, onYeniSayfaAcildi, onMaddeAc }) => {
+export const NotDefteri: React.FC<Props> = ({ items, onAddItem, onUpdateItem, uzun = false, sade = false, yeniSayfaBekliyor = false, onYeniSayfaAcildi, onMaddeAc }) => {
   const sayfalar = useMemo(
     () => items.filter(i => !i.archived && (i.tags || []).includes(DEFTER_ETIKETI)).sort((a, b) => b.updatedAt - a.updatedAt),
     [items]
@@ -123,12 +126,48 @@ export const NotDefteri: React.FC<Props> = ({ items, onAddItem, onUpdateItem, uz
     backgroundAttachment: 'local'
   };
 
+  const durumYazisi = durum === 'yaziliyor' ? 'kaydediliyor…' : durum === 'bekliyor' ? 'yazıyorsun…' : secili ? `kaydedildi · ${neZaman(secili.updatedAt)}` : '';
+
+  if (sade) {
+    return (
+      <div className="[--defter-cizgi:#E4DCCD] dark:[--defter-cizgi:#2C3C72]">
+        <div className="flex items-center gap-2">
+          <select
+            value={secili?.id ?? ''}
+            onChange={e => { void sec(e.target.value); }}
+            aria-label="Sayfa"
+            className={`min-w-0 flex-1 bg-transparent text-[13px] font-semibold ${YAZI} focus:outline-hidden cursor-pointer truncate`}
+          >
+            {!sayfalar.length && <option value="">Defter boş</option>}
+            {sayfalar.map(s => <option key={s.id} value={s.id}>{s.title || 'Adsız sayfa'}</option>)}
+          </select>
+          <button type="button" onClick={yeniSayfa} aria-label="Yeni sayfa" title="Yeni sayfa" className="shrink-0 p-1 rounded-full text-[#D6484C] dark:text-[#F26B6F] hover:bg-[#F26B6F]/10 cursor-pointer">
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+        {secili ? (
+          <textarea
+            ref={kagit}
+            value={metin}
+            onChange={e => { setMetin(e.target.value); degisti({ notes: e.target.value }); }}
+            placeholder="Yaz; yazdıkça kaydolur."
+            style={cizgili}
+            className={`mt-1 w-full resize-y bg-transparent text-[14px] lg:text-[13px] ${YAZI} placeholder:text-[#6A5E4C]/70 dark:placeholder:text-[#A6B0C9]/70 focus:outline-hidden min-h-[156px]`}
+          />
+        ) : (
+          <button type="button" onClick={yeniSayfa} className={`mt-2 w-full text-left text-[12px] ${IKINCIL} cursor-pointer hover:underline`}>Defter boş. İlk sayfayı aç.</button>
+        )}
+        <div className={`text-[10px] font-mono text-right ${IKINCIL}`}>{durumYazisi}</div>
+      </div>
+    );
+  }
+
   return (
     <section className={`${KART} p-4 [--defter-cizgi:#E4DCCD] dark:[--defter-cizgi:#2C3C72]`}>
       <div className="flex items-center justify-between gap-2">
         <div className={ETIKET}>Not defteri</div>
         <span className={`text-[10px] font-mono ${IKINCIL}`}>
-          {durum === 'yaziliyor' ? 'kaydediliyor…' : durum === 'bekliyor' ? 'yazıyorsun…' : secili ? `kaydedildi · ${neZaman(secili.updatedAt)}` : ''}
+          {durumYazisi}
         </span>
       </div>
 

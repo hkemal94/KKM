@@ -210,7 +210,7 @@ export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onIsAc, o
         {onaylar('lg:hidden')}
         {/* Notlarım */}
         <Kart baslik="Notlarım" simge={NotebookPen} git={() => onGit('notlar')} gitAdi="Hepsi">
-          <NotDefteri items={items} onAddItem={onAddItem} onUpdateItem={onUpdateItem} onMaddeAc={onMaddeAc} />
+          <NotDefteri items={items} onAddItem={onAddItem} onUpdateItem={onUpdateItem} onMaddeAc={onMaddeAc} sade />
         </Kart>
 
         {/* Projeler */}
