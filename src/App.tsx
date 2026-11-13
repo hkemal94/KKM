@@ -139,7 +139,7 @@ type Sayfa = 'ana' | 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada
 /** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
 const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar', 'studyo']);
 const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'boyut'];
-const AJANLAR_SEKMELERI: AjanlarSekmesi[] = ['ajanlar', 'zamanlayici', 'baglanti'];
+const AJANLAR_SEKMELERI: AjanlarSekmesi[] = ['ajanlar', 'zamanlayici', 'isakisi', 'baglanti'];
 const ajanlarSekmesi = (s: unknown): AjanlarSekmesi => (AJANLAR_SEKMELERI.includes(s as AjanlarSekmesi) ? s as AjanlarSekmesi : 'ajanlar');
 const ISLER_SEKMELERI: IslerSekmesi[] = ['kimde', 'takvim', 'yolharitasi'];
 const islerSekmesi = (s: unknown): IslerSekmesi => (ISLER_SEKMELERI.includes(s as IslerSekmesi) ? s as IslerSekmesi : 'kimde');
@@ -696,6 +696,10 @@ export default function App() {
       case 'ajans': setAjanlarSekme('baglanti'); setActiveTab('ajanlar'); break;
       case 'ajanlar': setAjanlarSekme('ajanlar'); setActiveTab('ajanlar'); break;
       case 'zamanlayici': setAjanlarSekme('zamanlayici'); setActiveTab('ajanlar'); break;
+      // 13 Kasım: İş akışı sekmesi ve akıştaki ekran kutularının gittiği yerler
+      case 'isakisi': setAjanlarSekme('isakisi'); setActiveTab('ajanlar'); break;
+      case 'profiller': setIcerikSekme('profiller'); setActiveTab('icerik'); break;
+      case 'boyut': setDurumSekme('boyut'); setActiveTab('durum'); break;
       case 'galeri': setMarkaGaleri(true); setMarkaSekme('markalar'); setActiveTab('marka'); break;
       case 'markalar': setMarkaGaleri(false); setMarkaSekme('markalar'); setActiveTab('marka'); break;
       default: setActiveTab(KALKAN_SAYFALAR.has(hedef) ? 'ana' : hedef as Sayfa);
@@ -905,7 +909,7 @@ export default function App() {
       { id: 'ana', ad: 'Ana sayfa', alt: 'sabah tepsisi, onaylar, notlar, bu gece', simge: Home },
       { id: 'onay', ad: 'Onay bekleyenler', alt: 'öneriler, kararlar, tek seferlik işler', simge: Inbox, nokta: bildirimVar('aday') || bildirimVar('dugme') || bildirimVar('ajan') },
       { id: 'isler', ad: 'İşler ve takvim', alt: 'kimde ne var, takvim, yol haritası', simge: CalendarDays },
-      { id: 'ajanlar', ad: 'Ajanlar ve otomasyonlar', alt: 'ajan kartları, zamanlayıcı, ajans bağlantısı', simge: Bot },
+      { id: 'ajanlar', ad: 'Ajanlar ve otomasyonlar', alt: 'ajan kartları, zamanlayıcı, iş akışı, ajans bağlantısı', simge: Bot },
       { id: 'durum', ad: 'Eksikler ve ayarlar', alt: 'eksikler, boşluklar, boyut ve hız', simge: ListChecks }
     ] },
     { grup: 'Evren', simge: Compass, satirlar: [
@@ -1126,6 +1130,7 @@ export default function App() {
                 onUpdateItem={handleUpdateItem}
                 onDeleteItem={handleDeleteItem}
                 onAddItem={handleAddItem}
+                onGit={hedef => git(hedef)}
               />
             )}
 
