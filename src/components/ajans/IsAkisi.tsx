@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Bot, Maximize2, Minus, Plus, RefreshCw, X } from 'lucide-react';
 import { anahtariOku } from '../../lib/oyunAyarlari';
-import { ajanAdi } from '../../lib/geceTuru';
-import { CIZIMLER, cizimOku, kisalt, NW, RENKLER, TAS, TURLER, type Cizim, type CizimId, type Dugum } from '../../lib/isAkisi';
+import { AJAN_ADLARI, ajanAdi } from '../../lib/geceTuru';
+import { isleriOku, type IsDosyasi } from '../../lib/isler';
+import { ajanEslesir, CIZIMLER, cizimOku, kisalt, NW, RENKLER, TAS, TURLER, type Cizim, type CizimId, type Dugum } from '../../lib/isAkisi';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
 /**
@@ -33,6 +34,11 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
   const [yenile, setYenile] = useState(0);
   const [secili, setSecili] = useState<string | null>(odak?.dugum ?? null);
   const [gorus, setGorus] = useState({ x: 20, y: 20, s: 0.5 });
+  /** 13 Kasım ekleri: liste ve eşleşme görünümü, ajan süzgeci, istenenleri gizle, ajanların elindeki işler */
+  const [gorunum, setGorunum] = useState<'cizim' | 'liste' | 'eslesme'>('cizim');
+  const [odakAjan, setOdakAjan] = useState('');
+  const [istenenGizle, setIstenenGizle] = useState(false);
+  const [isler, setIsler] = useState<IsDosyasi | null>(null);
   const sahne = useRef<HTMLDivElement | null>(null);
   const bekleyenOdak = useRef<string | null>(odak?.dugum ?? null);
 
@@ -49,6 +55,7 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
         .then(v => { if (!iptal) setVeriler(x => ({ ...x, [c.id]: v })); })
         .catch(e => { if (!iptal) setVeriler(x => ({ ...x, [c.id]: { hata: hataYazi(e) } })); });
     }
+    isleriOku(anahtar).then(i => { if (!iptal) setIsler(i); }).catch(() => { /* sayılar görünmez */ });
     return () => { iptal = true; };
   }, [anahtar, yenile]);
 
@@ -92,11 +99,14 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
   }, [D]);
 
   // Çizim gelince ya da değişince: odak varsa ona, yoksa hepsini sığdır
+  // Liste ya da eşleşmeden çizime dönünce de (çizim gizliyken ölçü alınamaz)
+  const gorulenCizim = useRef<Cizim | null>(null);
   useLayoutEffect(() => {
-    if (!cizim) return;
+    if (!cizim || gorunum !== 'cizim') return;
     if (bekleyenOdak.current && D.has(bekleyenOdak.current)) { kutuyaGit(bekleyenOdak.current); bekleyenOdak.current = null; }
-    else baslangic();
-  }, [cizim]); // eslint-disable-line react-hooks/exhaustive-deps
+    else if (gorulenCizim.current !== cizim) baslangic();
+    gorulenCizim.current = cizim;
+  }, [cizim, gorunum]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------------------------------------------------------------- dokunma
   const parmaklar = useRef(new Map<number, { x: number; y: number }>());
@@ -146,6 +156,18 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
 
   // ---------------------------------------------------------------- çizim
   const sec = secili ? D.get(secili) : undefined;
+  const elindeki = useCallback((ajan?: string) => (!ajan || !isler ? [] : isler.isler.filter(i => i.durum !== 'bitti' && ajanEslesir(ajan, i.kimde))), [isler]);
+  const gizli = (n: Dugum) => istenenGizle && n.durum === 'istenen';
+  /** Seçili ajanın kutuları ve bir adım komşuları parlar */
+  const vurgu = useMemo(() => {
+    if (!odakAjan || !cizim) return null;
+    const ana = new Set(cizim.dugumler.filter(n => n.ajan === odakAjan).map(n => n.id));
+    const hepsi = new Set(ana);
+    for (const b of cizim.baglar) { if (ana.has(b.k)) hepsi.add(b.h); if (ana.has(b.h)) hepsi.add(b.k); }
+    return { ana, hepsi };
+  }, [odakAjan, cizim]);
+  const akistakiAjanlar = useMemo(() => [...new Set((cizim?.dugumler || []).map(n => n.ajan).filter(Boolean) as string[])]
+    .sort((a, b) => ajanAdi(a).localeCompare(ajanAdi(b), 'tr')), [cizim]);
   const komsu = useMemo(() => {
     if (!sec || !cizim) return null;
     return {
@@ -184,7 +206,33 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
         <button type="button" onClick={() => setYenile(t => t + 1)} className={DUGME_BOS} title="Yeniden oku"><RefreshCw className="w-3.5 h-3.5" /></button>
       </div>
 
-      <div ref={sahne} onPointerDown={asagi} onPointerMove={hareket} onPointerUp={yukari} onPointerCancel={yukari}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] p-0.5">
+          {([['cizim', 'Çizim'], ['liste', 'Liste'], ['eslesme', 'Eşleşme']] as const).map(([id, ad]) => (
+            <button key={id} type="button" onClick={() => setGorunum(id)} aria-pressed={gorunum === id}
+              className={`min-h-8 px-2.5 rounded-md text-[11px] font-semibold cursor-pointer ${gorunum === id ? 'bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8]' : YAZI}`}>{ad}</button>
+          ))}
+        </div>
+        {gorunum !== 'eslesme' && cizimId === 'resmi' && (
+          <select value={odakAjan} onChange={e => { setOdakAjan(e.target.value); setSecili(null); }} aria-label="Ajan seç"
+            className={`min-h-9 max-w-[180px] px-2 rounded-lg text-[12px] bg-[#FAF8F5] dark:bg-[#13204A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72]`}>
+            <option value="">Bütün ajanlar</option>
+            {akistakiAjanlar.map(a => <option key={a} value={a}>{ajanAdi(a)}{elindeki(a).length ? ` · ${elindeki(a).length} iş` : ''}</option>)}
+          </select>
+        )}
+        {gorunum !== 'eslesme' && cizimId === 'resmi' && (
+          <label className={`inline-flex items-center gap-1.5 text-[12px] ${YAZI} cursor-pointer`}>
+            <input type="checkbox" checked={istenenGizle} onChange={e => setIstenenGizle(e.target.checked)} className="accent-[#F26B6F]" /> Yalnız bugün olanlar
+          </label>
+        )}
+      </div>
+
+      {gorunum === 'liste' && cizim && <AkisListesi cizim={cizim} odakAjan={odakAjan} istenenGizle={istenenGizle} elindeki={elindeki} onGit={onGit} onAjan={onAjan}
+        onCizimde={id => { bekleyenOdak.current = id; setGorunum('cizim'); }} />}
+      {gorunum === 'eslesme' && <Eslesme veriler={veriler} elindeki={elindeki} onAjan={onAjan} onGit={onGit}
+        onCizimde={(c, id) => { bekleyenOdak.current = id; setCizimId(c); setGorunum('cizim'); }} />}
+
+      <div ref={sahne} hidden={gorunum !== 'cizim'} onPointerDown={asagi} onPointerMove={hareket} onPointerUp={yukari} onPointerCancel={yukari}
         className={`${KART} relative h-[68vh] min-h-[360px] overflow-hidden touch-none select-none cursor-grab`}
         style={{ backgroundImage: 'radial-gradient(rgba(106,94,76,.22) 1.1px, transparent 1.1px)', backgroundSize: '22px 22px' }}>
         {!v && <p className={`absolute inset-0 grid place-items-center text-[12px] ${IKINCIL}`}>Akış okunuyor…</p>}
@@ -213,15 +261,16 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
                 <marker id="ia-ok-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F26B6F" /></marker>
               </defs>
               {cizim.baglar.map(b => {
-                const k = D.get(b.k), h = D.get(b.h); if (!k || !h) return null;
+                const k = D.get(b.k), h = D.get(b.h); if (!k || !h || gizli(k) || gizli(h)) return null;
                 const x1 = k.x + (NW - TAS) / 2 + TAS + 6, y1 = k.y + TAS / 2, x2 = h.x + (NW - TAS) / 2 - 8, y2 = h.y + TAS / 2;
                 const dx = Math.max(50, Math.abs(x2 - x1) * 0.5);
-                const ilgili = !!secili && (b.k === secili || b.h === secili);
+                const ilgili = (!!secili && (b.k === secili || b.h === secili)) || (!!vurgu && (vurgu.ana.has(b.k) || vurgu.ana.has(b.h)));
+                const soluk = (!!secili || !!vurgu) && !ilgili;
                 const istenen = k.durum === 'istenen' || h.durum === 'istenen';
                 return (
                   <g key={b.id}>
                     <path d={`M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`} fill="none" stroke={ilgili ? '#F26B6F' : '#8A8F99'}
-                      strokeWidth={ilgili ? 2.5 : 1.6} strokeDasharray={istenen ? '6 5' : undefined} opacity={secili && !ilgili ? 0.35 : 1} markerEnd={`url(#${ilgili ? 'ia-ok-s' : 'ia-ok'})`} />
+                      strokeWidth={ilgili ? 2.5 : 1.6} strokeDasharray={istenen ? '6 5' : undefined} opacity={soluk ? (vurgu ? 0.15 : 0.35) : 1} markerEnd={`url(#${ilgili ? 'ia-ok-s' : 'ia-ok'})`} />
                     {b.etiket && <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 4} textAnchor="middle" fontSize="11" fill="#6A5E4C">{b.etiket}</text>}
                   </g>
                 );
@@ -229,12 +278,15 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
             </svg>
             {cizim.dugumler.map(n => {
               const t = TURLER[n.tur || 'arac'] || TURLER.arac;
+              if (gizli(n)) return null;
               const bu = n.id === secili;
               const bagli = !!(n.ajan || n.git);
+              const isSayisi = elindeki(n.ajan).length;
               return (
-                <div key={n.id} data-dugum={n.id} className="absolute flex flex-col items-center gap-1.5 cursor-pointer" style={{ left: n.x, top: n.y, width: NW }}>
+                <div key={n.id} data-dugum={n.id} className="absolute flex flex-col items-center gap-1.5 cursor-pointer" style={{ left: n.x, top: n.y, width: NW, opacity: vurgu && !vurgu.hepsi.has(n.id) ? 0.18 : 1 }}>
                   <div className={`relative grid place-items-center rounded-xl border-[1.5px] bg-[#FAF8F5] dark:bg-[#0F1A40] ${n.durum === 'istenen' ? 'border-dashed bg-transparent' : ''} ${bu ? 'border-[#F26B6F] ring-4 ring-[#F26B6F]/20' : 'border-[#CFC5B4] dark:border-[#2C3C72]'}`} style={{ width: TAS, height: TAS }}>
                     <div className="grid place-items-center rounded-lg font-mono text-[12px] font-medium text-[#15171c]" style={{ width: 36, height: 36, background: t.renk, opacity: n.durum === 'istenen' ? 0.6 : 1 }}>{n.kisa || kisalt(n.ad)}</div>
+                    {isSayisi > 0 && <span className="absolute -bottom-2 -right-3 px-1.5 h-5 rounded-full bg-[#0E1C4F] dark:bg-[#F3EFE8] text-[#F3EFE8] dark:text-[#0E1C4F] text-[10px] font-semibold grid place-items-center whitespace-nowrap">{isSayisi} iş</span>}
                     {bagli && <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#F26B6F] text-white grid place-items-center"><ArrowRight className="w-3 h-3" /></span>}
                   </div>
                   <div className={`text-[12px] font-semibold leading-tight text-center break-words max-w-[130px] ${YAZI}`}>{n.ad}</div>
@@ -264,6 +316,15 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
             </div>
             {grubu && <p className={`text-[11.5px] ${IKINCIL}`}>{asamasi ? `${asamasi} · ` : ''}{grubu.ad}</p>}
             {sec.not && <p className={`text-[12px] leading-snug ${YAZI}`}>{sec.not}</p>}
+            {sec.ajan && elindeki(sec.ajan).length > 0 && (
+              <div>
+                <div className={ETIKET}>Elindeki işler ({elindeki(sec.ajan).length})</div>
+                <ul className="mt-1 space-y-0.5">
+                  {elindeki(sec.ajan).slice(0, 5).map(i => <li key={i.id} className={`text-[11.5px] leading-snug line-clamp-2 ${YAZI}`}>{i.durum === 'calisiyor' ? '● ' : '○ '}{i.metin}</li>)}
+                </ul>
+                {elindeki(sec.ajan).length > 5 && <p className={`text-[11px] ${IKINCIL}`}>… ve {elindeki(sec.ajan).length - 5} iş daha (İşler ve takvim)</p>}
+              </div>
+            )}
             <div className="flex flex-wrap gap-1.5">
               {sec.ajan && onAjan && <button type="button" onClick={() => onAjan(sec.ajan!)} className={DUGME_LAC}><Bot className="w-3.5 h-3.5" /> {ajanAdi(sec.ajan)} kartı</button>}
               {sec.git && onGit && <button type="button" onClick={() => onGit(sec.git!)} className={DUGME_LAC}>KKM'de aç <ArrowRight className="w-3.5 h-3.5" /></button>}
@@ -281,7 +342,109 @@ export const IsAkisi: React.FC<Props> = ({ onGit, onAjan, odak }) => {
           </aside>
         )}
       </div>
-      <p className={`text-[11px] ${IKINCIL}`}>Parmakla kaydır, iki parmakla yakınlaştır. Kırmızı oklu kutular bir yere bağlı. Çizim şimdilik iş akışı sayfasında (tuval) değişir; Kems buraya aktarır.</p>
+      <p hidden={gorunum !== 'cizim'} className={`text-[11px] ${IKINCIL}`}>Parmakla kaydır, iki parmakla yakınlaştır. Kırmızı oklu kutular bir yere bağlı; lacivert sayı ajanın elindeki iş. Çizim şimdilik iş akışı sayfasında (tuval) değişir; Kems buraya aktarır.</p>
+    </div>
+  );
+};
+
+type Elindeki = (ajan?: string) => Array<{ id: string; metin: string; durum: string }>;
+
+/** Okunur liste: aşama aşama, bölüm bölüm (tuvaldeki "Sayfa" gibi) */
+const AkisListesi: React.FC<{ cizim: Cizim; odakAjan: string; istenenGizle: boolean; elindeki: Elindeki; onGit?: (h: string) => void; onAjan?: (a: string) => void; onCizimde: (id: string) => void }> = ({ cizim, odakAjan, istenenGizle, elindeki, onGit, onAjan, onCizimde }) => {
+  const sirali = [...cizim.gruplar].sort((a, b) => (a.sira || 0) - (b.sira || 0));
+  const asamalar = [...cizim.asamalar.map(a => ({ id: a.id as string | null, ad: a.ad })), { id: null, ad: 'Aşamasız' }];
+  let no = 0;
+  return (
+    <div className="space-y-4">
+      {asamalar.map((a, ai) => {
+        const gs = sirali.filter(g => (g.asama ?? null) === a.id || (a.id === null && !cizim.asamalar.some(x => x.id === g.asama)));
+        const gorunen = gs.map(g => ({ g, ns: cizim.dugumler.filter(n => n.grup === g.id && !(istenenGizle && n.durum === 'istenen')).sort((x, y) => x.x - y.x || x.y - y.y) }))
+          .filter(x => !odakAjan || x.ns.some(n => n.ajan === odakAjan));
+        if (!gorunen.length) return null;
+        return (
+          <section key={a.id ?? 'yok'} className="space-y-2">
+            <h3 className={`${ETIKET} flex items-center gap-2`}>{a.id ? `${ai + 1}. ` : ''}{a.ad}<span className="flex-1 h-px bg-[#CFC5B4] dark:bg-[#2C3C72]" /></h3>
+            {gorunen.map(({ g, ns }) => {
+              no += 1;
+              const r = RENKLER[g.renk || 'gri'] || RENKLER.gri;
+              return (
+                <article key={g.id} className={`${KART} p-3 space-y-2`} style={{ borderLeft: `4px solid ${r}` }}>
+                  <div>
+                    <b className={`text-[13.5px] ${YAZI}`}>{sirali.indexOf(g) + 1}. {g.ad}</b>
+                    {g.not && <p className={`text-[11.5px] leading-snug ${IKINCIL}`}>{g.not}</p>}
+                  </div>
+                  <ul className="space-y-1">
+                    {ns.map(n => {
+                      const t = TURLER[n.tur || 'arac'] || TURLER.arac;
+                      const is = elindeki(n.ajan).length;
+                      return (
+                        <li key={n.id} className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] ${YAZI} ${odakAjan && n.ajan !== odakAjan ? 'opacity-50' : ''}`}>
+                          <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: t.renk }} title={t.ad} />
+                          <button type="button" onClick={() => onCizimde(n.id)} className="font-semibold hover:text-[#F26B6F] cursor-pointer text-left">{n.ad}</button>
+                          {n.alt && <span className={IKINCIL}>{n.alt}</span>}
+                          {n.durum === 'istenen' && <span className={`font-mono text-[9.5px] border border-dashed rounded px-1 ${IKINCIL}`}>istenen</span>}
+                          {is > 0 && <span className="text-[10.5px] font-semibold text-[#F26B6F]">{is} iş</span>}
+                          {n.ajan && onAjan && <button type="button" onClick={() => onAjan(n.ajan!)} className="text-[11px] underline cursor-pointer">kartı</button>}
+                          {n.git && onGit && <button type="button" onClick={() => onGit(n.git!)} className="text-[11px] underline cursor-pointer">KKM'de aç</button>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </article>
+              );
+            })}
+          </section>
+        );
+      })}
+      {no === 0 && <p className={`text-[12px] ${IKINCIL}`}>Bu süzgeçle gösterilecek bölüm yok.</p>}
+    </div>
+  );
+};
+
+/** Eşleşme (13 Kasım, Kemal: "ajanlar ve ekranlar eşleşti mi"): her ajanın akışta kutusu, her KKM ekranının akışta geçip geçmediği */
+const Eslesme: React.FC<{ veriler: Partial<Record<CizimId, Cizim | { hata: string }>>; elindeki: Elindeki; onAjan?: (a: string) => void; onGit?: (h: string) => void; onCizimde: (c: CizimId, id: string) => void }> = ({ veriler, elindeki, onAjan, onGit, onCizimde }) => {
+  const resmi = veriler.resmi && 'dugumler' in veriler.resmi ? veriler.resmi : null;
+  const ekranlar = veriler.ekranlar && 'dugumler' in veriler.ekranlar ? veriler.ekranlar : null;
+  if (!resmi || !ekranlar) return <p className={`${KART} p-4 text-[12px] ${IKINCIL}`}>Çizimler okunuyor…</p>;
+  const ajanlar = Object.keys(AJAN_ADLARI).map(a => ({ a, ns: resmi.dugumler.filter(n => n.ajan === a) }));
+  const ekranSayisi = new Map<string, number>();
+  for (const n of resmi.dugumler) if (n.git) ekranSayisi.set(n.git, (ekranSayisi.get(n.git) || 0) + 1);
+  const eksikAjan = ajanlar.filter(x => !x.ns.length).length;
+  const eksikEkran = ekranlar.dugumler.filter(n => n.git && !ekranSayisi.get(n.git)).length;
+  return (
+    <div className="grid gap-3 lg:grid-cols-2">
+      <section className={`${KART} p-3 space-y-2`}>
+        <div className={ETIKET}>Ajanlar · resmi akışta</div>
+        <p className={`text-[12px] ${YAZI}`}>{ajanlar.length - eksikAjan}/{ajanlar.length} ajanın akışta kutusu var{eksikAjan ? `; ${eksikAjan} ajan akışta yok.` : '.'}</p>
+        <ul className="space-y-1">
+          {ajanlar.map(({ a, ns }) => (
+            <li key={a} className={`flex flex-wrap items-center gap-x-2 text-[12px] ${YAZI}`}>
+              <span className={`w-4 text-center font-bold ${ns.length ? 'text-[#3C8D5A] dark:text-[#7BC49A]' : 'text-[#D6484C]'}`}>{ns.length ? '✓' : '!'}</span>
+              <button type="button" onClick={() => onAjan?.(a)} className="font-semibold hover:text-[#F26B6F] cursor-pointer">{ajanAdi(a)}</button>
+              <span className={IKINCIL}>{ns.length ? `${ns.length} kutu` : 'akışta yok'}{elindeki(a).length ? ` · elinde ${elindeki(a).length} iş` : ''}</span>
+              {ns[0] && <button type="button" onClick={() => onCizimde('resmi', ns[0].id)} className="text-[11px] underline cursor-pointer">çizimde</button>}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className={`${KART} p-3 space-y-2`}>
+        <div className={ETIKET}>KKM ekranları · resmi akışta geçiyor mu</div>
+        <p className={`text-[12px] ${YAZI}`}>{ekranlar.dugumler.length - eksikEkran}/{ekranlar.dugumler.length} ekran akışta geçiyor{eksikEkran ? `; ${eksikEkran} ekran hiçbir adımda yok.` : '.'}</p>
+        <ul className="space-y-1">
+          {ekranlar.dugumler.map(n => {
+            const say = n.git ? ekranSayisi.get(n.git) || 0 : 0;
+            const g = ekranlar.gruplar.find(x => x.id === n.grup);
+            return (
+              <li key={n.id} className={`flex flex-wrap items-center gap-x-2 text-[12px] ${YAZI}`}>
+                <span className={`w-4 text-center font-bold ${say ? 'text-[#3C8D5A] dark:text-[#7BC49A]' : 'text-[#D6484C]'}`}>{say ? '✓' : '–'}</span>
+                <button type="button" onClick={() => n.git && onGit?.(n.git)} className="font-semibold hover:text-[#F26B6F] cursor-pointer">{g && g.ad !== n.ad ? `${g.ad} → ` : ''}{n.ad}</button>
+                <span className={IKINCIL}>{say ? `${say} adımda` : 'akışta yok'}</span>
+              </li>
+            );
+          })}
+        </ul>
+        <p className={`text-[11px] ${IKINCIL}`}>"Akışta yok" hata değil: o ekranı hiçbir ajan adımı kullanmıyor demek. Eklenmesi gerekiyorsa tuvalde kutu eklenir.</p>
+      </section>
     </div>
   );
 };
