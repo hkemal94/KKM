@@ -27,7 +27,7 @@ const ATLANAN = new Set(['brandKit', 'eskiAdlar', 'aliases', 'relations', 'image
 const metinMi = (d: unknown): d is string => typeof d === 'string' && !d.startsWith('data:') && !d.startsWith('gorsel:');
 
 /** Düz metin ve sayı alanları; iç içe nesnede (künye gibi) yalnız bir kat inilir */
-function duzAlanlar(m: Record<string, unknown>, derin = true): Record<string, string | number | boolean> {
+export function duzAlanlar(m: Record<string, unknown>, derin = true): Record<string, string | number | boolean> {
   const cikti: Record<string, string | number | boolean> = {};
   for (const [k, d] of Object.entries(m)) {
     if (ATLANAN.has(k) || d == null) continue;
