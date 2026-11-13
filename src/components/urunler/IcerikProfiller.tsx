@@ -6,6 +6,7 @@ import {
   type Asama, type Icerik, type IcerikDosyasi, type IcerikTuru, type Platform, type Profil
 } from '../../lib/icerikProfilleri';
 import { ajanAdi } from '../../lib/geceTuru';
+import { ajaninSiradakiTuru, turGecesiYazisi, zamanlayiciOku } from '../../lib/ajanlar';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
 /**
@@ -49,10 +50,24 @@ export const IcerikProfiller: React.FC<{ onAjans: () => void }> = ({ onAjans }) 
   const liste = useMemo(() => (veri?.icerikler || []).filter(i => i.profil === profilId
     && (tur === 'hepsi' || i.tur === tur) && (kanal === 'hepsi' || i.kanallar.includes(kanal))), [veri, profilId, tur, kanal]);
 
-  const calistir = async (ad: string, f: () => Promise<IcerikDosyasi>, tamam?: string) => {
+  /** Taslağa alınınca: hangi ajan, hangi gece (13 Kasım, Kemal) */
+  const taslakMesaji = async (i: Icerik): Promise<string> => {
+    const ajan = i.tur === 'video' || i.tur === 'short' ? 'video-yapimcisi' : 'sosyal-medya-yapimcisi';
+    const bas = `"${i.baslik}" taslağa alındı.`;
+    try {
+      const z = await zamanlayiciOku(anahtar!);
+      const tur = ajaninSiradakiTuru(z, ajan);
+      if (tur === 'kapali') return `${bas} ${ajanAdi(ajan)}'nın yakında çalışacağı bir gece yok; istek kuyrukta bekler. Ajanlar ve otomasyonlar → Zamanlayıcı'dan "Bu gece de" diyebilirsin.`;
+      return `${bas} ${ajanAdi(ajan)} ${turGecesiYazisi(tur, z.turSaati)} taslağını hazırlar; sonuç Onay bekleyenler'e gelir.`;
+    } catch {
+      return `${bas} ${ajanAdi(ajan)} sırası gelince taslağını hazırlar (zamanlayıcı okunamadı).`;
+    }
+  };
+
+  const calistir = async (ad: string, f: () => Promise<IcerikDosyasi>, tamam?: string | (() => Promise<string>)) => {
     if (!anahtar) return;
     setMesgul(ad); setMesaj(null);
-    try { setVeri(await f()); if (tamam) setMesaj(tamam); } catch (e) { setMesaj(`Yazılamadı: ${hata(e)}`); } finally { setMesgul(null); }
+    try { setVeri(await f()); if (tamam) setMesaj(typeof tamam === 'string' ? tamam : await tamam()); } catch (e) { setMesaj(`Yazılamadı: ${hata(e)}`); } finally { setMesgul(null); }
   };
 
   if (!anahtar) {
@@ -110,7 +125,7 @@ export const IcerikProfiller: React.FC<{ onAjans: () => void }> = ({ onAjans }) 
           {onceki && <button type="button" disabled={!!mesgul} onClick={() => void calistir(i.id, () => asamaDegistir(anahtar, i, onceki.id, profil.ad))} className={DUGME_BOS} title={`${onceki.ad}'e geri`}><ArrowLeft className="w-3 h-3" /></button>}
           {sonraki && (
             <button type="button" disabled={!!mesgul} onClick={() => void calistir(i.id, () => asamaDegistir(anahtar, i, sonraki.id, profil.ad),
-              i.asama === 'fikir' ? `"${i.baslik}" taslağa alındı; ajan bu gece taslağını hazırlar.` : undefined)} className={DUGME_LAC}>
+              i.asama === 'fikir' ? () => taslakMesaji(i) : undefined)} className={DUGME_LAC}>
               {mesgul === i.id ? '…' : <>{sonraki.ad} <ArrowRight className="w-3 h-3" /></>}
             </button>
           )}

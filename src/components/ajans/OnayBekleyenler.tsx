@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Archive, Check, ChevronDown, ChevronRight, Clock, ExternalLink, Pencil, RefreshCw, Send, Trash2, Undo2 } from 'lucide-react';
+import { Archive, Check, ChevronDown, ChevronRight, Clock, ExternalLink, MoreHorizontal, Pencil, RefreshCw, Send, Trash2, Undo2 } from 'lucide-react';
 import type { Item } from '../../types';
 import { bekleyenAdaylar } from '../../lib/adaylar';
 import { eksikleriCikar } from '../../lib/eksikler';
@@ -132,6 +132,8 @@ export const OnayBekleyenler: React.FC<Props> = ({
   /** Açık alt pano: düzenle / beklet / sil onayı */
   const [panel, setPanel] = useState<{ anahtar: string; tur: 'duzenle' | 'beklet' | 'sil' } | null>(null);
   const [not, setNot] = useState('');
+  /** "Diğer" açık olan satır (13 Kasım, Kemal: düğmeler kompakt; Onayla ve Yorum yaz önde) */
+  const [digerAcik, setDigerAcik] = useState<string | null>(null);
   const [secenekler, setSecenekler] = useState<string[]>([]);
   const [bekletGun, setBekletGun] = useState(() => gunEkle(bugun(), 7));
   const [calisan, setCalisan] = useState<string | null>(null);
@@ -262,8 +264,9 @@ export const OnayBekleyenler: React.FC<Props> = ({
               await ajanaYaz({ [o.id]: { durum: 'duzenle', zaman: Date.now(), not, cevaplar } });
             }} />
             {o.baglanti && (
-              <a href={o.baglanti} target="_blank" rel="noreferrer" className={DUGME_BOS}>
-                <ExternalLink className="w-3.5 h-3.5" /> {o.tur === 'pr' ? 'PR\'ı aç' : o.tur === 'drive' ? 'Belgeyi aç' : 'GitHub\'da aç'}
+              <a href={o.baglanti} target="_blank" rel="noreferrer"
+                className={o.tur === 'pr' || o.tur === 'drive' ? DUGME_BOS : `inline-flex items-center gap-1 text-[11px] ${IKINCIL} underline hover:text-[#F26B6F]`}>
+                <ExternalLink className="w-3 h-3" /> {o.tur === 'pr' ? 'PR\'ı aç' : o.tur === 'drive' ? 'Belgeyi aç' : 'GitHub\'da aç'}
               </a>
             )}
             {o.tur === 'pr' && <p className={`text-[11px] ${IKINCIL}`}>Uygula bu PR'ı birleştirir (önce sorar).</p>}
@@ -532,7 +535,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
 
             {k?.durum === 'duzenle' && (
               <p className={`text-[11px] ${IKINCIL}`}>
-                <b className={YAZI}>Düzenleme notun:</b> {[...(k.secenekler || []), k.not].filter(Boolean).join(' · ')}
+                <b className={YAZI}>{s.kaynak === 'ajan' ? 'Yorumun:' : 'Düzenleme notun:'}</b> {[...(k.secenekler || []), k.not].filter(Boolean).join(' · ')}
               </p>
             )}
 
@@ -543,8 +546,15 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   <Check className="w-3.5 h-3.5" /> {bu ? 'Yapılıyor…' : s.uygula?.ad || 'Uygula'}
                 </button>
                 <button type="button" disabled={mesgul} onClick={() => panelAc(s, 'duzenle')} className={DUGME_BOS} aria-pressed={p === 'duzenle'}>
-                  <Pencil className="w-3.5 h-3.5" /> Düzenle
+                  <Pencil className="w-3.5 h-3.5" /> {s.kaynak === 'ajan' ? 'Yorum yaz' : 'Düzenle'}
                 </button>
+                {digerAcik !== s.anahtar && p !== 'sil' && p !== 'beklet' && (
+                  <button type="button" disabled={mesgul} onClick={() => setDigerAcik(s.anahtar)} className={DUGME_BOS} aria-label="Diğer seçenekler">
+                    <MoreHorizontal className="w-3.5 h-3.5" /> Diğer
+                  </button>
+                )}
+                {(digerAcik === s.anahtar || p === 'sil' || p === 'beklet') && (
+                  <>
                 {s.yolla && (
                   <button type="button" disabled={mesgul} onClick={() => void ajansaYolla([s])} className={DUGME_BOS} title="Not yazmadan ajansa geri yollar: olduğu gibi yeniden yap">
                     <Send className="w-3.5 h-3.5" /> {calisan === `yolla:${s.anahtar}` ? 'Yollanıyor…' : 'Ajansa yolla'}
@@ -559,6 +569,8 @@ export const OnayBekleyenler: React.FC<Props> = ({
                 <button type="button" disabled={mesgul} onClick={() => panelAc(s, 'beklet')} className={DUGME_BOS} aria-pressed={p === 'beklet'}>
                   <Clock className="w-3.5 h-3.5" /> Beklet
                 </button>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
@@ -573,7 +585,9 @@ export const OnayBekleyenler: React.FC<Props> = ({
 
             {p === 'duzenle' && (
               <div className={`${KUTU} space-y-2`}>
-                <p className={IKINCIL}>Ne değişsin? Not yaz ya da hazır seçeneklerden seç (ikisi birden olur). Ajans notuna göre yeniden hazırlar; yeni hâli buraya gelir.</p>
+                <p className={IKINCIL}>{s.kaynak === 'ajan'
+                  ? 'Yorumun ne? Yaz ya da hazır seçeneklerden seç (ikisi birden olur). Yorumun ajana gider; ajan ona göre yeniden yapar, yeni hâli buraya gelir.'
+                  : 'Ne değişsin? Not yaz ya da hazır seçeneklerden seç (ikisi birden olur). Ajans notuna göre yeniden hazırlar; yeni hâli buraya gelir.'}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {HAZIR_SECENEKLER.map(h => {
                     const on = secenekler.includes(h);
@@ -586,12 +600,12 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   })}
                 </div>
                 <textarea
-                  rows={3} value={not} onChange={e => setNot(e.target.value)} placeholder="Örnek: ikinci paragrafı çıkar, daha sade anlat"
+                  rows={3} value={not} onChange={e => setNot(e.target.value)} placeholder={s.kaynak === 'ajan' ? 'Örnek: renkler daha soğuk olsun, tekneler daha küçük' : 'Örnek: ikinci paragrafı çıkar, daha sade anlat'}
                   className={`w-full text-[13px] bg-[#FAF8F5] dark:bg-[#13204A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg p-2 focus:outline-hidden focus:border-[#F26B6F]`}
                 />
                 <div className="flex flex-wrap gap-2">
                   <button type="button" disabled={mesgul} onClick={() => void duzenle(s)} className={DUGME_LAC}>
-                    {bu ? 'Kaydediliyor…' : anahtar ? 'Kaydet ve ajansa gönder' : 'Kaydet'}
+                    {bu ? 'Kaydediliyor…' : s.kaynak === 'ajan' ? 'Yorumu ajana gönder' : anahtar ? 'Kaydet ve ajansa gönder' : 'Kaydet'}
                   </button>
                   <button type="button" onClick={() => setPanel(null)} className={DUGME_BOS}>Vazgeç</button>
                 </div>

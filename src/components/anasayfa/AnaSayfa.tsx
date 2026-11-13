@@ -1,3 +1,4 @@
+import { kararlariOku, type OneriKarari } from '../../lib/ajanOnerileri';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Bell, Bot, CalendarDays, Gamepad2, Image as GorselSimgesi, Inbox, Moon, NotebookPen, X } from 'lucide-react';
 import type { Item } from '../../types';
@@ -112,6 +113,7 @@ export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onIsAc, o
   const [tur, setTur] = useState<GeceTuruDosyasi | null | undefined>(undefined);
   const [isler, setIsler] = useState<IsDosyasi | null>(null);
   const [zaman, setZaman] = useState<Zamanlayici | null>(null);
+  const [kararlar, setKararlar] = useState<Record<string, OneriKarari>>({});
   const [galeriGunu, setGaleriGunu] = useState<string | null>(null);
   const galeriKapat = useCallback(() => setGaleriGunu(null), []);
 
@@ -120,6 +122,7 @@ export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onIsAc, o
     let iptal = false;
     void geceTurunuOku(anahtar).then(t => { if (!iptal) setTur(t); });
     void isleriOku(anahtar).then(i => { if (!iptal) setIsler(i); }).catch(() => { /* yok */ });
+    void kararlariOku(anahtar).then(k => { if (!iptal) setKararlar(k); }).catch(() => { /* okunamazsa "Oku ve karar ver" kalır */ });
     void zamanlayiciOku(anahtar).then(z => { if (!iptal) setZaman(z); }).catch(() => { /* okunamazsa kart "—" kalır */ });
     return () => { iptal = true; };
   }, [anahtar]);
@@ -184,7 +187,15 @@ export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onIsAc, o
                       <li key={a.ajan}>
                         <button type="button" onClick={() => (a.oneri && onIsAc ? onIsAc(`ajan:${a.oneri}`) : onGit('onay'))}
                           className={`w-full text-left ${satir} ${YAZI} hover:text-[#F26B6F] cursor-pointer`}>
-                          <b>{ajanAdi(a.ajan)}</b>{a.ozet ? ` · ${a.ozet}` : ''} <span className="text-[11px] font-semibold text-[#F26B6F] whitespace-nowrap">Oku ve karar ver →</span>
+                          <b>{ajanAdi(a.ajan)}</b>{a.ozet ? ` · ${a.ozet}` : ''} {(() => {
+                            // 13 Kasım, Kemal: cevapladığın iş bir bakışta görünsün
+                            const k = a.oneri ? kararlar[a.oneri] : undefined;
+                            const yazi = !k ? null : k.durum === 'duzenle' ? (k.cevaplar ? 'Cevapladın · ajanda' : 'Yorum yazdın · ajanda')
+                              : k.durum === 'uygula' ? 'Onayladın' : k.durum === 'silindi' ? 'Sildin' : k.durum === 'arsiv' ? 'Arşivledin' : 'Bekletiyorsun';
+                            return yazi
+                              ? <span className="text-[11px] font-semibold text-[#3C8D5A] dark:text-[#7BC49A] whitespace-nowrap">✓ {yazi}</span>
+                              : <span className="text-[11px] font-semibold text-[#F26B6F] whitespace-nowrap">Oku ve karar ver →</span>;
+                          })()}
                         </button>
                       </li>
                     ))}
@@ -210,7 +221,7 @@ export const AnaSayfa: React.FC<Props> = ({ items, bildirimler, onGit, onIsAc, o
         {onaylar('lg:hidden')}
         {/* Notlarım */}
         <Kart baslik="Notlarım" simge={NotebookPen} git={() => onGit('notlar')} gitAdi="Hepsi">
-          <NotDefteri items={items} onAddItem={onAddItem} onUpdateItem={onUpdateItem} onMaddeAc={onMaddeAc} />
+          <NotDefteri items={items} onAddItem={onAddItem} onUpdateItem={onUpdateItem} onMaddeAc={onMaddeAc} sade />
         </Kart>
 
         {/* Projeler */}

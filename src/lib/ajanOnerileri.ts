@@ -52,8 +52,9 @@ export interface AjanOnerisi {
   sorular?: AjanSorusu[];
 }
 
-/** Ajanın sorusu: adaylar düğme olur, önerilen önce seçili gelir */
-export interface AjanSorusu { id: string; soru: string; neden?: string; adaylar: string[]; onerilen?: number }
+/** Ajanın sorusu: adaylar düğme olur, önerilen önce seçili gelir.
+ *  `coklu`: birden çok şık seçilir (13 Kasım, Kemal); önerilen o zaman sıra listesi olabilir */
+export interface AjanSorusu { id: string; soru: string; neden?: string; adaylar: string[]; onerilen?: number | number[]; coklu?: boolean }
 
 export type OneriKararDurumu = 'uygula' | 'duzenle' | 'arsiv' | 'bekle' | 'silindi';
 
