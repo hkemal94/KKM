@@ -69,7 +69,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 - **Kemsköy'ün mahalleliği** — halk 1954 sonrası "mahalle" dedi; resmî
   mahalle olması belediyeyle.
 - **Okul** — 1920–1940'lar.
-- **Ada Tepesi kalıntısı** — antik yerleşim duvarları.
+- **Ada Tepesi kalıntısı** — antik yerleşim duvarları (Bizans ağırlıklı; yer yer Antik Yunan izleri).
 - **Belediye** — 1980 sonrası; Düzada Köyü o zaman "Merkez Mahallesi" oldu.
 - **Stadyum Mahallesi** — statın çevresinde büyüdü; kulüp çevresi ve adaya
   sonradan yerleşen aileler.
@@ -255,7 +255,8 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 
 ## Ada hayatı · 7 (29 Eylül 2026, W3 60–65. turlar)
 
-- **Antik yerleşim** — dönemi açık. Amfora alanında rehberli dalış yapılır.
+- **Antik yerleşim** — Bizans ağırlıklı; yer yer Antik Yunan izleri (Kemal, 13 Kasım 2026;
+  vikiyle aynı). Amfora alanında rehberli dalış yapılır.
 - **Küçükçetmi Çiftliği** (Sürek Kulübü'nün evi) — Çiftlik'in iç tarafında,
   tepeye yakın, kıyıdan uzak.
 - **Dirlik'in rakibi** — Küçükkuyu Gençlerbirliği (gerçek kulüp, easter egg); rekabet
