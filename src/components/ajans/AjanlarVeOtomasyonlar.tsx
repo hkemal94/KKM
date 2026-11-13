@@ -11,6 +11,8 @@ import {
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { SayfaRayi } from '../SayfaRayi';
 import { AjansSayfasi } from '../anasayfa/AjansSayfasi';
+import { IsAkisi, type AkisOdagi } from './IsAkisi';
+import { ajaninAdimlari, cizimOku, type Cizim } from '../../lib/isAkisi';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../anasayfa/stil';
 
 /**
@@ -28,7 +30,7 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI, neZaman } from '../a
  * model seçimi aynı "Kaydet"le `kkm/ajan-modelleri.json`'a yazılır.
  * KKM kayıtlarına hiçbir şey yazılmaz.
  */
-export type AjanlarSekmesi = 'ajanlar' | 'zamanlayici' | 'baglanti';
+export type AjanlarSekmesi = 'ajanlar' | 'zamanlayici' | 'isakisi' | 'baglanti';
 
 interface Props {
   items: Item[];
@@ -37,11 +39,14 @@ interface Props {
   onUpdateItem: (item: Item) => Promise<void>;
   onDeleteItem: (id: string) => Promise<void>;
   onAddItem?: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
+  /** İş akışındaki ekran kutusu: KKM'de o ekrana git */
+  onGit?: (hedef: string) => void;
 }
 
 const BOLUMLER = [
   { id: 'ajanlar', label: 'Ajanlar' },
   { id: 'zamanlayici', label: 'Zamanlayıcı' },
+  { id: 'isakisi', label: 'İş akışı' },
   { id: 'baglanti', label: 'Ajans bağlantısı' }
 ];
 
@@ -49,7 +54,7 @@ const hataYazi = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const GIRDI = `min-h-9 px-2 rounded-lg text-[12px] bg-[#FAF8F5] dark:bg-[#13204A] ${YAZI} border border-[#CFC5B4] dark:border-[#2C3C72]`;
 const cip = (on: boolean) => `min-h-9 px-2.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#F26B6F] border-transparent text-white' : 'border-[#CFC5B4] dark:border-[#2C3C72] hover:border-[#F26B6F]'}`;
 
-export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, onUpdateItem, onDeleteItem, onAddItem }) => {
+export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, onUpdateItem, onDeleteItem, onAddItem, onGit }) => {
   const anahtar = anahtariOku();
   const [tur, setTur] = useState(0);
   const [ajanlar, setAjanlar] = useState<AjanBilgisi[] | 'yukleniyor' | { hata: string }>('yukleniyor');
@@ -67,6 +72,18 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
   const [modelTaslak, setModelTaslak] = useState<Record<string, ModelKodu>>({});
   /** Ayrıntısı açık ajan */
   const [secili, setSecili] = useState<string | null>(null);
+  /** İş akışı (13 Kasım): ajan kartından akışa, akıştan ajan kartına */
+  const [akisOdagi, setAkisOdagi] = useState<AkisOdagi | null>(null);
+  const [resmiAkis, setResmiAkis] = useState<Cizim | null>(null);
+  useEffect(() => {
+    if (!anahtar || !secili || resmiAkis) return;
+    cizimOku(anahtar, 'resmi').then(setResmiAkis).catch(() => { /* kartta adımlar görünmez */ });
+  }, [anahtar, secili, resmiAkis]);
+  const ajanKartinaGit = (ad: string) => {
+    const kartAdi = ad === 'kems' ? 'Kems' : ad;
+    setSecili(kartAdi); onSekme('ajanlar');
+    window.setTimeout(() => document.getElementById(`ajan-${kartAdi}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  };
   /** Zamanlayıcıda ayarı açık satır (kompakt liste; 12 Kasım) */
   const [duzenlenen, setDuzenlenen] = useState<string | null>(null);
   /** Limit uyarısı aç / kapa (12 Kasım, Kemal); yalnız bu tarayıcıda, kayda yazılmaz */
@@ -184,6 +201,32 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
             {!kems && <> · <button type="button" onClick={() => onSekme('zamanlayici')} className="underline cursor-pointer">Zamanlayıcıda değiştir</button></>}
           </p>
         </div>
+        {(() => {
+          // İş akışındaki adımları (13 Kasım, Kemal: "ajanlar süreçlerini bilir")
+          const adimlar = resmiAkis ? ajaninAdimlari(resmiAkis, a.ad) : [];
+          return (
+            <div>
+              <div className={ETIKET}>İş akışındaki adımları{resmiAkis ? ` (${adimlar.length})` : ''}</div>
+              {!resmiAkis ? <p className={`mt-1 text-[12px] ${IKINCIL}`}>Okunuyor…</p>
+                : !adimlar.length ? <p className={`mt-1 text-[12px] ${IKINCIL}`}>Resmi akışta kutusu yok.</p>
+                : (
+                  <ul className="mt-1 space-y-1">
+                    {adimlar.map(x => (
+                      <li key={x.dugum.id}>
+                        <button type="button" onClick={() => { setAkisOdagi({ cizim: 'resmi', dugum: x.dugum.id, n: Date.now() }); onSekme('isakisi'); }}
+                          className={`text-left text-[12px] ${YAZI} hover:text-[#F26B6F] cursor-pointer`}>
+                          <b>{x.asama ? `${x.asama} · ` : ''}{x.bolum}</b>
+                          {x.once.length > 0 && <span className={IKINCIL}> · önce: {x.once.join(', ')}</span>}
+                          {x.sonra.length > 0 && <span className={IKINCIL}> · sonra: {x.sonra.join(', ')}</span>}
+                          <span className="text-[#F26B6F] font-semibold"> · çizimde gör →</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+            </div>
+          );
+        })()}
         <div>
           <div className={ETIKET}>Elindeki işler ({el.length})</div>
           {el.length ? <KisaListe className="mt-1 space-y-1">{el.map(isSatiri)}</KisaListe> : <p className={`mt-1 text-[12px] ${IKINCIL}`}>İş yok.</p>}
@@ -202,7 +245,7 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
     const son = sonIs(a.ad);
     const acik = secili === a.ad;
     return (
-      <article key={a.ad} className={`${KART} p-4 flex flex-col gap-2 ${acik ? 'sm:col-span-2 xl:col-span-3' : ''}`}>
+      <article key={a.ad} id={`ajan-${a.ad}`} className={`${KART} p-4 flex flex-col gap-2 ${acik ? 'sm:col-span-2 xl:col-span-3' : ''}`}>
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
             <h3 className={`text-[14px] font-bold leading-tight ${YAZI}`}>{a.baslik}</h3>
@@ -251,7 +294,7 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
       <SayfaBasi baslik="Ajanlar ve otomasyonlar" />
       <SayfaRayi baslik="Ajanlar ve otomasyonlar" bolumler={BOLUMLER} aktifId={sekme} onSec={id => onSekme(id as AjanlarSekmesi)} />
 
-      {sekme !== 'baglanti' && (anahtar ? (<>
+      {sekme !== 'baglanti' && sekme !== 'isakisi' && (anahtar ? (<>
         <div className="flex flex-wrap items-center gap-2">
           <p className={`flex-1 min-w-0 text-[12px] ${IKINCIL}`}>{turKayitli.turAcik === false ? 'Gece turu durduruldu; ayarlar duruyor, "Başlat" deyince kaldığı yerden devam eder.' : `Gece turu açık: her gece ${saatKayitli}'de zamanlayıcıdaki sıraya göre çalışır; getirdikleri sabah tepsine düşer.`}</p>
           <button type="button" onClick={() => setTur(t => t + 1)} className={DUGME_BOS}><RefreshCw className="w-3.5 h-3.5" /> Yenile</button>
@@ -380,6 +423,8 @@ export const AjanlarVeOtomasyonlar: React.FC<Props> = ({ items, sekme, onSekme, 
         </section>
         );
       })()}
+
+      {sekme === 'isakisi' && <IsAkisi onGit={onGit} onAjan={ajanKartinaGit} odak={akisOdagi} />}
 
       {sekme === 'baglanti' && <AjansSayfasi items={items} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} onAddItem={onAddItem} />}
     </div>
