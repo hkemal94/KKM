@@ -339,6 +339,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Sade ve kompakt: Ana sayfada Notlarım tek kart; onaylarda Onayla · Yorum yaz · Diğer; birden çok seçilen sorular; tepside "Cevapladın" işareti; "Taslağa al" ajanın sıradaki gecesini söyler' },
   { id: 'is-akisi-kkm', paket: 'K', kimde: 'claude', nereden: '13 Kasım · Kemal', bitti: true,
     ad: 'İş akışı KKM\'de: Ajanlar ve otomasyonlar → İş akışı (Resmi akış ve KKM\'nin bugünkü ekranları; kutudan ajan kartına ya da ekrana), ajan kartında "İş akışındaki adımları"; ajan süzgeci, elindeki işler, liste ve eşleşme görünümü, yalnız bugün olanlar', not: 'Yalnız görünüm; çizim tuvalde değişir, Kems aktarır. KKM\'de düzenleme sonraki adım.' },
+  { id: 'karar-eski-alan-bolum', paket: 'K', kimde: 'claude', nereden: '13 Kasım · Kemal', bitti: true,
+    ad: 'Ajansın kararları: künye ekranında olmayan eski alanlar düzeltilir ya da boşaltılır (eskiAlan); "Düzelt" bölümlerin içindeki cümleyi de değiştirir' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

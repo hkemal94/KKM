@@ -314,6 +314,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   {(i.tur === 'alanaYaz' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir') && <> → <b>{i.deger}</b></>}
                   {i.tur === 'gorselEkle' && <> → <img src={i.deger} alt="" loading="lazy" className="inline-block h-10 max-w-20 object-cover rounded align-middle" /> <b>{i.deger}</b></>}
                   {i.tur === 'alaniDegistir' && <> → <b>{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger}</b></>}
+                  {i.tur === 'eskiAlan' && <> → <b>{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger || 'boşaltılır'}</b></>}
                   {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <b className="line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</b></>}
                   {i.tur === 'bagKur' && <> → <b>{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</b></>}
                   {i.tur === 'yeniMadde' && <> · <b>{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</b>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}

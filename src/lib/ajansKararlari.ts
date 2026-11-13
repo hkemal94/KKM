@@ -73,6 +73,9 @@ export type KararIslemi =
   | { kimlik: string; tur: 'takmaAdSil'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'alaniDegistir'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'metindenSil'; madde: string; eski: string; baslik: string; neden: string }
+  /** 13 Kasım: künye ekranında olmayan eski bir alan (ör. merkezi, estDate, profile.konum); deger '' alanı boşaltır.
+   *  Yalnız var olan yazı alanı değişir, yeni alan açılmaz; eski verilirse önce o değer aranır */
+  | { kimlik: string; tur: 'eskiAlan'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string }
   | { kimlik: string; tur: 'yeniMadde'; baslik: string; maddeTur: string; metin?: string; baglar?: YeniMaddeBagi[]; neden?: string }
   | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; neden?: string };
@@ -190,6 +193,25 @@ const metindeVar = (m: Item, parca: string) => (m.notes || '').includes(parca) |
 /** Parçayı çıkarır, kalan boş satırları toplar */
 const parcaCikar = (metin: string, parca: string) => metin.replace(parca, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 
+/** Künye ekranında olmayan alanlar: korunanlar dışında, metadata içinde nokta yolu (profile.konum) */
+const KORUNAN_ALANLAR = new Set(['relations', 'wikiSections', 'brandKit', 'aliases', 'eskiAdlar', 'images', 'depo']);
+function eskiAlanDegeri(m: Item, yol: string): string | null {
+  const p = yol.split('.');
+  if (!p.length || KORUNAN_ALANLAR.has(p[0])) return null;
+  let v: unknown = m.metadata;
+  for (const k of p) { if (!v || typeof v !== 'object') return null; v = (v as Record<string, unknown>)[k]; }
+  return typeof v === 'string' || typeof v === 'number' ? String(v) : null;
+}
+function eskiAlanaYaz(m: Item, yol: string, deger: string): Item {
+  const p = yol.split('.');
+  const kopya = (o: unknown) => ({ ...((o && typeof o === 'object') ? o as Record<string, unknown> : {}) });
+  const md = kopya(m.metadata);
+  let ic = md;
+  for (const k of p.slice(0, -1)) { ic[k] = kopya(ic[k]); ic = ic[k] as Record<string, unknown>; }
+  ic[p[p.length - 1]] = deger;
+  return { ...m, metadata: md as Item['metadata'] };
+}
+
 const kucuk = (s: string) => (s || '').trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr');
 
 /**
@@ -223,7 +245,9 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   }
   if (i.tur === 'metneEkle') { const m = maddeBul(items, i.madde); return !!m && (m.notes || '').includes(i.deger.trim()); }
   if (i.tur === 'gorselEkle') { const m = maddeBul(items, i.madde); return !!m && (m.images || []).includes(i.deger.trim()); }
-  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !(m.notes || '').includes(i.eski) && (m.notes || '').includes(i.deger.trim()); }
+  // 13 Kasım: metin ya da bölümlerden birinde (Stadyum Mahallesi)
+  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !metindeVar(m, i.eski) && metindeVar(m, i.deger.trim()); }
+  if (i.tur === 'eskiAlan') { const m = maddeBul(items, i.madde); const v = m && eskiAlanDegeri(m, i.alan); return v !== null && v !== undefined && kucuk(v) === kucuk(i.deger); }
   if (i.tur === 'takmaAdSil') { const m = maddeBul(items, i.madde); return !!m && !takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)); }
   if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
   if (i.tur === 'metindenSil') { const m = maddeBul(items, i.madde); return !!m && !!i.eski?.trim() && !metindeVar(m, i.eski); }
@@ -280,6 +304,7 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
     if (i.tur === 'kitapBolumu') return kitapBolumuGecerli(i) && !yapilmis(items, i);
     // Sitedeki viki klasöründe olmayan yol listede durmaz
     if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
+    if (i.tur === 'eskiAlan') return typeof i.alan === 'string' && !!i.alan.trim() && !KORUNAN_ALANLAR.has(i.alan.split('.')[0]) && typeof i.deger === 'string' && !yapilmis(items, i);
     if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
       || i.tur === 'takmaAdSil' || i.tur === 'alaniDegistir' || i.tur === 'metindenSil') return !yapilmis(items, i);
     return false;
@@ -416,6 +441,15 @@ export async function kararlariUygula(
         yeni = { ...yeni, updatedAt: Date.now() };
         await yaz.guncelle(yeni);
         guncel.set(yeni.id, yeni);
+      } else if (islem.tur === 'eskiAlan') {
+        const m = maddeBul([...guncel.values()], islem.madde);
+        if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }
+        const v = eskiAlanDegeri(m, islem.alan);
+        if (v === null) { sonuc.atlanan.push({ islem, neden: `"${islem.alan}" bu maddede yazı alanı olarak yok` }); continue; }
+        if (islem.eski !== undefined && kucuk(v) !== kucuk(islem.eski)) { sonuc.atlanan.push({ islem, neden: `alan bu arada değişmiş (şimdi: ${v || 'boş'})` }); continue; }
+        const yeni = { ...eskiAlanaYaz(m, islem.alan, islem.deger.trim()), updatedAt: Date.now() };
+        await yaz.guncelle(yeni);
+        guncel.set(yeni.id, yeni);
       } else if (islem.tur === 'gorselEkle') {
         const m = maddeBul([...guncel.values()], islem.madde);
         if (!m) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${islem.madde})` }); continue; }
@@ -439,9 +473,17 @@ export async function kararlariUygula(
         } else if (islem.tur === 'metneEkle') {
           yeni = { ...m, notes: metin.trim() ? `${metin.trimEnd()}\n\n${islem.deger.trim()}` : islem.deger.trim() };
         } else {
-          if (!metin.includes(islem.eski)) { sonuc.atlanan.push({ islem, neden: 'değişecek cümle metinde yok' }); continue; }
-          // Cümle metinde birden çok kez geçiyorsa hepsi değişir; yoksa karar her uygulamada geri gelir (5 Kasım, Fener Burnu)
-          yeni = { ...m, notes: metin.split(islem.eski).join(islem.deger.trim()) };
+          if (!metindeVar(m, islem.eski)) { sonuc.atlanan.push({ islem, neden: 'değişecek cümle metinde yok' }); continue; }
+          // Cümle metinde birden çok kez geçiyorsa hepsi değişir; yoksa karar her uygulamada geri gelir (5 Kasım, Fener Burnu).
+          // 13 Kasım: bölümlerde de (Stadyum Mahallesi'nin Tarihçe ve Kamu binaları bölümleri)
+          const degis = (t: string) => t.split(islem.eski).join(islem.deger.trim());
+          const bolumler = (m.metadata?.wikiSections as WikiSection[] | undefined) || [];
+          yeni = {
+            ...m, notes: degis(metin),
+            ...(bolumler.some(b => String(b.content || '').includes(islem.eski))
+              ? { metadata: { ...(m.metadata || {}), wikiSections: bolumler.map(b => ({ ...b, content: degis(String(b.content || '')) })) } as Item['metadata'] }
+              : {}),
+          };
         }
         yeni = { ...yeni, updatedAt: Date.now() };
         await yaz.guncelle(yeni);
