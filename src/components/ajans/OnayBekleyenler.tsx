@@ -14,6 +14,7 @@ import {
   AJANSA_YOLLA_NOTU, HAZIR_SECENEKLER, bugun, gorunum, gunEkle, onayKayitlari, onaylariYaz, oneriAnahtari, tarihYaz,
   type Gorunum, type OnayKaydi
 } from '../../lib/onaylar';
+import { AjanIsiIcerigi } from './AjanIsiIcerigi';
 import { useBekleyenIsler } from '../anasayfa/BekleyenIsler';
 import { EksikOzeti } from '../anasayfa/EksikOzeti';
 import { ISLEM_ADI, useAjansKararlari } from '../anasayfa/AjansKararlariKarti';
@@ -102,6 +103,8 @@ interface Props {
   onEksikler: (anahtar: string | null) => void;
   /** Durum → Ajans (GitHub anahtarı orada girilir) */
   onAjans: () => void;
+  /** Ana sayfadaki tepsiden gelinince açık gelecek iş (ör. "ajan:<id>") */
+  ilkAcik?: string | null;
 }
 
 /** Satır başlığındaki aşama adı (Ajanda'da ajanın adı) */
@@ -113,12 +116,18 @@ const KUTU = `rounded-lg bg-white dark:bg-[#17345A] border border-[#CFC5B4] dark
 const CIP = (aktif: boolean) => `shrink-0 min-h-9 px-3 rounded-full text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer border ${aktif ? 'bg-[#0E1C4F] dark:bg-[#2C3C72] border-transparent text-[#F3EFE8]' : 'border-[#CFC5B4] dark:border-[#2C3C72] text-[#0E1C4F] dark:text-[#F3EFE8] hover:border-[#F26B6F]'}`;
 
 export const OnayBekleyenler: React.FC<Props> = ({
-  items, studyo, dugmeler, onUpdateItem, onAddItem, onDeleteItem, onAlanSil, onEksikler, onAjans
+  items, studyo, dugmeler, onUpdateItem, onAddItem, onDeleteItem, onAlanSil, onEksikler, onAjans, ilkAcik
 }) => {
   const [suzgec, setSuzgec] = useState<Suzgec>('hepsi');
   /** "Yenile": ajansın kararları depodan yeniden okunur */
   const [tur, setTur] = useState(0);
-  const [acik, setAcik] = useState<string | null>(null);
+  const [acik, setAcik] = useState<string | null>(ilkAcik ?? null);
+  useEffect(() => {
+    if (!ilkAcik) return;
+    setAcik(ilkAcik);
+    const z = setTimeout(() => document.getElementById(`onay-${ilkAcik}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 400);
+    return () => clearTimeout(z);
+  }, [ilkAcik]);
   const [secili, setSecili] = useState<Set<string>>(new Set());
   /** Açık alt pano: düzenle / beklet / sil onayı */
   const [panel, setPanel] = useState<{ anahtar: string; tur: 'duzenle' | 'beklet' | 'sil' } | null>(null);
@@ -247,9 +256,14 @@ export const OnayBekleyenler: React.FC<Props> = ({
             <p className={`text-[12px] leading-snug ${IKINCIL}`}>
               <b className={YAZI}>{kimdeAdi(o.ajan)}</b>{o.ozet ? ` · ${o.ozet}` : ''}
             </p>
+            {/* 13 Kasım: işin metni, görseli ve soruları burada; GitHub'a gitmeden */}
+            <AjanIsiIcerigi o={o} anahtar={anahtar || ''} onCevapla={async cevaplar => {
+              const not = (o.sorular || []).filter(s => cevaplar[s.id]).map((s, n) => `${n + 1}. ${s.soru} → ${cevaplar[s.id]}`).join('\n');
+              await ajanaYaz({ [o.id]: { durum: 'duzenle', zaman: Date.now(), not, cevaplar } });
+            }} />
             {o.baglanti && (
               <a href={o.baglanti} target="_blank" rel="noreferrer" className={DUGME_BOS}>
-                <ExternalLink className="w-3.5 h-3.5" /> {o.tur === 'pr' ? 'PR\'ı aç' : o.tur === 'drive' ? 'Belgeyi aç' : 'Dosyayı aç'}
+                <ExternalLink className="w-3.5 h-3.5" /> {o.tur === 'pr' ? 'PR\'ı aç' : o.tur === 'drive' ? 'Belgeyi aç' : 'GitHub\'da aç'}
               </a>
             )}
             {o.tur === 'pr' && <p className={`text-[11px] ${IKINCIL}`}>Uygula bu PR'ı birleştirir (önce sorar).</p>}
@@ -488,7 +502,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
     const p = panel?.anahtar === s.anahtar ? panel.tur : null;
     const t = suzgec === 'ajansta' ? takipBul.get(s.anahtar) : undefined;
     return (
-      <li key={s.anahtar} className="border-t border-[#CFC5B4]/70 dark:border-[#2C3C72]">
+      <li key={s.anahtar} id={`onay-${s.anahtar}`} className="scroll-mt-20 border-t border-[#CFC5B4]/70 dark:border-[#2C3C72]">
         <div className="flex items-center gap-2">
           {listeGorunumu && (
             <input
