@@ -52,6 +52,7 @@ import HesapMenusu from './components/kabuk/HesapMenusu';
 import { HataKapsayici } from './components/kabuk/HataKapsayici';
 import { ayrilmayaIzinVar } from './lib/kaydedilmemis';
 import { useVikiOtoGonder } from './lib/vikiOtoGonder';
+import { useMerchOtoGonder } from './lib/merchAjansa';
 import { useTepsiOtoGonder } from './lib/tepsiOtoGonder';
 
 /**
@@ -177,6 +178,8 @@ export default function App() {
   useEffect(() => { bagliGorselleriYukle(items); }, [items]);
   // Viki değişince ajansa kendiliğinden gider (3 Kasım); kayda yazmaz
   useVikiOtoGonder(items, !!user);
+  // 13 Kasım: droplar ve ürünler de ajansa (kkm/merch.json), merch ajanları okusun
+  useMerchOtoGonder(items, !!user);
   // Tepsi de değişince ajansa kendiliğinden gider (3 Kasım); kayda yazmaz
   useTepsiOtoGonder(items, !!user);
   const [settings, setSettings] = useState<UserSettings>({ theme: 'arşiv' });
