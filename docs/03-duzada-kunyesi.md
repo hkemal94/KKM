@@ -75,7 +75,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   sonradan yerleşen aileler.
 - **Zeytinyağı** — eski fabrika İskele tarafında (19. yy sonu – 1920'ler
   kuruldu, 1950–1970'lerde kapandı); taş binası bugün Sade Meyhane. 1950–
-  1970'lerde Tariş benzeri bir kooperatif Çiftlik'e modern, küçük bir fabrika
+  1970 arasında Tariş benzeri bir kooperatif Çiftlik'e modern, küçük bir fabrika
   kurdu (adsız). İki ayrı fabrika (Kemal, 22 Ekim).
 - **Çiftlik Mahallesi** — hep dağınık küçük çiftliklerin bölgesi.
 - **Fener bekçiliği** — bekçi fenerin yanındaki evde yaşardı; 1970'lerde fener
@@ -87,9 +87,9 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   yazın ek seferler (W3 63–64. tur); fırtınada iptal. Feribot yalnız
   adalıların aracını alır (W3 36. tur). Sahil Yolu eski patikaların parça parça
   birleşmesiyle oluştu. Su anakaradan boru hattıyla gelir.
-- **Küçükkuyu Limanı** — feribotun anakara ucu (evren). Gerçekte Küçükkuyu,
-  Ayvacık'a (Çanakkale) bağlı, Edremit Körfezi'nin kuzey kıyısında bir
-  beldedir; limanı bir balıkçı barınağıdır. Düzada yaklaşık 65 km batısında
+- **Küçükkuyu Limanı** — feribotun anakara ucu. Küçükkuyu, Ayvacık'a
+  (Çanakkale) bağlı, Edremit Körfezi'nin kuzey kıyısında bir beldedir;
+  limanı bir balıkçı barınağıdır. Düzada yaklaşık 65 km batısında
   (14 Kasım 2026, Kemal).
 - **Mevsim** — yazın kalabalıklaşır; kışın yarı yarıya: çarşı açık, sahil
   tarafı kapanır (W3 63. tur). Otel yıl boyu
@@ -176,8 +176,9 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 - **Mutfak** — balık öne çıkar.
 - **Stadyum** — Dirlik Stadı 1980'ler. Taraftar birahanesi plajın üstünde,
   plaja bakan kıyıda; maç öncesi buluşma yeri.
-- **Adalılar** — hafif Ege ağzı yalnız yaşlılarda. Lise, hastane, büyük
-  alışveriş ve resmî işler için Küçükkuyu'ya gidilir.
+- **Adalılar** — hafif Ege ağzı yalnız yaşlılarda. Lise, aile hekimi ve
+  büyük alışveriş için Küçükkuyu'ya; hastane ve resmî işler için Küçükkuyu
+  üzerinden Ayvacık'a gidilir (Kemal, 14 Kasım).
 - **Otel** — misafirler: sanatçı ve yazarlar, siyasetçi ve bürokratlar, iş
   insanları, yabancı gezginler. Personel karışık (adalı + sezonluk).
   Restoranı dışarıya da açık; düğün / etkinlik yapılmaz.
@@ -218,7 +219,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   Forma: Kemal'in 22 Ekim kararları (açık sorular).
 - **Kooperatif** — Çiftlik'teki zeytinyağı fabrikasının sahibi **Düzada
   Ziraat İşletmeleri Kurumu** (Kemal 8 Ekim; eski kanonda "Kemsköy Ziraat
-  İşletmeleri Kurumu"). Kuruluş 1950–1970'ler. Etiketlerdeki "1994" Birlik
+  İşletmeleri Kurumu"). Kuruluş 1950–1970 arası (Kemal, 5 Kasım). Etiketlerdeki "1994" Birlik
   markasının çıktığı yıl. Ürünleri **Birlik Zeytin** ve **Birlik Birası**
   (evrende üretilir; Kemal 8 Ekim). Markalar'da kurum.
 - **Canva'daki diğer etiketler** — Kems Coffee Co. Kems Company ürünü
@@ -267,7 +268,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   tepeye yakın, kıyıdan uzak.
 - **Dirlik'in rakibi** — Küçükkuyu Gençlerbirliği (gerçek kulüp, easter egg); rekabet
   sevgi–nefret ilişkisi.
-- **Kooperatifin fabrikası** — zeytinyağı. Kuruluş 1950–1970'ler (Kemal, 22 Ekim).
+- **Kooperatifin fabrikası** — zeytinyağı. Kuruluş 1950–1970 arası (Kemal, 22 Ekim; 5 Kasım).
 - **Fener** — eskiden bekçili, 1970'lerde otomatiğe geçti; bekçiye kişi
   kaydı açılmaz.
 - **Yangın gözetleme kulesi** — belediyede çalışan orman memurları nöbet
@@ -360,7 +361,7 @@ Bunlar kanon, kullanılabilir:
 - **Küçükçetmi Sürek Kulübü** — Çiftlik Mahallesi
 - **The Imperial Kemsköy** — İskele Mahallesi
 - **Kuzey Sırtı** (386 m), **Çetmi Sırtı** (254 m) — zirveler
-- **Fener Burnu** (118 m) — burun, Liman Mahallesi; üstünde Deniz Feneri (Kemal, 22 Ekim)
+- **Fener Burnu** (118 m) — burun, Liman Mahallesi; yamacında Deniz Feneri (Kemal, 22 Ekim; 5 Kasım)
 - **Güney Burnu** (96 m) — burun, İskele Mahallesi (Kemal, 22 Ekim)
 - **Liman İdare Binası** — Liman Mahallesi
 - **Belediye Binası** — Merkez Mahallesi
