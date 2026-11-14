@@ -82,8 +82,13 @@ const RelationGroup: React.FC<{
  * Künye değeri. Bağ alanıysa (3. gece) her ad, eşleşen maddeye bağlantı
  * olur; eşleşmeyen ad düz yazı kalır (yönetim yüzünde noktalı altçizgi).
  */
-const KunyeAlani: React.FC<{ value: string; alan?: SemaAlani; allItems: Item[]; selfId: string; admin: boolean; onNavigate: (id: string) => void }> = ({ value, alan, allItems, selfId, admin, onNavigate }) => {
-  if (!alan?.bag?.length) return <KunyeDegeri value={value} />;
+const KunyeAlani: React.FC<{ value: string; alan?: SemaAlani; allItems: Item[]; selfId: string; admin: boolean; onNavigate: (id: string) => void; linkIndex?: LinkIndexEntry[] }> = ({ value, alan, allItems, selfId, admin, onNavigate, linkIndex }) => {
+  // 14 Kasım, Kemal: "Eylül Hanım yazsa bile ilgili maddeye linklenebilmeli": bağ tanımı olmayan künye
+  // alanında da metindeki gibi başlık ve takma adlar maddeye bağlanır (renk kodu olan alan hariç)
+  if (!alan?.bag?.length) {
+    if (linkIndex && !/#[0-9a-f]{3,6}\b/i.test(value)) return <AutoLinkedText text={value} index={linkIndex} selfId={selfId} onNavigate={onNavigate} showBroken={false} />;
+    return <KunyeDegeri value={value} />;
+  }
   const turler = new Set<string>(alan.bag.flatMap(g => BAG_GRUPLARI[g].turler));
   const adaylar = allItems.filter(i => !i.archived && !i.isProposal && i.id !== selfId && turler.has(i.type));
   const parcalar = bagParcalari(value, alan.coklu);
@@ -730,7 +735,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                       {f.label}
                     </dt>
                     <dd className="text-[13px] text-lacivert dark:text-krem/90 leading-snug">
-                      <KunyeAlani value={f.value} alan={semaAlani.get(f.id) ?? (f.id === 'es_hesap' ? ES_ALANI : undefined)} allItems={allItems} selfId={item.id} admin={admin} onNavigate={onNavigate} />
+                      <KunyeAlani value={f.value} alan={semaAlani.get(f.id) ?? (f.id === 'es_hesap' ? ES_ALANI : undefined)} allItems={allItems} selfId={item.id} admin={admin} onNavigate={onNavigate} linkIndex={linkIndex} />
                     </dd>
                   </div>
                 ))}
