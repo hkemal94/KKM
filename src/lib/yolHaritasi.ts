@@ -357,6 +357,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Vikide otel maddesine kat planları: giriş katı ve oda katı (Kemal\'in 4 Kasım çizimleri; oyun sayfasındaki planların resmi)' },
   { id: 'viki-gorsel-sayisi', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Vikiyi ajansa gönder: her maddenin görsel sayısı ve KKM\'deki görsel adresleri de gider (ajans görseli olmayan maddelere görsel bulsun)' },
+  { id: 'viki-gorselsiz-maddeler', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Görseli olmayan viki maddelerine görsel: dört aileye üyelerinin bir arada çizimi (Alimyeri Ailesi gibi), Dirlik ve Sürek Kulübü logoları, Yağ Fabrikası 3B; Çağrı Babacan\'ın üç çizimi bıyıksız ve jandarma kıyafetiyle: koyu lacivert, kırmızı yaka işareti, kollarda arma ve rütbe (Kemal, 14 Kasım)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
