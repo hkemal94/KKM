@@ -87,6 +87,10 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   yazın ek seferler (W3 63–64. tur); fırtınada iptal. Feribot yalnız
   adalıların aracını alır (W3 36. tur). Sahil Yolu eski patikaların parça parça
   birleşmesiyle oluştu. Su anakaradan boru hattıyla gelir.
+- **Küçükkuyu Limanı** — feribotun anakara ucu (evren). Gerçekte Küçükkuyu,
+  Ayvacık'a (Çanakkale) bağlı, Edremit Körfezi'nin kuzey kıyısında bir
+  beldedir; limanı bir balıkçı barınağıdır. Düzada yaklaşık 65 km batısında
+  (14 Kasım 2026, Kemal).
 - **Mevsim** — yazın kalabalıklaşır; kışın yarı yarıya: çarşı açık, sahil
   tarafı kapanır (W3 63. tur). Otel yıl boyu
   açık (kışın az misafir, az personel).
