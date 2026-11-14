@@ -349,6 +349,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Ajansın kararları: uygulanmış "Alanı değiştir" (ör. Mahalle) listede dönüp durmuyor; karşılaştırma kayıttaki değere bakar' },
   { id: 'menu-ana-sayfa-kunye-bag', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Telefon menüsünde Ana sayfa düğmesi; künye alanlarında da madde adları ve takma adlar maddeye bağlanır ("Eylül Hanım" → Eylül Alimyeri)' },
+  { id: 'makbuz-saniye', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Ajansın kararları: aynı dakikada ikinci uygulamada da makbuz yazılır (dosya adında saniye)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

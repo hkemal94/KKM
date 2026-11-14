@@ -514,7 +514,8 @@ export async function makbuzYaz(anahtar: string, sonuc: Uygulama, zaman = new Da
   const bilgi = await github<{ default_branch: string; private: boolean }>(anahtar, `/repos/${AJANS_DEPOSU}`);
   if (!bilgi.private) throw new Error('Kems-Ajans deposu herkese açık; makbuz yazılmadı.');
   const iki = (x: number) => String(x).padStart(2, '0');
-  const ad = `${iki(zaman.getDate())}-${iki(zaman.getMonth() + 1)}-${zaman.getFullYear()}-${iki(zaman.getHours())}${iki(zaman.getMinutes())}`;
+  // 14 Kasım: aynı dakikada iki kez basılınca makbuz yazılamıyordu (aynı ad, GitHub 422); saniye de adda
+  const ad = `${iki(zaman.getDate())}-${iki(zaman.getMonth() + 1)}-${zaman.getFullYear()}-${iki(zaman.getHours())}${iki(zaman.getMinutes())}${iki(zaman.getSeconds())}`;
   const govde = {
     _aciklama: "Kemal KKM'de 'Ajansın kararlarını uygula'ya bastı; KKM'de işlenenler ve atlananlar.",
     uygulandi: zaman.toISOString(),
