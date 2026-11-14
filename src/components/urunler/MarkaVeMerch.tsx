@@ -1,10 +1,12 @@
 import React from 'react';
 import { SekmeCipleri } from './SekmeCipleri';
+import { MarkaKitabi } from './MarkaKitabi';
 
 /**
  * Ürünler → Marka ve merch (2 Kasım, yol haritası 6. adım; Kemal: "merch ve
  * marka birleşir"). Markalar (galeri dahil) ve Merch (droplar, ürünler) tek
- * sayfada; ekranların içi değişmedi.
+ * sayfada; ekranların içi değişmedi. Sekmelerin altında iki sekmede de
+ * Marka kitabı kartı (14 Kasım).
  */
 export type MarkaSekmesi = 'markalar' | 'merch';
 
@@ -22,6 +24,7 @@ export default function MarkaVeMerch({ sekme, onSekme, markalar, merch }: {
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
       <SekmeCipleri etiket="Marka ve merch" sekmeler={SEKMELER} aktif={sekme} onSec={onSekme} />
+      <MarkaKitabi />
       {sekme === 'markalar' ? markalar : merch}
     </div>
   );

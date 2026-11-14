@@ -367,6 +367,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki: "Vikipedi\'den getir" düğmesi (düzenleyici → Ayarlar → Wikipedia\'dan tiki): Türkçe Vikipedi\'nin kısa özeti ve bağlantısı aday olarak gelir; "Metne ekle" deyip kaydetmeden vikiye girmez; sayfa yoksa söyler' },
   { id: 'yer-adi-konum', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Viki: "yer adı" maddelerinin künyesine isteğe bağlı Konum kutusu (adanın dışındaki yerler için; Küçükkuyu Limanı); künyeye Küçükkuyu Limanı satırı' },
+  { id: 'kitabi-guncelle', paket: 'M', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Marka ve merch: "Marka kitabı" kartı ve "Kitabı güncelle" düğmesi; basınca ajansa istek gider (marka kitabı ve PDF\'i marka kartlarının son hâline göre güncellenir), sonuç Onay bekleyenler\'e düşer', not: 'Kayıtlara bir şey yazılmaz. Her pazartesi sabah turundaki kontrol ajansın işi.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
