@@ -52,6 +52,20 @@ export interface MaddeOnerisi {
   sayi: number;
 }
 
+/**
+ * Adın başına cümleden karışan sözleri atar (14 Kasım, Kemal: "Öztürk Ailesi'nden
+ * Zeynep Taraftar Birahanesi" öneri olarak gelmişti). Ek almış bir söz ("Ailesi'nden")
+ * bir adın sonudur; yeni ad ondan sonra başlar. Cümle başı sözleri de düşer.
+ */
+function adSozleri(adHam: string): string[] {
+  let sozler = adHam.replace(/\s+/g, ' ').trim().split(' ');
+  for (let n = sozler.length - 2; n >= 0; n--) {
+    if (/['’]\p{L}/u.test(sozler[n])) { sozler = sozler.slice(n + 1); break; }
+  }
+  while (sozler.length > 1 && BAS_SOZLER.has(sozler[0])) sozler = sozler.slice(1);
+  return sozler;
+}
+
 const trKucuk = (s: string) => s.trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr');
 
 /** Kaydın Kemal'in yazdığı metinleri */
@@ -82,8 +96,7 @@ export function maddeOnerileri(items: Item[], reddedilen: string[] = []): MaddeO
   const bulunan = new Map<string, MaddeOnerisi>();
 
   const ekle = (adHam: string, tur: OneriTuru, kaynak: Item) => {
-    let sozler = adHam.replace(/\s+/g, ' ').trim().split(' ');
-    while (sozler.length > 1 && BAS_SOZLER.has(sozler[0])) sozler = sozler.slice(1);
+    const sozler = adSozleri(adHam);
     const ad = sozler.join(' ').replace(/['’]$/, '');
     if (sozler.length < 2 && !SOZ_TURU.has(sozler[0])) return;
     const k = trKucuk(ad);
@@ -128,6 +141,8 @@ export function maddeOnerileri(items: Item[], reddedilen: string[] = []): MaddeO
   const sonuc: MaddeOnerisi[] = [];
   for (const [k, o] of liste) {
     if (basliklar.some(b => b !== k && b.endsWith(' ' + k))) continue;
+    // Var olan bir maddenin adının başına cümleden söz karışmış ("Zeynep Taraftar Birahanesi")
+    if (basliklar.some(b => b.includes(' ') && k.endsWith(' ' + b))) continue;
     const kisa = liste.find(([k2]) => k2 !== k && k.endsWith(' ' + k2));
     if (kisa) {
       const [, ko] = kisa;
@@ -179,12 +194,12 @@ export function metindekiYeniAdlar(metin: string, items: Item[]): Array<{ ad: st
   const red = new Set(reddedilenler(items).map(trKucuk));
   const bulunan = new Map<string, { ad: string; tur: OneriTuru }>();
   for (const m of metin.matchAll(AD_RE)) {
-    let sozler = `${m[1]}${m[2]}`.replace(/\s+/g, ' ').trim().split(' ');
-    while (sozler.length > 1 && BAS_SOZLER.has(sozler[0])) sozler = sozler.slice(1);
+    const sozler = adSozleri(`${m[1]}${m[2]}`);
     if (sozler.length < 2) continue;
     const ad = sozler.join(' ').replace(/['’]$/, '');
     const k = trKucuk(ad);
     if (!k || red.has(k) || bulunan.has(k) || adiCoz(ad, maddeler)) continue;
+    if (maddeler.some(i => { const b = trKucuk(i.title); return b.includes(' ') && k.endsWith(' ' + b); })) continue;
     bulunan.set(k, { ad, tur: SOZ_TURU.get(m[2])! });
   }
   return Array.from(bulunan.values()).sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
