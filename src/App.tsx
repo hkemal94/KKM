@@ -1326,9 +1326,19 @@ export default function App() {
 
       {/* TELEFON: alt menü (2 Kasım): Ajans · Evren · Ürünler · Yaz */}
       <nav className="lg:hidden fixed inset-x-0 bottom-0 z-40 h-16 pb-[env(safe-area-inset-bottom)] flex items-stretch justify-around px-1 bg-[#0E1C4F] dark:bg-[#081029]">
+        {/* 14 Kasım, Kemal: "ana sayfa butonunu ekle menüye" */}
+        <button
+          type="button"
+          onClick={() => { if (acikGrup) grubuKapat(); git('ana'); }}
+          aria-current={activeTab === 'ana' && !acikGrup ? 'page' : undefined}
+          className={`relative flex-1 my-1.5 mx-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] cursor-pointer ${activeTab === 'ana' && !acikGrup ? 'bg-[#F26B6F] text-white' : 'text-[#A6B0C9]'}`}
+        >
+          <Home className="w-5 h-5" />
+          Ana sayfa
+        </button>
         {RAY.map(g => {
           const Simge = g.simge;
-          const aktif = acikGrup ? acikGrup === g.grup : aktifGrup === g.grup;
+          const aktif = acikGrup ? acikGrup === g.grup : aktifGrup === g.grup && activeTab !== 'ana';
           const nokta = g.satirlar.some(r => r.nokta);
           return (
             <button
