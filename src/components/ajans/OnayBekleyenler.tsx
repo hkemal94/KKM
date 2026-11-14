@@ -14,7 +14,7 @@ import {
   AJANSA_YOLLA_NOTU, HAZIR_SECENEKLER, bugun, gorunum, gunEkle, onayKayitlari, onaylariYaz, oneriAnahtari, tarihYaz,
   type Gorunum, type OnayKaydi
 } from '../../lib/onaylar';
-import { AjanIsiIcerigi } from './AjanIsiIcerigi';
+import { AjanIsiIcerigi, KucukResim } from './AjanIsiIcerigi';
 import { useBekleyenIsler } from '../anasayfa/BekleyenIsler';
 import { EksikOzeti } from '../anasayfa/EksikOzeti';
 import { ISLEM_ADI, useAjansKararlari } from '../anasayfa/AjansKararlariKarti';
@@ -520,7 +520,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
               <span className={`block truncate text-[13px] ${YAZI}`}>{s.baslik}</span>
               {!buAcik && s.ozet && <span className={`block text-[11px] leading-snug line-clamp-2 ${IKINCIL}`}>{s.ozet}</span>}
             </span>
-            {!buAcik && s.gorsel && <img src={s.gorsel} alt="" loading="lazy" className="w-10 h-10 shrink-0 rounded-md object-cover border border-[#CFC5B4] dark:border-[#2C3C72]" />}
+            {!buAcik && s.gorsel && <KucukResim adres={s.gorsel} anahtar={anahtar || ''} className="w-10 h-10 shrink-0 rounded-md object-cover border border-[#CFC5B4] dark:border-[#2C3C72]" />}
             {k?.durum === 'duzenle' && <Pencil className="w-3.5 h-3.5 shrink-0 text-[#F26B6F]" aria-label="Düzenleme notu var" />}
             {suzgec === 'bekletilen' && k?.tarih && <span className={`shrink-0 text-[10px] ${IKINCIL}`}>{tarihYaz(k.tarih)}</span>}
             {suzgec === 'ajansta' && t && <span className={`shrink-0 text-[10px] font-semibold text-[#F26B6F]`}>{asamaAdi(t)}</span>}

@@ -34,6 +34,31 @@ async function depodanOku(anahtar: string, baglanti: string, gorsel: boolean): P
   return gorsel ? URL.createObjectURL(await r.blob()) : r.text();
 }
 
+/** Küçük resimlerin adresleri bir kez okunur (14 Kasım, Kemal: "Bu küçük resimler hiç görünmüyor") */
+const kucukResimler = new Map<string, Promise<string>>();
+
+/**
+ * Onay bekleyenler satırındaki küçük resim. Ajansın deposu gizli olduğu için
+ * GitHub sayfa adresi doğrudan resim olarak açılmaz; anahtarla okunur. Başka
+ * adresler olduğu gibi gösterilir; okunamazsa hiç çizilmez (kırık resim yok).
+ */
+export const KucukResim: React.FC<{ adres: string; anahtar: string; className?: string }> = ({ adres, anahtar, className }) => {
+  const ajansin = BLOB.test(adres);
+  const [src, setSrc] = useState<string | null>(ajansin ? null : adres);
+  const [hata, setHata] = useState(false);
+  useEffect(() => {
+    if (!ajansin) { setSrc(adres); setHata(false); return; }
+    if (!anahtar) { setSrc(null); return; }
+    let iptal = false;
+    let istek = kucukResimler.get(adres);
+    if (!istek) { istek = depodanOku(anahtar, adres, true); kucukResimler.set(adres, istek); istek.catch(() => kucukResimler.delete(adres)); }
+    istek.then(u => { if (!iptal) { setSrc(u); setHata(false); } }).catch(() => { if (!iptal) setHata(true); });
+    return () => { iptal = true; };
+  }, [adres, anahtar, ajansin]);
+  if (!src || hata) return null;
+  return <img src={src} alt="" loading="lazy" onError={() => setHata(true)} className={className} />;
+};
+
 const Satir: React.FC<{ metin: string }> = ({ metin }) => (
   <>
     {satirIci(metin).map((p, n) => {

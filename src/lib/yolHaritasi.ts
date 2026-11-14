@@ -373,6 +373,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Marka ve merch: "Marka kitabı" kartı ve "Kitabı güncelle" düğmesi; basınca ajansa istek gider (marka kitabı ve PDF\'i marka kartlarının son hâline göre güncellenir), sonuç Onay bekleyenler\'e düşer', not: 'Kayıtlara bir şey yazılmaz. Her pazartesi sabah turundaki kontrol ajansın işi.' },
   { id: 'yeni-oyun-karari', paket: 'M', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Ajans yeni oyun önerebilir: Onay bekleyenler\'de "Yeni oyun" kararı; Uygula\'ya basınca oyun Ürünler → Oyunlar listesine girer (ilk: kart oyunu)', not: 'Aynı adla oyun varsa açılmaz.' },
+  { id: 'kucuk-resimler', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Onay bekleyenler: ajansın işlerindeki küçük resimler görünür (gizli depodan anahtarla okunur); okunamayan resim kırık kutu yerine hiç çizilmez' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
