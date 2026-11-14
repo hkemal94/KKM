@@ -362,7 +362,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'madde-onerisi-cumle-parcasi', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Madde önerileri: cümleden karışan sözlerle uzamış adlar ("Öztürk Ailesi\'nden Zeynep Taraftar Birahanesi") öneri olarak gelmez' },
   { id: 'viki-dort-cizim', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
-    ad: 'Görselsiz dört viki maddesine kalem-suluboya çizim: Merkez Eczanesi, Efendi Kuruyemiş, İskele Mescidi, Düzada Ziraat İşletmeleri Kurumu (Kemal Onay bekleyenler\'de dördünü de seçti)' },
+    ad: 'Görselsiz beş viki maddesine kalem-suluboya çizim: Merkez Eczanesi, Efendi Kuruyemiş, İskele Mescidi, Düzada Ziraat İşletmeleri Kurumu, Küçükkuyu Limanı (Kemal\'in gönderdiği fotoğraftaki gerçek düzenle); Kemal Onay bekleyenler\'de seçti' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
