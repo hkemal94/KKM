@@ -355,6 +355,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Künye: Sade Meyhane ve Dondurmacı Kızlar\'ın sahibi Eylül Alimyeri, ailesi eski yazlıkçı (2000 sonrası); otel giriş katı, 4 oda katı ve kuleler (vikiyle aynı)' },
   { id: 'viki-otel-kat-planlari', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Vikide otel maddesine kat planları: giriş katı ve oda katı (Kemal\'in 4 Kasım çizimleri; oyun sayfasındaki planların resmi)' },
+  { id: 'viki-gorsel-sayisi', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Vikiyi ajansa gönder: her maddenin görsel sayısı ve KKM\'deki görsel adresleri de gider (ajans görseli olmayan maddelere görsel bulsun)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
