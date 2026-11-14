@@ -2,6 +2,7 @@ import type { Item, ItemType } from '../types';
 import type { Relation } from '../utils/relations';
 import { takmaAdlar } from './alanSablonu';
 import { ajansaDosyaYaz } from './tepsiAjansa';
+import { siluetMi } from './maddeGorseli';
 
 /**
  * Vikiyi ajansa gönder (22 Ekim gece). Ajansın Viki Editörü Firestore'a
@@ -13,6 +14,10 @@ import { ajansaDosyaYaz } from './tepsiAjansa';
  * 2 Kasım (Kemal: marka kartı "en kapsamlısı KKM"): marka kartları da gider
  * (`markaKartlari`): kartın yazı alanları; logo ve moodboard görseli gitmez,
  * yalnız var mı yok mu. Merch Tasarımcısı kartı buradan okur.
+ *
+ * 14 Kasım (Kemal: görseli olmayan maddelere görsel bulunsun): görseller yine
+ * gitmez; maddede kaç görsel olduğu (`gorselSayisi`, silüet sayılmaz) ve
+ * KKM'deki görsel adresleri (`/viki/…`, yüklenen fotoğraf değil) gider.
  */
 
 export const VIKI_YOLU = 'kkm/viki.json';
@@ -59,6 +64,8 @@ export function vikiDosyasi(items: Item[], zaman = new Date()) {
       id: i.id, baslik: i.title, tur: i.type, takmaAdlar: takmaAdlar(i), metin: i.notes || '',
       alanlar: { ...duzAlanlar(m), ...(bolumler.length ? { bolumler } : {}) },
       baglar,
+      gorselSayisi: (i.images || []).filter(g => typeof g === 'string' && !siluetMi(g)).length,
+      gorseller: (i.images || []).filter((g): g is string => typeof g === 'string' && g.startsWith('/viki/') && !siluetMi(g)),
     };
   });
   return { olusturuldu: zaman.toISOString(), sayi: maddeler.length, kisaltildi: false, maddeler, markaKartlari: markaKartlari(items) };

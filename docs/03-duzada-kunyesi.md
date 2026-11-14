@@ -147,8 +147,9 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   ya da tekneyle.
 - **Kış** — poyraz kışın sert (feribot iptalleri çoğunlukla kışın), bahar
   sabahları sis, sonbaharda lodos.
-- **Sade Meyhane ve Dondurmacı Kızlar** — ikisinin de sahibi aynı kadın: ailesi
-  adalı, anakaradan geldi; Sade Meyhane ailesinden kalma. Adı yok.
+- **Sade Meyhane ve Dondurmacı Kızlar** — ikisinin de sahibi aynı kadın, Eylül
+  Alimyeri. Ailesi eski yazlıkçı; 2000 sonrası, Eylül 5 yaşındayken adaya
+  yerleşti (Kemal, 14 Kasım).
 
 ## Ada hayatı · 3 (28 Eylül 2026, W3 28–35. turlar)
 
@@ -236,8 +237,9 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   yakın dönemde (2010 sonrası); 3. Lig iddiası o sezondan. Stat en fazla
   ~1.000 kişilik. Her 12 Mayıs kulüp günü: stadda mahallelerin karışık
   takımlarıyla dostluk maçı.
-- **Otel** — 4 kat ve kuleler, kesme taş; İskele'de yarımada ucunda,
-  uçurumun üstünde (sahili dipte ayrı bir cep). 20 oda.
+- **Otel** — giriş katı, 4 oda katı ve kuleler (Kemal, 14 Kasım), kesme taş;
+  İskele'de yarımada ucunda, uçurumun üstünde (sahili dipte ayrı bir cep). 20
+  oda.
 - **Doğa** — feribot yolunda yunus. Yaban domuzu (eski sürek avının
   hedefi), yaban tavşanı, keklik; kıyıda martı ve karabatak; baharda ve
   güzde göçmen kuşlar. Ada Tepesi'nde yalnız küçük yangınlar olmuş.
