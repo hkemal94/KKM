@@ -351,6 +351,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Telefon menüsünde Ana sayfa düğmesi; künye alanlarında da madde adları ve takma adlar maddeye bağlanır ("Eylül Hanım" → Eylül Alimyeri)' },
   { id: 'makbuz-saniye', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Ajansın kararları: aynı dakikada ikinci uygulamada da makbuz yazılır (dosya adında saniye); eskimiş kararlar (cümlesi artık metinde olmayan, değeri metindeki satırdan gelen) listeye geri dönmez' },
+  { id: 'kunye-alimyeri-otel', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Künye: Sade Meyhane ve Dondurmacı Kızlar\'ın sahibi Eylül Alimyeri, ailesi eski yazlıkçı (2000 sonrası); otel giriş katı, 4 oda katı ve kuleler (vikiyle aynı)' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
