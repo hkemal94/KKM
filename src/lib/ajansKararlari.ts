@@ -42,6 +42,10 @@ import { vikiGorseliMi } from './maddeGorseli';
  *     açsın): `yeniMadde` (`baslik` maddenin adı, `maddeTur` türü, `metin` madde
  *     metni, isteğe bağlı `baglar`: başka maddelere bağ). Aynı ad ve türde canlı
  *     madde varsa uygulanmış sayılır; aynı adla başka türde madde varsa atlanır.
+ *   - 14 Kasım (Kemal: kart oyunu Oyunlar'a girmemiş, "Ajans eklesin"): `yeniOyun`
+ *     (`baslik` oyunun KKM'deki geçici adı, `metin` isteğe bağlı not). Ürünler →
+ *     Oyunlar listesine "Yeni oyun" düğmesinin açtığı kaydın aynısını açar. Aynı
+ *     adla oyun varsa uygulanmış sayılır.
  *   - 5 Kasım (Kemal viki maddelerine görsel seçti): `gorselEkle` (`deger`
  *     sitedeki görselin yolu, ör. `/viki/dondurmaci-kizlar-tabela.jpg`; görsel
  *     dosyası `public/viki/` altında durur). Maddenin görsel listesinin sonuna
@@ -78,6 +82,7 @@ export type KararIslemi =
   | { kimlik: string; tur: 'eskiAlan'; madde: string; alan: string; eski?: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string }
   | { kimlik: string; tur: 'yeniMadde'; baslik: string; maddeTur: string; metin?: string; baglar?: YeniMaddeBagi[]; neden?: string }
+  | { kimlik: string; tur: 'yeniOyun'; baslik: string; metin?: string; neden?: string }
   | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; neden?: string };
 
 type KitapBolumuIslemi = Extract<KararIslemi, { tur: 'kitapBolumu' }>;
@@ -131,6 +136,10 @@ export function maddeTuru(t: string): ItemType | null {
 /** Aynı adla canlı viki maddeleri */
 const ayniAdli = (items: Item[], ad: string) =>
   items.filter(i => !i.archived && !i.isProposal && WIKI_TYPES.includes(i.type) && kucuk(i.title) === kucuk(ad));
+
+/** Aynı adla canlı oyun kayıtları (Ürünler → Oyunlar) */
+const ayniAdliOyun = (items: Item[], ad: string) =>
+  items.filter(i => i.type === 'oyun_tanitim' && !i.archived && kucuk(i.title) === kucuk(ad));
 
 /** Yeni maddenin kaydı (saf iş): bağlar çözülür, uymayan ya da bulunamayan bağ `atlanan`a */
 export function yeniMaddeKaydi(items: Item[], islem: Extract<KararIslemi, { tur: 'yeniMadde' }>, id: string) {
@@ -260,6 +269,7 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'metindenSil') { const m = maddeBul(items, i.madde); return !!m && !!i.eski?.trim() && !metindeVar(m, i.eski); }
   if (i.tur === 'markaKarti') { const m = maddeBul(items, i.marka); const d = kartDegeri(i.alan, i.deger); return !!m && d !== null && kartAyni(kartAlani(m, i.alan), d); }
   if (i.tur === 'yeniMadde') { const t = maddeTuru(i.maddeTur); return !!t && ayniAdli(items, i.baslik).some(m => m.type === t); }
+  if (i.tur === 'yeniOyun') return ayniAdliOyun(items, i.baslik).length > 0;
   if (i.tur === 'kitapBolumu') {
     const { bolum } = kitapBolumuPlani(items, i);
     return !!bolum && (bolum.notes || '').trim() === (i.metin || '').trim() && bolum.metadata?.chapterIndex === i.sira;
@@ -308,6 +318,7 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
     // Adı ya da türü geçersiz yeni madde listede durmaz
     if (i.tur === 'yeniMadde') return !!i.baslik?.trim() && !!maddeTuru(i.maddeTur) && !yapilmis(items, i);
     // Kitabı, adı ya da metni boş bölüm listede durmaz
+    if (i.tur === 'yeniOyun') return !!i.baslik?.trim() && !yapilmis(items, i);
     if (i.tur === 'kitapBolumu') return kitapBolumuGecerli(i) && !yapilmis(items, i);
     // Sitedeki viki klasöründe olmayan yol listede durmaz
     if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
@@ -368,6 +379,20 @@ export async function kararlariUygula(
           if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
         }
         for (const neden of atlanan) sonuc.atlanan.push({ islem, neden });
+      } else if (islem.tur === 'yeniOyun') {
+        if (!yaz.ekle) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan yeni oyun açılamıyor; Onay bekleyenler\'den uygula' }); continue; }
+        const ad = (islem.baslik || '').trim();
+        if (!ad) { sonuc.atlanan.push({ islem, neden: 'oyunun adı boş' }); continue; }
+        if (ayniAdliOyun([...guncel.values()], ad).length) { sonuc.atlanan.push({ islem, neden: 'aynı adla oyun zaten var' }); continue; }
+        // OyunStudyo'daki "Yeni oyun" düğmesinin açtığı kaydın aynısı
+        const id = `oyun_tanitim_${Date.now()}`;
+        const yeni = {
+          id, title: ad, area: 'oyun', type: 'oyun_tanitim', status: 'Fikir', priority: 'orta',
+          tags: ['oyun', 'tanitim'], links: [], notes: (islem.metin || '').trim(), images: [], isProposal: false, archived: false,
+          metadata: { ad }
+        } as unknown as Omit<Item, 'createdAt' | 'updatedAt' | 'userId'> & { id: string };
+        await yaz.ekle(yeni);
+        guncel.set(id, { ...yeni, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
       } else if (islem.tur === 'kitapBolumu') {
         if (!kitapBolumuGecerli(islem)) { sonuc.atlanan.push({ islem, neden: 'kitap, bölüm adı, metin ya da sıra eksik' }); continue; }
         const liste = [...guncel.values()];

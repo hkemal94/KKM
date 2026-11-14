@@ -23,7 +23,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', kitapBolumu: 'Kitap bölümü' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', yeniOyun: 'Yeni oyun', kitapBolumu: 'Kitap bölümü' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
