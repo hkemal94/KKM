@@ -363,6 +363,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Madde önerileri: cümleden karışan sözlerle uzamış adlar ("Öztürk Ailesi\'nden Zeynep Taraftar Birahanesi") öneri olarak gelmez' },
   { id: 'viki-dort-cizim', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Görselsiz beş viki maddesine kalem-suluboya çizim: Merkez Eczanesi, Efendi Kuruyemiş, İskele Mescidi, Düzada Ziraat İşletmeleri Kurumu, Küçükkuyu Limanı (Kemal\'in gönderdiği fotoğraftaki gerçek düzenle); Kemal Onay bekleyenler\'de seçti' },
+  { id: 'vikipediden-getir', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Viki: "Vikipedi\'den getir" düğmesi (düzenleyici → Ayarlar → Wikipedia\'dan tiki): Türkçe Vikipedi\'nin kısa özeti ve bağlantısı aday olarak gelir; "Metne ekle" deyip kaydetmeden vikiye girmez; sayfa yoksa söyler' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

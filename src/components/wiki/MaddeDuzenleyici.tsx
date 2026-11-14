@@ -10,7 +10,7 @@ import { BAG_TURLERI, getRelationLabels, resolveAllRelations, type BagTuru } fro
 import { aileUyeleri, type AileUyeligi } from '../../lib/aileUyeligi';
 import { tamAd } from '../../lib/kisiAdi';
 import { bagUygun, kaynakTurleri, uygunTurler } from '../../lib/bagKurallari';
-import { WIKIPEDIA_KAYNAGI, wikipediadanMi } from '../../lib/vikipediKaynagi';
+import { WIKIPEDIA_KAYNAGI, wikipediadanMi, vikipedidenGetir, type VikipediSonucu } from '../../lib/vikipediKaynagi';
 
 /**
  * Madde düzenleyici (yapisal-4, 25–28). Vikinin yönetim yüzünde "düzenle"ye
@@ -78,6 +78,16 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
   const [wikipedia, setWikipedia] = useState<boolean>(wikipediadanMi(item));
   const ilkKaynakUrl = typeof item.metadata?.kaynakUrl === 'string' ? item.metadata.kaynakUrl : '';
   const [kaynakUrl, setKaynakUrl] = useState<string>(ilkKaynakUrl);
+  /** Vikipedi'den getir (14 Kasım): özet aday olarak görünür; kayda Kemal "Kaydet"e basınca girer */
+  const [vikiAd, setVikiAd] = useState<string>(item.title);
+  const [vikiSonuc, setVikiSonuc] = useState<VikipediSonucu | null>(null);
+  const [vikiDurum, setVikiDurum] = useState<'' | 'araniyor' | 'hata'>('');
+  const [vikiEklendi, setVikiEklendi] = useState(false);
+  const vikiGetir = async () => {
+    setVikiDurum('araniyor'); setVikiSonuc(null); setVikiEklendi(false);
+    try { setVikiSonuc(await vikipedidenGetir(vikiAd)); setVikiDurum(''); }
+    catch { setVikiDurum('hata'); }
+  };
   /** Alan boşsa metindeki künye satırından okunan değer — kutuda soluk görünür */
   const metindeki = useMemo(() => new Map(getKunyeFields(item).map(f => [f.id, f.value])), [item]);
   const ipucu = (id: string, soru: string) => (metindeki.get(id) ? `metinde: ${metindeki.get(id)}` : soru);
@@ -424,11 +434,54 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
           </span>
         </label>
         {wikipedia && (
-          <label className="block mt-1 pl-8">
+          <div className="mt-1 pl-8">
+            <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Vikipedi'de aranacak ad</span>
+            <div className="flex gap-1.5">
+              <input value={vikiAd} onChange={e => setVikiAd(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void vikiGetir(); } }} className={`${girdi} min-w-0`} />
+              <button type="button" onClick={() => void vikiGetir()} disabled={!vikiAd.trim() || vikiDurum === 'araniyor'}
+                className="shrink-0 min-h-11 px-3 rounded text-[12.5px] font-semibold bg-[#0E1C4F] text-white dark:bg-[#F26B6F] disabled:opacity-50">
+                {vikiDurum === 'araniyor' ? 'Aranıyor…' : "Vikipedi'den getir"}
+              </button>
+            </div>
+            {vikiDurum === 'hata' && <span className="block mt-1 text-[12px] text-kiremit">Vikipedi'ye ulaşılamadı; biraz sonra yeniden dene. Hiçbir şey yazılmadı.</span>}
+            {vikiSonuc && (
+              <div className="mt-2 rounded-lg border border-dashed border-[#0E1C4F]/40 dark:border-[#F3EFE8]/40 p-2.5">
+                {vikiSonuc.durum === 'yok' && (
+                  <>
+                    <span className="block text-[13px] font-semibold text-kiremit">Bu adla Vikipedi sayfası yok.</span>
+                    <span className="block mt-1 text-[12px]">Adı kısaltıp yeniden dene (ör. yalnız yerin adı). Hiçbir şey yazılmadı.</span>
+                  </>
+                )}
+                {vikiSonuc.durum === 'cokAnlamli' && (
+                  <>
+                    <span className="block text-[13px] font-semibold text-kiremit">Bu adın Vikipedi'de birden çok anlamı var.</span>
+                    <span className="block mt-1 text-[12px]">Adı netleştirip yeniden dene. <a href={vikiSonuc.adres} target="_blank" rel="noopener noreferrer" className="underline">Anlamlara bak</a></span>
+                  </>
+                )}
+                {vikiSonuc.durum === 'bulundu' && (
+                  <>
+                    <span className="postmark-label block mb-1">Vikipedi'deki özet · aday</span>
+                    <p className="text-[13px] leading-snug">{vikiSonuc.ozet}</p>
+                    <a href={vikiSonuc.adres} target="_blank" rel="noopener noreferrer" className="block mt-1 text-[11.5px] underline break-all">Kaynak: {decodeURI(vikiSonuc.adres).replace(/^https?:\/\//, '')}</a>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      <button type="button" disabled={vikiEklendi} onClick={() => { const o = vikiSonuc.ozet; setGiris(g => (g.trim() ? `${g.trim()}\n\n${o}` : o)); setKaynakUrl(vikiSonuc.adres); setVikiEklendi(true); }}
+                        className="min-h-11 px-3 rounded text-[12.5px] font-semibold bg-[#0E1C4F] text-white dark:bg-[#F26B6F] disabled:opacity-50">{vikiEklendi ? 'Metne eklendi' : 'Metne ekle'}</button>
+                      <button type="button" onClick={() => setKaynakUrl(vikiSonuc.adres)}
+                        className="min-h-11 px-3 rounded text-[12.5px] font-semibold border border-[#0E1C4F] dark:border-[#F3EFE8]">Yalnız bağlantıyı al</button>
+                      <button type="button" onClick={() => { setVikiSonuc(null); setVikiEklendi(false); }}
+                        className="min-h-11 px-3 rounded text-[12.5px] font-semibold border border-[#0E1C4F] dark:border-[#F3EFE8]">Vazgeç</button>
+                    </div>
+                    <span className="block mt-2 text-[11px] text-gri dark:text-bej/70">{vikiEklendi ? 'Özet Metin sekmesine kondu, bağlantı aşağıya yazıldı. "Kaydet"e basmadan vikiye girmez.' : 'Hiçbir şey kendiliğinden yazılmaz. "Metne ekle" özeti Metin sekmesine koyar; sen "Kaydet"e basmadan vikiye girmez.'}</span>
+                  </>
+                )}
+              </div>
+            )}
+          <label className="block mt-2">
             <span className="block text-[11px] text-gri dark:text-bej/85 mb-0.5">Kaynak bağlantısı</span>
             <input value={kaynakUrl} onChange={e => setKaynakUrl(e.target.value)} placeholder="https://tr.wikipedia.org/wiki/…" inputMode="url" className={girdi} />
             {kaynakUrl.trim() && !/^https?:\/\//i.test(kaynakUrl.trim()) && <span className="block mt-0.5 text-[11px] text-kiremit">Bağlantı https:// ile başlamalı; yoksa işaret bağlantısız görünür.</span>}
           </label>
+          </div>
         )}
       </div>
 
