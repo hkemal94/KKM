@@ -186,9 +186,10 @@ function kunyeAlani(m: Item, alan: string) {
   // 14 Kasım: ekrandaki değer değil kayıttaki ham değer (Mahalle ekranda "Çiftlik Mahallesi", kayıtta "çiftlik";
   // karşılaştırma ekrandakine bakınca karar uygulandıktan sonra da listede dönüp duruyordu)
   const ham = f.fieldPath.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), m as unknown);
-  const deger = typeof ham === 'string' || typeof ham === 'number'
-    ? String(ham)
-    : getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
+  // Kayıtta boşsa ekrandakine bakılır: değer metindeki "* Konum: …" satırından da gelebilir (14 Kasım: yoksa
+  // metinden gelen eski kararlar "uygulanmamış" sanılıp listeye geri dönüyordu)
+  const hamYazi = typeof ham === 'string' || typeof ham === 'number' ? String(ham).trim() : '';
+  const deger = hamYazi || getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
   return { yol: f.fieldPath, deger };
 }
 
@@ -251,7 +252,8 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'metneEkle') { const m = maddeBul(items, i.madde); return !!m && (m.notes || '').includes(i.deger.trim()); }
   if (i.tur === 'gorselEkle') { const m = maddeBul(items, i.madde); return !!m && (m.images || []).includes(i.deger.trim()); }
   // 13 Kasım: metin ya da bölümlerden birinde (Stadyum Mahallesi)
-  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !metindeVar(m, i.eski) && metindeVar(m, i.deger.trim()); }
+  // 14 Kasım: eski cümle artık metinde yoksa (sonraki bir karar sildi ya da değiştirdi) karar eskimiştir; listeye dönmez
+  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !metindeVar(m, i.eski); }
   if (i.tur === 'eskiAlan') { const m = maddeBul(items, i.madde); const v = m && eskiAlanDegeri(m, i.alan); return v !== null && v !== undefined && kucuk(v) === kucuk(i.deger); }
   if (i.tur === 'takmaAdSil') { const m = maddeBul(items, i.madde); return !!m && !takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)); }
   if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
