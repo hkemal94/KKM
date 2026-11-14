@@ -186,9 +186,10 @@ function kunyeAlani(m: Item, alan: string) {
   // 14 Kasım: ekrandaki değer değil kayıttaki ham değer (Mahalle ekranda "Çiftlik Mahallesi", kayıtta "çiftlik";
   // karşılaştırma ekrandakine bakınca karar uygulandıktan sonra da listede dönüp duruyordu)
   const ham = f.fieldPath.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), m as unknown);
-  const deger = typeof ham === 'string' || typeof ham === 'number'
-    ? String(ham)
-    : getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
+  // Kayıtta boşsa ekrandakine bakılır: değer metindeki "* Konum: …" satırından da gelebilir (14 Kasım: yoksa
+  // metinden gelen eski kararlar "uygulanmamış" sanılıp listeye geri dönüyordu)
+  const hamYazi = typeof ham === 'string' || typeof ham === 'number' ? String(ham).trim() : '';
+  const deger = hamYazi || getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
   return { yol: f.fieldPath, deger };
 }
 
@@ -251,7 +252,8 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'metneEkle') { const m = maddeBul(items, i.madde); return !!m && (m.notes || '').includes(i.deger.trim()); }
   if (i.tur === 'gorselEkle') { const m = maddeBul(items, i.madde); return !!m && (m.images || []).includes(i.deger.trim()); }
   // 13 Kasım: metin ya da bölümlerden birinde (Stadyum Mahallesi)
-  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !metindeVar(m, i.eski) && metindeVar(m, i.deger.trim()); }
+  // 14 Kasım: eski cümle artık metinde yoksa (sonraki bir karar sildi ya da değiştirdi) karar eskimiştir; listeye dönmez
+  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && (!metindeVar(m, i.eski) || (i.deger.includes(i.eski) && metindeVar(m, i.deger.trim()))); }
   if (i.tur === 'eskiAlan') { const m = maddeBul(items, i.madde); const v = m && eskiAlanDegeri(m, i.alan); return v !== null && v !== undefined && kucuk(v) === kucuk(i.deger); }
   if (i.tur === 'takmaAdSil') { const m = maddeBul(items, i.madde); return !!m && !takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)); }
   if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
@@ -514,7 +516,8 @@ export async function makbuzYaz(anahtar: string, sonuc: Uygulama, zaman = new Da
   const bilgi = await github<{ default_branch: string; private: boolean }>(anahtar, `/repos/${AJANS_DEPOSU}`);
   if (!bilgi.private) throw new Error('Kems-Ajans deposu herkese açık; makbuz yazılmadı.');
   const iki = (x: number) => String(x).padStart(2, '0');
-  const ad = `${iki(zaman.getDate())}-${iki(zaman.getMonth() + 1)}-${zaman.getFullYear()}-${iki(zaman.getHours())}${iki(zaman.getMinutes())}`;
+  // 14 Kasım: aynı dakikada iki kez basılınca makbuz yazılamıyordu (aynı ad, GitHub 422); saniye de adda
+  const ad = `${iki(zaman.getDate())}-${iki(zaman.getMonth() + 1)}-${zaman.getFullYear()}-${iki(zaman.getHours())}${iki(zaman.getMinutes())}${iki(zaman.getSeconds())}`;
   const govde = {
     _aciklama: "Kemal KKM'de 'Ajansın kararlarını uygula'ya bastı; KKM'de işlenenler ve atlananlar.",
     uygulandi: zaman.toISOString(),
