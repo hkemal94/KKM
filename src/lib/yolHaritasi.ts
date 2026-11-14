@@ -361,6 +361,12 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Görseli olmayan viki maddelerine görsel: dört aileye üyelerinin bir arada çizimi (Alimyeri Ailesi gibi), Dirlik ve Sürek Kulübü logoları, Yağ Fabrikası 3B; Çağrı Babacan\'ın üç çizimi bıyıksız ve jandarma kıyafetiyle: koyu lacivert, kırmızı yaka işareti, kollarda arma ve rütbe (Kemal, 14 Kasım)' },
   { id: 'madde-onerisi-cumle-parcasi', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Madde önerileri: cümleden karışan sözlerle uzamış adlar ("Öztürk Ailesi\'nden Zeynep Taraftar Birahanesi") öneri olarak gelmez' },
+  { id: 'viki-dort-cizim', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Görselsiz beş viki maddesine kalem-suluboya çizim: Merkez Eczanesi, Efendi Kuruyemiş, İskele Mescidi, Düzada Ziraat İşletmeleri Kurumu, Küçükkuyu Limanı (Kemal\'in gönderdiği fotoğraftaki gerçek düzenle); Kemal Onay bekleyenler\'de seçti' },
+  { id: 'vikipediden-getir', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Viki: "Vikipedi\'den getir" düğmesi (düzenleyici → Ayarlar → Wikipedia\'dan tiki): Türkçe Vikipedi\'nin kısa özeti ve bağlantısı aday olarak gelir; "Metne ekle" deyip kaydetmeden vikiye girmez; sayfa yoksa söyler' },
+  { id: 'yer-adi-konum', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
+    ad: 'Viki: "yer adı" maddelerinin künyesine isteğe bağlı Konum kutusu (adanın dışındaki yerler için; Küçükkuyu Limanı); künyeye Küçükkuyu Limanı satırı' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

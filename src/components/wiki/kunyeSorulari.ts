@@ -121,7 +121,9 @@ export const DEFAULT_QUESTIONS_BY_CAT: Record<string, KunyeSorusu[]> = {
     { id: 'notes', label: 'Anlatım', question: 'Yerin anlatımı (sayfa metni).', fieldPath: 'notes' },
     { id: 'yerTuru', label: 'Tür', question: 'Ne tür bir yer? (tepe, burun, koy, plaj, dere…)', fieldPath: 'metadata.profile.yerTuru' },
     { id: 'region', label: 'Mahalle', question: 'Hangi mahallede ya da yakınında?', fieldPath: 'metadata.region' },
-    { id: 'adinKokeni', label: 'Adın kökeni', question: 'Bu adı nereden aldı?', fieldPath: 'metadata.profile.adinKokeni' }
+    { id: 'adinKokeni', label: 'Adın kökeni', question: 'Bu adı nereden aldı?', fieldPath: 'metadata.profile.adinKokeni' },
+    // 14 Kasım: adanın dışındaki yerler (Küçükkuyu Limanı) için; isteğe bağlı, boş kalınca eksik sayılmaz
+    { id: 'konum', label: 'Konum', question: 'Adanın dışındaysa nerede? (ör. anakarada, hangi ilçe)', fieldPath: 'metadata.profile.konum', istegeBagli: true }
   ],
   ada: [
     { id: 'title', label: 'Ad', question: 'Adanın adı.', fieldPath: 'title' },
