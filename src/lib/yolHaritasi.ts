@@ -375,6 +375,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Ajans yeni oyun önerebilir: Onay bekleyenler\'de "Yeni oyun" kararı; Uygula\'ya basınca oyun Ürünler → Oyunlar listesine girer (ilk: kart oyunu)', not: 'Aynı adla oyun varsa açılmaz.' },
   { id: 'kucuk-resimler', paket: 'K', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Onay bekleyenler: ajansın işlerindeki küçük resimler görünür (gizli depodan anahtarla okunur); okunamayan resim kırık kutu yerine hiç çizilmez' },
+  { id: 'marka-tek-sayfa-1', paket: 'M', kimde: 'claude', nereden: '15 Kasım · Kemal', bitti: true,
+    ad: 'Markalar: her markanın sayfası tek akışta (başlık ve tür rozeti, kimlik, ürünler, ilham, viki özeti); kurum dropları kurumun kendi sayfasında da görünür; Kems Company sayfasında "Kems Coffee Co. · ürün hattı" bölümü', not: 'Hiçbir bölüm silinmedi; kayıtlara bir şey yazılmaz.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

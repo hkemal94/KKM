@@ -48,6 +48,71 @@ interface MarkalarProps {
   onGaleri?: (acik: boolean) => void;
 }
 
+/**
+ * Marka sayfasının tür rozeti (15 Kasım, tek sayfa 1. adım). Yalnız veriden
+ * okunur: çatı marka "gerçek marka", mekân / dükkân kaydı "evrendeki mekân",
+ * kurum sayılan kayıt "evrendeki kurum". Hiçbirine uymuyorsa rozet yok.
+ */
+function markaTuru(b: Item, yapi: { anaMarka: Item | null }): string | null {
+  if (b.id === 'unassigned') return null;
+  if (yapi.anaMarka?.id === b.id || ANA_MARKA_KIMLIKLERI.includes(b.id)) return 'gerçek marka';
+  if (b.type === 'mekân' || b.type === 'dükkân') return 'evrendeki mekân';
+  if (kurumMu(b)) return 'evrendeki kurum';
+  return null;
+}
+
+/** Tek sayfadaki bölüm başlığı (15 Kasım) */
+const BolumBasligi: React.FC<{ ad: string }> = ({ ad }) => (
+  <h3 className="pt-2 -mb-3 text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-[#6A5E4C] dark:text-[#A6B0C9]">
+    {ad}
+  </h3>
+);
+
+/**
+ * Kems Company sayfasında "Kems Coffee Co. · ürün hattı" (15 Kasım). Yalnız
+ * veride Kems Coffee Co. adı geçen yerleri gösterir: drop ve ürün kayıtları,
+ * marka kitindeki örnek iş ve arma satırları. Kayıt yoksa "Henüz kayıt yok".
+ * Ad, slogan, renk uydurulmaz; kayda yazmaz.
+ */
+const KAHVE_ARANAN = 'kems coffee';
+const kahveMi = (m: unknown) => typeof m === 'string' && aramaKatla(m).includes(KAHVE_ARANAN);
+
+const KahveHatti: React.FC<{ items: Item[]; marka: Item; onAc: (id: string) => void }> = ({ items, marka, onAc }) => {
+  const kayitlar = items.filter(i => !i.archived && (i.type === 'drop' || i.type === 'merch_urun')
+    && (kahveMi(i.title) || (i.tags || []).some(kahveMi)));
+  const bk = (marka.metadata?.brandKit || {}) as { exemplaryWorks?: unknown[] };
+  const kitSatirlari = [
+    ...(bk.exemplaryWorks || []).filter(kahveMi),
+    ...((Array.isArray(marka.metadata?.armaTarifi) ? marka.metadata.armaTarifi : []) as unknown[]).filter(kahveMi)
+  ] as string[];
+  const bos = !kayitlar.length && !kitSatirlari.length;
+  return (
+    <section className="bg-white dark:bg-[#13204A]/60 border border-[#CFC5B4] dark:border-[#2C3C72] p-4 rounded-xl space-y-2">
+      <h4 className="text-[10px] font-mono uppercase text-[#6A5E4C] dark:text-[#A6B0C9] tracking-wider font-bold">
+        Kems Coffee Co. · ürün hattı
+      </h4>
+      {bos ? (
+        <p className="text-[11px] text-stone-500 dark:text-stone-400 italic">Henüz kayıt yok.</p>
+      ) : (
+        <ul className="space-y-1">
+          {kayitlar.map(k => (
+            <li key={k.id}>
+              <button type="button" onClick={() => onAc(k.id)}
+                className="w-full p-2 bg-stone-50 dark:bg-[#112440] border border-stone-200 dark:border-[#2C3C72] rounded-lg text-xs hover:border-[#F26B6F] flex justify-between items-center gap-2 cursor-pointer text-left">
+                <span className="font-semibold text-[#0E1C4F] dark:text-[#F3EFE8] truncate min-w-0">{k.title}</span>
+                <span className="text-[9px] font-mono text-stone-500 dark:text-stone-400 shrink-0">{k.type === 'drop' ? 'drop' : 'ürün'} · {k.status}</span>
+              </button>
+            </li>
+          ))}
+          {kitSatirlari.map(t => (
+            <li key={t} className="text-[11px] leading-snug text-[#6A5E4C] dark:text-[#A6B0C9] break-words">· {t} <span className="text-stone-400">(marka kiti)</span></li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+};
+
 /** Raydaki Galeri satırının kimliği (marka kimlikleriyle karışmasın) */
 const GALERI_SEKMESI = '__galeri';
 
@@ -302,7 +367,9 @@ export default function Markalar({
       i.type === 'drop' && 
       (isUnassignedSelected 
         ? !i.metadata?.brandId
-        : i.metadata?.brandId === activeBrandId
+        // 15 Kasım: kurum dropları (brandId Kems Company, kurumId kurum) kurumun
+        // kendi sayfasında da görünür; Kems Company sayfasında kalmaya devam eder
+        : (i.metadata?.brandId === activeBrandId || i.metadata?.kurumId === activeBrandId)
       )
     );
   }, [items, activeBrandId, isUnassignedSelected]);
@@ -619,13 +686,18 @@ export default function Markalar({
               
               {/* Brand Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4 border-b border-[#CFC5B4]">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-mono bg-[#0E1C4F] dark:bg-[#2C3C72] text-white px-2 py-0.5 rounded">
                       {activeBrand.id === 'unassigned'
                         ? 'BAĞIMSIZ SÜREÇ'
                         : kurumMu(activeBrand) ? 'KURUM / KİMLİK' : 'MARKA / KİMLİK'}
                     </span>
+                    {markaTuru(activeBrand, yapi) && (
+                      <span className="text-[10px] font-mono border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] px-2 py-0.5 rounded">
+                        {markaTuru(activeBrand, yapi)}
+                      </span>
+                    )}
                     {activeBrand.isProposal && (
                       <span className="text-[10px] font-mono bg-amber-500 text-white px-2 py-0.5 rounded animate-pulse">
                         ÖNERİ SÜRECİNDE
@@ -643,9 +715,15 @@ export default function Markalar({
                       />
                     </div>
                   ) : (
-                    <h2 className="font-sans font-bold text-2xl text-[#0E1C4F] dark:text-[#F3EFE8] tracking-tight">
-                      {activeBrand.title}
-                    </h2>
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Başlıkta birincil logo (15 Kasım); yoksa hiç görünmez */}
+                      {maddeGorseli(activeBrand, items) && (
+                        <LogoKutusu src={maddeGorseli(activeBrand, items) || ''} alt="" className="w-12 h-12 shrink-0 rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] p-1 flex items-center justify-center overflow-hidden" />
+                      )}
+                      <h2 className="font-sans font-bold text-2xl text-[#0E1C4F] dark:text-[#F3EFE8] tracking-tight break-words min-w-0">
+                        {activeBrand.title}
+                      </h2>
+                    </div>
                   )}
                 </div>
 
@@ -785,6 +863,8 @@ export default function Markalar({
               )}
 
 
+              {/* KİMLİK (15 Kasım): logolar, renk, yazı, ton, kurallar */}
+              {activeBrand.id !== 'unassigned' && <BolumBasligi ad="Kimlik" />}
               {/* MARKA KİTİ (Brand Kit) */}
               {activeBrand.id !== 'unassigned' && (() => {
                 const bk = activeBrand.metadata?.brandKit || {
@@ -1336,11 +1416,159 @@ export default function Markalar({
 
                     </div>
 
+
+                  </div>
+                );
+              })()}
+
+              {/* ÜRÜNLER (15 Kasım) */}
+              <BolumBasligi ad="Ürünler" />
+              {/* MERCHANDISING SECTION */}
+              <div className="bg-stone-50 dark:bg-[#17345A]/50 border border-[#CFC5B4] dark:border-[#2C3C72]/50 p-5 rounded-xl space-y-4">
+                <div className="flex items-center justify-between pb-1 border-b border-stone-200">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="w-4.5 h-4.5 text-[#F26B6F]" />
+                    <h3 className="font-sans font-bold text-sm text-[#0E1C4F] dark:text-[#F3EFE8] tracking-tight">
+                      Marka Merch & Tasarımları
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-mono text-stone-500 dark:text-stone-400">
+                    Tema → Drop → Ürün Zinciri
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  {/* Drop List */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 block">
+                      📦 Droplar ({brandDroplar.length})
+                    </span>
+                    <div className="space-y-1">
+                      <KisaListe as="div" className="space-y-1">
+                      {brandDroplar.map(d => (
+                        <div 
+                          key={d.id} 
+                          onClick={() => onSelectArea('merch', d.id)}
+                          className="p-2 bg-white dark:bg-[#112440] border border-stone-200 rounded-lg text-xs hover:border-[#F26B6F] transition-all flex justify-between items-center cursor-pointer"
+                        >
+                          <span className="font-bold text-[#0E1C4F] dark:text-[#F3EFE8] truncate max-w-[120px]">{d.title}</span>
+                          <span className="text-[9px] font-mono text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950 px-1 py-0.5 rounded">{d.status}</span>
+                        </div>
+                      ))}
+                      </KisaListe>
+                      {brandDroplar.length === 0 && (
+                        <span className="text-[11px] text-stone-500 dark:text-stone-400 italic block">Aktif Drop bulunmuyor.</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ürün List */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 block">
+                      👕 Ürünler ({brandUrunler.length})
+                    </span>
+                    <div className="space-y-1">
+                      <KisaListe as="div" className="space-y-1">
+                      {brandUrunler.map(u => (
+                        <div 
+                          key={u.id} 
+                          onClick={() => onSelectArea('merch', u.id)}
+                          className="p-2 bg-white dark:bg-[#112440] border border-stone-200 rounded-lg text-xs hover:border-[#F26B6F] transition-all flex justify-between items-center cursor-pointer"
+                        >
+                          <span className="font-semibold text-[#0E1C4F] dark:text-[#F3EFE8] truncate max-w-[110px]">{u.title}</span>
+                          <span className="text-[9px] font-mono text-[#F26B6F] shrink-0">{u.metadata?.category || 'giyim'}</span>
+                        </div>
+                      ))}
+                      </KisaListe>
+                      {brandUrunler.length === 0 && (
+                        <span className="text-[11px] text-stone-500 dark:text-stone-400 italic block">Oluşturulmuş ürün bulunmuyor.</span>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Kems Coffee Co. · ürün hattı (15 Kasım): yalnız veride olan */}
+              {!isUnassignedSelected && ANA_MARKA_KIMLIKLERI.includes(activeBrand.id) && (
+                <KahveHatti items={items} marka={activeBrand} onAc={id => onSelectArea('merch', id)} />
+              )}
+
+              {/* İLHAM (15 Kasım): moodboard, tasarım örnekleri, bağlı ilhamlar */}
+              {activeBrand.id !== 'unassigned' && <BolumBasligi ad="İlham" />}
+              {activeBrand.id !== 'unassigned' && (() => {
+                const bk = activeBrand.metadata?.brandKit || { exemplaryWorks: [], atmosphereMoodboard: [] };
+                return (
+                  <div className="bg-white dark:bg-[#13204A]/60 border border-[#CFC5B4] dark:border-[#2C3C72] p-4 sm:p-6 rounded-xl space-y-6">
                     {/* 6. SAMPLE GALLERY & MOODBOARD (IMAGE SECTIONS) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-stone-100 dark:border-stone-800">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       
+                      {/* Atmosphere & Moodboard */}
+                      <KatlanirBolum baslik="6. Moodboard & Atmosfer Kataloğu" bos={!(bk.atmosphereMoodboard || []).length} duzenleniyor={isEditingBrand} onEkle={kitiDuzenle}>
+                        
+                        {!isEditingBrand ? (
+                          <div className="grid grid-cols-3 gap-2.5">
+                            {(bk.atmosphereMoodboard || []).map((img, idx) => (
+                              <div key={idx} className="aspect-square bg-stone-50 border border-stone-200 rounded-xl overflow-hidden relative group/atmosphere select-none">
+                                <img src={img} alt={`Moodboard ${idx+1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                            ))}
+                            {(bk.atmosphereMoodboard || []).length === 0 && (
+                              <span 
+                                onClick={() => setIsEditingBrand(true)}
+                                className="text-[10px] font-mono text-stone-500 dark:text-stone-400 hover:text-[#F26B6F] cursor-pointer block text-center py-4 col-span-full"
+                              >
+                                ➕ Moodboard Görseli Ekle...
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-3 bg-stone-50 p-3.5 border border-stone-200 rounded-xl">
+                            <div className="grid grid-cols-4 gap-2">
+                              {editAtmosphereMoodboard.map((img, idx) => (
+                                <div key={idx} className="aspect-square bg-white border rounded relative group">
+                                  <img src={img} alt="Mood" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditAtmosphereMoodboard(prev => prev.filter((_, i) => i !== idx))}
+                                    className="absolute inset-0 bg-red-600/80 text-white text-[9px] font-mono flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded cursor-pointer"
+                                  >
+                                    Kaldır
+                                  </button>
+                                </div>
+                              ))}
+                              <label className="aspect-square border-2 border-dashed border-stone-300 hover:border-[#F26B6F] rounded flex flex-col items-center justify-center cursor-pointer text-stone-500 dark:text-stone-400 hover:text-[#F26B6F] transition-all">
+                                <Plus className="w-4 h-4" />
+                                <span className="text-[8px] font-mono font-bold uppercase mt-1">Yükle</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = async (evt) => {
+                                      if (evt.target?.result) {
+                                        const base64 = evt.target.result as string;
+                                        const comp = await compressImageBase64(base64);
+                                        setEditAtmosphereMoodboard(prev => [...prev, comp]);
+                                      }
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            <span className="text-[9px] font-mono text-stone-500 dark:text-stone-400 block leading-tight">İlham verici atmosfer paneli için Base64 görseller ekleyin.</span>
+                          </div>
+                        )}
+                      </KatlanirBolum>
+
                       {/* Exemplary Works Archive */}
-                      <KatlanirBolum baslik="6. Tasarım Örnekleri & İlham Arşivi" bos={!(bk.exemplaryWorks || []).length} duzenleniyor={isEditingBrand} onEkle={kitiDuzenle}>
+                      <KatlanirBolum baslik="7. Tasarım Örnekleri & İlham Arşivi" bos={!(bk.exemplaryWorks || []).length} duzenleniyor={isEditingBrand} onEkle={kitiDuzenle}>
                         
                         {!isEditingBrand ? (
                           <div className="grid grid-cols-3 gap-2.5">
@@ -1434,79 +1662,17 @@ export default function Markalar({
                         )}
                       </KatlanirBolum>
 
-                      {/* Atmosphere & Moodboard */}
-                      <KatlanirBolum baslik="7. Moodboard & Atmosfer Kataloğu" bos={!(bk.atmosphereMoodboard || []).length} duzenleniyor={isEditingBrand} onEkle={kitiDuzenle}>
-                        
-                        {!isEditingBrand ? (
-                          <div className="grid grid-cols-3 gap-2.5">
-                            {(bk.atmosphereMoodboard || []).map((img, idx) => (
-                              <div key={idx} className="aspect-square bg-stone-50 border border-stone-200 rounded-xl overflow-hidden relative group/atmosphere select-none">
-                                <img src={img} alt={`Moodboard ${idx+1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                              </div>
-                            ))}
-                            {(bk.atmosphereMoodboard || []).length === 0 && (
-                              <span 
-                                onClick={() => setIsEditingBrand(true)}
-                                className="text-[10px] font-mono text-stone-500 dark:text-stone-400 hover:text-[#F26B6F] cursor-pointer block text-center py-4 col-span-full"
-                              >
-                                ➕ Moodboard Görseli Ekle...
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="space-y-3 bg-stone-50 p-3.5 border border-stone-200 rounded-xl">
-                            <div className="grid grid-cols-4 gap-2">
-                              {editAtmosphereMoodboard.map((img, idx) => (
-                                <div key={idx} className="aspect-square bg-white border rounded relative group">
-                                  <img src={img} alt="Mood" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditAtmosphereMoodboard(prev => prev.filter((_, i) => i !== idx))}
-                                    className="absolute inset-0 bg-red-600/80 text-white text-[9px] font-mono flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded cursor-pointer"
-                                  >
-                                    Kaldır
-                                  </button>
-                                </div>
-                              ))}
-                              <label className="aspect-square border-2 border-dashed border-stone-300 hover:border-[#F26B6F] rounded flex flex-col items-center justify-center cursor-pointer text-stone-500 dark:text-stone-400 hover:text-[#F26B6F] transition-all">
-                                <Plus className="w-4 h-4" />
-                                <span className="text-[8px] font-mono font-bold uppercase mt-1">Yükle</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    const reader = new FileReader();
-                                    reader.onload = async (evt) => {
-                                      if (evt.target?.result) {
-                                        const base64 = evt.target.result as string;
-                                        const comp = await compressImageBase64(base64);
-                                        setEditAtmosphereMoodboard(prev => [...prev, comp]);
-                                      }
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }}
-                                />
-                              </label>
-                            </div>
-                            <span className="text-[9px] font-mono text-stone-500 dark:text-stone-400 block leading-tight">İlham verici atmosfer paneli için Base64 görseller ekleyin.</span>
-                          </div>
-                        )}
-                      </KatlanirBolum>
 
                     </div>
-
                   </div>
                 );
               })()}
 
-              {/* Kanallar (29 Eylül): Durum sayfasından buraya taşındı; yalnız Kems Company */}
-              {!isUnassignedSelected && activeBrand && ANA_MARKA_KIMLIKLERI.includes(activeBrand.id) && (
-                <Kanallar items={items} onAddItem={onAddItem} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />
-              )}
+              {/* İlhamlar (3 Kasım): İlham ve kaynaklar'da bu markaya bağlananlar */}
+              <BagliIlhamlar items={items} hedefId={activeBrand.id} className="bg-stone-50 dark:bg-[#17345A]/50 border border-[#CFC5B4] dark:border-[#2C3C72]/50 p-5 rounded-xl" />
 
+              {/* VİKİ ÖZETİ (15 Kasım) */}
+              {!isUnassignedSelected && <BolumBasligi ad="Viki özeti" />}
               {/* Viki özeti: künye, bilgiler, sayfa metni (29 Eylül) */}
               {!isEditingBrand && !isUnassignedSelected ? (
                 <KurumOzeti item={activeBrand} items={items} onVikideAc={id => onSelectArea('duzada', id)} />
@@ -1528,6 +1694,11 @@ export default function Markalar({
                   </p>
                 )}
               </div>
+              )}
+
+              {/* Kanallar (29 Eylül): Durum sayfasından buraya taşındı; yalnız Kems Company */}
+              {!isUnassignedSelected && activeBrand && ANA_MARKA_KIMLIKLERI.includes(activeBrand.id) && (
+                <Kanallar items={items} onAddItem={onAddItem} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />
               )}
 
               {/* CHILD ENTITIES SEGMENT */}
@@ -1648,77 +1819,6 @@ export default function Markalar({
                 </div>
 
               </div>
-
-              {/* MERCHANDISING SECTION */}
-              <div className="bg-stone-50 dark:bg-[#17345A]/50 border border-[#CFC5B4] dark:border-[#2C3C72]/50 p-5 rounded-xl space-y-4">
-                <div className="flex items-center justify-between pb-1 border-b border-stone-200">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="w-4.5 h-4.5 text-[#F26B6F]" />
-                    <h3 className="font-sans font-bold text-sm text-[#0E1C4F] dark:text-[#F3EFE8] tracking-tight">
-                      Marka Merch & Tasarımları
-                    </h3>
-                  </div>
-                  <span className="text-[10px] font-mono text-stone-500 dark:text-stone-400">
-                    Tema → Drop → Ürün Zinciri
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                  {/* Drop List */}
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 block">
-                      📦 Droplar ({brandDroplar.length})
-                    </span>
-                    <div className="space-y-1">
-                      <KisaListe as="div" className="space-y-1">
-                      {brandDroplar.map(d => (
-                        <div 
-                          key={d.id} 
-                          onClick={() => onSelectArea('merch', d.id)}
-                          className="p-2 bg-white dark:bg-[#112440] border border-stone-200 rounded-lg text-xs hover:border-[#F26B6F] transition-all flex justify-between items-center cursor-pointer"
-                        >
-                          <span className="font-bold text-[#0E1C4F] dark:text-[#F3EFE8] truncate max-w-[120px]">{d.title}</span>
-                          <span className="text-[9px] font-mono text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950 px-1 py-0.5 rounded">{d.status}</span>
-                        </div>
-                      ))}
-                      </KisaListe>
-                      {brandDroplar.length === 0 && (
-                        <span className="text-[11px] text-stone-500 dark:text-stone-400 italic block">Aktif Drop bulunmuyor.</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Ürün List */}
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 block">
-                      👕 Ürünler ({brandUrunler.length})
-                    </span>
-                    <div className="space-y-1">
-                      <KisaListe as="div" className="space-y-1">
-                      {brandUrunler.map(u => (
-                        <div 
-                          key={u.id} 
-                          onClick={() => onSelectArea('merch', u.id)}
-                          className="p-2 bg-white dark:bg-[#112440] border border-stone-200 rounded-lg text-xs hover:border-[#F26B6F] transition-all flex justify-between items-center cursor-pointer"
-                        >
-                          <span className="font-semibold text-[#0E1C4F] dark:text-[#F3EFE8] truncate max-w-[110px]">{u.title}</span>
-                          <span className="text-[9px] font-mono text-[#F26B6F] shrink-0">{u.metadata?.category || 'giyim'}</span>
-                        </div>
-                      ))}
-                      </KisaListe>
-                      {brandUrunler.length === 0 && (
-                        <span className="text-[11px] text-stone-500 dark:text-stone-400 italic block">Oluşturulmuş ürün bulunmuyor.</span>
-                      )}
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* İlhamlar (3 Kasım): İlham ve kaynaklar'da bu markaya bağlananlar */}
-              <BagliIlhamlar items={items} hedefId={activeBrand.id} className="bg-stone-50 dark:bg-[#17345A]/50 border border-[#CFC5B4] dark:border-[#2C3C72]/50 p-5 rounded-xl" />
 
             </div>
           ) : (
