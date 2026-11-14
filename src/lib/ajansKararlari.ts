@@ -253,7 +253,7 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'gorselEkle') { const m = maddeBul(items, i.madde); return !!m && (m.images || []).includes(i.deger.trim()); }
   // 13 Kasım: metin ya da bölümlerden birinde (Stadyum Mahallesi)
   // 14 Kasım: eski cümle artık metinde yoksa (sonraki bir karar sildi ya da değiştirdi) karar eskimiştir; listeye dönmez
-  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && !metindeVar(m, i.eski); }
+  if (i.tur === 'metniDegistir') { const m = maddeBul(items, i.madde); return !!m && (!metindeVar(m, i.eski) || (i.deger.includes(i.eski) && metindeVar(m, i.deger.trim()))); }
   if (i.tur === 'eskiAlan') { const m = maddeBul(items, i.madde); const v = m && eskiAlanDegeri(m, i.alan); return v !== null && v !== undefined && kucuk(v) === kucuk(i.deger); }
   if (i.tur === 'takmaAdSil') { const m = maddeBul(items, i.madde); return !!m && !takmaAdlar(m).some(t => kucuk(t) === kucuk(i.deger)); }
   if (i.tur === 'alaniDegistir') { const m = maddeBul(items, i.madde); const a = m && kunyeAlani(m, i.alan); return !!a && kucuk(a.deger) === kucuk(i.deger); }
