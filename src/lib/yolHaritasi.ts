@@ -395,6 +395,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Ürünler → Pullar: bütün oyunların pul koleksiyonu oyundaki düzenle (yıl, çeyrek, üç aylık pul ve büyük 4. pul); üstte oyun düğmeleri ve tasarlandı / onaylı / bekliyor özeti; pula dokununca ayrıntı paneli (durum, küçük resim, ayın görevi, Canva bağlantısı); "Kaydet" ajansın kkm/pullar.json\'una yazar', not: 'KKM kayıtlarına bir şey yazılmaz. Dosya yoksa sayfa "Pul kaydı henüz yok" der, yazmaz.' },
   { id: 'illustrator-ajani', paket: 'K', kimde: 'claude', nereden: '15 Kasım · Kemal', bitti: true,
     ad: 'Ajanlar ve otomasyonlar: yeni İllüstratör ajanı (her gece günün görseli) kartlarda ve zamanlayıcıda adıyla görünür; hattı Görsel, ekranı Oyunlar', not: 'Ajan dosyası ve takvimi ajans deposunda; KKM kayıtlarına bir şey yazılmaz.' },
+  { id: 'ana-sayfa-tekrar', paket: 'K', kimde: 'claude', nereden: '15 Kasım · Kemal', bitti: true,
+    ad: 'Menü: Ajans grubundaki tekrar eden "Ana sayfa" satırı kalktı; Ana sayfa telefonda alt menüdeki düğmeden, masaüstünde soldaki logodan açılır', not: 'Yalnız menü; KKM kayıtlarına bir şey yazılmaz. Açılışta yine Ana sayfa gelir.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
