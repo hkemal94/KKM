@@ -85,7 +85,7 @@ const AJAN_ADLARI: Record<string, string> = {
   'video-yapimcisi': 'Video Yapımcısı', 'video-editoru': 'Video Editörü',
   'sosyal-medya-stratejisti': 'Sosyal Medya Stratejisti', 'sosyal-medya-yapimcisi': 'Sosyal Medya Yapımcısı',
   'sosyal-medya-dagitimcisi': 'Sosyal Medya Dağıtımcısı', 'merch-konseptcisi': 'Merch Konseptçisi',
-  'merch-tasarimcisi': 'Merch Tasarımcısı', 'lore-arastirmacisi': 'Lore Araştırmacısı',
+  'merch-tasarimcisi': 'Merch Tasarımcısı', illustrator: 'İllüstratör', 'lore-arastirmacisi': 'Lore Araştırmacısı',
   'viki-editoru': 'Viki Editörü', 'kanon-denetcisi': 'Kanon Denetçisi', 'harita-ajani': 'Harita Ajanı',
   'bulten-ajani': 'Bülten Ajanı', 'oyun-tasarimcisi': 'Oyun Tasarımcısı', 'oyun-gelistiricisi': 'Oyun Geliştiricisi',
   'kod-bakimcisi': 'Kod Bakımcısı', 'kod-gelistiricisi': 'Kod Geliştiricisi'

@@ -52,7 +52,8 @@ const HATLAR: Record<string, { hat: string; ekran: string }> = {
   'oyun-tasarimcisi': { hat: 'Oyun', ekran: 'Oyunlar' },
   'oyun-gelistiricisi': { hat: 'Oyun', ekran: 'Oyunlar' },
   'kod-bakimcisi': { hat: 'Kod', ekran: 'Ajanlar ve otomasyonlar' },
-  'kod-gelistiricisi': { hat: 'Kod', ekran: 'Ajanlar ve otomasyonlar' }
+  'kod-gelistiricisi': { hat: 'Kod', ekran: 'Ajanlar ve otomasyonlar' },
+  illustrator: { hat: 'Görsel', ekran: 'Oyunlar' }
 };
 /** Bir KKM ekranına bağlı ajanlar (ajan düğmesinde seçim için) */
 export const ekranAjanlari = (ekran: string) => Object.entries(HATLAR).filter(([, h]) => h.ekran === ekran).map(([ad]) => ad);
