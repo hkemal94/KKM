@@ -7,7 +7,6 @@ değil, çalışma değerleri.
 
 | | |
 |---|---|
-| Motto | Quietly cultural. |
 | Estetik | Sessiz lüks |
 | Ses tonu | Gösterişsiz · bilge · samimi ama havalı |
 | Değerler | Sessiz Özgüven · Kültürel Derinlik · Özenli/Düşünülmüş · Aidiyet |
