@@ -377,6 +377,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Ajans kararlarına "Bağ sil": iki madde arasındaki yanlış bağ tek düğmeyle kalkar', not: 'Kayıt yalnız Kemal "Uygula"ya basınca değişir.' },
   { id: 'marka-celiski-15-11', paket: 'M', kimde: 'claude', nereden: '15 Kasım · Kemal', bitti: true,
     ad: 'Marka çelişkileri (Kemal\'in 14 cevabı): Kems Company sloganı kart cümlesi, merkez evren adresi, Tabakhane örnek işlerden çıktı; Dirlik kuruluşu 12 Mayıs 1957; Küçükçetmi paleti krem-mürekkep-bej; Basics 1 etiketi Est. 2025 · Düzada, TR', not: 'Kartlardaki aynı düzeltmeler ajansın kararlarıyla (Uygula) gelir; kod ve kart aynı kalsın diye ikisi birlikte.' },
+  { id: 'techpack-9', paket: 'M', kimde: 'claude', nereden: '16 Kasım · Kemal', bitti: true,
+    ad: 'Merch panosu: Basics 1\'in 9 ürününün tech pack bağlantısı (Tee, Hoodie, Sweatshirt, Şapka, Çorap, yarım fermuarlı, kolej montu, bez çanta, rüzgârlık)', not: 'Bağlantı yalnız kodun verisinde; kayda yazılmaz. Son dördün adı çalışma adı; kart o adla açılınca bağlantı görünür.' },
   { id: 'kitabi-guncelle', paket: 'M', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,
     ad: 'Marka ve merch: "Marka kitabı" kartı ve "Kitabı güncelle" düğmesi; basınca ajansa istek gider (marka kitabı ve PDF\'i marka kartlarının son hâline göre güncellenir), sonuç Onay bekleyenler\'e düşer', not: 'Kayıtlara bir şey yazılmaz. Her pazartesi sabah turundaki kontrol ajansın işi.' },
   { id: 'yeni-oyun-karari', paket: 'M', kimde: 'claude', nereden: '14 Kasım · Kemal', bitti: true,

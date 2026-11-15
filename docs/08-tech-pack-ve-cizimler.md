@@ -10,6 +10,7 @@ okur. Kurulum: Kemal'in kararı, 15 Kasım 2026 ("Proje belgesi + KKM").
 |---|---|---|
 | Tech pack şablonu (taslak) | `DAHa755XcHA` | 13 sayfa, boş. Dokunulmaz; her ürün için kopyası alınır. |
 | Örnek: Basics 1 · Basic Hoodie | `DAHa71mrInM` | Şablondan doldurulmuş örnek, 13 sayfa. Klasör `FAHZ_W7UZy4`. |
+| Basics 1 · 9 ürün (16 Kasım) | `DAHa8J9cO1c` Tee · `DAHa71mrInM` Hoodie · `DAHa8C0d2FQ` Sweatshirt · `DAHa_OKB8U8` Şapka · `DAHa_NIVQZk` Çorap · `DAHa8CnV_YU` Yarım fermuarlı · `DAHa8NZezhQ` Kolej montu · `DAHa_MhArQI` Bez çanta · `DAHa_B0vxQc` Rüzgârlık | Hepsi 13 sayfa, aynı standart. Liste: drop dosyası kopyası `DAHa-1fYzOM` s.13. |
 | Etsy tech pack (Kemal'in lisanslı kopyası) | `DAHa78a4_o4` | Yalnız çizim kaynağı. Düzeni, metni, görselleri kopyalanmaz. |
 | Klasör "Ürün çizimleri" | `FAHa70YysZA` | Ücretsiz kaynaklardan işlenmiş çizimler (aşağıda). |
 
@@ -74,5 +75,5 @@ dalında. Telif ajansın; Kemal'in stil onayını bekliyor.
 ## KKM'de nerede görünür
 
 - Galeri → Canva aynası (`src/data/canvaAynasi.ts`): şablon ve örnek.
-- Merch → Pano: Basic Hoodie kartında tech pack bağlantısı (`DAHa71mrInM`; veri `src/data/teknikFoyler.ts`).
+- Merch → Pano: Basics 1 ürün kartlarında tech pack bağlantısı (9 ürün; veri `src/data/teknikFoyler.ts`).
 - Bu belge: `docs/08-tech-pack-ve-cizimler.md` (proje kopyası: claude/08-tech-pack-ve-cizimler.md).
