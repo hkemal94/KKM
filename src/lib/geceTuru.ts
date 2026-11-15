@@ -31,6 +31,7 @@ export const AJAN_ADLARI: Record<string, string> = {
   'sosyal-medya-dagitimcisi': 'Sosyal Medya Dağıtımcısı',
   'merch-konseptcisi': 'Merch Konseptçisi',
   'merch-tasarimcisi': 'Merch Tasarımcısı',
+  illustrator: 'İllüstratör',
   'bulten-ajani': 'Bülten Ajanı',
   'oyun-tasarimcisi': 'Oyun Tasarımcısı',
   'oyun-gelistiricisi': 'Oyun Geliştiricisi',
