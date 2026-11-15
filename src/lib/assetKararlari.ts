@@ -27,13 +27,18 @@ function base64Coz(b64: string): string {
   return new TextDecoder().decode(baytlar);
 }
 
+/** Dosyanın metninden kararlar; bozuksa boş */
+function kararlariCoz(ham: string): AssetKararlari {
+  const veri = JSON.parse(ham) as unknown;
+  return veri && typeof veri === 'object' && !Array.isArray(veri) ? (veri as AssetKararlari) : {};
+}
+
 /** Ajans deposundaki kararlar; dosya yoksa boş */
 export async function assetKararlariniOku(anahtar: string): Promise<AssetKararlari> {
   try {
     const d = await github<{ content?: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${ASSET_KARARLARI_YOLU}?t=${Date.now()}`);
     if (!d.content) return {};
-    const veri = JSON.parse(base64Coz(d.content)) as unknown;
-    return veri && typeof veri === 'object' && !Array.isArray(veri) ? (veri as AssetKararlari) : {};
+    return kararlariCoz(base64Coz(d.content));
   } catch (e) {
     if (e instanceof GithubHatasi && e.durum === 404) return {};
     throw e;
@@ -46,12 +51,16 @@ let sira: Promise<unknown> = Promise.resolve();
 /** Tek modelin kararını yazar (dosyanın güncel hâli okunur, yalnız o model değişir); yeni hâli döner */
 export function assetKarariYaz(anahtar: string, kimlik: string, karar: AssetKarariTuru, not?: string): Promise<AssetKararlari> {
   const is = sira.then(async () => {
-    const kararlar = await assetKararlariniOku(anahtar);
     const temizNot = (not ?? '').trim();
-    kararlar[kimlik] = { karar, ...(temizNot ? { not: temizNot } : {}), tarih: new Date().toISOString() };
-    const sirali = Object.fromEntries(Object.keys(kararlar).sort().map(k => [k, kararlar[k]]));
-    await ajansaDosyaYaz(anahtar, ASSET_KARARLARI_YOLU, `${JSON.stringify(sirali, null, 2)}\n`,
-      `KKM asset kararı: ${kimlik} · ${KARAR_ADI[karar]}`, 'asset kararı');
+    const yeni = { karar, ...(temizNot ? { not: temizNot } : {}), tarih: new Date().toISOString() };
+    let sirali: AssetKararlari = {};
+    // 15 Kasım: her denemede dosyanın güncel hâli okunur, yalnız bu model değişir
+    await ajansaDosyaYaz(anahtar, ASSET_KARARLARI_YOLU, ham => {
+      const kararlar = ham === null ? {} : kararlariCoz(ham);
+      kararlar[kimlik] = yeni;
+      sirali = Object.fromEntries(Object.keys(kararlar).sort().map(k => [k, kararlar[k]]));
+      return `${JSON.stringify(sirali, null, 2)}\n`;
+    }, `KKM asset kararı: ${kimlik} · ${KARAR_ADI[karar]}`, 'asset kararı');
     return sirali;
   });
   sira = is.catch(() => undefined);

@@ -1,7 +1,8 @@
 import type { BrandKit, Item, ItemType, WikiSection } from '../types';
 import { alanaYaz, bosluklariCikar } from '../components/Bosluklar';
-import { base64, base64Coz, github } from './oyunAyarlari';
+import { base64Coz, github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
+import { ajansaYeniDosyaYaz } from './tepsiAjansa';
 import { bagEkle } from './bagAgi';
 import { semaAlanlari, takmaAdlar } from './alanSablonu';
 import { getKunyeFields, schemaKeyFor, TYPE_LABELS, WIKI_TYPES } from '../components/wiki/wikiSchema';
@@ -564,10 +565,12 @@ export async function kararlariUygula(
   return sonuc;
 }
 
-/** Makbuzu ajansın deposuna yazar; adresini döner */
+/**
+ * Makbuzu ajansın deposuna yazar; adresini döner.
+ * 15 Kasım: ajans ana dala yazarken basılınca GitHub 409 ("is at … but expected …")
+ * dönüyor, makbuz düşüyordu; artık `ajansaYeniDosyaYaz` güncel dalla yeniden dener.
+ */
 export async function makbuzYaz(anahtar: string, sonuc: Uygulama, zaman = new Date()): Promise<string> {
-  const bilgi = await github<{ default_branch: string; private: boolean }>(anahtar, `/repos/${AJANS_DEPOSU}`);
-  if (!bilgi.private) throw new Error('Kems-Ajans deposu herkese açık; makbuz yazılmadı.');
   const iki = (x: number) => String(x).padStart(2, '0');
   // 14 Kasım: aynı dakikada iki kez basılınca makbuz yazılamıyordu (aynı ad, GitHub 422); saniye de adda
   const ad = `${iki(zaman.getDate())}-${iki(zaman.getMonth() + 1)}-${zaman.getFullYear()}-${iki(zaman.getHours())}${iki(zaman.getMinutes())}${iki(zaman.getSeconds())}`;
@@ -577,12 +580,6 @@ export async function makbuzYaz(anahtar: string, sonuc: Uygulama, zaman = new Da
     uygulanan: sonuc.uygulanan,
     atlanan: sonuc.atlanan,
   };
-  const r = await github<{ content: { html_url: string } }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${MAKBUZ_KLASORU}/${ad}.json`, {
-    method: 'PUT',
-    govde: {
-      message: `KKM: ajansın ${sonuc.uygulanan.length} kararı uygulandı`,
-      content: base64(`${JSON.stringify(govde, null, 2)}\n`), branch: bilgi.default_branch,
-    },
-  });
-  return r.content.html_url;
+  return ajansaYeniDosyaYaz(anahtar, `${MAKBUZ_KLASORU}/${ad}.json`, `${JSON.stringify(govde, null, 2)}\n`,
+    `KKM: ajansın ${sonuc.uygulanan.length} kararı uygulandı`, 'makbuz');
 }

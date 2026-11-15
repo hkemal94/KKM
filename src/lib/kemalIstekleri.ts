@@ -33,11 +33,16 @@ export interface KemalIstegi {
 
 interface IstekDosyasi { istekler: KemalIstegi[] }
 
+/** Dosyanın metninden geçerli istekler */
+function istekListesi(ham: string): KemalIstegi[] {
+  const j = JSON.parse(ham) as Partial<IstekDosyasi>;
+  return (Array.isArray(j.istekler) ? j.istekler : []).filter(i => i && typeof i.id === 'string' && typeof i.metin === 'string');
+}
+
 export async function istekleriOku(anahtar: string): Promise<KemalIstegi[]> {
   try {
     const d = await github<{ content: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${ISTEKLER_YOLU}`);
-    const j = JSON.parse(base64Coz(d.content)) as Partial<IstekDosyasi>;
-    return (Array.isArray(j.istekler) ? j.istekler : []).filter(i => i && typeof i.id === 'string' && typeof i.metin === 'string');
+    return istekListesi(base64Coz(d.content));
   } catch (e) {
     if (e instanceof Error && /yazma izni yok/.test(e.message)) return []; // dosya henüz yok
     throw e;
@@ -54,13 +59,16 @@ export async function istekEkle(anahtar: string, yeni: Omit<KemalIstegi, 'id' | 
     id: `${yeni.tur}-${simdi.getTime().toString(36)}`, tur: yeni.tur, metin, tarih: simdi.toISOString(),
     ...(yeni.ekran ? { ekran: yeni.ekran } : {}), ...(yeni.ajan ? { ajan: yeni.ajan } : {})
   };
-  const sonraki = [...liste, istek];
-  const dosya = {
-    _aciklama: "Kemal'in istekleri: ajan düğmesinden (istek) ve İşler ve takvim'deki 'Yapılacak ekle'den (yapilacak). KKM yazar. Kems her oturum başında okur, iş listesine (kkm/isler.json) alır, aldığını buradan çıkarır (araclar/istekler.py).",
-    guncellendi: simdi.toISOString(),
-    istekler: sonraki
-  };
-  await ajansaDosyaYaz(anahtar, ISTEKLER_YOLU, `${JSON.stringify(dosya, null, 2)}\n`,
-    `KKM: Kemal'in ${yeni.tur === 'istek' ? 'isteği' : 'yapılacak notu'}`, yeni.tur === 'istek' ? 'istek' : 'not');
+  // 15 Kasım: yazarken dosya değiştiyse (Kems arada aldıklarını çıkardı) güncel listenin sonuna eklenir
+  let sonraki = [...liste, istek];
+  await ajansaDosyaYaz(anahtar, ISTEKLER_YOLU, ham => {
+    sonraki = [...(ham === null ? liste : istekListesi(ham)).filter(i => i.id !== istek.id), istek];
+    const dosya = {
+      _aciklama: "Kemal'in istekleri: ajan düğmesinden (istek) ve İşler ve takvim'deki 'Yapılacak ekle'den (yapilacak). KKM yazar. Kems her oturum başında okur, iş listesine (kkm/isler.json) alır, aldığını buradan çıkarır (araclar/istekler.py).",
+      guncellendi: simdi.toISOString(),
+      istekler: sonraki
+    };
+    return `${JSON.stringify(dosya, null, 2)}\n`;
+  }, `KKM: Kemal'in ${yeni.tur === 'istek' ? 'isteği' : 'yapılacak notu'}`, yeni.tur === 'istek' ? 'istek' : 'not');
   return sonraki;
 }

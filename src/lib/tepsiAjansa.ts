@@ -1,7 +1,8 @@
 import type { Item } from '../types';
 import { adayBilgisi, bekleyenAdaylar, eskiOneriler, seceneksizMi, sorulacaklar } from './adaylar';
 import { aracBul, yapayZekaOnerisi } from './studyo';
-import { base64, github, GithubHatasi } from './oyunAyarlari';
+import { base64, base64Coz, github, GithubHatasi } from './oyunAyarlari';
+import { guncelHaleYaz, yeniDosyaYaz } from './cakisma';
 import { AJANS_DEPOSU } from './ajansDeposu';
 import { onayKayitlari } from './onaylar';
 
@@ -88,11 +89,6 @@ export type TepsiDosyasi = ReturnType<typeof tepsiDosyasi>;
  */
 let kuyruk: Promise<unknown> = Promise.resolve();
 
-/** Çakışmada (409) kaç kez daha denensin ve aralarda kaç ms beklensin */
-const CAKISMA_DENEME = 3;
-const CAKISMA_BEKLE = 1500;
-const bekle = (ms: number) => new Promise(c => setTimeout(c, ms));
-
 /**
  * Ajansın gizli deposunun ana dalına bir dosya yazar (varsa yerine); GitHub
  * adresini döner. Depo açıksa hiçbir şey yazılmaz. Tepsi, viki, harita,
@@ -102,37 +98,73 @@ const bekle = (ms: number) => new Promise(c => setTimeout(c, ms));
  * gönderim araya girdi) GitHub 409 döner: dosyanın güncel hâli yeniden
  * okunur ve birkaç kez daha denenir. Gönderilen her zaman dosyanın tamamı
  * ve KKM'deki en son hâlidir; öncekinin yerine geçmesi istenen şeydir.
+ *
+ * Listeye ekleyen yazmalar (istekler, öneri kararları, asset kararları) içeriği
+ * işlev olarak verir: her denemede dosyanın güncel hâli (`ham`, yoksa null)
+ * okunur ve içerik onun üstüne yeniden kurulur; eski okunuşla ezilmez (15 Kasım).
  */
-export function ajansaDosyaYaz(anahtar: string, yol: string, icerik: string, mesaj: string, ad: string): Promise<string> {
-  const is = kuyruk.then(() => ajansaYazDene(anahtar, yol, icerik, mesaj, ad));
-  kuyruk = is.catch(() => undefined);
-  return is;
+export type Icerik = string | ((ham: string | null) => string);
+
+export function ajansaDosyaYaz(anahtar: string, yol: string, icerik: Icerik, mesaj: string, ad: string): Promise<string> {
+  return sirayaKoy(() => ajansaYazDene(anahtar, yol, icerik, mesaj, ad));
 }
 
-async function ajansaYazDene(anahtar: string, yol: string, icerik: string, mesaj: string, ad: string): Promise<string> {
+/** Her yazma bir öncekinin bitmesini bekler */
+function sirayaKoy<T>(is: () => Promise<T>): Promise<T> {
+  const p = kuyruk.then(is);
+  kuyruk = p.catch(() => undefined);
+  return p;
+}
+
+/** Ajansın deposu gizli mi; ana dalın adını döner. Açıksa hiçbir şey yazılmaz. */
+async function gizliDepoDali(anahtar: string, ad: string): Promise<string> {
   const bilgi = await github<{ default_branch: string; private: boolean }>(anahtar, `/repos/${AJANS_DEPOSU}`);
   if (!bilgi.private) throw new Error(`Kems-Ajans deposu herkese açık; ${ad} gönderilmedi. Önce depoyu GitHub'da gizli (Private) yap.`);
-  const dal = bilgi.default_branch;
-  for (let deneme = 0; ; deneme++) {
-    let sha: string | undefined;
-    try {
-      sha = (await github<{ sha: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}?ref=${encodeURIComponent(dal)}&t=${Date.now()}`)).sha;
-    } catch (e) {
-      // İlk gönderim: dosya yok (404). Başka bir hata gerçek hatadır.
-      if (!(e instanceof GithubHatasi) || e.durum !== 404) throw e;
-    }
-    try {
+  return bilgi.default_branch;
+}
+
+async function ajansaYazDene(anahtar: string, yol: string, icerik: Icerik, mesaj: string, ad: string): Promise<string> {
+  const dal = await gizliDepoDali(anahtar, ad);
+  return guncelHaleYaz(
+    async () => {
+      try {
+        const d = await github<{ sha: string; content?: string; encoding?: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}?ref=${encodeURIComponent(dal)}&t=${Date.now()}`);
+        // Çok büyük dosyada GitHub içeriği vermez; üstüne eklenecekse körlemesine ezilmesin
+        if (typeof icerik === 'function' && (d.encoding !== 'base64' || typeof d.content !== 'string')) throw new Error(`${yol} okunamadı; ${ad} gönderilmedi`);
+        return { sha: d.sha as string | undefined, ham: typeof d.content === 'string' ? base64Coz(d.content) : null };
+      } catch (e) {
+        // İlk gönderim: dosya yok (404). Başka bir hata gerçek hatadır.
+        if (!(e instanceof GithubHatasi) || e.durum !== 404) throw e;
+        return { sha: undefined, ham: null };
+      }
+    },
+    async ({ sha, ham }) => {
+      const metin = typeof icerik === 'function' ? icerik(ham) : icerik;
       const sonuc = await github<{ content: { html_url: string } }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}`, {
         method: 'PUT',
-        govde: { message: mesaj, content: base64(icerik), branch: dal, ...(sha ? { sha } : {}) },
+        govde: { message: mesaj, content: base64(metin), branch: dal, ...(sha ? { sha } : {}) },
       });
       return sonuc.content.html_url;
-    } catch (e) {
-      const cakisma = e instanceof GithubHatasi && (e.durum === 409 || e.durum === 422);
-      if (!cakisma || deneme >= CAKISMA_DENEME) throw e;
-      await bekle(CAKISMA_BEKLE * (deneme + 1));
-    }
-  }
+    },
+  );
+}
+
+/**
+ * Ajansın deposunda yeni dosya açar (makbuz, "Ajansa gönder" dosyası); GitHub
+ * adresini döner. Dal bu arada ilerlediyse (409) yeniden dener; o adda dosya
+ * varsa (422) adın sonuna -2, -3 … ekler (15 Kasım: makbuz 409 ile düşüyordu).
+ */
+export function ajansaYeniDosyaYaz(anahtar: string, yol: string, icerik: string, mesaj: string, ad: string): Promise<string> {
+  return sirayaKoy(async () => {
+    const dal = await gizliDepoDali(anahtar, ad);
+    return yeniDosyaYaz(yol, async y => {
+      const sonuc = await github<{ content: { html_url: string } }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${y}`, {
+        method: 'PUT',
+        govde: { message: mesaj, content: base64(icerik), branch: dal },
+      });
+      return sonuc.content.html_url;
+    });
+  });
 }
 
 /** Tepsi dosyasını ajansın ana dalına yazar; GitHub adresini döner */

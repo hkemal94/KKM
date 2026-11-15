@@ -3,8 +3,9 @@ import {
   GDD_BOLUMLERI, KONSEPT_BOLUMLERI, MEKANIK_BOLUMLERI, KUNYE_SATIRLARI, FIKIR_KATEGORILERI, ASAMALAR,
   gddBolumleri, oyunAdi, oyunFikirleri, oyunIsleri, projeAsamasi, kunyeDegeri, secimSatirlari, serbestYazi
 } from '../components/oyun/OyunSureci';
-import { base64, github } from './oyunAyarlari';
+import { github } from './oyunAyarlari';
 import { AJANS_DEPOSU } from './ajansDeposu';
+import { ajansaYeniDosyaYaz } from './tepsiAjansa';
 
 /**
  * Ajansa gönder (21 Ekim, Kemal: "düğmeyi bir sonraki iş olarak düşünebiliriz").
@@ -118,9 +119,6 @@ export async function ajansaGonder(anahtar: string, baslik: string, metin: strin
       break; // dosya yok: bu ad boş
     }
   }
-  const sonuc = await github<{ content: { html_url: string } }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}`, {
-    method: 'PUT',
-    govde: { message: `KKM'den iş: ${baslik}`, content: base64(metin), branch: bilgi.default_branch },
-  });
-  return sonuc.content.html_url;
+  // 15 Kasım: dal bu arada ilerlediyse (409) ya da ad arada dolduysa (422) yeniden dener
+  return ajansaYeniDosyaYaz(anahtar, yol, metin, `KKM'den iş: ${baslik}`, 'iş');
 }
