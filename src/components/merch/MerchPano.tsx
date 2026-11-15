@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, Link2, Plus } from 'lucide-rea
 import type { Item } from '../../types';
 import { MERCH_ASAMALARI, type MerchAsamasi } from '../../lib/durumOranlari';
 import { KisaListe } from '../kabuk/KisaListe';
+import { teknikFoy } from '../../data/teknikFoyler';
 
 /**
  * Merch panosu (Paket 5). Kemal (yapısal 1. set, 4. tur): "Kanon kökü, pano
@@ -100,6 +101,11 @@ export const MerchPano: React.FC<Props> = ({ urunler, items, kapak, onUpdateItem
                       <div className="mt-2 flex items-center gap-1">
                         <button type="button" onClick={() => tasi(u, -1)} disabled={a === 'Konsept'} title="Bir aşama geri" className="p-1.5 rounded-lg text-[#6A5E4C] dark:text-[#A6B0C9] hover:text-[#D6484C] disabled:opacity-25 cursor-pointer"><ChevronLeft className="w-4 h-4" /></button>
                         <button type="button" onClick={() => tasi(u, 1)} disabled={a === 'Satışta'} title="Bir aşama ileri" className="p-1.5 rounded-lg text-[#6A5E4C] dark:text-[#A6B0C9] hover:text-[#D6484C] disabled:opacity-25 cursor-pointer"><ChevronRight className="w-4 h-4" /></button>
+                        {teknikFoy(u.title) && (
+                          <a href={teknikFoy(u.title)!.adres} target="_blank" rel="noopener noreferrer" title={teknikFoy(u.title)!.ad} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8] hover:underline">
+                            Tech pack <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
                         {canva ? (
                           <a href={canva} target="_blank" rel="noopener noreferrer" className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold text-[#D6484C] dark:text-[#F26B6F] hover:underline">
                             Canva'da aç <ExternalLink className="w-3 h-3" />
