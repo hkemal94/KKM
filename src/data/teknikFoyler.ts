@@ -6,7 +6,17 @@
  * Şablon: Canva DAHa755XcHA.
  */
 export const TEKNIK_FOYLER: Record<string, { ad: string; adres: string }> = {
-  'basic hoodie': { ad: 'Tech pack · Basic Hoodie (örnek)', adres: 'https://www.canva.com/d/ywTYpQkuAk6nQS5' },
+  // Basics 1: 9 ürün, aynı standart (16 Kasım, Kemal: "her ürüne ayrı tech pack").
+  // Son dördün adı çalışma adıdır; ürün adı Kemal'in.
+  'basic tee': { ad: 'Tech pack · Basic Tee', adres: 'https://www.canva.com/design/DAHa8J9cO1c/view' },
+  'basic hoodie': { ad: 'Tech pack · Basic Hoodie', adres: 'https://www.canva.com/design/DAHa71mrInM/view' },
+  'basic sweatshirt': { ad: 'Tech pack · Basic Sweatshirt', adres: 'https://www.canva.com/design/DAHa8C0d2FQ/view' },
+  "basic's hat": { ad: 'Tech pack · Basic\'s Hat', adres: 'https://www.canva.com/design/DAHa_OKB8U8/view' },
+  "basic's socks pack": { ad: 'Tech pack · Basic\'s Socks Pack', adres: 'https://www.canva.com/design/DAHa_NIVQZk/view' },
+  'yarım fermuarlı sweatshirt': { ad: 'Tech pack · Yarım fermuarlı sweatshirt', adres: 'https://www.canva.com/design/DAHa8CnV_YU/view' },
+  'kolej montu': { ad: 'Tech pack · Kolej montu', adres: 'https://www.canva.com/design/DAHa8NZezhQ/view' },
+  'bez çanta': { ad: 'Tech pack · Bez çanta', adres: 'https://www.canva.com/design/DAHa_MhArQI/view' },
+  'rüzgârlık': { ad: 'Tech pack · Rüzgârlık', adres: 'https://www.canva.com/design/DAHa_B0vxQc/view' },
 };
 
 export const teknikFoy = (urunAdi: string) => TEKNIK_FOYLER[(urunAdi || '').trim().toLocaleLowerCase('tr')];
