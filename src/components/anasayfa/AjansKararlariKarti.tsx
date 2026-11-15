@@ -23,7 +23,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', yeniOyun: 'Yeni oyun', kitapBolumu: 'Kitap bölümü' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', bagSil: 'Bağ sil', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', yeniOyun: 'Yeni oyun', kitapBolumu: 'Kitap bölümü' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
@@ -110,6 +110,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
                     {i.tur === 'eskiAlan' && <> → <span className="font-semibold">{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger || 'boşaltılır'}</span></>}
                     {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <span className="font-semibold line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</span></>}
                     {i.tur === 'markaKarti' && <> → <span className="font-semibold">{i.marka} · {MARKA_KARTI_ALANLARI[i.alan] || i.alan}: {Array.isArray(i.deger) ? i.deger.join(' · ') : i.deger}</span></>}
+                    {i.tur === 'bagSil' && <> → <span className="font-semibold line-through">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</span></>}
                     {i.tur === 'bagKur' && <> → <span className="font-semibold">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</span></>}
                     {i.tur === 'yeniMadde' && <> · <span className="font-semibold">{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</span>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}
                     {i.tur === 'kitapBolumu' && <> → <span className="font-semibold">{kitapBolumuOnizleme(props.items, i)}</span></>}
