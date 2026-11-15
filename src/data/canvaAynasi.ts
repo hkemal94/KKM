@@ -11,6 +11,9 @@
 export interface CanvaTasarimi { id: string; baslik: string; tur: 'viki' | 'site' | 'mekân' | 'merch' | 'marka' | 'harita'; kucukResim: string; adres: string; guncelleme: number }
 
 export const CANVA_AYNASI: CanvaTasarimi[] = [
+  // 15 Kasım (Kemal: tech pack "proje belgesi + KKM"): şablon ve dolu örnek
+  { id: 'DAHa755XcHA', baslik: 'Kems Company · Tech pack şablonu (taslak)', tur: 'merch', kucukResim: 'https://design.canva.ai/KKmQR6GKSZKBiXS', adres: 'https://www.canva.com/d/SNppqBdBfQsefKP', guncelleme: 1794699530 },
+  { id: 'DAHa71mrInM', baslik: 'Kems Company · Tech pack · Basics 1 Basic Hoodie (örnek)', tur: 'merch', kucukResim: 'https://design.canva.ai/hrm5rcL68Cj3l0B', adres: 'https://www.canva.com/d/ywTYpQkuAk6nQS5', guncelleme: 1794702123 },
   { id: 'DAHWhVrx3o4', baslik: 'Düzada Künye Kalıpları 1', tur: 'viki', kucukResim: 'https://design.canva.ai/hy5AnpQZpwxNCGf', adres: 'https://www.canva.com/d/Vg9kMdOqhOhCskc', guncelleme: 1790630921 },
   { id: 'DAHWhXnuKDs', baslik: 'Düzada Künye Örnekleri', tur: 'viki', kucukResim: 'https://design.canva.ai/KrbYLQkWztYdOOm', adres: 'https://www.canva.com/d/wdEpPFGOcazL1dv', guncelleme: 1790631903 },
   { id: 'DAHWhRlBAyQ', baslik: 'Düzada Künye Kalıpları', tur: 'viki', kucukResim: 'https://design.canva.ai/gO6z3qnEYiI-ixK', adres: 'https://www.canva.com/d/-rvgzqxXYI-1ScT', guncelleme: 1790629682 },
