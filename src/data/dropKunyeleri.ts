@@ -37,7 +37,7 @@ export interface DropKunyesi {
 export const DROP_KUNYELERI: DropKunyesi[] = [
   {
     id: 'drop_1783763762753_lgo55',
-    adlar: ['Basics 1', 'Basics I'],
+    adlar: ['Basics 1'], // Kemal 15 Kasım: her yerde "Basics 1"
     yil: 2026,
     edisyon: 'I. Edisyon',
     bedenler: ['S', 'M', 'L', 'XL', 'ONE'],
@@ -45,8 +45,8 @@ export const DROP_KUNYELERI: DropKunyesi[] = [
       "Kems Company's",
       'Apparel + Objects',
       'Made with Culture',
-      'Est. 2024',
-      'Küçükçetmi, TR'
+      'Est. 2025',
+      'Düzada, TR'
     ],
     urunRenkleri: {
       'Basic Tee': 'Beyaz',
@@ -59,9 +59,8 @@ export const DROP_KUNYELERI: DropKunyesi[] = [
     uyarilar: [
       'Etikette "Apperal + Objects" yazıyor; doğrusu "Apparel". Künyeye '
         + 'düzeltilmiş hâlini yazdım, Canva\'daki tasarıma dokunmadım.',
-      'Menşe satırı iki sayfada "Küçükçetmi, TR", bir sayfada "Kemskøy, TR". '
-        + 'Künyeye Küçükçetmi\'yi aldım — hangisi doğruysa söyle.',
-      'Drop adı uygulamada "Basics 1", lookbook\'ta "Basics I".'
+      'Kemal 15 Kasım: kuruluş 2025, menşe "Düzada, TR", ad her yerde "Basics 1". '
+        + 'Canva\'daki lookbook ("Est. 2024", "Küçükçetmi, TR", "Basics I") henüz düzeltilmedi.'
     ]
   }
 ];
