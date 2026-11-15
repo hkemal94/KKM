@@ -104,7 +104,13 @@ export async function onerileriOku(anahtar: string): Promise<AjanOnerisi[]> {
 
 /** Kemal'in verdiği kararlar (öneri kimliğine göre); bozuklar atlanır */
 export async function kararlariOku(anahtar: string): Promise<Record<string, OneriKarari>> {
-  const j = await jsonOku<{ kararlar?: Record<string, Partial<OneriKarari>> }>(anahtar, ONERI_KARARLARI_YOLU);
+  return kararlariCoz(await jsonOku<KararDosyasiHam>(anahtar, ONERI_KARARLARI_YOLU));
+}
+
+type KararDosyasiHam = { kararlar?: Record<string, Partial<OneriKarari>> };
+
+/** Dosyanın içeriğinden geçerli kararlar */
+function kararlariCoz(j: KararDosyasiHam | null): Record<string, OneriKarari> {
   const sonuc: Record<string, OneriKarari> = {};
   for (const [id, k] of Object.entries(j?.kararlar || {})) {
     if (!k || !KARAR_DURUMLARI.has(k.durum as OneriKararDurumu)) continue;
@@ -126,18 +132,23 @@ export async function kararlariOku(anahtar: string): Promise<Record<string, Oner
  * `null` o önerinin kararını kaldırır (listeye geri al). Yeni kararları döner.
  */
 export async function kararYaz(anahtar: string, degisim: Record<string, OneriKarari | null>): Promise<Record<string, OneriKarari>> {
-  const kararlar = await kararlariOku(anahtar);
-  for (const [id, k] of Object.entries(degisim)) {
-    if (k) kararlar[id] = k;
-    else delete kararlar[id];
-  }
-  const dosya = {
-    _aciklama: "Kemal'in ajan önerilerine verdiği kararlar. KKM → Onay bekleyenler'de düğmeye basınca yazılır. Kems okur: uygula = onaylandı, duzenle = nota göre revize, arsiv = beklesin, bekle = tarihe kadar beklesin, silindi = istenmiyor.",
-    guncellendi: new Date().toISOString(),
-    kararlar
-  };
+  const ilk = await kararlariOku(anahtar);
+  let kararlar = ilk;
   const sayi = Object.keys(degisim).length;
-  await ajansaDosyaYaz(anahtar, ONERI_KARARLARI_YOLU, `${JSON.stringify(dosya, null, 2)}\n`, `KKM: ${sayi} öneriye Kemal'in kararı`, 'karar');
+  // 15 Kasım: yazarken dosya değiştiyse (Kems arada kaldırdı) değişim güncel hâlin üstüne yeniden kurulur
+  await ajansaDosyaYaz(anahtar, ONERI_KARARLARI_YOLU, ham => {
+    kararlar = ham === null ? { ...ilk } : kararlariCoz(JSON.parse(ham) as KararDosyasiHam);
+    for (const [id, k] of Object.entries(degisim)) {
+      if (k) kararlar[id] = k;
+      else delete kararlar[id];
+    }
+    const dosya = {
+      _aciklama: "Kemal'in ajan önerilerine verdiği kararlar. KKM → Onay bekleyenler'de düğmeye basınca yazılır. Kems okur: uygula = onaylandı, duzenle = nota göre revize, arsiv = beklesin, bekle = tarihe kadar beklesin, silindi = istenmiyor.",
+      guncellendi: new Date().toISOString(),
+      kararlar
+    };
+    return `${JSON.stringify(dosya, null, 2)}\n`;
+  }, `KKM: ${sayi} öneriye Kemal'in kararı`, 'karar');
   return kararlar;
 }
 
