@@ -9,6 +9,7 @@ klasöründeki dört belgeyi okur:
 | `docs/02-marka-kiti.md` | Kems Company: renk, font, ton, marka yapısı |
 | `docs/03-duzada-kunyesi.md` | Evrenin kanonu: ada, mahalleler, konmuş adlar |
 | `docs/04-durum.md` | Şu an neredeyiz, ne bitti, ne açık |
+| `docs/08-tech-pack-ve-cizimler.md` | Tech pack şablonu, ürün çizimleri ve lisansları |
 
 Belgeler Kemal'in Claude projesindeki belgelerin kopyası. Çelişki olursa
 Kemal'e sor; kendin seçme.
