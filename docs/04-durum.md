@@ -119,7 +119,8 @@ Sonra tasarımlar Canva'da şu klasörlere taşındı; hiçbir şey silinmedi:
 İlham (FAHWf9rScOM)      14 tasarım — Düzada Harita, İskele Mahallesi örnek,
 │                          The Imperial, davetiyeler, fotoğraflar…
 ├── Marka (FAHWgMHm7u4)   5  — KEMS, kems, Kems Company, Company, Sandbox (Brand Kit)
-├── Merch (FAHWgGalwn0)  18  — Basics 1, Basics I, No Name Drop.1, iskambil destesi,
+├── Merch (FAHWgGalwn0)  18  — Basics 1, Basics I, No Name Drop.1, iskambil destesi
+│                              (markası Küçükçetmi Sürek Kulübü, satan Kems Company),
 │                              11 Shopier seti, İyot / Deniz Kulübü Prints, poster
 ├── Instagram (FAHWgD-8jho) 7 — Instagram gönderileri, Başlık, 3 adsız (emin olunamayanlar)
 └── Harita (FAHWf784A3E)  2  — doğum günü gönderisi, Instagram Denemeleri
