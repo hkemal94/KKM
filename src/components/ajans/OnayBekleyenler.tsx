@@ -316,6 +316,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   {i.tur === 'alaniDegistir' && <> → <b>{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger}</b></>}
                   {i.tur === 'eskiAlan' && <> → <b>{i.alan}: {i.eski ? `${i.eski} → ` : ''}{i.deger || 'boşaltılır'}</b></>}
                   {(i.tur === 'takmaAdSil' || i.tur === 'metindenSil') && <> → <b className="line-through">{i.tur === 'takmaAdSil' ? i.deger : i.eski}</b></>}
+                  {i.tur === 'bagSil' && <> → <b className="line-through">{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</b></>}
                   {i.tur === 'bagKur' && <> → <b>{i.kaynak} · {i.bag} · {i.hedef}{i.ikiYonlu ? ' (iki tarafta)' : ''}</b></>}
                   {i.tur === 'yeniMadde' && <> · <b>{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</b>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}
                   {i.tur === 'kitapBolumu' && <> → <b>{kitapBolumuOnizleme(items, i)}</b></>}

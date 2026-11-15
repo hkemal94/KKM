@@ -45,7 +45,12 @@ import { vikiGorseliMi } from './maddeGorseli';
  *   - 14 Kasım (Kemal: kart oyunu Oyunlar'a girmemiş, "Ajans eklesin"): `yeniOyun`
  *     (`baslik` oyunun KKM'deki geçici adı, `metin` isteğe bağlı not). Ürünler →
  *     Oyunlar listesine "Yeni oyun" düğmesinin açtığı kaydın aynısını açar. Aynı
- *     adla oyun varsa uygulanmış sayılır.
+ *     adla oyun varsa uygulanmış sayılır. 15 Kasım: `metin` varsa oyunun kartında
+ *     görünen özete (`metadata.ozet`) de yazılır (yalnız yeni açılan oyunda).
+ *   - 15 Kasım (Kemal, 14 Kasım: Düzada'daki ters "bulunduğu yer → The Imperial
+ *     Kemsköy" bağı kalksın): `bagSil` (`bagKur`'un tersi; kaynak maddedeki o
+ *     türden hedefe giden bağ çıkar, `ikiYonlu` ise hedefteki ters bağ da). Bağ
+ *     yoksa uygulanmış sayılır.
  *   - 5 Kasım (Kemal viki maddelerine görsel seçti): `gorselEkle` (`deger`
  *     sitedeki görselin yolu, ör. `/viki/dondurmaci-kizlar-tabela.jpg`; görsel
  *     dosyası `public/viki/` altında durur). Maddenin görsel listesinin sonuna
@@ -70,6 +75,7 @@ export type KararIslemi =
   | { kimlik: string; tur: 'sil'; id: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'alanaYaz'; anahtar: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'bagKur'; kaynak: string; hedef: string; bag: BagTuru; ikiYonlu?: boolean; baslik: string; neden: string }
+  | { kimlik: string; tur: 'bagSil'; kaynak: string; hedef: string; bag: BagTuru; ikiYonlu?: boolean; baslik: string; neden?: string }
   | { kimlik: string; tur: 'takmaAdEkle'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'metneEkle'; madde: string; deger: string; baslik: string; neden: string }
   | { kimlik: string; tur: 'gorselEkle'; madde: string; deger: string; baslik: string; neden: string }
@@ -248,11 +254,23 @@ export function maddeBul(items: Item[], ad: string): Item | null {
 const bagVar = (k: Item, hedefId: string, bag: string) =>
   ((k.metadata?.relations as Array<Record<string, unknown>> | undefined) || []).some(r => r?.targetId === hedefId && r.type === bag && !r.isProposal);
 
+/** Kaynak maddeden hedefe giden o türden bağları çıkarır (öneri olanlar dahil); bağ yoksa null */
+function bagCikar(kaynak: Item, hedefId: string, bag: string): Item | null {
+  const eski = (kaynak.metadata?.relations as Array<Record<string, unknown>> | undefined) || [];
+  const kalan = eski.filter(r => !(r?.targetId === hedefId && r.type === bag));
+  if (kalan.length === eski.length) return null;
+  return { ...kaynak, metadata: { ...(kaynak.metadata || {}), relations: kalan } as Item['metadata'], updatedAt: Date.now() };
+}
+
 /** Bu iş zaten uygulanmış mı (madde bulunamazsa hayır: denenir, makbuza neden yazılır) */
 function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'bagKur') {
     const k = maddeBul(items, i.kaynak), h = maddeBul(items, i.hedef);
     return !!k && !!h && bagVar(k, h.id, i.bag) && (!i.ikiYonlu || bagVar(h, k.id, i.bag));
+  }
+  if (i.tur === 'bagSil') {
+    const k = maddeBul(items, i.kaynak), h = maddeBul(items, i.hedef);
+    return !!k && !!h && !bagCikar(k, h.id, i.bag) && (!i.ikiYonlu || !bagCikar(h, k.id, i.bag));
   }
   if (i.tur === 'takmaAdEkle') {
     const m = maddeBul(items, i.madde);
@@ -323,7 +341,7 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
     // Sitedeki viki klasöründe olmayan yol listede durmaz
     if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
     if (i.tur === 'eskiAlan') return typeof i.alan === 'string' && !!i.alan.trim() && !KORUNAN_ALANLAR.has(i.alan.split('.')[0]) && typeof i.deger === 'string' && !yapilmis(items, i);
-    if (i.tur === 'bagKur' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
+    if (i.tur === 'bagKur' || i.tur === 'bagSil' || i.tur === 'takmaAdEkle' || i.tur === 'metneEkle' || i.tur === 'metniDegistir'
       || i.tur === 'takmaAdSil' || i.tur === 'alaniDegistir' || i.tur === 'metindenSil') return !yapilmis(items, i);
     return false;
   });
@@ -364,6 +382,16 @@ export async function kararlariUygula(
           const h2 = bagEkle(guncel.get(h.id) || h, k.id, islem.bag);
           if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
         }
+      } else if (islem.tur === 'bagSil') {
+        const liste = [...guncel.values()];
+        const k = maddeBul(liste, islem.kaynak), h = maddeBul(liste, islem.hedef);
+        if (!k || !h) { sonuc.atlanan.push({ islem, neden: `madde bulunamadı ya da aynı adla birden çok var (${!k ? islem.kaynak : islem.hedef})` }); continue; }
+        const k2 = bagCikar(k, h.id, islem.bag);
+        if (k2) { await yaz.guncelle(k2); guncel.set(k2.id, k2); }
+        if (islem.ikiYonlu) {
+          const h2 = bagCikar(guncel.get(h.id) || h, k.id, islem.bag);
+          if (h2) { await yaz.guncelle(h2); guncel.set(h2.id, h2); }
+        }
       } else if (islem.tur === 'yeniMadde') {
         if (!yaz.ekle) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan yeni madde açılamıyor; Onay bekleyenler\'den uygula' }); continue; }
         const liste = [...guncel.values()];
@@ -389,7 +417,7 @@ export async function kararlariUygula(
         const yeni = {
           id, title: ad, area: 'oyun', type: 'oyun_tanitim', status: 'Fikir', priority: 'orta',
           tags: ['oyun', 'tanitim'], links: [], notes: (islem.metin || '').trim(), images: [], isProposal: false, archived: false,
-          metadata: { ad }
+          metadata: { ad, ...((islem.metin || '').trim() ? { ozet: (islem.metin || '').trim() } : {}) }
         } as unknown as Omit<Item, 'createdAt' | 'updatedAt' | 'userId'> & { id: string };
         await yaz.ekle(yeni);
         guncel.set(id, { ...yeni, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
