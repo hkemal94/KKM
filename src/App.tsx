@@ -40,6 +40,7 @@ import {
   KeyRound,
   LogOut,
   Megaphone,
+  Stamp,
   Sparkles,
   ArrowLeft,
   Home,
@@ -106,6 +107,7 @@ const Blog = lazyYukle(() => import('./components/Blog'));
 const MarkaVeMerch = lazyYukle(() => import('./components/urunler/MarkaVeMerch'));
 const Icerik = lazyYukle(() => import('./components/urunler/Icerik'));
 const IlhamVeKaynaklar = lazyYukle(() => import('./components/urunler/IlhamVeKaynaklar'));
+const Pullar = lazyYukle(() => import('./components/urunler/Pullar'));
 const Galeri = lazyYukle(() => import('./components/Galeri'));
 const Sosyal = lazyYukle(() => import('./components/sosyal/Sosyal'));
 const Takvim = lazyYukle(() => import('./components/takvim/Takvim'));
@@ -136,7 +138,7 @@ import { useBildirimler, KANON_YOKSAY, type Bildirim, type KanonSatiri } from '.
  * 'onay' 2 Kasım'dan 12 Kasım'a kadar açılıştı; eski Komuta Merkezi 'durum'.
  * 2 Kasım (yol haritası 1. adım): Ana sayfa ve Site kalktı; notlar 'notlar'da.
  */
-type Sayfa = 'ana' | 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik' | 'ilham';
+type Sayfa = 'ana' | 'onay' | 'notlar' | 'isler' | 'ajanlar' | 'durum' | 'duzada' | 'kitap' | 'harita' | 'gorunumler' | 'oyun' | 'marka' | 'icerik' | 'pullar' | 'ilham';
 /** Kalkan sayfalar: eski geçmişten ya da yenilemeden gelirse açılış ekranına gider */
 const KALKAN_SAYFALAR = new Set(['komuta', 'site', 'araclar', 'studyo']);
 const DURUM_SEKMELERI: DurumSekmesi[] = ['eksikler', 'bosluklar', 'boyut'];
@@ -925,6 +927,7 @@ export default function App() {
       { id: 'oyun', ad: 'Oyunlar', simge: Gamepad2 },
       { id: 'marka', ad: 'Marka ve merch', alt: 'markalar, galeri, droplar, ürünler', simge: Shield },
       { id: 'icerik', ad: 'İçerik', alt: 'sosyal medya, blog, fanzin, video', simge: Megaphone },
+      { id: 'pullar', ad: 'Pullar', alt: 'oyunların pul koleksiyonu', simge: Stamp },
       { id: 'ilham', ad: 'İlham ve kaynaklar', alt: 'bağlantı, görsel, not; markaya ve maddeye bağla', simge: Sparkles }
     ] }
   ];
@@ -938,7 +941,7 @@ export default function App() {
   const SAYFA_ADI: Record<Sayfa, string> = {
     ana: 'Ana sayfa', onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
     kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
-    oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', ilham: 'İlham ve kaynaklar', durum: 'Eksikler ve ayarlar'
+    oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', pullar: 'Pullar', ilham: 'İlham ve kaynaklar', durum: 'Eksikler ve ayarlar'
   };
 
   const logo = hasKemsLogo ? (
@@ -1306,6 +1309,8 @@ export default function App() {
                 fanzin={<FanzinSayfasi items={items} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onOnay={() => git('onay')} onMaddeAc={id => { const k = items.find(i => i.id === id); if (k) maddeyiAc(k); }} />}
               />
             )}
+
+            {activeTab === 'pullar' && <Pullar onAjans={() => git('ajans')} onOnay={() => git('onay')} />}
 
             {activeTab === 'ilham' && (
               <IlhamVeKaynaklar

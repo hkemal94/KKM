@@ -5,6 +5,16 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
+## Pullar (15 Kasım, Kemal)
+
+Ürünler → **Pullar** (ayrı menü, `components/urunler/Pullar.tsx`, `lib/pullar.ts`): bütün oyunların pul
+koleksiyonu, oyunlardaki düzenle (yıl bölümü; her çeyrek bir satırda üç aylık pul ve büyük 4. pul). Üstte
+oyun düğmeleri ve oyun başına tasarlandı / onaylı / bekliyor sayıları (yalnız kayıttan). Pula dokununca
+ayrıntı paneli: durum, küçük resim, ayın görevi (yoksa oyunun koşulu, o da yoksa "[Kemal]"), Canva
+bağlantısı. Kemal durumu ve bağlantıyı değiştirip "Kaydet"e basınca KKM ajansın `kkm/pullar.json`'unda
+yalnız o pulu yazar (dosyanın güncel hâlinin üstüne). Dosya yoksa yazmaz. KKM kayıtlarına bir şey yazılmaz.
+Standart ajansın `docs/pul-koleksiyonu.md`'sinde. Taslaklar Onay bekleyenler'e ajansın öneri listesiyle düşer.
+
 ## DK Lite paneli (10 Kasım, Kemal)
 
 Kemal (9 Kasım): DK Lite'ın bölümlerini, arka planlarını, hediyelerini "sürükle bırakla" değiştirebileceği
