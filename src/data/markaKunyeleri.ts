@@ -61,7 +61,7 @@ export const MARKA_KUNYELERI: MarkaKunyesi[] = [
     hikayeKoku:
       "Kems, Kemal'in lakabı. Marka bir ürün fikrinden bir evrene dönüştü.",
     // kurulus yok (3 Kasım): kuruluş yılı vikide `profile.founded`; eski alan Temizlik'te silinir
-    merkezi: 'İstanbul',
+    merkezi: 'Kemsköy Caddesi, İskele Mahallesi', // Kemal 15 Kasım: yalnız evren adresi
     armaTarifi: [
       'Çerçeveli kilit: lacivert çerçeve, krem alan, altta kiremit bant',
       'KEMS blok + el yazısı "Company" (kiremit, krem konturlu)',
@@ -79,12 +79,11 @@ export const MARKA_KUNYELERI: MarkaKunyesi[] = [
       exemplaryWorks: [
         'Birlik Birası etiketi',
         'Birlik Zeytin etiketi',
-        'Kemsköy Tabakhane İşletmeleri Kurumu etiketi',
         'Kems Coffee Co. bardak logosu'
       ],
       selectedFont: 'Sıkışık blok sans (başlık) + el yazısı (alt satır)',
       voiceTone: 'Gösterişsiz · Bilge · Samimi ama havalı',
-      slogan: 'Quietly cultural.',
+      slogan: 'Kems is the culture, teşekkürler.', // Kemal 15 Kasım: sayfada yalnız kart cümlesi
       usageRulesDo: [
         'Lacivert ve kiremit birlikte; krem her zaman zemin',
         'Arma tipi etiketlerde "Kuruluş 2025" satırı kalsın',
@@ -104,7 +103,7 @@ export const MARKA_KUNYELERI: MarkaKunyesi[] = [
     tur: 'kulüp markası',
     ustMarka: 'marka_kems',
     neYapar: 'Adanın spor kulübü; Dirlik Stadı onun sahası.',
-    kurulus: '12 Mayıs',
+    kurulus: '12 Mayıs 1957',
     merkezi: 'Stadyum Mahallesi',
     bagliMekan: 'mekan_dirlik_stadi',
     armaTarifi: [
@@ -124,7 +123,7 @@ export const MARKA_KUNYELERI: MarkaKunyesi[] = [
       usageRulesDo: [
         'Rozetin oranı korunur — yatay ezilmez',
         'Yelkenli her zaman lacivert, zemin krem',
-        '12 Mayıs kuruluş tarihidir, armadan düşmez'
+        'Kuruluş tarihi 12 Mayıs 1957; armada "12 Mayıs" düşmez'
       ],
       usageRulesDont: [
         'Kiremit ile lacivert yer değiştirmez',
@@ -167,7 +166,7 @@ export const MARKA_KUNYELERI: MarkaKunyesi[] = [
       voiceTone: 'Sakin, yerli, gösterişsiz',
       slogan: '',
       usageRulesDo: [
-        'Tek renk kalır: krem zemin, mürekkep çizgi',
+        'Palet krem, mürekkep ve bej; zemin krem, çizgi mürekkep',
         'Kangal ile monogram birlikte kullanılabilir, üst üste gelmez',
         'El yazısı ad ile alt satır arasındaki hizalama ortalanır'
       ],
