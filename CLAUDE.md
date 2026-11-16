@@ -147,6 +147,12 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   kartının özet, açıklama, depo alanı; ad yazılmaz) ve `gddBolumu` (tasarım
   belgesi adımının yazısı; adım yoksa açılır). Dolu adımın ya da bu arada
   değişmiş alanın üzerine yazılmaz; listede "çakışma" diye görünür.
+  16 Kasım: `kurucuBina` (Kurucu'da konan binayı taşı ya da sil; `bina`
+  `yeniBinalar` kimliği). Kurucu'nun kendi kaydı gibi harita kaydının taslağına
+  (`duzada/haritaDuzeni` → `kurucu`) tek yazmada gider; haritaya "Kurucu
+  taslağını haritaya işle" ile geçer. Taşımada `eski` kayıttakinden farklıysa,
+  silmede binaya madde bağı, oturan ya da onu gösteren madde varsa uygulanmaz.
+  Kurucu başka sekmede açıksa kendi hâlini yazınca bu değişikliği geri alır.
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz
   yok" diye açıkça söylenir (30 Eylül'de karışmıştı).
 
