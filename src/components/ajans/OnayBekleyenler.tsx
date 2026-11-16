@@ -18,7 +18,7 @@ import { AjanIsiIcerigi, KucukResim } from './AjanIsiIcerigi';
 import { useBekleyenIsler } from '../anasayfa/BekleyenIsler';
 import { EksikOzeti } from '../anasayfa/EksikOzeti';
 import { ISLEM_ADI, useAjansKararlari } from '../anasayfa/AjansKararlariKarti';
-import { kitapBolumuOnizleme, maddeTuru, oyunKarariOnizleme } from '../../lib/ajansKararlari';
+import { kitapBolumuOnizleme, kurucuBinaOnizleme, maddeTuru, oyunKarariOnizleme } from '../../lib/ajansKararlari';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { oneriTuru, useOneriIslemleri } from '../studyo/OneriTepsisi';
 import type { StudyoIslemleri } from '../studyo/StudyoBaglami';
@@ -293,19 +293,20 @@ export const OnayBekleyenler: React.FC<Props> = ({
     if (anahtar && d && typeof d === 'object' && 'islemler' in d && kararlar.islemler.length && !kararlar.sonuc) {
       const k = `karar:${d.olusturuldu || 'dosya'}`;
       const zaman = Date.parse(d.olusturuldu) || simdi;
-      const { silSayisi, yazSayisi, kitapSayisi, oyunSayisi } = kararlar;
+      const { silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi } = kararlar;
       liste.push({
         anahtar: k, kaynak: 'karar', etiket: 'KARAR', zaman, zamanYazi: neZaman(zaman),
         baslik: `Ajansın kararları: ${kararlar.islemler.length} iş`,
         ozet: [
-          [silSayisi ? `${silSayisi} öneri silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a` : '', oyunSayisi ? `${oyunSayisi} yazı Oyunlar'a` : ''].filter(Boolean).join(', '),
+          [silSayisi ? `${silSayisi} öneri silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a` : '', oyunSayisi ? `${oyunSayisi} yazı Oyunlar'a` : '', kurucuSayisi ? `${kurucuSayisi} bina Kurucu'ya` : ''].filter(Boolean).join(', '),
           kararlar.islemler.slice(0, 3).map(i => i.baslik).join(' · ')
         ].filter(Boolean).join(' · '),
         govde: (
           <>
             <p className={`text-[12px] ${IKINCIL}`}>
-              {[silSayisi ? `${silSayisi} öneri tepsiden silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye işlenecek` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a yazılacak` : '', oyunSayisi ? `${oyunSayisi} yazı Oyunlar'a işlenecek` : ''].filter(Boolean).join(', ')}.
+              {[silSayisi ? `${silSayisi} öneri tepsiden silinecek` : '', yazSayisi ? `${yazSayisi} düzeltme vikiye işlenecek` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a yazılacak` : '', oyunSayisi ? `${oyunSayisi} yazı Oyunlar'a işlenecek` : '', kurucuSayisi ? `${kurucuSayisi} bina Kurucu'da değişecek` : ''].filter(Boolean).join(', ')}.
               Uygula hepsini birden işler; makbuz ajansın deposuna düşer.
+              {kurucuSayisi ? ' Kurucu başka bir sekmede ya da cihazda açıksa önce onu kapat; Kurucu değişikliği taslağa yazılır, haritaya "Kurucu taslağını haritaya işle" ile geçer.' : ''}
             </p>
             <ul className={`${KUTU} space-y-1.5 max-h-72 overflow-y-auto`}>
               {kararlar.islemler.map(i => (
@@ -321,6 +322,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   {i.tur === 'yeniMadde' && <> · <b>{TYPE_LABELS[maddeTuru(i.maddeTur)!] || i.maddeTur}</b>{i.metin ? <> → {i.metin}</> : null}{i.baglar?.length ? <> · bağlar: {i.baglar.map(b => `${b.bag} ${b.hedef}`).join(', ')}</> : null}</>}
                   {i.tur === 'kitapBolumu' && <> → <b>{kitapBolumuOnizleme(items, i)}</b></>}
                   {(i.tur === 'oyunKarti' || i.tur === 'gddBolumu') && <> → <b>{oyunKarariOnizleme(items, i)}</b></>}
+                  {i.tur === 'kurucuBina' && <> → <b>{kurucuBinaOnizleme(items, kararlar.kurucu, i)}</b></>}
                   <span className={`block text-[11px] ${IKINCIL}`}>{i.neden}</span>
                 </li>
               ))}
