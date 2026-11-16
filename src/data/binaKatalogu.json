@@ -67,7 +67,8 @@
   "ozel": {
     "the-imperial-kemskoy": "binalar/the-imperial-kemskoy.glb",
     "haydarpasa-buyuk-olcek": "binalar/haydarpasa-buyuk-olcek.glb",
-    "deniz-feneri": "deniz/deniz-feneri.glb"
+    "deniz-feneri": "deniz/deniz-feneri.glb",
+    "dirlik-stadi": "binalar/dirlik-stadi.glb"
   },
   "sokak": {
     "karo_m": 10,
