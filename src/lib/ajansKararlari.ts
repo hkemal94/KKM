@@ -9,6 +9,8 @@ import { getKunyeFields, schemaKeyFor, TYPE_LABELS, WIKI_TYPES } from '../compon
 import type { BagTuru } from '../utils/relations';
 import { bagUygun } from './bagKurallari';
 import { vikiGorseliMi } from './maddeGorseli';
+import { depoAdi } from './depoBelgesi';
+import { GDD_BOLUMLERI, gddBolumleri } from '../components/oyun/OyunSureci';
 
 /**
  * Ajansın kararlarını uygula (22 Ekim, Kemal: "Ajans kendi uygulasın ama ben
@@ -64,6 +66,14 @@ import { vikiGorseliMi } from './maddeGorseli';
  *     bölüm varsa metni ve sırası güncellenir, yoksa yeni bölüm (`kitap_bolum`,
  *     `metadata.bookId` + `chapterIndex`) eklenir. Bölümün adı Kitap ekranı
  *     gibi "Bölüm 3: Ad" diye yazılır; karşılaştırmada "Bölüm 3:" kısmı sayılmaz.
+ *   - 16 Kasım (Kemal: Oyunlar'daki kartlar ve tasarım belgesi adımları boş, ajans
+ *     doldurmak istiyor): `oyunKarti` (oyunun kartındaki `ozet`, `aciklama` ya da
+ *     `depo` alanı; `oyun` oyunun adı ya da kimliği). Adı yazmaz, ad Kemal'in. `eski`
+ *     verilir ve kayıttaki değer başkaysa çakışma olur, uygulanmaz. `gddBolumu`
+ *     (`bolum` tasarım belgesinin adımı, `GDD_BOLUMLERI` kimliği; `metin` adımın
+ *     yazısı). Adım hiç açılmamışsa ekrandaki "aç" düğmesinin açtığı kayıt açılır.
+ *     Adım doluysa ve `eski` verilmemişse (ya da yazı `eski`den başkaysa) üzerine
+ *     yazılmaz, çakışma olur. Çakışan karar listede "çakışma" diye görünür.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -90,7 +100,9 @@ export type KararIslemi =
   | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string }
   | { kimlik: string; tur: 'yeniMadde'; baslik: string; maddeTur: string; metin?: string; baglar?: YeniMaddeBagi[]; neden?: string }
   | { kimlik: string; tur: 'yeniOyun'; baslik: string; metin?: string; neden?: string }
-  | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; neden?: string };
+  | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; neden?: string }
+  | { kimlik: string; tur: 'oyunKarti'; oyun: string; alan: OyunKartiAlani; eski?: string; deger: string; baslik: string; neden?: string }
+  | { kimlik: string; tur: 'gddBolumu'; oyun: string; bolum: string; eski?: string; metin: string; baslik: string; neden?: string };
 
 type KitapBolumuIslemi = Extract<KararIslemi, { tur: 'kitapBolumu' }>;
 
@@ -147,6 +159,83 @@ const ayniAdli = (items: Item[], ad: string) =>
 /** Aynı adla canlı oyun kayıtları (Ürünler → Oyunlar) */
 const ayniAdliOyun = (items: Item[], ad: string) =>
   items.filter(i => i.type === 'oyun_tanitim' && !i.archived && kucuk(i.title) === kucuk(ad));
+
+type OyunKartiIslemi = Extract<KararIslemi, { tur: 'oyunKarti' }>;
+type GddBolumuIslemi = Extract<KararIslemi, { tur: 'gddBolumu' }>;
+
+/** `oyunKarti` ile yazılabilen kart alanları (Oyunlar → oyunun kartı); ad yok, ad Kemal'in */
+export const OYUN_KARTI_ALANLARI = { ozet: 'Özet', aciklama: 'Açıklama', depo: 'Oyunun deposu' } as const;
+export type OyunKartiAlani = keyof typeof OYUN_KARTI_ALANLARI;
+
+/** Oyunu bulur: kimliği, kayıt başlığı ya da kartındaki adıyla; tek eşleşme yoksa null */
+export function oyunBul(items: Item[], ad: string): Item | null {
+  const canli = items.filter(i => i.type === 'oyun_tanitim' && !i.archived);
+  const kimlikle = canli.find(i => i.id === (ad || '').trim());
+  if (kimlikle) return kimlikle;
+  const bas = ayniAdliOyun(items, ad);
+  if (bas.length) return bas.length === 1 ? bas[0] : null;
+  const adla = canli.filter(i => kucuk(String((i.metadata as Record<string, unknown> | undefined)?.ad || '')) === kucuk(ad));
+  return adla.length === 1 ? adla[0] : null;
+}
+
+/** Kart alanının yazılacak hâli (depo "sahip/depo" biçimine çevrilir); geçersizse null */
+function oyunKartiDegeri(alan: string, deger: unknown): string | null {
+  if (!(alan in OYUN_KARTI_ALANLARI) || typeof deger !== 'string' || !deger.trim()) return null;
+  return alan === 'depo' ? depoAdi(deger) : deger.trim();
+}
+const oyunKartiSimdi = (m: Item, alan: string) => String((m.metadata as Record<string, unknown> | undefined)?.[alan] ?? '').trim();
+
+/** Ne olacak (saf iş): oyun, yazılacak değer, kayıttaki değer ve çakışma nedeni */
+export function oyunKartiPlani(items: Item[], i: OyunKartiIslemi) {
+  const oyun = oyunBul(items, i.oyun);
+  const deger = oyunKartiDegeri(i.alan, i.deger);
+  const simdi = oyun ? oyunKartiSimdi(oyun, i.alan) : '';
+  const eski = i.eski === undefined ? undefined : (i.alan === 'depo' && i.eski.trim() ? depoAdi(i.eski) ?? i.eski.trim() : i.eski.trim());
+  const yapildi = !!oyun && deger !== null && kucuk(simdi) === kucuk(deger);
+  const cakisma = !oyun ? `oyun bulunamadı ya da aynı adla birden çok var (${i.oyun})`
+    : deger === null ? `"${i.alan}" kartta yazılabilen bir alan değil ya da değer boş`
+    : !yapildi && eski !== undefined && kucuk(simdi) !== kucuk(eski) ? `kartta bu alan bu arada değişmiş (kayıtta: ${simdi || 'boş'})`
+    : null;
+  return { oyun, deger, simdi, yapildi, cakisma };
+}
+
+/** Tasarım belgesi adımı: kimliği ya da ekrandaki adıyla */
+const gddAdimi = (b: string) => GDD_BOLUMLERI.find(x => x.id === (b || '').trim() || kucuk(x.ad) === kucuk(b || '')) || null;
+
+/** Ne olacak (saf iş): oyun, adım, adımın kaydı (yoksa açılır) ve çakışma nedeni */
+export function gddBolumuPlani(items: Item[], i: GddBolumuIslemi) {
+  const oyun = oyunBul(items, i.oyun);
+  const adim = gddAdimi(i.bolum);
+  const metin = typeof i.metin === 'string' ? i.metin.trim() : '';
+  const kayitlar = oyun && adim ? gddBolumleri(items, oyun.id).filter(b => (b.metadata as Record<string, unknown> | undefined)?.bolumId === adim.id) : [];
+  const kayit = kayitlar.length === 1 ? kayitlar[0] : null;
+  const simdi = (kayit?.notes || '').trim();
+  const yapildi = !!kayit && !!metin && simdi === metin;
+  const cakisma = !oyun ? `oyun bulunamadı ya da aynı adla birden çok var (${i.oyun})`
+    : !adim ? `"${i.bolum}" tasarım belgesinin bir adımı değil`
+    : !metin ? 'metin boş'
+    : kayitlar.length > 1 ? `bu adım için birden çok kayıt var (${adim.ad})`
+    : !yapildi && simdi && (i.eski === undefined || simdi !== i.eski.trim()) ? (i.eski === undefined ? 'adım dolu; üzerine yazılmaz' : 'adımın yazısı bu arada değişmiş')
+    : null;
+  return { oyun, adim, metin, kayit, simdi, yapildi, cakisma };
+}
+
+/** Onay listesindeki satır: hangi oyun, hangi alan ya da adım, ne yazılacak; çakışma varsa başta */
+export function oyunKarariOnizleme(items: Item[], i: OyunKartiIslemi | GddBolumuIslemi, sinir = 180): string {
+  const kisalt = (s: string) => { const m = (s || '').replace(/\s+/g, ' ').trim(); return m.length > sinir ? `${m.slice(0, sinir).trimEnd()}… (${m.length} harf)` : m; };
+  if (i.tur === 'oyunKarti') {
+    const p = oyunKartiPlani(items, i);
+    const ad = p.oyun ? (oyunKartiSimdi(p.oyun, 'ad') || p.oyun.title) : i.oyun;
+    const yer = `${ad} · ${OYUN_KARTI_ALANLARI[i.alan] || i.alan}`;
+    if (p.cakisma) return `Çakışma, uygulanmaz: ${p.cakisma}. ${yer} → ${kisalt(String(i.deger ?? ''))}`;
+    return `${yer}: ${p.simdi ? `${kisalt(p.simdi)} → ` : ''}${kisalt(p.deger || '')}`;
+  }
+  const p = gddBolumuPlani(items, i);
+  const ad = p.oyun ? (oyunKartiSimdi(p.oyun, 'ad') || p.oyun.title) : i.oyun;
+  const yer = `${ad} · Tasarım belgesi · ${p.adim?.ad || i.bolum}`;
+  if (p.cakisma) return `Çakışma, uygulanmaz: ${p.cakisma}. ${yer} → ${kisalt(p.metin)}`;
+  return `${yer}${p.kayit ? (p.simdi ? ' (yazısı değişir)' : '') : ' (adım açılır)'} → ${kisalt(p.metin)}`;
+}
 
 /** Yeni maddenin kaydı (saf iş): bağlar çözülür, uymayan ya da bulunamayan bağ `atlanan`a */
 export function yeniMaddeKaydi(items: Item[], islem: Extract<KararIslemi, { tur: 'yeniMadde' }>, id: string) {
@@ -289,6 +378,8 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'markaKarti') { const m = maddeBul(items, i.marka); const d = kartDegeri(i.alan, i.deger); return !!m && d !== null && kartAyni(kartAlani(m, i.alan), d); }
   if (i.tur === 'yeniMadde') { const t = maddeTuru(i.maddeTur); return !!t && ayniAdli(items, i.baslik).some(m => m.type === t); }
   if (i.tur === 'yeniOyun') return ayniAdliOyun(items, i.baslik).length > 0;
+  if (i.tur === 'oyunKarti') return oyunKartiPlani(items, i).yapildi;
+  if (i.tur === 'gddBolumu') return gddBolumuPlani(items, i).yapildi;
   if (i.tur === 'kitapBolumu') {
     const { bolum } = kitapBolumuPlani(items, i);
     return !!bolum && (bolum.notes || '').trim() === (i.metin || '').trim() && bolum.metadata?.chapterIndex === i.sira;
@@ -339,6 +430,8 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
     // Kitabı, adı ya da metni boş bölüm listede durmaz
     if (i.tur === 'yeniOyun') return !!i.baslik?.trim() && !yapilmis(items, i);
     if (i.tur === 'kitapBolumu') return kitapBolumuGecerli(i) && !yapilmis(items, i);
+    // Çakışan oyun kararı listede kalır, "çakışma" diye görünür; Uygula onu atlar
+    if (i.tur === 'oyunKarti' || i.tur === 'gddBolumu') return !yapilmis(items, i);
     // Sitedeki viki klasöründe olmayan yol listede durmaz
     if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
     if (i.tur === 'eskiAlan') return typeof i.alan === 'string' && !!i.alan.trim() && !KORUNAN_ALANLAR.has(i.alan.split('.')[0]) && typeof i.deger === 'string' && !yapilmis(items, i);
@@ -456,6 +549,34 @@ export async function kararlariUygula(
             metadata: { bookId: kitap.id, chapterIndex: islem.sira, chapterTodos: [] },
           };
           await yaz.ekle!(yeni);
+          guncel.set(id, { ...yeni, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
+        }
+      } else if (islem.tur === 'oyunKarti') {
+        const p = oyunKartiPlani([...guncel.values()], islem);
+        if (p.yapildi) { sonuc.uygulanan.push(islem); ilerleme?.(++n); continue; }
+        if (p.cakisma || !p.oyun || p.deger === null) { sonuc.atlanan.push({ islem, neden: p.cakisma || 'oyun bulunamadı' }); continue; }
+        // Oyunlar → oyunun kartındaki "Kaydet" gibi: yalnız bu alan değişir
+        const yeni: Item = { ...p.oyun, metadata: { ...(p.oyun.metadata || {}), [islem.alan]: p.deger }, updatedAt: Date.now() };
+        await yaz.guncelle(yeni);
+        guncel.set(yeni.id, yeni);
+      } else if (islem.tur === 'gddBolumu') {
+        const p = gddBolumuPlani([...guncel.values()], islem);
+        if (p.yapildi) { sonuc.uygulanan.push(islem); ilerleme?.(++n); continue; }
+        if (p.cakisma || !p.oyun || !p.adim) { sonuc.atlanan.push({ islem, neden: p.cakisma || 'oyun ya da adım bulunamadı' }); continue; }
+        if (p.kayit) {
+          const yeni: Item = { ...p.kayit, notes: p.metin, updatedAt: Date.now() };
+          await yaz.guncelle(yeni);
+          guncel.set(yeni.id, yeni);
+        } else {
+          if (!yaz.ekle) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan belge adımı açılamıyor; Onay bekleyenler\'den uygula' }); continue; }
+          const id = `gdd_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          // Oyun ekranındaki tasarım belgesi "aç" düğmesinin açtığı kaydın aynısı
+          const yeni = {
+            id, title: p.adim.ad, area: 'oyun' as const, type: 'gdd_bolum' as const, status: 'Fikir', priority: 'orta' as const,
+            tags: ['oyun', 'gdd'], links: [], notes: p.metin, images: [], isProposal: false, archived: false,
+            metadata: { bolumId: p.adim.id, soru: p.adim.soru, oyunId: p.oyun.id },
+          };
+          await yaz.ekle(yeni);
           guncel.set(id, { ...yeni, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
         }
       } else if (islem.tur === 'markaKarti') {

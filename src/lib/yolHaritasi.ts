@@ -397,6 +397,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Ajanlar ve otomasyonlar: yeni İllüstratör ajanı (her gece günün görseli) kartlarda ve zamanlayıcıda adıyla görünür; hattı Görsel, ekranı Oyunlar', not: 'Ajan dosyası ve takvimi ajans deposunda; KKM kayıtlarına bir şey yazılmaz.' },
   { id: 'ana-sayfa-tekrar', paket: 'K', kimde: 'claude', nereden: '15 Kasım · Kemal', bitti: true,
     ad: 'Menü: Ajans grubundaki tekrar eden "Ana sayfa" satırı kalktı; Ana sayfa telefonda alt menüdeki düğmeden, masaüstünde soldaki logodan açılır', not: 'Yalnız menü; KKM kayıtlarına bir şey yazılmaz. Açılışta yine Ana sayfa gelir.' },
+  { id: 'oyun-karti-kararlari', paket: 'K', kimde: 'claude', nereden: '16 Kasım · Kemal', bitti: true,
+    ad: 'Ajans kararlarına "Oyun kartı" ve "Tasarım belgesi": ajans Oyunlar\'daki kartın özetini, açıklamasını, deposunu ve tasarım belgesi adımlarının yazısını önerir; Onay bekleyenler\'de hangi oyun, hangi alan ya da adım, ne yazılacağı görünür', not: 'Kayıt yalnız Kemal "Uygula"ya basınca değişir. Oyunun adı yazılmaz; dolu adımın ya da bu arada değişmiş alanın üzerine yazılmaz, "çakışma" diye görünür.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
