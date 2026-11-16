@@ -141,6 +141,12 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   `kkm_ayar` → `oneriKanallari` ayarı ve `gece_hazirlik` defteri okunmaz,
   silinmedi. Viki yazıları Vikipedi gibi genel, nesnel, süssüz yazılır
   (`server.ts` → `VIKI_USLUBU`).
+- **Ajansın kararları** (`src/lib/ajansKararlari.ts`; türlerin listesi dosyanın
+  başındaki açıklamada): ajans `kkm/kararlar.json`'a yazar, kayıt yalnız Kemal
+  Onay bekleyenler'de "Uygula"ya basınca değişir. 16 Kasım: `oyunKarti` (oyun
+  kartının özet, açıklama, depo alanı; ad yazılmaz) ve `gddBolumu` (tasarım
+  belgesi adımının yazısı; adım yoksa açılır). Dolu adımın ya da bu arada
+  değişmiş alanın üzerine yazılmaz; listede "çakışma" diye görünür.
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz
   yok" diye açıkça söylenir (30 Eylül'de karışmıştı).
 
