@@ -32,6 +32,12 @@ const DURUM_ETIKETI: Record<PulTasarimDurumu, string> = {
 };
 const durumAdi = (d: PulTasarimDurumu) => PUL_DURUMLARI.find(x => x.id === d)?.ad || d;
 
+/**
+ * Ajansın taslak görselleri ana dala girmez, bu dalda durur (gece turuyla aynı dal).
+ * Pulun resmi önce burada, yoksa ana dalda aranır (17 Kasım, Kemal: "KKM o daldan da okusun").
+ */
+const PUL_GORSEL_DALLARI = ['gece-turu-gorseller', 'main'];
+
 /** Pulun küçük resmi: tam adres olduğu gibi; ajansın deposundaki yol anahtarla indirilir */
 function useResim(anahtar: string | null, gorsel?: string): string | null {
   const [adres, setAdres] = useState<string | null>(null);
@@ -41,7 +47,11 @@ function useResim(anahtar: string | null, gorsel?: string): string | null {
     if (/^https?:\/\//.test(gorsel)) { setAdres(gorsel); return; }
     if (!anahtar) return;
     let iptal = false;
-    gorselAdresi(anahtar, 'main', gorsel.replace(/^\/+/, '')).then(a => { if (!iptal) setAdres(a); }).catch(() => undefined);
+    const yol = gorsel.replace(/^\/+/, '');
+    PUL_GORSEL_DALLARI.reduce<Promise<string>>(
+      (onceki, dal) => onceki.catch(() => gorselAdresi(anahtar, dal, yol)),
+      Promise.reject(new Error('dal yok')),
+    ).then(a => { if (!iptal) setAdres(a); }).catch(() => undefined);
     return () => { iptal = true; };
   }, [anahtar, gorsel]);
   return adres;
