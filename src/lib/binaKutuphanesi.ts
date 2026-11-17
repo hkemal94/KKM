@@ -7,7 +7,8 @@
  * panosunda. Ölçü metre, Y yukarı, ön cephe +Z.
  *
  * Başlıklar dosya adından okunur hâle getirilmiş tür adlarıdır, özel ad değildir.
- * Tek istisna The Imperial Kemskoy: oyunun ve otelin kanondaki adı.
+ * İstisnalar kanondaki adlar: The Imperial Kemskoy (oyunun ve otelin adı) ve
+ * Dirlik Stadı (künye: Stadyum Mahallesi).
  */
 
 import katalogMetni from '../data/binaKatalogu.json?raw';
@@ -80,7 +81,8 @@ const BASLIKLAR: Record<string, string> = {
   'sahil-guvenlik-botu': 'Sahil güvenlik botu', sandal: 'Sandal', yelkenli: 'Yelkenli', 'yolcu-motoru': 'Yolcu motoru',
   bisiklet: 'Bisiklet', dolmus: 'Dolmuş', hatchback: 'Hatchback', motosiklet: 'Motosiklet', pikap: 'Pikap', sedan: 'Sedan',
   taksi: 'Taksi', traktor: 'Traktör',
-  yazlik: 'Yazlık', 'depo-atolye': 'Depo / atölye', 'futbol-sahasi': 'Futbol sahası', tribun: 'Tribün'
+  yazlik: 'Yazlık', 'depo-atolye': 'Depo / atölye', 'futbol-sahasi': 'Futbol sahası', tribun: 'Tribün',
+  'dirlik-stadi': 'Dirlik Stadı'
 };
 
 export const modelKimligi = (dosya: string) => (dosya.split('/').pop() || dosya).replace(/\.glb$/i, '');
