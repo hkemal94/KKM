@@ -7,8 +7,10 @@
  * panosunda. Ölçü metre, Y yukarı, ön cephe +Z.
  *
  * Başlıklar dosya adından okunur hâle getirilmiş tür adlarıdır, özel ad değildir.
- * İstisnalar kanondaki adlar: The Imperial Kemskoy (oyunun ve otelin adı) ve
- * Dirlik Stadı (künye: Stadyum Mahallesi).
+ * İstisnalar kanondaki adlar: The Imperial Kemskoy (oyunun ve otelin adı),
+ * Dirlik Stadı (künye: Stadyum Mahallesi) ve 17 Kasım'da gelen özel yapılar
+ * (künyedeki hâliyle). Künyede adı olmayan özel yapının başlığında "[ad: Kemal]"
+ * yer tutucusu durur; adı Kemal koyar.
  */
 
 import katalogMetni from '../data/binaKatalogu.json?raw';
@@ -82,7 +84,13 @@ const BASLIKLAR: Record<string, string> = {
   bisiklet: 'Bisiklet', dolmus: 'Dolmuş', hatchback: 'Hatchback', motosiklet: 'Motosiklet', pikap: 'Pikap', sedan: 'Sedan',
   taksi: 'Taksi', traktor: 'Traktör',
   yazlik: 'Yazlık', 'depo-atolye': 'Depo / atölye', 'futbol-sahasi': 'Futbol sahası', tribun: 'Tribün',
-  'dirlik-stadi': 'Dirlik Stadı'
+  'dirlik-stadi': 'Dirlik Stadı',
+  'sade-meyhane': 'Sade Meyhane', 'taraftar-birahanesi': 'Taraftar Birahanesi', 'merkez-pazari': 'Merkez Pazarı',
+  'liman-idare': 'Liman İdare Binası', 'merkez-camii': 'Merkez Camii', 'eski-kilise': 'Eski Kilise',
+  'liman-balik-hali': 'Liman Balık Hali', 'liman-balik-lokantasi': 'Balık Lokantası',
+  // künyede adı yok: yer tutucu
+  'zeytinyagi-fabrikasi': 'Zeytinyağı fabrikası [ad: Kemal]', 'saglik-ocagi': 'Sağlık ocağı [ad: Kemal]',
+  'merkez-postanesi': 'Postane [ad: Kemal]'
 };
 
 export const modelKimligi = (dosya: string) => (dosya.split('/').pop() || dosya).replace(/\.glb$/i, '');
