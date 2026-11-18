@@ -403,6 +403,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Ajans kararlarına "Kurucu: taşı / sil": ajans Kurucu\'da konan bir binanın yerini, açısını, boyunu değiştirmeyi ya da binayı silmeyi önerir; Onay bekleyenler\'de bina, bağlı madde ve eski → yeni değerler görünür', not: 'Kayıt yalnız Kemal "Uygula"ya basınca değişir; Kurucu taslağına tek yazma, haritaya "Kurucu taslağını haritaya işle" ile geçer. Bina bu arada değiştiyse ya da silinecek binaya madde, oturan bağlıysa uygulanmaz.' },
   { id: 'dirlik-stadi-galeri', paket: 'H', kimde: 'claude', nereden: '16 Kasım · Kemal', bitti: true,
     ad: 'Ortak assetler: ajansın 3B Dirlik Stadı modeli bina kütüphanesinde, Binalar bölümünde döndürülebilir önizlemeyle', not: 'Yalnız galeri; haritadaki stat eskisi gibi kutularla çizilir. KKM kayıtlarına bir şey yazılmaz.' },
+  { id: 'pul-resmi-dal', paket: 'K', kimde: 'claude', nereden: '17 Kasım · Kemal', bitti: true,
+    ad: 'Pullar: ajansın taslak pul resmi görünür; küçük resim önce ajansın görsel dalından (gece turunun dalı), yoksa ana daldan okunur', not: 'Yalnız okuma, aynı GitHub anahtarıyla; KKM kayıtlarına bir şey yazılmaz.' },
   { id: 'ozel-yapilar-galeri', paket: 'H', kimde: 'claude', nereden: '17 Kasım · Kemal', bitti: true,
     ad: 'Ortak assetler: ajansın 11 özel yapısı (Sade Meyhane, Merkez Camii, Eski Kilise, Liman Balık Hali…) bina kütüphanesinde, Binalar bölümünde döndürülebilir önizlemeyle', not: 'Yalnız galeri; haritadaki yapılar eskisi gibi çizilir. Künyede adı olmayan üç yapı adsız, başlıkta yalnız türü yazar (Kemal, 18 Kasım). KKM kayıtlarına bir şey yazılmaz.' },
   // sırası belli değil
