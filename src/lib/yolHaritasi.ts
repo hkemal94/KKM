@@ -404,7 +404,7 @@ export const YOL_HARITASI: YolIsi[] = [
   { id: 'dirlik-stadi-galeri', paket: 'H', kimde: 'claude', nereden: '16 Kasım · Kemal', bitti: true,
     ad: 'Ortak assetler: ajansın 3B Dirlik Stadı modeli bina kütüphanesinde, Binalar bölümünde döndürülebilir önizlemeyle', not: 'Yalnız galeri; haritadaki stat eskisi gibi kutularla çizilir. KKM kayıtlarına bir şey yazılmaz.' },
   { id: 'ozel-yapilar-galeri', paket: 'H', kimde: 'claude', nereden: '17 Kasım · Kemal', bitti: true,
-    ad: 'Ortak assetler: ajansın 11 özel yapısı (Sade Meyhane, Merkez Camii, Eski Kilise, Liman Balık Hali…) bina kütüphanesinde, Binalar bölümünde döndürülebilir önizlemeyle', not: 'Yalnız galeri; haritadaki yapılar eskisi gibi çizilir. Künyede adı olmayan üç yapının başlığında "[ad: Kemal]" durur. KKM kayıtlarına bir şey yazılmaz.' },
+    ad: 'Ortak assetler: ajansın 11 özel yapısı (Sade Meyhane, Merkez Camii, Eski Kilise, Liman Balık Hali…) bina kütüphanesinde, Binalar bölümünde döndürülebilir önizlemeyle', not: 'Yalnız galeri; haritadaki yapılar eskisi gibi çizilir. Künyede adı olmayan üç yapı adsız, başlıkta yalnız türü yazar (Kemal, 18 Kasım). KKM kayıtlarına bir şey yazılmaz.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
