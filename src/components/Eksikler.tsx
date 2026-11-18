@@ -7,6 +7,7 @@ import { KanonKarti } from './KanonKarti';
 import { AdDegisikligiKarti } from './AdDegisikligiKarti';
 import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
+import { HaritaYedegiKarti } from './HaritaYedegiKarti';
 import { GaleriDisariKarti } from './GaleriDisariKarti';
 import { SilinmisGaleriKarti, SilinmisGaleriDenetle, GorselIsteyenSatiri, useSilinmisGaleri } from './VikiGorselKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
@@ -89,6 +90,9 @@ export const Eksikler: React.FC<EksiklerProps> = ({
   return (
     <div className="mb-8">
       {/* Ortak alan (1 Ekim): eski ortak alanda kayıt kaldıysa tek seferlik taşıma */}
+
+      {/* Harita yedeği ve geri yükleme (18 Kasım, kompakt ada A adımı) */}
+      {onUpdateItem && <HaritaYedegiKarti items={items} onUpdateItem={onUpdateItem} />}
 
       {/* Temizlik (29 Eylül): kullanılmayan kayıtlar silinir, önce yedek */}
       {onDeleteItem && <TemizlikKarti items={items} onDeleteItem={onDeleteItem} />}
