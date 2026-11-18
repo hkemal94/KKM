@@ -407,6 +407,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Pullar: ajansın taslak pul resmi görünür; küçük resim önce ajansın görsel dalından (gece turunun dalı), yoksa ana daldan okunur', not: 'Yalnız okuma, aynı GitHub anahtarıyla; KKM kayıtlarına bir şey yazılmaz.' },
   { id: 'ozel-yapilar-galeri', paket: 'H', kimde: 'claude', nereden: '17 Kasım · Kemal', bitti: true,
     ad: 'Ortak assetler: ajansın 11 özel yapısı (Sade Meyhane, Merkez Camii, Eski Kilise, Liman Balık Hali…) bina kütüphanesinde, Binalar bölümünde döndürülebilir önizlemeyle', not: 'Yalnız galeri; haritadaki yapılar eskisi gibi çizilir. Künyede adı olmayan üç yapı adsız, başlıkta yalnız türü yazar (Kemal, 18 Kasım). KKM kayıtlarına bir şey yazılmaz.' },
+  { id: 'yasayan-harita', paket: 'H', kimde: 'claude', nereden: '16 Kasım · Kemal', bitti: true,
+    ad: 'Yaşayan harita: 3B haritada bir yapıya dokununca küçük kart açılır: ad, görsel, vikideki maddenin kısa girişi, "Vikide aç"; Sürek Kulübü kartında Küçükçetmi Çiftliği ikinci bağlantı', not: 'Yalnız okuma; kayda bir şey yazılmaz. Yapı → madde eşlemesi ajansın listesinden (`src/lib/yasayanHarita.ts`), Kurucu\'daki bağlar da okunur; kimlik uyuşmazlıkları okurken eşlenir. Görseli olmayan kart boş görsel yeriyle, maddesi olmayan yapı yalnız adıyla açılır. Rakım kartta yok.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

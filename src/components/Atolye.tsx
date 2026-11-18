@@ -120,6 +120,8 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
   const [eskiHarita, setEskiHarita] = useState(false);
   const eskiHaritayaGec = useCallback(() => setEskiHarita(true), []);
   const tamEkran3B = useCallback(() => setUcBoyutDeneme(true), []);
+  // Yaşayan harita (18 Kasım): 3B kartı Kurucu'daki yapı → madde bağlarını da okur (yalnız okuma)
+  const kurucuBaglari = useMemo(() => (haritaDuzeni.duzen?.kurucu ?? haritaDuzeni.duzen?.kurucuIslenen)?.baglar ?? {}, [haritaDuzeni.duzen]);
   const tamEkranDegistir = useCallback(() => {
     const el = haritaKabi.current;
     if (!tamEkran) {
@@ -194,7 +196,7 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
       </SayfaBasi>
       {ucBoyutDeneme && (
         <Suspense fallback={<div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">3B harita yükleniyor…</div>}>
-          <UcBoyutDeneme onKapat={ucBoyutuKapat} />
+          <UcBoyutDeneme onKapat={ucBoyutuKapat} items={items} baglar={kurucuBaglari} onMaddeAc={onMaddeAc} />
         </Suspense>
       )}
       {bolumler.length > 1 && <SayfaRayi baslik={baslik} bolumler={bolumler} aktifId={sekme} onSec={id => setSekme(id as AtolyeSekmesi)} />}
@@ -224,7 +226,7 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
       */}
       {sekme === 'harita' && !eskiHarita && !ucBoyutDeneme && (
         <Suspense fallback={<div className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] flex items-center justify-center rounded-2xl bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">3B harita yükleniyor…</div>}>
-          <UcBoyutDeneme gomulu onKapat={eskiHaritayaGec} onTamEkran={tamEkran3B}
+          <UcBoyutDeneme gomulu onKapat={eskiHaritayaGec} onTamEkran={tamEkran3B} items={items} baglar={kurucuBaglari} onMaddeAc={onMaddeAc}
             className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] sm:min-h-[520px] rounded-2xl overflow-hidden border border-[#CFC5B4] dark:border-[#2C3C72]" />
         </Suspense>
       )}
