@@ -68,7 +68,18 @@
     "the-imperial-kemskoy": "binalar/the-imperial-kemskoy.glb",
     "haydarpasa-buyuk-olcek": "binalar/haydarpasa-buyuk-olcek.glb",
     "deniz-feneri": "deniz/deniz-feneri.glb",
-    "dirlik-stadi": "binalar/dirlik-stadi.glb"
+    "dirlik-stadi": "binalar/dirlik-stadi.glb",
+    "sade-meyhane": "binalar/sade-meyhane.glb",
+    "taraftar-birahanesi": "binalar/taraftar-birahanesi.glb",
+    "merkez-pazari": "binalar/merkez-pazari.glb",
+    "liman-idare": "binalar/liman-idare.glb",
+    "zeytinyagi-fabrikasi": "binalar/zeytinyagi-fabrikasi.glb",
+    "saglik-ocagi": "binalar/saglik-ocagi.glb",
+    "merkez-postanesi": "binalar/merkez-postanesi.glb",
+    "merkez-camii": "binalar/merkez-camii.glb",
+    "eski-kilise": "binalar/eski-kilise.glb",
+    "liman-balik-hali": "binalar/liman-balik-hali.glb",
+    "liman-balik-lokantasi": "binalar/liman-balik-lokantasi.glb"
   },
   "sokak": {
     "karo_m": 10,
