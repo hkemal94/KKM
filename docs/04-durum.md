@@ -30,8 +30,10 @@ olmayanlar buraya yazıldı; KKM'nin ekranında ve kayıtlarında bu PR'la bir �
   yüksekte. Cuma (20 Kasım) Kemal Firebase kuralını yayımlar ve Durum → Eksikler → Harita yedeği'nden yedeği alır;
   sonra B adımı (yol haritasında `kompakt-ada-b`).
 - **AI Studio:** uygulama `hkemal94/KKM`'ye bağlı değil (ajansın kolu 19 Kasım'da gördü: Ayarlar → GitHub "Create new
-  repository" diyor; hiçbir şeye basılmadı). KKM'nin yayını cloud.run'dan (GitHub'dan kendiliğinden). Ne yapılacağı
-  Cuma Kemal'in kararı.
+  repository" diyor; hiçbir şeye basılmadı). **Kemal 19 Kasım: AI Studio BIRAKILDI.** KKM yalnız
+  https://kemskomutamerkezi.cloud.run/ adresinden açılır (GitHub'dan kendiliğinden yayınlanır). Cuma Kemal eski AI Studio
+  yayınını (kems-komuta-merkezi.ai.studio) kapatır ve Firebase Authorized domains'ten AI Studio adreslerini siler;
+  firebaseapp.com ve web.app satırları kalır. AI Studio'dan GitHub'a gönderi ya da eşitleme yapılmaz.
 - **Mini Golf Duzada:** par 3. delikte 3, 1. delikte 2, 7. delikte 4; par ya da altı 3 yıldız, par + 1 iki, fazlası
   bir. Üç rozet kalır (tek vuruş, par altı, cezasız; adları [Kemal]). Top bırakılmadan cezasız iptal; ilk açılış normal
   mod, kolay mod ayardan; engelin arkasındaki top ve delik için şeffaf pencere ve halka (saydamlık 0,25; halka rengi
