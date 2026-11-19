@@ -1,7 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Map as HaritaSimgesi, Maximize2, X } from 'lucide-react';
+import { BookOpen, ImageOff, Map as HaritaSimgesi, Maximize2, X } from 'lucide-react';
+import type { Item } from '../../types';
+import { enYakinYapi, kartCozucu } from '../../lib/yasayanHarita';
+import { maddeGorseli } from '../../lib/maddeGorseli';
+import { GorselImg } from '../GorselImg';
 import { GOK } from './haritaStili';
 import { parcaKoku } from '../../lib/parcaKaynagi';
 import { IptalHatasi, ParcaYukleyici } from '../../lib/parcaYukle';
@@ -31,7 +35,15 @@ type Parca = ParcaSatiri & {
   yakin?: THREE.Group;
   /** Yakın sürüm istendi (iniyor ya da yüklü) */
   yakinIstendi: boolean;
+  /** Yakın sürümdeki yapı işaretleri (`extras.kkm_id`), sahnedeki x, z'si */
+  yapilar?: YapiIsareti[];
 };
+
+type YapiIsareti = { kimlik: string; x: number; z: number };
+
+/** Dokunma: bu kadar pikselden az kayan ve kısa süren basış "dokunma" sayılır (sürükleme değil) */
+const DOKUNMA_PIKSEL = 6;
+const DOKUNMA_MS = 600;
 
 type Sayac = { mb: number; yakin: number; uzak: number; toplam: number; ucgen: number; fps: number };
 
@@ -52,10 +64,30 @@ const sayi = (n: number, basamak = 0) => n.toLocaleString('tr-TR', { minimumFrac
  * kutu olarak durur; "Eski harita · Kurucu" düğmesi eski haritaya geçer,
  * "Tam ekran" ayrı bir katmanda açar. Ölçü sayaçları yalnız tam ekranda.
  */
-export const UcBoyutDeneme: React.FC<{ onKapat: () => void; gomulu?: boolean; className?: string; onTamEkran?: () => void }> = ({ onKapat, gomulu, className, onTamEkran }) => {
+type Props = {
+  onKapat: () => void; gomulu?: boolean; className?: string; onTamEkran?: () => void;
+  /**
+   * Yaşayan harita (18 Kasım, Kemal): yapıya dokununca kart. Viki maddeleri,
+   * Kurucu'daki yapı → madde bağları ve "Vikide aç". Verilmezse kart açılmaz.
+   * Yalnız okunur; kayda hiçbir şey yazılmaz.
+   */
+  items?: Item[];
+  baglar?: Record<string, string>;
+  onMaddeAc?: (id: string) => void;
+};
+
+export const UcBoyutDeneme: React.FC<Props> = ({ onKapat, gomulu, className, onTamEkran, items, baglar, onMaddeAc }) => {
   const kap = useRef<HTMLDivElement>(null);
   const [sayac, setSayac] = useState<Sayac>({ mb: 0, yakin: 0, uzak: 0, toplam: 0, ucgen: 0, fps: 0 });
   const [hata, setHata] = useState('');
+  // Yaşayan harita: dokunulan yapının kimliği (kart açık)
+  const [secili, setSecili] = useState<string | null>(null);
+  const cozucu = useMemo(() => kartCozucu(items ?? [], baglar ?? {}), [items, baglar]);
+  const kart = useMemo(() => (secili ? cozucu(secili) : null), [secili, cozucu]);
+  const kartGorseli = useMemo(() => (kart?.madde ? maddeGorseli(kart.madde, items ?? []) : undefined), [kart, items]);
+  // Sahne bir kez kurulur; dokunma araması güncel kayıtları bu ref'ten okur
+  const kartliRef = useRef<(kimlik: string) => boolean>(() => false);
+  useEffect(() => { kartliRef.current = items ? (k => cozucu(k) !== null) : () => false; }, [cozucu, items]);
 
   useEffect(() => {
     const kab = kap.current;
@@ -125,6 +157,17 @@ export const UcBoyutDeneme: React.FC<{ onKapat: () => void; gomulu?: boolean; cl
         p.yakin = g;
         sahne.add(g);
         if (p.uzak) p.uzak.visible = false;
+        // Yapı işaretleri: Blender'daki boş düğümler, `extras.kkm_id` ile
+        g.updateMatrixWorld(true);
+        const yapilar: YapiIsareti[] = [];
+        const yer = new THREE.Vector3();
+        g.traverse(o => {
+          const kimlik = (o.userData as { kkm_id?: unknown } | undefined)?.kkm_id;
+          if (typeof kimlik !== 'string' || !kimlik) return;
+          o.getWorldPosition(yer);
+          yapilar.push({ kimlik, x: yer.x, z: yer.z });
+        });
+        p.yapilar = yapilar;
       }).catch(e => {
         p.yakinIstendi = false;
         if (!(e instanceof IptalHatasi) && !kapandi) console.warn('[3B deneme] yakın parça inmedi', p.ad, e);
@@ -134,6 +177,7 @@ export const UcBoyutDeneme: React.FC<{ onKapat: () => void; gomulu?: boolean; cl
     const yakinBirak = (p: Parca) => {
       yukleyici.birak(yakinDosya(p));
       p.yakin = undefined;
+      p.yapilar = undefined;
       p.yakinIstendi = false;
       if (p.uzak) p.uzak.visible = true;
     };
@@ -167,6 +211,28 @@ export const UcBoyutDeneme: React.FC<{ onKapat: () => void; gomulu?: boolean; cl
       if (bekleme) clearTimeout(bekleme);
       bekleme = setTimeout(guncelle, BEKLEME_MS);
     });
+
+    // Yaşayan harita: dokunulan noktaya en yakın kartlı yapı. Yapı işaretleri yalnız
+    // yakın parçalarda; uzaktan bakışta dokunma kart açmaz (yakınlaşınca açar).
+    const isin = new THREE.Raycaster();
+    const ekranNoktasi = new THREE.Vector2();
+    let basis: { x: number; y: number; t: number; id: number } | null = null;
+    const basildi = (e: PointerEvent) => { basis = e.isPrimary ? { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId } : null; };
+    const birakildi = (e: PointerEvent) => {
+      const b = basis; basis = null;
+      if (!b || b.id !== e.pointerId || e.button > 0) return;
+      if (Math.hypot(e.clientX - b.x, e.clientY - b.y) > DOKUNMA_PIKSEL || performance.now() - b.t > DOKUNMA_MS) return;
+      const kutu = renderer.domElement.getBoundingClientRect();
+      ekranNoktasi.set(((e.clientX - kutu.left) / kutu.width) * 2 - 1, -((e.clientY - kutu.top) / kutu.height) * 2 + 1);
+      isin.setFromCamera(ekranNoktasi, kamera);
+      const gorunen = parcalar.flatMap(p => (p.yakin ? [p.yakin] : p.uzak?.visible ? [p.uzak] : []));
+      const vurus = isin.intersectObjects(gorunen, true)[0];
+      if (!vurus) { setSecili(null); return; }
+      const yapilar = parcalar.flatMap(p => p.yapilar ?? []);
+      setSecili(enYakinYapi({ x: vurus.point.x, z: vurus.point.z }, yapilar, k => kartliRef.current(k)));
+    };
+    renderer.domElement.addEventListener('pointerdown', basildi);
+    renderer.domElement.addEventListener('pointerup', birakildi);
 
     // Deniz bir kez iner
     yukleyici.iste('parca/deniz.glb', 0).then(g => { if (!kapandi) sahne.add(g); })
@@ -279,6 +345,8 @@ export const UcBoyutDeneme: React.FC<{ onKapat: () => void; gomulu?: boolean; cl
       if (bekleme) clearTimeout(bekleme);
       listeDurdur.abort();
       boyut.disconnect();
+      renderer.domElement.removeEventListener('pointerdown', basildi);
+      renderer.domElement.removeEventListener('pointerup', birakildi);
       renderer.setAnimationLoop(null);
       kontrol.dispose();
       yukleyici.kapat();
@@ -332,6 +400,44 @@ export const UcBoyutDeneme: React.FC<{ onKapat: () => void; gomulu?: boolean; cl
           </>
         )}
       </div>
+      {items && (kart ? (
+        <div role="dialog" aria-label={kart.ad}
+          className="absolute left-3 bottom-3 w-[min(19rem,calc(100%-1.5rem))] p-2.5 rounded-xl bg-[#FAF8F5]/95 dark:bg-[#13204A]/95 border border-[#CFC5B4] dark:border-[#2C3C72] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] text-[#0E1C4F] dark:text-[#F3EFE8]">
+          <div className="relative">
+            {kartGorseli ? (
+              <GorselImg src={kartGorseli} alt={kart.ad} className={`w-full aspect-[16/9] ${kart.madde && ['kulüp', 'marka'].includes(kart.madde.type) ? 'object-contain p-2' : 'object-cover'} rounded-lg bg-[#F3EFE8] dark:bg-[#17345A]`} />
+            ) : (
+              <div className="w-full aspect-[16/9] rounded-lg border border-dashed border-[#CFC5B4] dark:border-[#2C3C72] bg-[#F3EFE8] dark:bg-[#17345A] flex flex-col items-center justify-center gap-1 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">
+                <ImageOff className="w-4 h-4" /> Görsel yok
+              </div>
+            )}
+            <button type="button" onClick={() => setSecili(null)} aria-label="Kartı kapat" title="Kapat"
+              className="absolute right-1.5 top-1.5 w-8 h-8 flex items-center justify-center rounded-full bg-[#FAF8F5]/90 dark:bg-[#13204A]/90 border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer hover:border-[#F26B6F]">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="mt-2 text-[14px] font-semibold leading-snug">{kart.ad}</div>
+          {kart.giris && <p className="mt-0.5 text-[12px] leading-[1.45] text-[#6A5E4C] dark:text-[#A6B0C9] line-clamp-3">{kart.giris}</p>}
+          {kart.madde && onMaddeAc && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <button type="button" onClick={() => onMaddeAc(kart.madde!.id)}
+                className="inline-flex items-center gap-1.5 min-h-9 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#0E1C4F] dark:bg-[#2C3C72] text-white cursor-pointer">
+                <BookOpen className="w-3.5 h-3.5" /> Vikide aç
+              </button>
+              {kart.ikinci.map(m => (
+                <button key={m.id} type="button" onClick={() => onMaddeAc(m.id)} title={`${m.title}: vikide aç`}
+                  className="inline-flex items-center min-h-9 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer hover:border-[#F26B6F]">
+                  {m.title}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="absolute left-3 bottom-3 pointer-events-none px-2.5 py-1.5 rounded-lg bg-[#FAF8F5]/90 dark:bg-[#13204A]/90 border border-[#CFC5B4] dark:border-[#2C3C72] text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">
+          Yakınlaşıp bir yapıya dokun: kartı açılır
+        </div>
+      ))}
     </div>
   );
 };
