@@ -46,11 +46,11 @@ export const HARITA_YAPILARI: HaritaYapisi[] =
     "tur": "stadyum",
     "mahalle": "yer_stadyum",
     "kat": null,
-    "yukseklik": 7.5,
-    "taban": 147.0,
+    "yukseklik": 5.3,
+    "taban": 146.7,
     "merkez": {
-      "x": 25.906989,
-      "y": 39.628060600000005
+      "x": 25.907029,
+      "y": 39.6280568
     }
   },
   {

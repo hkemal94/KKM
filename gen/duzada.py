@@ -1430,8 +1430,8 @@ bina("bina_fener_evi", "Fener Evi", dikdortgen(_fe[0], _fe[1], 11, 8,
 
 # Dirlik Stadı — küçük bir ilçe statı (Kemal, 2 Ekim: "küçük bir belde
 # veya ilçe stadı olmalıydı"; kanon: iki tribün, en fazla ~1.000 kişi).
-# Çim saha, çevresinde beton zemin; batıda kapalı ana tribün, doğuda açık
-# tribün, köşede soyunma binası, dört ışık direği. Yeri ve yönü Kemal'in
+# Çim saha, çevresinde beton zemin; kapalı ana tribün, açık tribün, köşede
+# kulüp binası, dört ışık direği (19 Kasım yerleşimi aşağıda). Yeri ve yönü Kemal'in
 # Kurucu'da eski statı taşıdığı yer (yapı düzeni bu parçalara işlendi).
 _STAD = {"merkez": (4750.0, 3150.0), "aci": 15.0}
 _sd = _KURUCU.get("yapiDuzeni", {}).get("bina_stad")
@@ -1459,21 +1459,25 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
     json.dump(DUZLUKLER, _f, ensure_ascii=False, indent=1)
 print(f"Stat kaidesi   : {DUZLUKLER[0]['kot']:.0f} m kotunda, 132x100 m")
 
+# 19 Kasım (Kemal, kompleks kararları; ajansın 3B modeli `dirlik_stadi`, 1:1): saha 90 x 58,
+# güneybatıda kapalı ana tribün (44 m, 10 sıra; soyunma odaları ve tünel altında, dıştan
+# görünmez), kuzeydoğuda açık tribün (34 m, 6 sıra), kulüp binası açık tribün tarafındaki
+# köşede (B ucu, 7 x 12 m, tek kat), dört ışık direği, taş çevre duvarı (118 x 90 m).
+# Ölçüler modelden; sahanın ortası (0, 0). Eski ayrı soyunma binası kalktı.
 STAD_ZEMIN = [("stad_cevre", "teras", _stad_parca(0, 0, 124, 92)),
-              ("stad_saha", "saha", _stad_parca(0, 0, 100, 64))]
+              ("stad_saha", "saha", _stad_parca(0, 0, 90, 58))]
 for _zid, _ztur, _zg in STAD_ZEMIN:
     zemin.append({"id": _zid, "ad": "", "tur": _ztur, "geom": _zg})
-bina("bina_stad_tribun", "Dirlik Stadı", _stad_parca(0, -40.5, 72, 9), 7.5, "stadyum",
+bina("bina_stad_tribun", "Dirlik Stadı", _stad_parca(0, -38.4, 44.6, 8.8), 5.3, "stadyum",
      "yer_stadyum", wiki_id="viki_mekan_dirlik_stadi")
-bina("bina_stad_cati", "Dirlik Stadı · ana tribün", _stad_parca(0, -44.0, 72, 3), 9.5,
+bina("bina_stad_cati", "Dirlik Stadı · ana tribün", _stad_parca(0, -39.55, 45.2, 6.9), 9.1,
      "stadyum", "yer_stadyum")
-bina("bina_stad_acik", "Dirlik Stadı · açık tribün", _stad_parca(0, 38.5, 54, 7), 4.2,
+bina("bina_stad_acik", "Dirlik Stadı · açık tribün", _stad_parca(0, 36.7, 34.6, 5.4), 3.5,
      "stadyum", "yer_stadyum")
-# Soyunma ışık direğine biniyordu (7 Ekim çakışma denetimi); biraz içeride
-bina("bina_stad_soyunma", "Dirlik Stadı · soyunma", _stad_parca(-46, -34, 16, 8), 4.4,
+bina("bina_stad_kulup", "Dirlik Stadı · kulüp binası", _stad_parca(53.5, 27.0, 7, 12), 3.6,
      "yapı", "yer_stadyum", kat=1)
-for _i, (_u, _v) in enumerate(((-55, -41), (55, -41), (-55, 41), (55, 41)), 1):
-    bina(f"bina_stad_isik_{_i}", "Işık direği", _stad_parca(_u, _v, 1.2, 1.2), 20,
+for _i, (_u, _v) in enumerate(((-52, -37), (52, -37), (-52, 37), (52, 37)), 1):
+    bina(f"bina_stad_isik_{_i}", "Işık direği", _stad_parca(_u, _v, 1.2, 1.2), 23.6,
          "direk", "yer_stadyum")
 
 # Küçükçetmi Sürek Kulübü — çiftlik yerleşkesi
