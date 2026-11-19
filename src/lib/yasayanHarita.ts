@@ -41,7 +41,7 @@ export const ESLEME: Record<string, KartEslemesi> = {
   bina_belediye: { madde: 'viki_mekan_belediye' },
   bina_pazar: { madde: 'mekan_pazar' },
   bina_okul: { madde: 'mekan_okul', yaricap: 45 },
-  // Haritadaki adı "Dükkânlı Ev"; kartın adı vikiden gelir (Kemal Kurucu'da bağlamış)
+  // 19 Kasım: haritadaki adı da karakol (eskiden "Dükkânlı Ev"); kartın adı vikiden gelir
   bina_apt1: { madde: 'mekan_1791406291488_7jtvw' },
   kurucu_bina_mw1zb16h: { madde: 'mekan_1791406293719_6ki1i' },
   kurucu_bina_muzkrwr7: { madde: 'marka_dirlik' },

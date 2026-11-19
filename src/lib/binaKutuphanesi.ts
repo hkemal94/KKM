@@ -88,6 +88,7 @@ const BASLIKLAR: Record<string, string> = {
   'sade-meyhane': 'Sade Meyhane', 'taraftar-birahanesi': 'Taraftar Birahanesi', 'merkez-pazari': 'Merkez Pazarı',
   'liman-idare': 'Liman İdare Binası', 'merkez-camii': 'Merkez Camii', 'eski-kilise': 'Eski Kilise',
   'liman-balik-hali': 'Liman Balık Hali', 'liman-balik-lokantasi': 'Balık Lokantası',
+  'duzada-jandarma-karakolu': 'Düzada Jandarma Karakolu', 'merkez-kahvehanesi': 'Merkez Kahvehanesi',
   // künyede adı yok: adsız, yalnız türü (Kemal, 18 Kasım)
   'zeytinyagi-fabrikasi': 'Zeytinyağı fabrikası', 'saglik-ocagi': 'Sağlık ocağı',
   'merkez-postanesi': 'Postane'
@@ -179,12 +180,12 @@ export const IMPERIAL_CAPA = { z: -12, kuleArasi: 48 };
  * ya da Kurucu türü (o türün modelleri arasından seçilir). Tabloda olmayan "yapı"
  * türündeki binalar kutu kalır: Merkez Pazarı (pazar binası modeli yok), Liman İdare
  * Binası, Kemsköy Caddesi'ndeki yapılar, Zeytinyağı Fabrikası, stat soyunma odası.
- * Haritada karakol yok.
+ * Karakol (19 Kasım, Kemal): eskiden "Dükkânlı Ev" olan `bina_apt1` karakolun kendi modeliyle.
  */
 export const HARITA_YAPILARI: Record<string, string> = {
   bina_belediye: 'binalar/belediye.glb',    // Belediye Binası
   bina_okul: 'binalar/okul.glb',            // Düzada İlkokulu
-  bina_apt1: 'dukkanli',                    // Dükkânlı Ev
+  bina_apt1: 'binalar/duzada-jandarma-karakolu.glb', // Düzada Jandarma Karakolu
   bina_apt2: 'ev',                          // Müstakil Ev
   bina_liman_depo: 'depo'                   // Liman Deposu
 };

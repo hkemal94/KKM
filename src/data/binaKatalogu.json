@@ -79,7 +79,9 @@
     "merkez-camii": "binalar/merkez-camii.glb",
     "eski-kilise": "binalar/eski-kilise.glb",
     "liman-balik-hali": "binalar/liman-balik-hali.glb",
-    "liman-balik-lokantasi": "binalar/liman-balik-lokantasi.glb"
+    "liman-balik-lokantasi": "binalar/liman-balik-lokantasi.glb",
+    "duzada-jandarma-karakolu": "binalar/duzada-jandarma-karakolu.glb",
+    "merkez-kahvehanesi": "binalar/merkez-kahvehanesi.glb"
   },
   "sokak": {
     "karo_m": 10,
