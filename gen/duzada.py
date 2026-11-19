@@ -1459,26 +1459,37 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
     json.dump(DUZLUKLER, _f, ensure_ascii=False, indent=1)
 print(f"Stat kaidesi   : {DUZLUKLER[0]['kot']:.0f} m kotunda, 132x100 m")
 
-# 19 Kasım (Kemal, kompleks kararları; ajansın 3B modeli `dirlik_stadi`, 1:1): saha 90 x 58,
-# güneybatıda kapalı ana tribün (44 m, 10 sıra; soyunma odaları ve tünel altında, dıştan
-# görünmez), kuzeydoğuda açık tribün (34 m, 6 sıra), kulüp binası açık tribün tarafındaki
-# köşede (B ucu, 7 x 12 m, tek kat), dört ışık direği, taş çevre duvarı (118 x 90 m).
-# Ölçüler modelden; sahanın ortası (0, 0). Eski ayrı soyunma binası kalktı.
+# 19 Kasım (Kemal, kompleks kararları; ajansın 3B modeli `dirlik_stadi`): güneybatıda kapalı ana
+# tribün (10 sıra; soyunma odaları ve tünel altında, dıştan görünmez), kuzeydoğuda açık tribün
+# (6 sıra), kulüp binası açık tribün tarafındaki köşede (B ucu, tek kat), dört ışık direği, taş
+# çevre duvarı. Eski ayrı soyunma binası kalktı. Sahanın ortası (0, 0).
+# Saha 100 x 64 (Kemal, 19 Kasım: eski ölçü kalsın). Model 90 x 58 kurulu; haritada (3B parça da)
+# planı uzun kenarda 100/90, kısa kenarda 64/58 büyütülür, yükseklikler aynı kalır. Aşağıdaki
+# ölçüler modelin metresi; _stad_olcekli onları haritaya ölçekler.
+_STAD_OLCEK = (100.0 / 90.0, 64.0 / 58.0)
+
+
+def _stad_olcekli(u, v, uzun, en):
+    su, sv = _STAD_OLCEK
+    return _stad_parca(u * su, v * sv, uzun * su, en * sv)
+
+
 STAD_ZEMIN = [("stad_cevre", "teras", _stad_parca(0, 0, 124, 92)),
-              ("stad_saha", "saha", _stad_parca(0, 0, 90, 58))]
+              ("stad_saha", "saha", _stad_olcekli(0, 0, 90, 58))]
 for _zid, _ztur, _zg in STAD_ZEMIN:
     zemin.append({"id": _zid, "ad": "", "tur": _ztur, "geom": _zg})
-bina("bina_stad_tribun", "Dirlik Stadı", _stad_parca(0, -38.4, 44.6, 8.8), 5.3, "stadyum",
+bina("bina_stad_tribun", "Dirlik Stadı", _stad_olcekli(0, -38.4, 44.6, 8.8), 5.3, "stadyum",
      "yer_stadyum", wiki_id="viki_mekan_dirlik_stadi")
-bina("bina_stad_cati", "Dirlik Stadı · ana tribün", _stad_parca(0, -39.55, 45.2, 6.9), 9.1,
+bina("bina_stad_cati", "Dirlik Stadı · ana tribün", _stad_olcekli(0, -39.55, 45.2, 6.9), 9.1,
      "stadyum", "yer_stadyum")
-bina("bina_stad_acik", "Dirlik Stadı · açık tribün", _stad_parca(0, 36.7, 34.6, 5.4), 3.5,
+bina("bina_stad_acik", "Dirlik Stadı · açık tribün", _stad_olcekli(0, 36.7, 34.6, 5.4), 3.5,
      "stadyum", "yer_stadyum")
-bina("bina_stad_kulup", "Dirlik Stadı · kulüp binası", _stad_parca(53.5, 27.0, 7, 12), 3.6,
+bina("bina_stad_kulup", "Dirlik Stadı · kulüp binası", _stad_olcekli(53.5, 27.0, 7, 12), 3.6,
      "yapı", "yer_stadyum", kat=1)
 for _i, (_u, _v) in enumerate(((-52, -37), (52, -37), (-52, 37), (52, 37)), 1):
-    bina(f"bina_stad_isik_{_i}", "Işık direği", _stad_parca(_u, _v, 1.2, 1.2), 23.6,
-         "direk", "yer_stadyum")
+    _isik = _stad_olcekli(_u, _v, 1.2, 1.2).centroid
+    bina(f"bina_stad_isik_{_i}", "Işık direği", dikdortgen(_isik.x, _isik.y, 1.2, 1.2, _STAD["aci"]),
+         23.6, "direk", "yer_stadyum")
 
 # Küçükçetmi Sürek Kulübü — çiftlik yerleşkesi
 bina("bina_surek", "Küçükçetmi Sürek Kulübü", dikdortgen(6320, -2320, 54, 26, -8),
@@ -2622,8 +2633,13 @@ for _b in binalar:
     if _b["id"] in _yapi_duzeni:          # Kurucu'da taşınan yapı: yeni yeri
         _g = _kurucu_tasi(_g, _yapi_duzeni[_b["id"]])
     _pay = OZEL_BAHCE.get(_b["id"], 2.5)
-    _yerlestir(_g.buffer(_pay))
-    _engeller.append(_g.buffer(_pay))
+    _e = _g.buffer(_pay)
+    if _b["id"].startswith("bina_stad"):
+        # Statın yapıları kendi çevresinin (stad_cevre) içinde kalır (19 Kasım: saha 100 x 64 ile kulüp
+        # binasının payı çevreden 1,8 m taşıp çevredeki evleri kaydırıyordu)
+        _e = _e.intersection(STAD_ZEMIN[0][2].buffer(2.0))
+    _yerlestir(_e)
+    _engeller.append(_e)
     if _b["id"] in OZEL_BAHCE:
         _ozel_bahceler.append((_b["id"], _g, len(_engeller) - 1))
 for _z in STAD_ZEMIN:
