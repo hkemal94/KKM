@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, reauthenticateWithPopup, signInWithPopup, signOut } from "firebase/auth";
 import { getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot, query } from "firebase/firestore";
 import firebaseConfig from "../../firebase-applet-config.json";
 import { Item, UserSettings } from "../types";
@@ -101,6 +101,32 @@ export const driveIzniniYenile = async () => {
   return result.user;
 };
 
+/**
+ * Harita yedeği için yalnız `drive.file` izni (19 Kasım). Kemal "Yedeği al"a
+ * basınca Google penceresi açılır (aynı hesap, yeniden giriş). Belirteç
+ * yalnız bellekte durur; kayda ve koda yazılmaz. `yenile` verilirse eski
+ * belirteç atılır, pencere yeniden açılır (süresi dolmuşsa).
+ */
+let driveBelirteci: { deger: string; bitis: number } | null = null;
+export const driveDosyaIzni = async (yenile = false): Promise<string> => {
+  if (!yenile && driveBelirteci && driveBelirteci.bitis > Date.now()) return driveBelirteci.deger;
+  driveBelirteci = null;
+  const kullanici = auth.currentUser;
+  if (!kullanici) throw Object.assign(new Error('Google ile bağlı değil'), { code: 'auth/no-current-user' });
+  const saglayici = new GoogleAuthProvider();
+  saglayici.addScope('https://www.googleapis.com/auth/drive.file');
+  if (kullanici.email) saglayici.setCustomParameters({ login_hint: kullanici.email });
+  const sonuc = await reauthenticateWithPopup(kullanici, saglayici);
+  const belirtec = GoogleAuthProvider.credentialFromResult(sonuc)?.accessToken;
+  if (!belirtec) throw Object.assign(new Error('Google belirteç vermedi'), { code: 'auth/no-token' });
+  // Google belirteci bir saat geçerli; biraz erken bırakılır
+  driveBelirteci = { deger: belirtec, bitis: Date.now() + 50 * 60 * 1000 };
+  return belirtec;
+};
+/** Bellekteki Drive izni var mı (sayfa açılınca pencere açmadan listelemek için) */
+export const driveIzniVarMi = () => !!driveBelirteci && driveBelirteci.bitis > Date.now();
+export const driveIzniniUnut = () => { driveBelirteci = null; };
+
 /** Drive / Google hatası izin eksikliğinden mi */
 export const izinEksikMi = (e: unknown) => /insufficient.*scope|insufficientPermissions|PERMISSION_DENIED|\b403\b/i.test(e instanceof Error ? e.message : String(e));
 
@@ -108,6 +134,7 @@ export const logoutUser = async () => {
   try {
     await signOut(auth);
     cachedAccessToken = null;
+    driveBelirteci = null;
   } catch (error) {
     console.error("Çıkış yapılırken hata oluştu:", error);
     throw error;
