@@ -1,9 +1,47 @@
 # Durum
 
-**Son güncelleme: 19 Kasım 2026 (bugünkü kararlar: pullar 2027, kitap bölümü denetimi, kompakt ada ve Dirlik Stadı sırası)**
+**Son güncelleme: 19 Kasım 2026 akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 19 Kasım akşam: Kemal'in son kararları
+
+Kemal: "Bütün son güncellemeleri KKM'ye işle." Ajansın karar türü olan kararlar (Mini Golf Duzada kartı ve tasarım
+belgesi adımları, DK Lite) Onay bekleyenler'e "Uygula" satırı olarak gelir (Kems-Ajans `kkm/kararlar.json`). Karar türü
+olmayanlar buraya yazıldı; KKM'nin ekranında ve kayıtlarında bu PR'la bir şey değişmez.
+
+- **Dirlik Stadı ölçüsü:** saha 100 × 64 m **yalnız haritada** (KKM #242, duzada-harita #5); ajansın 3B modeli
+  90 × 58 kalır. Viki maddesi bugün "Uygula" ile güncellendi; ölçü farkı vikiye yazılmaz.
+- **Karakol ve kahvehane:** ikisine özel 3B model (Kems-Ajans #186, KKM #244; ikisi de birleşti).
+  Karakolda bayrak dalgalı, kahvehanenin önünde çınar. Haritada karakol "Dükkânlı Ev"in yerine geçer. Kahvehanenin
+  haritadaki yeri: Kemal B'yi seçti (Merkez Meydanı'nın kuzeydoğu köşesi; ajansın adayları
+  `oneriler/kahvehane-harita-yeri.md`); haritaya KKM #247 ile girdi (önü meydana). Yeni 3B haritada karakol ve kahvehane duzada-harita #6 ile.
+- **Yaşayan harita:** dört yapının (Fener Evi dahil) yeri kesin; uzaktan iğne yok. Haritaya konmaları ajansta sırada.
+- **İskambil ön yüzü:** tarz gerçek illüstrasyon. Kodla geometrik çizim beğenilmedi, bir daha yapılmaz.
+- **DK Lite:** Sürekli Mod bölümleri aylık "bölüm kazan" görevine sayılır; son bölüme gelen oyuncu Sürekli Mod oynar
+  (DK-Lite belgesi 0.50). Ayın görevinin kodu henüz yok. KKM'deki oyun kartı ve İlerleme adımı ajansın "Uygula"
+  satırıyla güncellenir.
+- **Pullar:** her çeyrek kendi tarzında; geçmiş çeyrekler (2026'nın 1.–3. çeyreği) deneysel; 8 pul onaylı (kart
+  oyunu: 2026 Ekim, Kasım, Aralık ve 4. çeyrek büyük pulu; 2027 Ocak, Şubat, Mart ve 1. çeyrek büyük pulu; ajansın
+  `kkm/pullar.json`'u).
+- **Canva:** 16 eski tasarım (iskambil arka v1–v4: 8, oyun logosu v1: 8) Kemal bakana kadar kalır; silinmez.
+- **"Kems İş Akışı":** üç parçası (Google Sheet, tuval sayfası, KKM'deki İş akışı sekmesi) silinmez.
+- **Kompakt ada:** ada en ve boyda %30 küçülür (0,70); tepeler aynı yükseklikte; Merkez ve Çiftlik yerinde; stat
+  yüksekte. Cuma (20 Kasım) Kemal Firebase kuralını yayımlar ve Durum → Eksikler → Harita yedeği'nden yedeği alır;
+  sonra B adımı (yol haritasında `kompakt-ada-b`).
+- **AI Studio:** uygulama `hkemal94/KKM`'ye bağlı değil (ajansın kolu 19 Kasım'da gördü: Ayarlar → GitHub "Create new
+  repository" diyor; hiçbir şeye basılmadı). **Kemal 19 Kasım: AI Studio BIRAKILDI.** KKM yalnız
+  https://kemskomutamerkezi.cloud.run/ adresinden açılır (GitHub'dan kendiliğinden yayınlanır). Cuma Kemal eski AI Studio
+  yayınını (kems-komuta-merkezi.ai.studio) kapatır ve Firebase Authorized domains'ten AI Studio adreslerini siler;
+  firebaseapp.com ve web.app satırları kalır. AI Studio'dan GitHub'a gönderi ya da eşitleme yapılmaz.
+- **Mini Golf Duzada:** par 3. delikte 3, 1. delikte 2, 7. delikte 4; par ya da altı 3 yıldız, par + 1 iki, fazlası
+  bir. Üç rozet kalır (tek vuruş, par altı, cezasız; adları [Kemal]). Top bırakılmadan cezasız iptal; ilk açılış normal
+  mod, kolay mod ayardan; engelin arkasındaki top ve delik için şeffaf pencere ve halka (saydamlık 0,25; halka rengi
+  ayardan: krem, lacivert, kiremit); kamera daha uzağa açılır, başlangıç aynı; dokulu gerçekçi görünüş; esinti ve
+  kuşlar, sahada insan yok; kutlamada bayrak kalkar, ses ve titreşim sonra; 10. delik kulüp binasının sundurmasının
+  altında; marka renkleri kural. İnsansız saha, cezasız iptal, normal mod, delik penceresi ve halka rengi **karar;
+  uygulamada** minigolf deposuna öneri PR'ı ile geliyor. Kart ve adımlar ajansın "Uygula" satırlarıyla.
 
 ## 19 Kasım: bugünkü kararlar KKM'de
 
@@ -22,7 +60,7 @@ burası "şu an neredeyiz"i söyler. Kısa tutulur.
   Zaman çizgisi'nin dönemleri (`kkm_ayar` → `donemler`), onlar yalnız Kemal "Ekle"ye basınca yazılır; ajansın
   bunun için bir karar türü yok, bu PR'da da eklenmedi.
 - **Kompakt ada:** A adımı birleşti (#236). B adımı (yeni ada üreteci) Cuma'yı bekliyor: Kemal kuralı yayımlar,
-  yedeği alır. Yol haritasında `kompakt-ada-b`.
+  yedeği alır. Yol haritasında `kompakt-ada-b`. Akşamki kararlar yukarıda.
 - **Vikide 3B görünüm:** modeli olan binanın maddesinde künyenin görsel alanında "Görsel · 3B" seçimi (`components/wiki/Madde3B.tsx`, bina kütüphanesinin `ModelOnizleme`'si). Eşleme kodda sabit tablo, maddenin kimliğiyle (`lib/maddeModelleri.ts`); kayda yazılmaz. Merkez Camii, Sağlık Ocağı ve Postane de kendi modelleriyle bağlandı (19 Kasım, Kemal); The Imperial vikide hafif kopyasıyla iner (`binalar/the-imperial-kemskoy-viki.glb`, 242 KB; asıl 834 KB'lık model harita, Kurucu ve galeride aynen). Karakol ve kahvehane kendi modelleriyle bağlandı (19 Kasım, Kemal; `duzada-jandarma-karakolu.glb`, `merkez-kahvehanesi.glb`). Haritada eski "Dükkânlı Ev" (`bina_apt1`) artık Düzada Jandarma Karakolu: adı, madde bağı ve etiketi üreteçten, modeli `HARITA_YAPILARI`'ndan; Kurucu'da "kamu" diye işaretli olsa da kendi modeli kalır. Merkez Kahvehanesi haritada (19 Kasım, Kemal: ajansın adaylarından B): meydanın kuzeydoğu üçgeninde, kavşağın köşesinde `bina_kahvehane`; üreteçte en son konur, öteki yapı ve arsalar yerinden oynamaz. Önü meydana bakar: üreteç yapıya `bak` noktası (meydanın ortası) yazar, 3B model önünü oraya çevirir (`modelYerlesimi.ts`).
 - **Dirlik Stadı bölümü** (Imperial gibi ayrı bölüm) planlandı, yapılmadı; yol haritasında `dirlik-stadi-bolumu`.
   Viki maddesine yalnız Kemal'in kararları ajansın "Uygula" satırıyla gider.

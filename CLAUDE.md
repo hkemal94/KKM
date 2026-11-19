@@ -29,7 +29,8 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   · MapLibre GL 6 · @google/genai · lucide-react
 - `npm run dev` → `tsx server.ts` (Express; `/api/ai` Gemini'ye buradan gider)
 - `npm run lint` → `tsc --noEmit` · `npm run build` → vite + server paketi
-- **GitHub deposu tek doğru kaynak.** AI Studio yalnızca önizleme penceresi.
+- **GitHub deposu tek doğru kaynak.** KKM https://kemskomutamerkezi.cloud.run/ adresinden açılır (GitHub'dan
+  kendiliğinden yayınlanır). AI Studio bırakıldı (Kemal, 19 Kasım); oradan GitHub'a gönderi ya da eşitleme yapılmaz.
 - Harita verisi (`src/data/duzadaGeo.ts`) üretilir, elle düzenlenmez:
   `python gen/duzada.py` (shapely, numpy, scipy, matplotlib gerekir). Ev ve
   sokak dokusu orada (`_ege_dokusu`, Merkez için `_merkez_dokusu`, evler ve arsaları, Çiftlik arazileri).
