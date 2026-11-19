@@ -3,6 +3,8 @@ import { Check, ExternalLink } from 'lucide-react';
 import type { Item } from '../../types';
 import { gecerliIslemler, kararlariOku, kararlariUygula, kitapBolumuOnizleme, kurucuBinaOnizleme, kurucuTaslagi, maddeTuru, oyunKarariOnizleme, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
+import { donemleriOku } from '../../lib/zamanCizgisi';
+import { donemOnizleme } from '../../lib/donemKarari';
 import { useHaritaDuzeni } from '../../lib/haritaDuzeni';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
@@ -24,7 +26,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', bagSil: 'Bağ sil', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', yeniOyun: 'Yeni oyun', kitapBolumu: 'Kitap bölümü', oyunKarti: 'Oyun kartı', gddBolumu: 'Tasarım belgesi', kurucuBina: 'Harita' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', bagSil: 'Bağ sil', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', yeniOyun: 'Yeni oyun', kitapBolumu: 'Kitap bölümü', oyunKarti: 'Oyun kartı', gddBolumu: 'Tasarım belgesi', kurucuBina: 'Harita', donem: 'Dönem' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
@@ -53,7 +55,8 @@ export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteI
   const kitapSayisi = islemler.filter(i => i.tur === 'kitapBolumu').length;
   const oyunSayisi = islemler.filter(i => i.tur === 'oyunKarti' || i.tur === 'gddBolumu').length;
   const kurucuSayisi = islemler.filter(i => i.tur === 'kurucuBina').length;
-  const yazSayisi = islemler.length - silSayisi - kitapSayisi - oyunSayisi - kurucuSayisi;
+  const donemSayisi = islemler.filter(i => i.tur === 'donem').length;
+  const yazSayisi = islemler.length - silSayisi - kitapSayisi - oyunSayisi - kurucuSayisi - donemSayisi;
 
   const uygula = async () => {
     setCalisiyor(0);
@@ -64,13 +67,13 @@ export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteI
     } finally { setCalisiyor(null); }
   };
 
-  return { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, kurucu, calisiyor, sonuc, uygula };
+  return { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, donemSayisi, kurucu, calisiyor, sonuc, uygula };
 }
 
 export const AjansKararlariKarti: React.FC<Props> = (props) => {
   const { anahtar } = props;
   const [acik, setAcik] = useState(false);
-  const { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, kurucu, calisiyor, sonuc, uygula } = useAjansKararlari(props);
+  const { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, donemSayisi, kurucu, calisiyor, sonuc, uygula } = useAjansKararlari(props);
 
   if (!anahtar) return null;
 
@@ -102,7 +105,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
         islemler.length ? (
           <>
             <p className={`text-[14px] ${YAZI}`}>
-              {[silSayisi ? `${silSayisi} öneri tepsiden silinecek` : '', yazSayisi ? `${yazSayisi} cevap vikiye işlenecek` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a yazılacak` : '', oyunSayisi ? `${oyunSayisi} yazı Oyunlar'a işlenecek` : '', kurucuSayisi ? `${kurucuSayisi} bina Kurucu'da değişecek` : ''].filter(Boolean).join(', ')}.
+              {[silSayisi ? `${silSayisi} öneri tepsiden silinecek` : '', yazSayisi ? `${yazSayisi} cevap vikiye işlenecek` : '', kitapSayisi ? `${kitapSayisi} bölüm Kitap'a yazılacak` : '', oyunSayisi ? `${oyunSayisi} yazı Oyunlar'a işlenecek` : '', kurucuSayisi ? `${kurucuSayisi} bina Kurucu'da değişecek` : '', donemSayisi ? `${donemSayisi} dönem zaman çizgisine işlenecek` : ''].filter(Boolean).join(', ')}.
             </p>
             <button type="button" className={DUGME_BOS} onClick={() => setAcik(a => !a)}>{acik ? 'Listeyi gizle' : 'Listeyi göster'}</button>
             {acik && (
@@ -122,6 +125,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
                     {i.tur === 'kitapBolumu' && <> → <span className="font-semibold">{kitapBolumuOnizleme(props.items, i)}</span></>}
                     {(i.tur === 'oyunKarti' || i.tur === 'gddBolumu') && <> → <span className="font-semibold">{oyunKarariOnizleme(props.items, i)}</span></>}
                     {i.tur === 'kurucuBina' && <> → <span className="font-semibold">{kurucuBinaOnizleme(props.items, kurucu, i)}</span></>}
+                    {i.tur === 'donem' && <> → <span className="font-semibold">{donemOnizleme(donemleriOku(props.items), i)}</span></>}
                     <span className={`block text-[12px] ${IKINCIL}`}>{i.neden}</span>
                   </li>
                 ))}
