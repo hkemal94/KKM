@@ -504,9 +504,14 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
       continue;
     }
 
-    // Önü en yakın yola baksın (40 m içinde yol varsa)
+    // Önü en yakın yola baksın (40 m içinde yol varsa). Üreteç yapıya `bak` noktası
+    // verdiyse önü oraya döner (Merkez Kahvehanesi meydana bakar; 19 Kasım, Kemal)
     let yolYonu: Nokta | undefined;
-    if (katman === 'bina') {
+    const bak = katman === 'bina' && Array.isArray(p.bak) ? d.metre(p.bak as Nokta) : undefined;
+    const bakUz = bak ? Math.hypot(bak[0] - kutu.c[0], bak[1] - kutu.c[1]) : 0;
+    if (bak && bakUz > 0.5) {
+      yolYonu = [(bak[0] - kutu.c[0]) / bakUz, (bak[1] - kutu.c[1]) / bakUz];
+    } else if (katman === 'bina') {
       const y = yol(d.derece(kutu.c));
       if (y && y.u > 0.5 && y.u < 40) { const q = d.metre(y.nokta); const l = Math.hypot(q[0] - kutu.c[0], q[1] - kutu.c[1]); yolYonu = [(q[0] - kutu.c[0]) / l, (q[1] - kutu.c[1]) / l]; }
     }
