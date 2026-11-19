@@ -19,9 +19,10 @@ export const IMPERIAL_VIKI_MODELI = 'binalar/the-imperial-kemskoy-viki.glb';
  * kimlikle bulur). Yalnız modeli gerçekten o yapı için olan binalar girer;
  * her satırın dayanağı yanında.
  *
- * Bilerek girmeyenler (modeli var, maddesi kodda güvenle bulunamadı; Kemal'e soru):
- *   - Karakol ve kahvehane: modeller türün ortak modeli (belirli bir bina
- *     için değil); ayrıca karakol maddesi haritada "Dükkânlı Ev" yapısına bağlı.
+ * Karakol ve kahvehane (19 Kasım, Kemal): türün ortak modeli (`karakol.glb`,
+ * `kahvehane-meyhane.glb`) belirli bir bina için olmadığından bağlanmamıştı;
+ * ikisine de kendi modeli yapıldı ve bağlandı. Karakol haritada da bu modelle
+ * (`bina_apt1`); kahvehane haritada yok, yalnız vikide açılır.
  */
 export const MADDE_MODELLERI: Record<string, string> = {
   // Otel: yaşayan haritada `bina_imperial`; katalogda özel model
@@ -47,7 +48,10 @@ export const MADDE_MODELLERI: Record<string, string> = {
   // 19 Kasım, Kemal: katalogdaki aynı adlı modeller vikideki maddelerine bağlansın
   mekan_1791406290403_o0m2j: 'binalar/merkez-camii.glb', // Düzada Merkez Camii
   mekan_1791406292051_49pt1: 'binalar/saglik-ocagi.glb', // Düzada Sağlık Ocağı
-  mekan_1791406291758_f8hzx: 'binalar/merkez-postanesi.glb' // Merkez Postanesi
+  mekan_1791406291758_f8hzx: 'binalar/merkez-postanesi.glb', // Merkez Postanesi
+  // 19 Kasım, Kemal: iki maddeye özel model (ajans). Karakol yaşayan haritada `bina_apt1`
+  mekan_1791406291488_7jtvw: 'binalar/duzada-jandarma-karakolu.glb', // Düzada Jandarma Karakolu
+  mekan_1791406291022_hotli: 'binalar/merkez-kahvehanesi.glb' // Merkez Kahvehanesi
 };
 
 const BILINEN = new Set([IMPERIAL_VIKI_MODELI, ...BINA_MODELLERI.flatMap(m => [m.dosya, ...(m.renkler?.map(r => r.dosya) ?? [])])]);
