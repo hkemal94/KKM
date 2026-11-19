@@ -15,6 +15,8 @@ import { WikiHarita, haritaKarsiligiVar } from './WikiHarita';
 import { KunyeDegeri } from './KunyeDegeri';
 import { BAG_GRUPLARI, adiCoz, bagParcalari, kunyeBaglari, semaAlanlari, takmaAdlar, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
 import { maddeGorselleri } from '../../lib/maddeGorseli';
+import { maddeModeli } from '../../lib/maddeModelleri';
+import { Madde3B } from './Madde3B';
 import { useGorselSurumu } from '../../lib/gorselOnbellek';
 import { bosAlanlar, taslakIstegi } from '../../lib/taslakIstegi';
 import { anahtariOku } from '../../lib/oyunAyarlari';
@@ -221,6 +223,32 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
   const [secilenGorsel, setSecilenGorsel] = useState(0);
   useEffect(() => { setSecilenGorsel(0); }, [item.id]);
   const gorsel = gorseller[Math.min(secilenGorsel, gorseller.length - 1)] || gorseller[0];
+  /** 3B modeli olan bina (`lib/maddeModelleri.ts`, 19 Kasım) */
+  const model = maddeModeli(item.id);
+  const gorselAlani = gorsel ? (
+    <>
+      <img
+        src={gorsel}
+        alt={item.title}
+        className="block mx-auto w-full max-h-64 object-contain"
+      />
+      {gorseller.length > 1 && (
+        <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+          {gorseller.map((g, n) => (
+            <button
+              key={`${n}-${g.slice(0, 40)}`}
+              type="button"
+              onClick={() => setSecilenGorsel(n)}
+              aria-label={`${item.title}, ${n + 1}. görsel`}
+              className={`w-12 h-12 rounded-md overflow-hidden border cursor-pointer ${g === gorsel ? 'border-[#0E1C4F] dark:border-[#F26B6F]' : 'border-bej/60 opacity-70 hover:opacity-100'}`}
+            >
+              <img src={g} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  ) : null;
 
   /** Bu mekâna bağlı odalar — ayrı ve katlanmış gösterilir */
   const rooms = useMemo(
@@ -678,7 +706,7 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
         </div>
 
         {/* --- Künye + Haritada --- */}
-        {(kunyeSatirlari.length > 0 || haritada || gorsel) && (
+        {(kunyeSatirlari.length > 0 || haritada || gorsel || model) && (
           <aside
             className={
               govdeVar
@@ -686,33 +714,17 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
                 : 'order-2 mt-2'
             }
           >
-            {(kunyeSatirlari.length > 0 || gorsel) && (
+            {(kunyeSatirlari.length > 0 || gorsel || model) && (
             <div className="border border-bej/50 dark:border-lacivert-600/50 rounded-lg overflow-hidden bg-krem-acik/70 dark:bg-lacivert-800/40 archive-shadow">
               <h2 className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-gri dark:text-bej/85 border-b border-bej/40 dark:border-lacivert-600/40 bg-bej/12 dark:bg-lacivert-600/25">
                 Künye
               </h2>
-              {gorsel && (
+              {model ? (
+                <Madde3B dosya={model} baslik={item.title} maddeId={item.id}
+                  gorselAlani={gorsel ? gorselAlani : undefined} />
+              ) : gorsel && (
                 <div className="border-b border-bej/40 dark:border-lacivert-600/40 bg-[#F3EFE8] p-3">
-                  <img
-                    src={gorsel}
-                    alt={item.title}
-                    className="block mx-auto w-full max-h-64 object-contain"
-                  />
-                  {gorseller.length > 1 && (
-                    <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-                      {gorseller.map((g, n) => (
-                        <button
-                          key={`${n}-${g.slice(0, 40)}`}
-                          type="button"
-                          onClick={() => setSecilenGorsel(n)}
-                          aria-label={`${item.title}, ${n + 1}. görsel`}
-                          className={`w-12 h-12 rounded-md overflow-hidden border cursor-pointer ${g === gorsel ? 'border-[#0E1C4F] dark:border-[#F26B6F]' : 'border-bej/60 opacity-70 hover:opacity-100'}`}
-                        >
-                          <img src={g} alt="" className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {gorselAlani}
                 </div>
               )}
               <dl
