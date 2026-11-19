@@ -1,4 +1,13 @@
-import { BINA_MODELLERI, DIRLIK_MODELI, IMPERIAL_MODELI } from './binaKutuphanesi';
+import { BINA_MODELLERI, DIRLIK_MODELI } from './binaKutuphanesi';
+
+/**
+ * The Imperial'in vikiye özel hafif kopyası (19 Kasım, Kemal). Asıl model
+ * (`IMPERIAL_MODELI`) harita, Kurucu ve oyun galerisinde aynen kalır; bu kopya
+ * yalnız viki maddesinin 3B görünümünde iner. Asıldan gltf-transform ile
+ * üretildi (yüzey yönleri atıldı, köşeler birleştirildi, sadeleştirildi,
+ * meshopt ile sıkıştırıldı); yüzey yönü olmayınca yükleyici düz gölgeleme yapar.
+ */
+export const IMPERIAL_VIKI_MODELI = 'binalar/the-imperial-kemskoy-viki.glb';
 
 /**
  * Viki maddesi → 3B model (19 Kasım, Kemal: modeli olan her bina vikide
@@ -11,15 +20,12 @@ import { BINA_MODELLERI, DIRLIK_MODELI, IMPERIAL_MODELI } from './binaKutuphanes
  * her satırın dayanağı yanında.
  *
  * Bilerek girmeyenler (modeli var, maddesi kodda güvenle bulunamadı; Kemal'e soru):
- *   - Merkez Camii, Sağlık ocağı, Postane (`merkez-camii`, `saglik-ocagi`,
- *     `merkez-postanesi`): vikide benzer başlıklı maddeler var ama KKM'nin
- *     kodunda bu maddelerle hiçbir bağ yok; ikisi künyede adsız (18 Kasım).
  *   - Karakol ve kahvehane: modeller türün ortak modeli (belirli bir bina
  *     için değil); ayrıca karakol maddesi haritada "Dükkânlı Ev" yapısına bağlı.
  */
 export const MADDE_MODELLERI: Record<string, string> = {
   // Otel: yaşayan haritada `bina_imperial`; katalogda özel model
-  kemskoy_hotel: IMPERIAL_MODELI,
+  kemskoy_hotel: IMPERIAL_VIKI_MODELI,
   // Dirlik bölümünün "Vikide aç"ı (`lib/dirlikStadi.ts` → DIRLIK_MADDESI)
   viki_mekan_dirlik_stadi: DIRLIK_MODELI,
   // Haritadaki `bina_belediye`, `bina_okul` bu modellerle çiziliyor (HARITA_YAPILARI)
@@ -37,10 +43,14 @@ export const MADDE_MODELLERI: Record<string, string> = {
   mekan_1791406292605_gha8n: 'binalar/eski-kilise.glb',
   // Taraftar Birahanesi: yaşayan haritada Kurucu yapısı; vikideki görseli bu modelin
   // görüntüsü (5 Kasım, Kemal seçti)
-  mekan_1791406293719_6ki1i: 'binalar/taraftar-birahanesi.glb'
+  mekan_1791406293719_6ki1i: 'binalar/taraftar-birahanesi.glb',
+  // 19 Kasım, Kemal: katalogdaki aynı adlı modeller vikideki maddelerine bağlansın
+  mekan_1791406290403_o0m2j: 'binalar/merkez-camii.glb', // Düzada Merkez Camii
+  mekan_1791406292051_49pt1: 'binalar/saglik-ocagi.glb', // Düzada Sağlık Ocağı
+  mekan_1791406291758_f8hzx: 'binalar/merkez-postanesi.glb' // Merkez Postanesi
 };
 
-const BILINEN = new Set(BINA_MODELLERI.flatMap(m => [m.dosya, ...(m.renkler?.map(r => r.dosya) ?? [])]));
+const BILINEN = new Set([IMPERIAL_VIKI_MODELI, ...BINA_MODELLERI.flatMap(m => [m.dosya, ...(m.renkler?.map(r => r.dosya) ?? [])])]);
 
 /** Maddenin 3B modeli (`public/modeller/` altındaki yol); yoksa null */
 export function maddeModeli(id: string): string | null {
