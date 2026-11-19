@@ -13,9 +13,10 @@ olmayanlar buraya yazıldı; KKM'nin ekranında ve kayıtlarında bu PR'la bir �
 
 - **Dirlik Stadı ölçüsü:** saha 100 × 64 m **yalnız haritada** (KKM #242, duzada-harita #5); ajansın 3B modeli
   90 × 58 kalır. Viki maddesi bugün "Uygula" ile güncellendi; ölçü farkı vikiye yazılmaz.
-- **Karakol ve kahvehane:** ikisine özel 3B model (Kems-Ajans #186, KKM #244; ikisi de **açık**, Kemal birleştirecek).
+- **Karakol ve kahvehane:** ikisine özel 3B model (Kems-Ajans #186, KKM #244; ikisi de birleşti).
   Karakolda bayrak dalgalı, kahvehanenin önünde çınar. Haritada karakol "Dükkânlı Ev"in yerine geçer. Kahvehanenin
-  haritadaki yerini Kemal seçecek (ajansın adayları A, B, C; `oneriler/kahvehane-harita-yeri.md`).
+  haritadaki yeri: Kemal B'yi seçti (Merkez Meydanı'nın kuzeydoğu köşesi; ajansın adayları
+  `oneriler/kahvehane-harita-yeri.md`); haritaya ayrı PR'la gelir. Yeni 3B haritada da karakol yeni modele geçer (ayrı PR).
 - **Yaşayan harita:** dört yapının (Fener Evi dahil) yeri kesin; uzaktan iğne yok. Haritaya konmaları ajansta sırada.
 - **İskambil ön yüzü:** tarz gerçek illüstrasyon. Kodla geometrik çizim beğenilmedi, bir daha yapılmaz.
 - **DK Lite:** Sürekli Mod bölümleri aylık "bölüm kazan" görevine sayılır; son bölüme gelen oyuncu Sürekli Mod oynar
@@ -60,7 +61,7 @@ olmayanlar buraya yazıldı; KKM'nin ekranında ve kayıtlarında bu PR'la bir �
   bunun için bir karar türü yok, bu PR'da da eklenmedi.
 - **Kompakt ada:** A adımı birleşti (#236). B adımı (yeni ada üreteci) Cuma'yı bekliyor: Kemal kuralı yayımlar,
   yedeği alır. Yol haritasında `kompakt-ada-b`. Akşamki kararlar yukarıda.
-- **Vikide 3B görünüm:** modeli olan binanın maddesinde künyenin görsel alanında "Görsel · 3B" seçimi (`components/wiki/Madde3B.tsx`, bina kütüphanesinin `ModelOnizleme`'si). Eşleme kodda sabit tablo, maddenin kimliğiyle (`lib/maddeModelleri.ts`); kayda yazılmaz. Merkez Camii, Sağlık Ocağı ve Postane de kendi modelleriyle bağlandı (19 Kasım, Kemal); The Imperial vikide hafif kopyasıyla iner (`binalar/the-imperial-kemskoy-viki.glb`, 242 KB; asıl 834 KB'lık model harita, Kurucu ve galeride aynen). Karakol ve Kahvehane özel modelleriyle KKM #244'te (açık; yukarıda).
+- **Vikide 3B görünüm:** modeli olan binanın maddesinde künyenin görsel alanında "Görsel · 3B" seçimi (`components/wiki/Madde3B.tsx`, bina kütüphanesinin `ModelOnizleme`'si). Eşleme kodda sabit tablo, maddenin kimliğiyle (`lib/maddeModelleri.ts`); kayda yazılmaz. Merkez Camii, Sağlık Ocağı ve Postane de kendi modelleriyle bağlandı (19 Kasım, Kemal); The Imperial vikide hafif kopyasıyla iner (`binalar/the-imperial-kemskoy-viki.glb`, 242 KB; asıl 834 KB'lık model harita, Kurucu ve galeride aynen). Karakol ve kahvehane kendi modelleriyle bağlandı (19 Kasım, Kemal; `duzada-jandarma-karakolu.glb`, `merkez-kahvehanesi.glb`). Haritada eski "Dükkânlı Ev" (`bina_apt1`) artık Düzada Jandarma Karakolu: adı, madde bağı ve etiketi üreteçten, modeli `HARITA_YAPILARI`'ndan; Kurucu'da "kamu" diye işaretli olsa da kendi modeli kalır. Kahvehane haritada henüz yok; Kemal 19 Kasım akşam B'yi seçti (Merkez Meydanı'nın kuzeydoğu köşesi), ayrı PR'la geliyor.
 - **Dirlik Stadı bölümü** (Imperial gibi ayrı bölüm) planlandı, yapılmadı; yol haritasında `dirlik-stadi-bolumu`.
   Viki maddesine yalnız Kemal'in kararları ajansın "Uygula" satırıyla gider.
 

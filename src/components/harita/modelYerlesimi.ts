@@ -469,7 +469,10 @@ export function modelYerleri(geo: FeatureCollection): ModelYeri[] {
 
     // Kurucu türü; üreteçten gelen evler `tur: 'ev'` taşır
     // Üreteçten gelen yapılar: önce ad/kimlik tablosu (Belediye → belediye…), sonra tür (ev, depo)
-    const yapi = katman === 'bina' && !kt ? HARITA_YAPILARI[id] : undefined;
+    // Yapının kendi modeli (dosya) Kurucu'da "kamu" diye işaretlense de geçerli kalır: karakol
+    // (`bina_apt1`) Kemal'in düzeninde "kamu"; tür seçimi onu belediye ya da okul modeline çevirmesin
+    const tablo = katman === 'bina' ? HARITA_YAPILARI[id] : undefined;
+    const yapi = tablo && (!kt || (kt === 'kamu' && tablo.includes('/'))) ? tablo : undefined;
     const tur = kt || (yapi && !yapi.includes('/') ? yapi : '')
       || (katman === 'bina' && !yapi ? HARITA_TURLERI[String(p.tur ?? '')] ?? '' : '')
       || (id === MERKEZ_MEYDANI ? 'meydan' : '');
