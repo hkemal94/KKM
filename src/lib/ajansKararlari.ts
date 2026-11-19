@@ -67,6 +67,9 @@ import { sonrakiKurucuSayaci, type HaritaDuzeni, type KurucuBelge } from '../com
  *     bölüm varsa metni ve sırası güncellenir, yoksa yeni bölüm (`kitap_bolum`,
  *     `metadata.bookId` + `chapterIndex`) eklenir. Bölümün adı Kitap ekranı
  *     gibi "Bölüm 3: Ad" diye yazılır; karşılaştırmada "Bölüm 3:" kısmı sayılmaz.
+ *     19 Kasım: isteğe bağlı `eski` (bölümün beklenen yazısı). Verilirse ve bölümün
+ *     yazısı ne `eski` ne de yeni `metin` ise Kemal bölümü bu arada değiştirmiştir:
+ *     üzerine yazılmaz, listede "çakışma" diye görünür, Uygula atlar.
  *   - 16 Kasım (Kemal: Oyunlar'daki kartlar ve tasarım belgesi adımları boş, ajans
  *     doldurmak istiyor): `oyunKarti` (oyunun kartındaki `ozet`, `aciklama` ya da
  *     `depo` alanı; `oyun` oyunun adı ya da kimliği). Adı yazmaz, ad Kemal'in. `eski`
@@ -110,7 +113,7 @@ export type KararIslemi =
   | { kimlik: string; tur: 'markaKarti'; marka: string; alan: MarkaKartiAlani; eski?: string | string[]; deger: string | string[]; baslik: string; neden: string }
   | { kimlik: string; tur: 'yeniMadde'; baslik: string; maddeTur: string; metin?: string; baglar?: YeniMaddeBagi[]; neden?: string }
   | { kimlik: string; tur: 'yeniOyun'; baslik: string; metin?: string; neden?: string }
-  | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; neden?: string }
+  | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; eski?: string; neden?: string }
   | { kimlik: string; tur: 'oyunKarti'; oyun: string; alan: OyunKartiAlani; eski?: string; deger: string; baslik: string; neden?: string }
   | { kimlik: string; tur: 'gddBolumu'; oyun: string; bolum: string; eski?: string; metin: string; baslik: string; neden?: string }
   | { kimlik: string; tur: 'kurucuBina'; islem: 'tasi' | 'sil'; bina: string; eski?: Partial<KurucuBinaDegeri>; deger?: Partial<KurucuBinaDegeri>; baslik: string; neden?: string };
@@ -139,7 +142,12 @@ export function kitapBolumuPlani(items: Item[], i: KitapBolumuIslemi) {
   const k = kitaplar(items, i.kitap);
   const kitap = k.length === 1 ? k[0] : null;
   const b = kitap ? bolumler(items, kitap.id, i.baslik) : [];
-  return { kitap, cokKitap: k.length > 1, bolum: b.length === 1 ? b[0] : null, cokBolum: b.length > 1 };
+  const bolum = b.length === 1 ? b[0] : null;
+  // 19 Kasım: `eski` verilmişse bölümün yazısı ne o ne de yenisiyse Kemal bu arada değiştirmiştir; üzerine yazılmaz
+  const simdi = (bolum?.notes || '').trim();
+  const cakisma = !!bolum && i.eski !== undefined && simdi !== i.eski.trim() && simdi !== (i.metin || '').trim()
+    ? 'bölümün yazısı bu arada değişmiş; üzerine yazılmaz' : null;
+  return { kitap, cokKitap: k.length > 1, bolum, cokBolum: b.length > 1, cakisma };
 }
 
 /** Önizleme satırı: ne değişecek ve metnin başı (uzun senaryo kısaltılır) */
@@ -148,6 +156,7 @@ export function kitapBolumuOnizleme(items: Item[], i: KitapBolumuIslemi, sinir =
   const kitap = p.cokKitap ? `"${i.kitap}" adıyla birden çok kitap var, atlanır`
     : p.kitap ? `"${i.kitap}" kitabına` : `"${i.kitap}" kitabı yeni açılır;`;
   const bolum = p.cokBolum ? 'aynı adla birden çok bölüm var, atlanır'
+    : p.cakisma ? `Çakışma, uygulanmaz: ${p.cakisma}.`
     : p.bolum ? `${i.sira}. bölümün metni güncellenir` : `${i.sira}. bölüm eklenir`;
   const m = (i.metin || '').replace(/\s+/g, ' ').trim();
   const kisa = m.length > sinir ? `${m.slice(0, sinir).trimEnd()}… (${m.length} harf)` : m;
@@ -654,6 +663,7 @@ export async function kararlariUygula(
         const p = kitapBolumuPlani(liste, islem);
         if (p.cokKitap) { sonuc.atlanan.push({ islem, neden: `"${islem.kitap}" adıyla birden çok kitap var` }); continue; }
         if (p.cokBolum) { sonuc.atlanan.push({ islem, neden: `kitapta "${bolumAdi(islem.baslik)}" adıyla birden çok bölüm var` }); continue; }
+        if (p.cakisma) { sonuc.atlanan.push({ islem, neden: p.cakisma }); continue; }
         if ((!p.kitap || !p.bolum) && !yaz.ekle) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan kitap ya da bölüm açılamıyor; Onay bekleyenler\'den uygula' }); continue; }
         const metin = islem.metin.trim();
         const baslik = bolumBasligi(islem.sira, islem.baslik);

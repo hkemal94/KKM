@@ -31,6 +31,8 @@ const DURUM_ETIKETI: Record<PulTasarimDurumu, string> = {
   onayli: 'bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8]',
 };
 const durumAdi = (d: PulTasarimDurumu) => PUL_DURUMLARI.find(x => x.id === d)?.ad || d;
+/** Taslak ya da onaylı pul gelecek bir ayda da soluk çizilmez (19 Kasım: onaylı 2027 pulları silik görünmesin) */
+const tasarli = (p?: PulKaydi) => !!p && p.durum !== 'tasarlanmadi';
 
 /**
  * Ajansın taslak görselleri ana dala girmez, bu dalda durur (gece turuyla aynı dal).
@@ -134,7 +136,8 @@ export default function Pullar({ onAjans, onOnay }: { onAjans: () => void; onOna
   }, [anahtar]);
 
   const oyun = veri?.oyunlar.find(o => o.id === oyunId) || veri?.oyunlar[0] || null;
-  const seri = useMemo(() => (oyun ? pulSerisi(oyun.baslangic) : []), [oyun]);
+  const oyunPullari = oyun ? veri?.pullar[oyun.id] : undefined;
+  const seri = useMemo(() => (oyun ? pulSerisi(oyun.baslangic, new Date(), oyunPullari) : []), [oyun, oyunPullari]);
 
   let govde: React.ReactNode;
   if (!anahtar) {
@@ -177,11 +180,11 @@ export default function Pullar({ onAjans, onOnay }: { onAjans: () => void; onOna
                   <div className="flex items-center gap-2 sm:gap-2.5">
                     {c.aylar.map(a => (
                       <PulDugmesi key={a.anahtar} anahtar={anahtar} pulAnahtari={a.anahtar} kayit={kayitlar[a.anahtar]}
-                        soluk={a.once || a.gelecek} secili={secili === a.anahtar} onSec={() => setSecili(a.anahtar)} />
+                        soluk={(a.once || a.gelecek) && !tasarli(kayitlar[a.anahtar])} secili={secili === a.anahtar} onSec={() => setSecili(a.anahtar)} />
                     ))}
                     <span className="w-1" />
                     <PulDugmesi anahtar={anahtar} pulAnahtari={c.anahtar} kayit={kayitlar[c.anahtar]} buyuk
-                      soluk={c.once || c.gelecek} secili={secili === c.anahtar} onSec={() => setSecili(c.anahtar)} />
+                      soluk={(c.once || c.gelecek) && !tasarli(kayitlar[c.anahtar])} secili={secili === c.anahtar} onSec={() => setSecili(c.anahtar)} />
                   </div>
                   <figcaption className="mt-1 text-[12px] text-[#F3EFE8]/75">{AY_ADLARI[c.ceyrek * 3 - 3]}–{AY_ADLARI[c.ceyrek * 3 - 1]} {c.yil}</figcaption>
                 </figure>
