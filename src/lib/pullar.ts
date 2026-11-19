@@ -147,15 +147,18 @@ export interface SeriYili { yil: number; ceyrekler: SeriCeyregi[] }
 
 /**
  * Oyunun pul düzeni: başlangıç yılından bugünün yılına kadar her yıl, her
- * yılda dört çeyrek (ileri yıllar yok). Saf iş.
+ * yılda dört çeyrek. İleri yıl yalnız kayıtta o yıla ait bir pul varsa
+ * görünür (19 Kasım, Kemal 2027'nin ilk çeyreğini onayladı; seri 2026'da
+ * bittiği için ekranda yoktu). Saf iş.
  */
-export function pulSerisi(baslangic: string | null, bugun = new Date()): SeriYili[] {
+export function pulSerisi(baslangic: string | null, bugun = new Date(), kayitlar?: Record<string, PulKaydi>): SeriYili[] {
   const buYil = bugun.getFullYear();
   const buAy = `${buYil}-${iki(bugun.getMonth() + 1)}`;
   const ilk = baslangic || `${buYil}-01`;
   const ilkYil = Number(ilk.slice(0, 4));
+  const sonYil = Math.max(ilkYil, buYil, sonKayitYili(kayitlar));
   const yillar: SeriYili[] = [];
-  for (let yil = ilkYil; yil <= Math.max(ilkYil, buYil); yil++) {
+  for (let yil = ilkYil; yil <= sonYil; yil++) {
     const ceyrekler = ([1, 2, 3, 4] as const).map(ceyrek => {
       const aylar = [0, 1, 2].map(i => {
         const ay = ceyrek * 3 - 2 + i;
@@ -167,6 +170,13 @@ export function pulSerisi(baslangic: string | null, bugun = new Date()): SeriYil
     yillar.push({ yil, ceyrekler });
   }
   return yillar;
+}
+
+/** Kayıttaki en ileri pulun yılı (tasarlanmamış kayıt sayılmaz); kayıt yoksa 0 */
+export function sonKayitYili(kayitlar?: Record<string, PulKaydi>): number {
+  return Object.entries(kayitlar || {})
+    .filter(([a, p]) => gecerliAnahtar(a) && p.durum !== 'tasarlanmadi')
+    .reduce((en, [a]) => Math.max(en, Number(a.slice(0, 4))), 0);
 }
 
 /** "Ocak 2026 · aylık pul" ya da "Ocak–Mart 2026 · büyük pul" */
