@@ -114,8 +114,26 @@ export interface HaritaDuzeni {
    */
   kurucuIslenen?: KurucuBelge;
   /**
+   * Kurucu yazma sayacı (18 Kasım, kompakt ada A adımı). Kurucu taslağını
+   * yazan her iş (Kurucu, 3B'deki ev kartı, ajans kararı, yedekten geri
+   * yükleme) bir artırır. Kurucu açıldığında gördüğü sayıyı aklında tutar;
+   * yazmadan önce kayıttaki sayı daha büyükse başka bir yer (başka sekme,
+   * telefon, geri yükleme) yazmış demektir: yazmaz, "sayfayı yenile" der.
+   * Eski kayıtlarda yok (0 sayılır).
+   */
+  kurucuSayac?: number;
+  /**
+   * Hangi adanın kaydı (18 Kasım, kompakt ada). Yoksa 2: bugünkü ada.
+   * 3: kompakt ada (adım C'nin kartı yazar). Bu adımda yalnız taşınır.
+   */
+  adaKusagi?: number;
+  /**
    * Yalnız bellekte: belge eski koordinattan (surum 1) okunup çevrildi,
    * kalıcı yazım bekliyor. Firestore'a yazılmaz.
    */
   eskiKoordinat?: boolean;
 }
+
+/** Kurucu taslağını yazan işin yazacağı yeni sayaç: kayıttakinin bir fazlası */
+export const sonrakiKurucuSayaci = (d: { kurucuSayac?: number } | null | undefined): number =>
+  (Number.isFinite(Number(d?.kurucuSayac)) ? Math.max(0, Math.floor(Number(d?.kurucuSayac))) : 0) + 1;

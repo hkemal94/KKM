@@ -40,6 +40,8 @@ const ACIKLAMA: Record<string, string> = {
   'kurucu.yolDuzeni': 'Haritadan gelen yolun yeni hâli (nokta taşındı ya da parça silindi): yol kimliği → { parça sırası → n }.',
   'kurucu.binaDuzeni': 'Haritadan gelen yapının düzeltmesi: kimlik → { dx, dy (metre, doğuya / güneye), aci (radyan), kat, tur }.',
   kurucuIslenen: "Kurucu'da 'Haritaya işle'ye basıldığı andaki hâl; 3B harita bunu gösterir. Taslakla aynıysa yazılmaz (taslakHaritayaIslendi: true).",
+  kurucuSayac: "Kurucu yazma sayacı: taslağı yazan her iş bir artırır; açık kalmış eski Kurucu sekmesi daha yeni kaydın üstüne yazamaz (18 Kasım). Yoksa 0.",
+  adaKusagi: 'Hangi adanın kaydı: 2 bugünkü ada (yoksa 2), 3 kompakt ada (18 Kasım).',
   taslakHaritayaIslendi: 'true: taslak haritaya işlenmiş hâlle aynı. false: taslakta haritaya işlenmemiş değişiklik var.',
   mekanlar: 'Mekân düzeltmeleri ve elle eklenen mekânlar: kimlik → { yeni, ad, tur, konum, silindi, mahalle, wikiId, taban, yukseklik, yaricap }.',
   hatlar: 'Üreteçten farklı olan sınır hatları: kimlik → [[boylam, enlem], …].',
@@ -86,6 +88,8 @@ export function haritaDuzeniDosyasi(duzen: HaritaDuzeni, items: Item[], zaman = 
       not: notlar.length,
       maddeIsareti: maddeIsaretleri.length
     },
+    kurucuSayac: Number(duzen.kurucuSayac) || 0,
+    adaKusagi: Number(duzen.adaKusagi) || 2,
     taslakHaritayaIslendi: islendi,
     kurucu: taslak ?? null,
     ...(duzen.kurucuIslenen && !islendi ? { kurucuIslenen: duzen.kurucuIslenen } : {}),

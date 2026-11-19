@@ -1,6 +1,6 @@
 import type { FeatureCollection } from 'geojson';
 import type { Item } from '../types';
-import type { HaritaDuzeni } from '../components/harita/duzenTipi';
+import { sonrakiKurucuSayaci, type HaritaDuzeni } from '../components/harita/duzenTipi';
 import { bosDuzen } from '../components/harita/duzenKatmani';
 import { bosTaslak, taslaktanBelge } from '../components/kurucu/kurucuTipi';
 import { kisiMi } from './adaSakini';
@@ -67,7 +67,8 @@ export function oturanlariDegistir(d: HaritaDuzeni | null, evId: string, kisiIdl
   const oturanlar = { ...(taslak.oturanlar ?? {}) };
   const kisiler = [...new Set(kisiIdleri.filter(Boolean))];
   if (kisiler.length) oturanlar[evId] = kisiler; else delete oturanlar[evId];
-  return { ...temel, guncelleme: Date.now(), kurucu: { ...taslak, oturanlar } };
+  // Kurucu sayacı artar (18 Kasım): açık kalmış Kurucu bu bağı ezmesin
+  return { ...temel, guncelleme: Date.now(), kurucu: { ...taslak, oturanlar }, kurucuSayac: sonrakiKurucuSayaci(temel) };
 }
 
 /**

@@ -11,7 +11,7 @@ import { bagUygun } from './bagKurallari';
 import { vikiGorseliMi } from './maddeGorseli';
 import { depoAdi } from './depoBelgesi';
 import { GDD_BOLUMLERI, gddBolumleri } from '../components/oyun/OyunSureci';
-import type { HaritaDuzeni, KurucuBelge } from '../components/harita/duzenTipi';
+import { sonrakiKurucuSayaci, type HaritaDuzeni, type KurucuBelge } from '../components/harita/duzenTipi';
 
 /**
  * Ajansın kararlarını uygula (22 Ekim, Kemal: "Ajans kendi uygulasın ama ben
@@ -819,7 +819,7 @@ export async function kararlariUygula(
   // Kurucu'nun kendi kaydı gibi: harita kaydının taslağı tek seferde yazılır
   if (kurucuBekleyen.length && kurucu && yaz.harita?.duzen && yaz.harita.kaydet) {
     let oldu = false, hata = '';
-    try { oldu = await yaz.harita.kaydet({ ...yaz.harita.duzen, guncelleme: Date.now(), kurucu }); }
+    try { oldu = await yaz.harita.kaydet({ ...yaz.harita.duzen, guncelleme: Date.now(), kurucu, kurucuSayac: sonrakiKurucuSayaci(yaz.harita.duzen) }); }
     catch (e) { hata = e instanceof Error ? e.message : String(e); }
     for (const islem of kurucuBekleyen) {
       if (oldu) sonuc.uygulanan.push(islem);

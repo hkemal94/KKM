@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, getDocFromServer, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { hattiSadelestir } from './hatSadelestir';
 import {
-  DUZEN_SURUMU, type HaritaDuzeni, type KurucuBelge, type MekanDuzeni, type MekanKaydi
+  DUZEN_SURUMU, sonrakiKurucuSayaci, type HaritaDuzeni, type KurucuBelge, type MekanDuzeni, type MekanKaydi
 } from '../components/harita/duzenTipi';
 import type { Nokta, SinirHatlari } from '../components/harita/sinirBolgeleri';
 import { duzeniTasi, YENI_KOORDINAT_SURUMU } from '../components/harita/koordinatGocu';
@@ -46,7 +46,17 @@ interface Belge {
   kurucu?: KurucuBelge;
   /** Kurucu'nun haritaya işlenmiş hâli. Yoksa hiç yazılmaz. */
   kurucuIslenen?: KurucuBelge;
+  /** Kurucu yazma sayacı (18 Kasım). Yoksa hiç yazılmaz. */
+  kurucuSayac?: number;
+  /** Ada kuşağı (18 Kasım): yoksa 2, bugünkü ada. Yoksa hiç yazılmaz. */
+  adaKusagi?: number;
 }
+
+/** Sayaç ve kuşak: yalnız sıfırdan büyük tam sayı yazılır, öbürü atılır */
+const tamSayi = (v: unknown): number | undefined => {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : undefined;
+};
 
 const duzle = (h: SinirHatlari): DuzHatlar =>
   Object.fromEntries(Object.entries(h).map(([id, n]) => [id, n.flat()]));
@@ -122,6 +132,10 @@ const belgeye = (d: HaritaDuzeni): Belge => {
     mekanlar: mekanlariTemizle(d.mekanlar)
   };
   // Tanımsız alan yazılmaz: Firestore bütün kaydı reddeder
+  const sayac = tamSayi(d.kurucuSayac);
+  if (sayac) b.kurucuSayac = sayac;
+  const kusak = tamSayi(d.adaKusagi);
+  if (kusak) b.adaKusagi = kusak;
   if (d.kurucuIslenen) b.kurucuIslenen = kurucuyuTemizle(d.kurucuIslenen);
   if (d.kurucu) {
     // Taslak haritaya işlenenle aynıysa ikinci kopya yazılmaz (2 Ekim gece,
@@ -247,6 +261,8 @@ const belgedenHam = (v: Partial<Belge>): HaritaDuzeni => {
     hatlar: coz(v.hatlar),
     yollar: coz(v.yollar),
     mekanlar: mekanlariCoz(v.mekanlar),
+    ...(tamSayi(v.kurucuSayac) ? { kurucuSayac: tamSayi(v.kurucuSayac) } : {}),
+    ...(tamSayi(v.adaKusagi) ? { adaKusagi: tamSayi(v.adaKusagi) } : {}),
     ...(v.kurucu && typeof v.kurucu === 'object'
       ? { kurucu: kurucuyuTemizle(v.kurucu as KurucuBelge) }
       : {}),
@@ -476,11 +492,33 @@ export function haritaDuzeniniYedekIcinOku(): unknown {
   }
 }
 
-/** Yedekten gelen harita düzenini geri yazar — önce yerele, sonra buluta */
-export async function haritaDuzeniniYedektenYaz(ham: unknown): Promise<void> {
+/**
+ * Yedekten gelen harita düzenini geri yazar — önce yerele, sonra buluta.
+ * Tek yazma. Kurucu sayacı artar: açık kalmış Kurucu'lar üstüne yazamaz.
+ */
+export async function haritaDuzeniniYedektenYaz(ham: unknown, buluttakiSayac?: number): Promise<void> {
   const d = belgeden(ham);
   if (!d) return;
-  const belge = belgeye({ ...d, guncelleme: Date.now() });
+  // Açık kalmış Kurucu'lar geri yüklenen hâlin üstüne yazmasın (18 Kasım):
+  // sayaç buluttakinin de yedektekinin de üstüne çıkar
+  const sayac = Math.max(
+    sonrakiKurucuSayaci(d), sonrakiKurucuSayaci(yereldenOku()),
+    sonrakiKurucuSayaci({ kurucuSayac: buluttakiSayac })
+  );
+  const belge = belgeye({ ...d, guncelleme: Date.now(), kurucuSayac: sayac });
   try { localStorage.setItem(YEREL_ANAHTAR, JSON.stringify(belge)); } catch { /* yok */ }
   await setDoc(belgeYolu(), belge);
 }
+
+/**
+ * Harita yedeği için buluttaki kaydı olduğu gibi okur (18 Kasım). Yerel
+ * kopya başka cihazda eski ya da boş olabilir; yedek buluttakinden alınır.
+ * Kayıt yoksa null.
+ */
+export async function buluttakiHaritaKaydi(): Promise<Record<string, unknown> | null> {
+  const s = await getDocFromServer(belgeYolu());
+  return s.exists() ? (s.data() as Record<string, unknown>) : null;
+}
+
+/** Ham kayıt → harita düzeni (saf iş; yedek kartının özeti için) */
+export const haritaKaydiniCoz = (ham: unknown): HaritaDuzeni | null => belgeden(ham);

@@ -75,6 +75,10 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 - Kurucu taslağına (`KurucuBelge`) yeni alan eklenirse `src/lib/haritaDuzeni.ts`
   → `kurucuyuTemizle`'ye de eklenir; yoksa kayıtta sessizce düşer (30 Eylül'de
   özel yapı, doğa ve madde bağları böyle kayboluyordu).
+- **Kurucu yazma sayacı** (18 Kasım): Kurucu taslağını (`kurucu`) yazan her kod harita kaydının
+  `kurucuSayac`'ını bir artırır (`sonrakiKurucuSayaci`, `duzenTipi.ts`); yoksa açık kalmış Kurucu
+  sekmesi yeni hâlin üstüne yazar. Kurucu açılıştaki sayaçtan yenisini görünce yazmaz.
+  `adaKusagi`: yoksa 2 (bugünkü ada), 3 kompakt ada. Harita yedeği: Durum → Eksikler → Harita yedeği.
 - **Veri göçleri tek seferliktir ve düğmeyle çalışır.** Kalıp:
   `src/lib/` altında yazılacak kayıtları üreten saf bir fonksiyon + Durum → Eksikler
   sekmesinde (`src/components/Eksikler.tsx`) yalnızca iş varken
