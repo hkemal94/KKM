@@ -12,6 +12,8 @@ import { vikiGorseliMi } from './maddeGorseli';
 import { depoAdi } from './depoBelgesi';
 import { GDD_BOLUMLERI, gddBolumleri } from '../components/oyun/OyunSureci';
 import { sonrakiKurucuSayaci, type HaritaDuzeni, type KurucuBelge } from '../components/harita/duzenTipi';
+import { donemKaydi, donemleriOku } from './zamanCizgisi';
+import { donemPlani, type DonemYillari } from './donemKarari';
 
 /**
  * Ajansın kararlarını uygula (22 Ekim, Kemal: "Ajans kendi uygulasın ama ben
@@ -87,6 +89,13 @@ import { sonrakiKurucuSayaci, type HaritaDuzeni, type KurucuBelge } from '../com
  *     yalnız o bina. Kurucu'nun açtığı taslağa (`kurucu`, yoksa `kurucuIslenen`)
  *     yazılır, Kurucu'nun kendi kaydı gibi: bütün Kurucu kararları tek yazmada gider.
  *     Haritada görünmesi için sonra "Kurucu taslağını haritaya işle" gerekir.
+ *   - 19 Kasım (Kemal: ajans zaman çizgisine dönem önerebilsin, "evet"): `donem`
+ *     (`ad` dönemin adı, `bas` başlangıç yılı, isteğe bağlı `bit` bitiş yılı; yoksa ya
+ *     da null ise açık uçlu). Zaman çizgisinin dönemleri `kkm_ayar` → `donemler`'e
+ *     yazılır. `eski` yoksa eklenir: aynı adla dönem yoksa; aynı ad ve yıllarla varsa
+ *     uygulanmış sayılır, başka yıllarla varsa çakışma olur. `eski` (`ad`, `bas`,
+ *     `bit`) verilirse onu birebir tutan dönem yenisiyle değişir; tutan yoksa çakışma.
+ *     Silme yok. Ayrıntı ve saf iş `donemKarari.ts`.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -116,7 +125,8 @@ export type KararIslemi =
   | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; eski?: string; neden?: string }
   | { kimlik: string; tur: 'oyunKarti'; oyun: string; alan: OyunKartiAlani; eski?: string; deger: string; baslik: string; neden?: string }
   | { kimlik: string; tur: 'gddBolumu'; oyun: string; bolum: string; eski?: string; metin: string; baslik: string; neden?: string }
-  | { kimlik: string; tur: 'kurucuBina'; islem: 'tasi' | 'sil'; bina: string; eski?: Partial<KurucuBinaDegeri>; deger?: Partial<KurucuBinaDegeri>; baslik: string; neden?: string };
+  | { kimlik: string; tur: 'kurucuBina'; islem: 'tasi' | 'sil'; bina: string; eski?: Partial<KurucuBinaDegeri>; deger?: Partial<KurucuBinaDegeri>; baslik: string; neden?: string }
+  | { kimlik: string; tur: 'donem'; ad: string; bas: number; bit?: number | null; eski?: DonemYillari; baslik: string; neden?: string };
 
 type KitapBolumuIslemi = Extract<KararIslemi, { tur: 'kitapBolumu' }>;
 
@@ -495,6 +505,7 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'yeniOyun') return ayniAdliOyun(items, i.baslik).length > 0;
   if (i.tur === 'oyunKarti') return oyunKartiPlani(items, i).yapildi;
   if (i.tur === 'gddBolumu') return gddBolumuPlani(items, i).yapildi;
+  if (i.tur === 'donem') return donemPlani(donemleriOku(items), i).yapildi;
   if (i.tur === 'kitapBolumu') {
     const { bolum } = kitapBolumuPlani(items, i);
     return !!bolum && (bolum.notes || '').trim() === (i.metin || '').trim() && bolum.metadata?.chapterIndex === i.sira;
@@ -547,6 +558,8 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[], harita?:
     if (i.tur === 'kitapBolumu') return kitapBolumuGecerli(i) && !yapilmis(items, i);
     // Çakışan oyun kararı listede kalır, "çakışma" diye görünür; Uygula onu atlar
     if (i.tur === 'oyunKarti' || i.tur === 'gddBolumu') return !yapilmis(items, i);
+    // Dönem kararı da öyle: değişmiş ya da aynı adla başka yıllarda duran dönem "çakışma" diye görünür
+    if (i.tur === 'donem') return !yapilmis(items, i);
     // Kurucu kararı da öyle; harita kaydı okunmadan listede kalır ("henüz okunmadı")
     if (i.tur === 'kurucuBina') return !kurucuBinaPlani(items, harita, i).yapildi;
     // Sitedeki viki klasöründe olmayan yol listede durmaz
@@ -702,6 +715,22 @@ export async function kararlariUygula(
         const yeni: Item = { ...p.oyun, metadata: { ...(p.oyun.metadata || {}), [islem.alan]: p.deger }, updatedAt: Date.now() };
         await yaz.guncelle(yeni);
         guncel.set(yeni.id, yeni);
+      } else if (islem.tur === 'donem') {
+        const liste = [...guncel.values()];
+        const p = donemPlani(donemleriOku(liste), islem, `donem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`);
+        if (p.yapildi) { sonuc.uygulanan.push(islem); ilerleme?.(++n); continue; }
+        if (p.cakisma || !p.liste) { sonuc.atlanan.push({ islem, neden: p.cakisma || 'dönem yazılamadı' }); continue; }
+        // Zaman çizgisindeki "Ekle" gibi: `kkm_ayar`'ın öbür alanları olduğu gibi kalır
+        const k = donemKaydi(liste, p.liste);
+        if (k.guncel) {
+          await yaz.guncelle(k.guncel);
+          guncel.set(k.guncel.id, k.guncel);
+        } else if (k.yeni) {
+          if (!yaz.ekle) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan ayar kaydı açılamıyor; Onay bekleyenler\'den uygula' }); continue; }
+          const id = `kkm_ayar_${Date.now()}`;
+          await yaz.ekle({ ...k.yeni, id });
+          guncel.set(id, { ...k.yeni, id, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
+        }
       } else if (islem.tur === 'gddBolumu') {
         const p = gddBolumuPlani([...guncel.values()], islem);
         if (p.yapildi) { sonuc.uygulanan.push(islem); ilerleme?.(++n); continue; }
