@@ -1,9 +1,30 @@
 # Durum
 
-**Son güncelleme: 18 Kasım 2026 (kompakt ada A adımı: harita yedeği)**
+**Son güncelleme: 19 Kasım 2026 (bugünkü kararlar: pullar 2027, kitap bölümü denetimi, kompakt ada ve Dirlik Stadı sırası)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 19 Kasım: bugünkü kararlar KKM'de
+
+- **Pullar:** seri artık bugünün yılında bitmez; kayıtta ileri bir yılın pulu varsa o yıl da görünür
+  (`lib/pullar.ts` → `pulSerisi`, `sonKayitYili`). Kemal'in onayladığı 8 kart oyunu pulunun 4'ü 2027'de
+  (Ocak, Şubat, Mart, 1. çeyrek büyük pulu); önceden sayfada yoktu. Taslak ya da onaylı pul gelecek bir
+  ayda da silik çizilmez. Pul kuralları KKM'de hiçbir ekranda yazmıyor; ajansın `docs/pul-koleksiyonu.md`'si
+  ve İllüstratör'ün dosyasında (Kemal, 18–19 Kasım): pullar gün gün, resim hakkı yettikçe; ışık aya göre
+  (kış loş, yaz parlak; genel eğilim biraz aydınlık); her çeyrek kendi çizim tarzı (üç ay ve büyük pul aynı
+  tarzda; çerçeve, dişli kenar, yazısızlık sabit); ilk 8 onaylı pul yeniden çizilmez; 2026'nın 1.–3. çeyreği
+  deneysel (her çeyrek başka tarz, Kemal seçer), sonra 2027 Nisan'dan devam.
+- **Ajansın "Kitap bölümü" kararı** isteğe bağlı `eski` alır (`lib/ajansKararlari.ts`): bölümün yazısı ne
+  eski ne yeni ise Kemal bu arada değiştirmiştir; üzerine yazılmaz, listede "çakışma" görünür. İlk kullanan:
+  Resepsiyon dizisi 2. bölümünden "O oda onun." repliğinin çıkması (Kemal, 19 Kasım; anahtar anı sessiz).
+- **Kitap zaman çizelgesi:** taslak ajansta (Kemal'in 16–19 Kasım cevaplarıyla). KKM'de karşılığı Atölye →
+  Zaman çizgisi'nin dönemleri (`kkm_ayar` → `donemler`), onlar yalnız Kemal "Ekle"ye basınca yazılır; ajansın
+  bunun için bir karar türü yok, bu PR'da da eklenmedi.
+- **Kompakt ada:** A adımı birleşti (#236). B adımı (yeni ada üreteci) Cuma'yı bekliyor: Kemal kuralı yayımlar,
+  yedeği alır. Yol haritasında `kompakt-ada-b`.
+- **Dirlik Stadı bölümü** (Imperial gibi ayrı bölüm) planlandı, yapılmadı; yol haritasında `dirlik-stadi-bolumu`.
+  Viki maddesine yalnız Kemal'in kararları ajansın "Uygula" satırıyla gider.
 
 ## Kompakt ada · A adımı: yedek ve geri alma (18 Kasım, Kemal)
 
