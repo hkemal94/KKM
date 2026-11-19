@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { BolumBasligi, BosSatir, IlerlemeHalkasi, Rozet } from '../kabuk/Parcalar';
 import {
-  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, ArrowRight, Send, Layers
+  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, ArrowRight, Send, Layers, ArrowDown
 } from 'lucide-react';
 import type { Item, AreaType } from '../../types';
 import {
@@ -30,6 +30,7 @@ import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
 import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
 import { ayrilmayaIzinVar } from '../../lib/kaydedilmemis';
+import { DIRLIK_MADDESI } from '../../lib/dirlikStadi';
 import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
 /**
@@ -126,9 +127,14 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
   const [oyunId, setOyunId] = useState<string | null>(null);
   const [yeniAd, setYeniAd] = useState<string | null>(null);
   const [ortakAcik, setOrtakAcik] = useState(false);
+  /** Oyun açılınca ilk sekmesi (Dirlik Stadı bölümünden minigolfün "Planlar ve çizimler"i) */
+  const [ilkSekme, setIlkSekme] = useState<Sekme | undefined>(undefined);
   const secili = oyunId ? liste.find(o => o.id === oyunId) : undefined;
+  /** Minigolf oyunu (OyunEkrani'ndaki "Planlar ve çizimler" sekmesiyle aynı tanıma) */
+  const minigolf = liste.find(o => minigolfDeposuBul(o.kayit));
+  const dirlikMaddesi = items.some(i => i.id === DIRLIK_MADDESI && !i.archived);
 
-  if (secili) return <OyunEkrani key={secili.id} {...p} oyunId={secili.id} onGeri={() => { if (!ayrilmayaIzinVar()) return; setOyunId(null); window.scrollTo({ top: 0 }); }} />;
+  if (secili) return <OyunEkrani key={secili.id} {...p} oyunId={secili.id} ilkSekme={ilkSekme} onGeri={() => { if (!ayrilmayaIzinVar()) return; setOyunId(null); setIlkSekme(undefined); window.scrollTo({ top: 0 }); }} />;
 
   // Ortak assetler (2 Kasım): birden fazla oyunda ve haritada kullanılanlar
   if (ortakAcik) return (
@@ -136,7 +142,12 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
       <button type="button" onClick={() => { setOrtakAcik(false); window.scrollTo({ top: 0 }); }} className={DUGME_BOS}><ArrowLeft className="w-3.5 h-3.5" /> Oyunlar</button>
       <SayfaBasi baslik="Ortak assetler" />
       <p className={`text-[13px] ${IKINCIL}`}>Birden fazla yerde kullanılanlar: ortak bina kütüphanesi (KKM haritası ve oyunlar aynı modelleri kullanır), Kems Company imzası ve logolar, yazı tipi.</p>
-      <BinaGalerisi />
+      <button type="button" onClick={() => document.getElementById('dirlik-stadi-bolumu')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className={DUGME_BOS}>
+        <ArrowDown className="w-3.5 h-3.5" /> Dirlik Stadı bölümü
+      </button>
+      <BinaGalerisi
+        onVikideAc={dirlikMaddesi && p.onSelectArea ? () => p.onSelectArea!('duzada', DIRLIK_MADDESI) : undefined}
+        onMinigolfPlanlari={minigolf ? () => { setOrtakAcik(false); setIlkSekme('plan'); setOyunId(minigolf.id); window.scrollTo({ top: 0 }); } : undefined} />
       <BolumBasligi baslik="Ajansın ortak klasörü" />
       <OyunAssetleri depo={ORTAK_DEPO} kok={ORTAK_KLASOR} gizli kaynak="Ortak" ajan="merch-tasarimcisi" bosYazi="Ortak klasörde henüz görsel yok." />
     </div>
@@ -217,7 +228,13 @@ export const OyunStudyo: React.FC<OyunStudyoProps> = (p) => {
 };
 
 /** Tek oyunun ekranı: künye, süreç, mekanikler */
-const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => void }> = ({ items, onAddItem, onUpdateItem, onDeleteItem, oyunId, onGeri }) => {
+/** Minigolf oyununun deposu (19 Kasım): deposunda "minigolf" ya da adında "golf" geçen oyun; değilse boş */
+const minigolfDeposuBul = (kayit?: Item): string => {
+  const depo = String((kayit?.metadata as { depo?: string } | undefined)?.depo || '').trim();
+  return /minigolf/i.test(depo) ? depo : (/golf/i.test(oyunAdi(kayit) || '') ? 'hkemal94/minigolf' : '');
+};
+
+const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => void; ilkSekme?: Sekme }> = ({ items, onAddItem, onUpdateItem, onDeleteItem, oyunId, onGeri, ilkSekme }) => {
   const isler = useMemo(() => oyunIsleri(items, oyunId), [items, oyunId]);
   const suAn = useMemo(() => projeAsamasi(items, oyunId), [items, oyunId]);
   const belgeler = useMemo(() => gddBolumleri(items, oyunId), [items, oyunId]);
@@ -227,7 +244,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   /** The Imperial Kemskoy: deposu ya da adı "imperial" içeriyorsa bina ve kat planları sekmesi çıkar */
   const imperial = /imperial/i.test(depo) || /imperial/i.test(oyunAdi(oyunKaydi) || '');
   /** Minigolf (19 Kasım): "Planlar ve çizimler" sekmesi, oyun deposundaki docs/galeri.json'dan */
-  const minigolfDeposu = /minigolf/i.test(depo) ? depo : (/golf/i.test(oyunAdi(oyunKaydi) || '') ? 'hkemal94/minigolf' : '');
+  const minigolfDeposu = minigolfDeposuBul(oyunKaydi);
   const gddSayim = useMemo(() => {
     let dolu = 0, toplam = 0;
     for (const [bolumId, secimler] of Object.entries(GDD_SECIMLERI)) {
@@ -237,7 +254,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
     return { dolu, toplam };
   }, [belgeler]);
 
-  const [sekme, setSekme] = useState<Sekme>('kunye');
+  const [sekme, setSekme] = useState<Sekme>(ilkSekme ?? 'kunye');
 
   useEffect(() => {
     if (!depo && (sekme === 'ekran' || sekme === 'asset' || sekme === 'depo' || sekme === 'yol' || sekme === 'ayar')) {

@@ -8,6 +8,7 @@ import {
 } from '../../lib/binaKutuphanesi';
 import { assetKarariYaz, assetKararlariniOku, KARAR_ADI, type AssetKarari, type AssetKarariTuru, type AssetKararlari } from '../../lib/assetKararlari';
 import { anahtariOku } from '../../lib/oyunAyarlari';
+import { DirlikStadiBolumu } from './DirlikStadiBolumu';
 
 /** three.js yalnız galeri açılınca iner */
 const ModelOnizleme = React.lazy(() => import('./ModelOnizleme'));
@@ -26,7 +27,8 @@ const GRUPLAR: Array<{ grup: ModelGrubu; baslik: string }> = [
   { grup: 'bahce', baslik: 'Bahçe' },
   { grup: 'deniz', baslik: 'Deniz ve liman' },
   { grup: 'arac', baslik: 'Araçlar' },
-  { grup: 'imperial', baslik: 'The Imperial Kemskoy' }
+  { grup: 'imperial', baslik: 'The Imperial Kemskoy' },
+  { grup: 'dirlik', baslik: 'Dirlik Stadı' }
 ];
 
 const KARAR_RENGI: Record<AssetKarariTuru, 'bitti' | 'dikkat' | 'lacivert'> = { tamam: 'bitti', duzelt: 'dikkat', sil: 'lacivert' };
@@ -132,7 +134,11 @@ const KararSatiri: React.FC<{
   );
 };
 
-export const BinaGalerisi: React.FC = () => {
+/**
+ * `onVikideAc`: Dirlik Stadı'nın viki maddesini açar (madde yoksa verilmez).
+ * `onMinigolfPlanlari`: Oyunlar → minigolf → Planlar ve çizimler (oyun yoksa verilmez).
+ */
+export const BinaGalerisi: React.FC<{ onVikideAc?: () => void; onMinigolfPlanlari?: () => void }> = ({ onVikideAc, onMinigolfPlanlari }) => {
   const anahtar = anahtariOku();
   const [kararlar, setKararlar] = useState<AssetKararlari | null>(null);
   const [okumaHatasi, setOkumaHatasi] = useState<string | null>(null);
@@ -202,9 +208,12 @@ export const BinaGalerisi: React.FC = () => {
         if (!liste.length) return null;
         return (
           <div key={g.grup} className="space-y-2">
-            <p className={`text-[13px] font-semibold ${YAZI}`}>{g.baslik} <span className={`font-normal ${IKINCIL}`}>· {liste.length}</span></p>
+            <p className={`text-[13px] font-semibold ${YAZI}`}>{g.baslik} <span className={`font-normal ${IKINCIL}`}>· {g.grup === 'dirlik' ? 'kompleks, planlar, kararlar' : liste.length}</span></p>
             {g.grup === 'bahce' && <BahceBirlestir onBuyut={(m, ek) => setBuyuk({ m, ek })} />}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{liste.map(kart)}</div>
+            {g.grup === 'dirlik'
+              ? <DirlikStadiBolumu baslik={liste[0].baslik} onVikideAc={onVikideAc} onMinigolfPlanlari={onMinigolfPlanlari}
+                karar={<KararSatiri kimlik={liste[0].kimlik} karar={kararlar?.[liste[0].kimlik]} anahtar={anahtar} onYazildi={k => setKararlar(k)} />} />
+              : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{liste.map(kart)}</div>}
             {g.grup === 'imperial' && (
               <div className="space-y-3">
                 <p className={`text-[12px] font-semibold ${YAZI}`}>Kat planları</p>

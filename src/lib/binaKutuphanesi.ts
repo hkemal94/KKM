@@ -15,7 +15,7 @@
 
 import katalogMetni from '../data/binaKatalogu.json?raw';
 
-export type ModelGrubu = 'bina' | 'sokak' | 'bitki' | 'bahce' | 'deniz' | 'arac' | 'imperial';
+export type ModelGrubu = 'bina' | 'sokak' | 'bitki' | 'bahce' | 'deniz' | 'arac' | 'imperial' | 'dirlik';
 
 export interface BinaModeli {
   /** `public/modeller/` altındaki yol */
@@ -116,6 +116,9 @@ export const MODELI_EKSIK_TURLER = Object.entries(KATALOG.kurucu_turleri ?? {}).
 /** The Imperial: otel kalıbının ve haritadaki otel grubunun modeli */
 export const IMPERIAL_MODELI = KATALOG.kaliplar?.otel ?? KATALOG.ozel?.['the-imperial-kemskoy'] ?? 'binalar/the-imperial-kemskoy.glb';
 
+/** Dirlik Stadı: kompleksin tek modeli; galeride kendi bölümünde (`lib/dirlikStadi.ts`) */
+export const DIRLIK_MODELI = KATALOG.ozel?.['dirlik-stadi'] ?? 'binalar/dirlik-stadi.glb';
+
 /** Kurucu kalıbı (ve haritadaki aynı türdeki yapı) → model: otel → Imperial, fener → deniz feneri */
 export const KALIP_MODELLERI: Record<string, string> = { otel: IMPERIAL_MODELI, ...(KATALOG.kaliplar ?? {}) };
 
@@ -135,7 +138,7 @@ const renkAdi = (takim: string, dosya: string) => modelKimligi(dosya).slice(mode
 export const BINA_MODELLERI: BinaModeli[] = (() => {
   const gorulen = new Set<string>();
   const cikti: BinaModeli[] = [];
-  const grubu = (dosya: string): ModelGrubu => dosya === IMPERIAL_MODELI ? 'imperial'
+  const grubu = (dosya: string): ModelGrubu => dosya === IMPERIAL_MODELI ? 'imperial' : dosya === DIRLIK_MODELI ? 'dirlik'
     : dosya.startsWith('sokak/') ? 'sokak' : dosya.startsWith('bitkiler/') ? 'bitki' : dosya.startsWith('bahce/') ? 'bahce'
       : dosya.startsWith('deniz/') ? 'deniz' : dosya.startsWith('araclar/') ? 'arac' : 'bina';
   const ekle = (takim: string) => {
@@ -159,8 +162,8 @@ export const BINA_MODELLERI: BinaModeli[] = (() => {
   Object.values(KATALOG.deniz ?? {}).forEach(l => (Array.isArray(l) ? l : [l]).forEach(d => { if (d.endsWith('.glb')) ekle(d); }));
   (KATALOG.araclar ?? []).forEach(ekle);
   Object.values(KATALOG.ozel ?? {}).forEach(ekle);
-  // Katalogda sırası: bina, sokak, bitki, bahçe, deniz, araç; Imperial en sonda
-  const sira: Record<ModelGrubu, number> = { bina: 0, sokak: 1, bitki: 2, bahce: 3, deniz: 4, arac: 5, imperial: 6 };
+  // Katalogda sırası: bina, sokak, bitki, bahçe, deniz, araç; Imperial ve Dirlik Stadı en sonda
+  const sira: Record<ModelGrubu, number> = { bina: 0, sokak: 1, bitki: 2, bahce: 3, deniz: 4, arac: 5, imperial: 6, dirlik: 7 };
   return cikti.sort((a, b) => sira[a.grup] - sira[b.grup]);
 })();
 
