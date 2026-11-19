@@ -138,6 +138,20 @@ export const HARITA_YAPILARI: HaritaYapisi[] =
     }
   },
   {
+    "id": "bina_apt1",
+    "wikiId": "mekan_1791406291488_7jtvw",
+    "ad": "Düzada Jandarma Karakolu",
+    "tur": "yapı",
+    "mahalle": "yer_merkez",
+    "kat": 2,
+    "yukseklik": 7,
+    "taban": 171.0,
+    "merkez": {
+      "x": 25.866319400000002,
+      "y": 39.608924
+    }
+  },
+  {
     "id": "bina_okul",
     "wikiId": "mekan_okul",
     "ad": "Düzada İlkokulu",

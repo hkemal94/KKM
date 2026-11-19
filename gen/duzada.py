@@ -1495,7 +1495,9 @@ merkez_yapilar = [
     ("bina_pazar", "Merkez Pazarı", (-260, -140), 36, 30, 7, 1, "mekan_pazar"),
     # Kemal (28 Eylül): Merkez'de apartman yok; ikisi dükkânlı / müstakil ev.
     # Adlar tür adı; eski geçici adlar (Çarşı / Zeytinli Apartmanı) kalktı.
-    ("bina_apt1", "Dükkânlı Ev", (120, 270), 14, 12, 7, 2, None),
+    # 19 Kasım, Kemal: ilki karakol (maddesi Kurucu'da buna bağlıydı; 3B'de kendi modeliyle).
+    # Kimlik aynı kalır: kayıtlar ve yaşayan harita `bina_apt1` ile bulur.
+    ("bina_apt1", "Düzada Jandarma Karakolu", (120, 270), 14, 12, 7, 2, "mekan_1791406291488_7jtvw"),
     ("bina_apt2", "Müstakil Ev", (-200, 50), 12, 11, 6, 2, None),
 ]
 # Yerleri yeni Merkez kurulurken, kavşağın çevresinde seçilir (8 Ekim);
