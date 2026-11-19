@@ -1,9 +1,25 @@
 # Durum
 
-**Son güncelleme: 2 Kasım 2026 (yeni yerleşim 2. adım: Onay bekleyenler)**
+**Son güncelleme: 18 Kasım 2026 (kompakt ada A adımı: harita yedeği)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## Kompakt ada · A adımı: yedek ve geri alma (18 Kasım, Kemal)
+
+Kemal ada en ve boyda 0,70'e küçülsün dedi; plan adım adım (A yedek → B üreteç → C kart → D 3B → E künye ve
+viki → F temizlik). A adımında ada **değişmez**. Durum → Eksikler → **Harita yedeği** kartı
+(`components/HaritaYedegiKarti.tsx`, `lib/haritaYedegi.ts`): buluttaki harita kaydını (`duzada/haritaDuzeni`,
+olduğu gibi) ve haritaya bağlı viki alanlarını (rakım, harita konumu, işaret, bağlı yapı, ilgili not satırı)
+bilgisayara indirir ve `users/{uid}/haritaYedekleri/{id}` (+ `parcalar/`) altına tek toplu yazmada yazar. En
+çok 3 yedek; dördüncüde en eskisi yalnız Kemal onaylarsa silinir. "Yedekten geri yükle" önce farkı gösterir,
+onayla şimdiki hâli indirir, harita kaydını tek yazmada döndürür; viki alanları ayrı kutuyla. Kural
+(`firestore.rules`) yayımlanmadan kart yalnız bilgisayara indirir. Drive'a yükleme sonra.
+
+Eski sekme koruması: harita kaydında `kurucuSayac` (Kurucu taslağını yazan her iş bir artırır: Kurucu, 3B ev
+kartı, ajans kararı, geri yükleme) ve `adaKusagi` (yoksa 2 = bugünkü ada; 3 = kompakt ada, C adımı yazar).
+Kurucu açıldığı andaki sayaçtan daha yeni bir kayıt görürse yazmaz, "Harita başka bir yerde değişti, sayfayı
+yenile" der ve bu sekmedeki taslağı indirmeyi önerir.
 
 ## Pullar (15 Kasım, Kemal)
 

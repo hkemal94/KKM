@@ -106,6 +106,42 @@ service cloud.firestore {
         allow update: if false;
       }
 
+      // Harita yedekleri (18 Kasım, kompakt ada A adımı): Durum → Eksikler →
+      // Harita yedeği. Baş belge + içerik parçaları; bir kez yazılır,
+      // değişmez. Silme yalnız sahibinden (en çok 3 yedek; Kemal onaylar).
+      match /haritaYedekleri/{yedekId} {
+        allow read, delete: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+          && isValidId(yedekId)
+          && incoming().keys().hasAll(['id', 'userId', 'olusturma', 'parcaSayisi', 'boyut', 'ozet'])
+          && incoming().keys().hasOnly(['id', 'userId', 'olusturma', 'parcaSayisi', 'boyut', 'ozet'])
+          && incoming().id == yedekId
+          && incoming().userId == userId
+          && incoming().olusturma is number
+          && incoming().parcaSayisi is int
+          && incoming().parcaSayisi >= 1
+          && incoming().parcaSayisi <= 10
+          && incoming().boyut is number
+          && incoming().ozet is map;
+
+        allow update: if false;
+
+        match /parcalar/{parcaId} {
+          allow read, delete: if isOwner(userId);
+
+          allow create: if isOwner(userId)
+            && isValidId(parcaId)
+            && incoming().keys().hasAll(['sira', 'veri'])
+            && incoming().keys().hasOnly(['sira', 'veri'])
+            && incoming().sira is int
+            && incoming().veri is string
+            && incoming().veri.size() <= 300000;
+
+          allow update: if false;
+        }
+      }
+
       // Settings subcollection
       match /settings/{docId} {
         allow read: if isOwner(userId);

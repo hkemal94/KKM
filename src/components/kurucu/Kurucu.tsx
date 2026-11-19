@@ -6,7 +6,7 @@ import { DEM_SINIR } from '../../data/duzadaDem';
 import { ANIT_KALIPLARI, kalipBul, kalibiYerlestir, alan, merkez as cokgenMerkezi, yolCokgeneBiniyor } from './anitKaliplari';
 import { belgelerAyniMi, belgeFarklari } from './kurucuHarita';
 import { DOKULAR, dokuBul, mahalleDoldur, yolYariEni, type DokuTuru, type DoldurAlani } from './mahalleDoldur';
-import type { KurucuBelge } from '../harita/duzenTipi';
+import { sonrakiKurucuSayaci, type KurucuBelge } from '../harita/duzenTipi';
 import { kurucuEvMi } from '../../lib/evSakinleri';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import {
@@ -200,13 +200,43 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
   // Açılış hızı (3. gece): Kurucu'nun ilk çizimi bittiğinde
   useEffect(() => { requestAnimationFrame(() => requestAnimationFrame(() => isaretle('harita-hazir'))); }, []);
   const bekleyenTaslak = useRef<KurucuTaslak | null>(null);
+  /*
+   * Eski sekme koruması (18 Kasım, kompakt ada A adımı). Kurucu açıldığında
+   * kayıttaki yazma sayacını aklında tutar. Yazmadan önce kayıttaki sayaç
+   * daha büyükse taslağı başka bir yer yazmıştır (başka sekme, telefon,
+   * 3B'deki ev kartı, ajans kararı, yedekten geri yükleme): bu sekme kendi
+   * eski hâlini onun üstüne yazmaz, ekranda "sayfayı yenile" der.
+   */
+  const acilisSayaci = useRef(Number(duzen?.kurucuSayac) || 0);
+  const [eskiSekme, setEskiSekme] = useState(false);
+  /** Yazılamayan son taslak: Kemal isterse bilgisayara indirir */
+  const yazilamayan = useRef<KurucuBelge | null>(null);
+  /** Yazılabiliyorsa yazılacak sayaç, eski sekmeyse null */
+  const yazmaSayaci = useCallback((): number | null => {
+    const kayitta = Number(sonDuzen.current?.kurucuSayac) || 0;
+    if (kayitta > acilisSayaci.current) return null;
+    return sonrakiKurucuSayaci({ kurucuSayac: Math.max(kayitta, acilisSayaci.current) });
+  }, []);
   const bekleyeniGonder = useCallback(() => {
     const t = bekleyenTaslak.current;
     if (!t) return;
     bekleyenTaslak.current = null;
+    const sayac = yazmaSayaci();
+    if (sayac === null) { yazilamayan.current = taslaktanBelge(t); setEskiSekme(true); return; }
+    acilisSayaci.current = sayac;
     const d = sonDuzen.current ?? bosDuzen();
-    void kaydet({ ...d, guncelleme: Date.now(), kurucu: taslaktanBelge(t) });
-  }, [kaydet]);
+    void kaydet({ ...d, guncelleme: Date.now(), kurucu: taslaktanBelge(t), kurucuSayac: sayac });
+  }, [kaydet, yazmaSayaci]);
+  /** Yazılamayan taslağı bilgisayara indirir (eski sekme uyarısındaki düğme) */
+  const yazilamayaniIndir = useCallback(() => {
+    const k = yazilamayan.current;
+    if (!k) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({ aciklama: 'Kurucu: bu sekmede kalan, kayda yazılmayan taslak', zaman: new Date().toISOString(), kurucu: k }, null, 2)], { type: 'application/json' }));
+    a.download = `kurucu-yazilamayan-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, []);
   useEffect(() => {
     if (taslak === ilkTaslak.current) return;
     bekleyenTaslak.current = taslak;
@@ -1338,11 +1368,19 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
     setIsleOnay(false);
     setIsleniyor(true);
     try {
+      const sayac = yazmaSayaci();
+      if (sayac === null) {
+        yazilamayan.current = taslakBelgesi;
+        setEskiSekme(true);
+        setIsleRaporu('İşlenemedi: harita başka bir yerde değişti. Sayfayı yenile.');
+        return;
+      }
       const onceki = yerelIslenen ?? duzen?.kurucuIslenen;
       if (onceki && !belgelerAyniMi(onceki, undefined) && arsivle) await arsivle(onceki);
       const d = sonDuzen.current ?? bosDuzen();
       bekleyenTaslak.current = null;   // işlenen taslak zaten yazılıyor
-      await kaydet({ ...d, guncelleme: Date.now(), kurucu: taslakBelgesi, kurucuIslenen: taslakBelgesi });
+      acilisSayaci.current = sayac;
+      await kaydet({ ...d, guncelleme: Date.now(), kurucu: taslakBelgesi, kurucuIslenen: taslakBelgesi, kurucuSayac: sayac });
       setYerelIslenen(taslakBelgesi);
       setIsleRaporu('Haritaya işlendi. "3D · bak" ile görünür.'
         + (onceki && arsivle ? ' Önceki hâl arşive kalktı.' : ''));
@@ -1910,6 +1948,17 @@ export function Kurucu({ duzen, kaydet, durum, arsivle, className, items = [], o
       {ipucu && (
         <div className={`absolute left-1/2 -translate-x-1/2 ${islenmemis || isleRaporu ? 'top-[12rem]' : 'top-[6.75rem]'} sm:top-16 z-10 max-w-[88%] sm:max-w-[80%] px-3 py-1.5 rounded-2xl sm:rounded-full bg-[#0E1C4F]/85 text-[11px] text-[#F3EFE8] pointer-events-none text-center`}>
           {ipucu}
+        </div>
+      )}
+      {/* Eski sekme (18 Kasım): kayıt başka yerde değişti, bu sekme yazmaz */}
+      {eskiSekme && (
+        <div role="alert" className="absolute left-1/2 -translate-x-1/2 top-28 sm:top-16 z-30 w-[min(30rem,calc(100%-1.5rem))] px-4 py-3 rounded-xl bg-[#0E1C4F] text-[#F3EFE8] text-[12px] shadow-lg">
+          <b className="block text-[13px]">Harita başka bir yerde değişti</b>
+          <span className="block mt-1 text-[#D9DEEA]">Başka bir sekmede, telefonda ya da yedekten geri yüklemeyle kayıt yenilendi. Bu sekmedeki değişiklikler kayda yazılmadı, yeni hâlin üstüne de yazılmayacak. Sayfayı yenileyince güncel hâl açılır.</span>
+          <span className="mt-2 flex flex-wrap gap-2">
+            <button type="button" onClick={() => window.location.reload()} className="px-3 py-1.5 rounded-lg bg-[#F26B6F] text-white text-[11px] font-semibold cursor-pointer">Sayfayı yenile</button>
+            {yazilamayan.current && <button type="button" onClick={yazilamayaniIndir} className="px-3 py-1.5 rounded-lg border border-[#F3EFE8]/40 text-[11px] font-semibold cursor-pointer">Bu sekmedeki taslağı indir</button>}
+          </span>
         </div>
       )}
       {uyari && (
