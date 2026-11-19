@@ -431,6 +431,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Karakol ve kahvehane kendi modelleriyle: iki madde vikide 3B açılır; haritada eski "Dükkânlı Ev" artık Düzada Jandarma Karakolu ve karakol modeliyle görünür', not: 'Modeller ajanstan (bayrak dalgalı, kahvehanenin önünde çınar). Haritada yalnız bina_apt1 değişti (ad, madde bağı, etiket); yeri ve ölçüsü aynı. Kahvehane haritaya konmadı: yer adayları ajansta (oneriler/kahvehane-harita-yeri.md), Kemal seçince ayrı iş. Kayda bir şey yazılmaz.' },
   { id: 'karar-donem', paket: 'K', kimde: 'claude', nereden: '19 Kasım · Kemal', bitti: true,
     ad: 'Ajansın kararları: zaman çizgisine dönem önerisi (donem): yeni dönem eklenir ya da var olan dönemin adı ve yılları değişir; Onay bekleyenler\'de "Zaman çizgisi · dönem eklenir / değişir" satırı', not: 'Kayıt yalnız Uygula ile değişir (kkm_ayar → donemler). Aynı adla başka yıllarda dönem varsa ya da değişecek dönem bu arada değiştiyse "çakışma" görünür, uygulanmaz. Silme yok.' },
+  { id: 'oyun-oyna-dugmesi', paket: 'K', kimde: 'claude', nereden: '19 Kasım · Kemal', bitti: true,
+    ad: 'Oyun sayfalarında "Oyna" düğmesi: sayfanın üstünde ve "Depoda aç"ın yanında; oyun yeni sekmede açılır', not: 'Adres oyunun deposundan türetilir (bilinen beş oyunda sabit tablo, lib/depoBelgesi.ts → oyunAdresi). Depo alanı boş oyunda düğme görünmez. Kayda bir şey yazılmaz.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

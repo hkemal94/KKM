@@ -28,6 +28,26 @@ export function depoAdi(girdi: string): string | null {
 export const hamAdres = (depo: string, yol: string) => `https://raw.githubusercontent.com/${depo}/HEAD/${yol}`;
 export const depoSayfasi = (depo: string, yol?: string) => `https://github.com/${depo}${yol ? `/blob/HEAD/${yol}` : ''}`;
 
+/**
+ * Oyunun oynandığı adres (19 Kasım, Kemal: oyun sayfasında "Oyna" düğmesi). Depo adından türetilir:
+ * GitHub Pages adresi büyük-küçük harfe duyarlı olduğu için bilinen oyunlarda doğru yazım tablodan gelir
+ * (19 Kasım'da hepsi açılıyordu). Kayda yazılmaz; depo boşsa ya da adı uymuyorsa null.
+ */
+const OYUN_ADRESLERI: Record<string, string> = {
+  minigolf: 'https://hkemal94.github.io/minigolf/?oyna=1',
+  'kart-oyunu': 'https://hkemal94.github.io/kart-oyunu/',
+  'dk-lite': 'https://hkemal94.github.io/DK-Lite/',
+  dondurmacikizlar: 'https://hkemal94.github.io/DondurmaciKizlar/',
+  dondumacikizlar: 'https://hkemal94.github.io/DondurmaciKizlar/',
+  theimperialkemskoy: 'https://hkemal94.github.io/TheImperialKemskoy/'
+};
+export function oyunAdresi(depo: string): string | null {
+  const ad = depoAdi(depo);
+  if (!ad) return null;
+  const [sahip, depoKisa] = ad.split('/');
+  return OYUN_ADRESLERI[depoKisa.toLowerCase()] || `https://${sahip.toLowerCase()}.github.io/${depoKisa}/`;
+}
+
 /** Belgenin yanındaki göreli görsel yolunu ham adrese çevirir */
 export function gorselAdresi(depo: string, belgeYolu: string, adres: string): string {
   if (/^https?:\/\//.test(adres)) return adres;
