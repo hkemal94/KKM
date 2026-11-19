@@ -23,7 +23,7 @@ burası "şu an neredeyiz"i söyler. Kısa tutulur.
   bunun için bir karar türü yok, bu PR'da da eklenmedi.
 - **Kompakt ada:** A adımı birleşti (#236). B adımı (yeni ada üreteci) Cuma'yı bekliyor: Kemal kuralı yayımlar,
   yedeği alır. Yol haritasında `kompakt-ada-b`.
-- **Vikide 3B görünüm:** modeli olan binanın maddesinde künyenin görsel alanında "Görsel · 3B" seçimi (`components/wiki/Madde3B.tsx`, bina kütüphanesinin `ModelOnizleme`'si). Eşleme kodda sabit tablo, maddenin kimliğiyle (`lib/maddeModelleri.ts`); kayda yazılmaz. Merkez Camii, Sağlık ocağı, Postane, Karakol, Kahvehane eşlenmedi (Kemal'e soru).
+- **Vikide 3B görünüm:** modeli olan binanın maddesinde künyenin görsel alanında "Görsel · 3B" seçimi (`components/wiki/Madde3B.tsx`, bina kütüphanesinin `ModelOnizleme`'si). Eşleme kodda sabit tablo, maddenin kimliğiyle (`lib/maddeModelleri.ts`); kayda yazılmaz. Merkez Camii, Sağlık Ocağı ve Postane de kendi modelleriyle bağlandı (19 Kasım, Kemal); The Imperial vikide hafif kopyasıyla iner (`binalar/the-imperial-kemskoy-viki.glb`, 242 KB; asıl 834 KB'lık model harita, Kurucu ve galeride aynen). Karakol ve Kahvehane eşlenmedi (Kemal'e soru).
 - **Dirlik Stadı bölümü** (Imperial gibi ayrı bölüm) planlandı, yapılmadı; yol haritasında `dirlik-stadi-bolumu`.
   Viki maddesine yalnız Kemal'in kararları ajansın "Uygula" satırıyla gider.
 
