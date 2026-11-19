@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ExternalLink, RefreshCw } from 'lucide-react';
-import { belgeyiOku, depoSayfasi, gorselAdresi, markdownuAyir, satirIci, type Blok } from '../../lib/depoBelgesi';
-import { DUGME_BOS, IKINCIL, KART, YAZI } from '../anasayfa/stil';
+import { ExternalLink, Play, RefreshCw } from 'lucide-react';
+import { belgeyiOku, depoSayfasi, gorselAdresi, markdownuAyir, oyunAdresi, satirIci, type Blok } from '../../lib/depoBelgesi';
+import { DUGME_BOS, DUGME_VURGU, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
 /**
  * Oyunun deposundaki tasarım belgesi (14 Ekim, `lib/depoBelgesi.ts`).
@@ -30,7 +30,7 @@ const Satir: React.FC<{ metin: string }> = ({ metin }) => (
  * `yollar`: okunacak dosyalar, sırayla denenir (yoksa tasarım belgesi).
  * `bulunamazsa`: dosya depoda yoksa (404) hata yerine gösterilen sakin yazı (3 Kasım).
  */
-export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[]; bulunamazsa?: string }> = ({ depo, yollar, bulunamazsa }) => {
+export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[]; bulunamazsa?: string; oyunDeposu?: boolean }> = ({ depo, yollar, bulunamazsa, oyunDeposu }) => {
   const [durum, setDurum] = useState<{ yol: string; metin: string } | 'yukleniyor' | { hata: string }>('yukleniyor');
   const [tur, setTur] = useState(0);
   const [buyuk, setBuyuk] = useState<string | null>(null);
@@ -48,6 +48,8 @@ export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[]; bulunamazs
   const icindekiler = bloklar.filter((b): b is Extract<Blok, { tur: 'baslik' }> => b.tur === 'baslik' && b.seviye === 2);
   const yol = typeof durum === 'object' && 'yol' in durum ? durum.yol : undefined;
 
+  // Ajansın deposu (AjansSayfasi) oyun değil; Oyna yalnız oyun deposunda
+  const oyna = oyunDeposu ? oyunAdresi(depo) : null;
   const ust = (
     <div className="flex flex-wrap items-center gap-2">
       <span className={`text-[13px] ${IKINCIL} min-w-0 break-all`}>
@@ -56,6 +58,7 @@ export const DepoBelgesi: React.FC<{ depo: string; yollar?: string[]; bulunamazs
       <span className="flex-1" />
       <button type="button" onClick={() => setTur(t => t + 1)} className={DUGME_BOS}><RefreshCw className="w-3.5 h-3.5" /> Yenile</button>
       <a href={depoSayfasi(depo, yol)} target="_blank" rel="noreferrer" className={DUGME_BOS}><ExternalLink className="w-3.5 h-3.5" /> Depoda aç</a>
+      {oyna && <a href={oyna} target="_blank" rel="noreferrer" className={DUGME_VURGU}><Play className="w-3.5 h-3.5" /> Oyna</a>}
     </div>
   );
 

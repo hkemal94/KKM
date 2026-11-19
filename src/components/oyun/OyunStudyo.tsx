@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import { BolumBasligi, BosSatir, IlerlemeHalkasi, Rozet } from '../kabuk/Parcalar';
 import {
-  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, ArrowRight, Send, Layers, ArrowDown
+  Plus, ChevronLeft, ChevronRight, UserPlus, Trash2, X, Check, Download, Lightbulb, Target, ArrowLeft, ArrowRight, Send, Layers, ArrowDown, Play
 } from 'lucide-react';
 import type { Item, AreaType } from '../../types';
 import {
@@ -27,11 +27,11 @@ import { DurumOzeti, OyunKapagi } from './DurumOzeti';
 import { BinaPlanlari } from './BinaPlanlari';
 import { PlanGalerisi } from './PlanGalerisi';
 import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
-import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
+import { YOL_HARITASI_YOLLARI, oyunAdresi } from '../../lib/depoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
 import { ayrilmayaIzinVar } from '../../lib/kaydedilmemis';
 import { DIRLIK_MADDESI } from '../../lib/dirlikStadi';
-import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
+import { DUGME_BOS, DUGME_LAC, DUGME_VURGU, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
 /**
  * Oyun: fikir ve süreç (1 Ekim). Kemal: "Oyun ekranı 7 ekran ama bir işe
@@ -241,6 +241,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   const fikirler = useMemo(() => oyunFikirleri(items, oyunId), [items, oyunId]);
   const oyunKaydi = items.find(i => i.id === oyunId && !i.archived);
   const depo = String((oyunKaydi?.metadata as { depo?: string } | undefined)?.depo || '').trim();
+  /** "Oyna" düğmesi (19 Kasım): depodan türetilen adres; depo boşsa düğme yok */
+  const oynaAdresi = depo ? oyunAdresi(depo) : null;
   /** The Imperial Kemskoy: deposu ya da adı "imperial" içeriyorsa bina ve kat planları sekmesi çıkar */
   const imperial = /imperial/i.test(depo) || /imperial/i.test(oyunAdi(oyunKaydi) || '');
   /** Minigolf (19 Kasım): "Planlar ve çizimler" sekmesi, oyun deposundaki docs/galeri.json'dan */
@@ -556,6 +558,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
     <div className="space-y-5 animate-in fade-in duration-300">
       <button type="button" onClick={onGeri} className={DUGME_BOS}><ArrowLeft className="w-3.5 h-3.5" /> Oyunlar</button>
       <SayfaBasi baslik={oyunAdi(oyunKaydi) || 'Adsız oyun'}>
+        {oynaAdresi && <a href={oynaAdresi} target="_blank" rel="noreferrer" className={DUGME_VURGU} title="Oyun yeni sekmede açılır"><Play className="w-3.5 h-3.5" /> Oyna</a>}
         <button type="button" onClick={() => void belgeIndir()} disabled={pdfDurumu === 'hazirlaniyor'} className={DUGME_BOS} title="Künye ve konsept, mekanikler ve notlar, Düzada özeti tek PDF'te">
           <Download className="w-3.5 h-3.5" /> {pdfDurumu === 'hazirlaniyor' ? 'Hazırlanıyor…' : 'Oyun PDF\'i'}
         </button>
@@ -588,8 +591,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
         bosYazi="Bu oyunun deposunda görsel ya da 3B model dosyası yok; çizimleri kodla yapılıyor olabilir." />}
       {sekme === 'bina' && imperial && <BinaPlanlari />}
       {sekme === 'plan' && minigolfDeposu && <PlanGalerisi depo={minigolfDeposu} />}
-      {sekme === 'depo' && depo && <DepoBelgesi key="depo" depo={depo} />}
-      {sekme === 'yol' && depo && <DepoBelgesi key="yol" depo={depo} yollar={YOL_HARITASI_YOLLARI}
+      {sekme === 'depo' && depo && <DepoBelgesi key="depo" depo={depo} oyunDeposu />}
+      {sekme === 'yol' && depo && <DepoBelgesi key="yol" depo={depo} oyunDeposu yollar={YOL_HARITASI_YOLLARI}
         bulunamazsa="Bu oyunun deposunda henüz yol haritası yok (docs/yol-haritasi.md). Oyun ajanı yazınca burada görünür." />}
       {/* DK Lite'ın ayarları kendi panelinde (9 Kasım, Kemal: hediyeler, lokasyonlar, mağaza, bölümler) */}
       {sekme === 'ayar' && depo && (dkLiteMi(depo) ? <DkLitePaneli depo={depo} /> : <OyunAyarlari depo={depo} />)}
