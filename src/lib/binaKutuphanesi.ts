@@ -181,12 +181,14 @@ export const IMPERIAL_CAPA = { z: -12, kuleArasi: 48 };
  * türündeki binalar kutu kalır: Merkez Pazarı (pazar binası modeli yok), Liman İdare
  * Binası, Kemsköy Caddesi'ndeki yapılar, Zeytinyağı Fabrikası, stat soyunma odası.
  * Karakol (19 Kasım, Kemal): eskiden "Dükkânlı Ev" olan `bina_apt1` karakolun kendi modeliyle.
+ * Merkez Kahvehanesi (19 Kasım, Kemal: yer B, meydanın kuzeydoğu üçgeni) kendi modeliyle.
  */
 export const HARITA_YAPILARI: Record<string, string> = {
   bina_belediye: 'binalar/belediye.glb',    // Belediye Binası
   bina_okul: 'binalar/okul.glb',            // Düzada İlkokulu
   bina_apt1: 'binalar/duzada-jandarma-karakolu.glb', // Düzada Jandarma Karakolu
   bina_apt2: 'ev',                          // Müstakil Ev
+  bina_kahvehane: 'binalar/merkez-kahvehanesi.glb', // Merkez Kahvehanesi
   bina_liman_depo: 'depo'                   // Liman Deposu
 };
 

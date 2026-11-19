@@ -43,6 +43,8 @@ export const ESLEME: Record<string, KartEslemesi> = {
   bina_okul: { madde: 'mekan_okul', yaricap: 45 },
   // 19 Kasım: haritadaki adı da karakol (eskiden "Dükkânlı Ev"); kartın adı vikiden gelir
   bina_apt1: { madde: 'mekan_1791406291488_7jtvw' },
+  // 19 Kasım, Kemal: kahvehane haritada meydanın kuzeydoğu üçgeninde (aday B)
+  bina_kahvehane: { madde: 'mekan_1791406291022_hotli' },
   kurucu_bina_mw1zb16h: { madde: 'mekan_1791406293719_6ki1i' },
   kurucu_bina_muzkrwr7: { madde: 'marka_dirlik' },
   // Eşleme listesinde çıkarım: künyedeki kooperatif fabrikası Çiftlik'te

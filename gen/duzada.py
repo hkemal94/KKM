@@ -3057,6 +3057,28 @@ for _i, (_id, _g) in enumerate(_son_liste):
 binalar[:] = [_b for _b in binalar if _b["id"] not in _silinecek]
 print(f"Çakışma denetimi: {len(_silinecek)} ev silindi" + (f" ({', '.join(sorted(_silinecek))})" if _silinecek else ""))
 
+# Merkez Kahvehanesi (19 Kasım, Kemal: ajansın aday yerlerinden B). Merkez Meydanı'nın
+# kuzeydoğu üçgeni, kavşağın köşesi: güneyde Güney Sırt Yolu, doğuda Müstakil Ev (~3 m).
+# Oturum kahvehanenin modeliyle aynı, 13 × 11 m; uzun kenarı (ön cephe) yola dik durur ve
+# meydana (batıya) bakar: önündeki taş seki, masalar ve çınar üçgenin açık kısmında kalır.
+# Yer en sona konur: öteki yapıların, arsaların ve meydanın yerleşimi değişmesin diye
+# engel sayılmaz (üçgenin ~80 m²'si kahvehanenin altında kalır; ajansın aday dosyasındaki ödün).
+# `bak`: yapının önünün baktığı nokta (meydanın ortası); 3B'de model önü buna döner.
+KAHVEHANE_YERI = _dm((25.867023, 39.609152))      # aday B'nin ortası
+_kh_yol = next(LineString(_n) for _yid, _ad, _n, _tur, _m in YOLLAR if _yid == "yol_sirt_gbati")
+_kh_s = _kh_yol.project(Point(*KAHVEHANE_YERI))
+_kh_a, _kh_b = _kh_yol.interpolate(_kh_s - 15), _kh_yol.interpolate(_kh_s + 15)
+_kh_aci = math.degrees(math.atan2(_kh_b.y - _kh_a.y, _kh_b.x - _kh_a.x))
+_kh_kuzey = (-math.sin(math.radians(_kh_aci)), math.cos(math.radians(_kh_aci)))
+if _kh_kuzey[1] < 0:
+    _kh_kuzey = (-_kh_kuzey[0], -_kh_kuzey[1])
+# 13 m'lik kenar yola dik; iki yolun arasına ortalansın diye 0,6 m kuzeye (iki yolun
+# kenarına ~0,2 m, Müstakil Ev'e ~2,8 m)
+_kh_x, _kh_y = KAHVEHANE_YERI[0] + 0.6 * _kh_kuzey[0], KAHVEHANE_YERI[1] + 0.6 * _kh_kuzey[1]
+bina("bina_kahvehane", "Merkez Kahvehanesi", dikdortgen(_kh_x, _kh_y, 11, 13, _kh_aci), 5, "yapı",
+     "yer_merkez", wiki_id="mekan_1791406291022_hotli", kat=1)
+binalar[-1]["bak"] = MERKEZ_KAVSAK
+
 for z in zemin:
     if "taban" not in z:
         _c = z["geom"].centroid
@@ -3373,7 +3395,8 @@ for b in binalar:
              "id": b["id"] if len(parcalar) == 1 else f"{b['id']}_{k}",
              "ad": b["ad"], "wikiId": b["wikiId"],
              "yukseklik": b["yukseklik"], "taban": b["taban"],
-             "tur": b["tur"], "mahalle": b["mahalle"], "kat": b["kat"]}
+             "tur": b["tur"], "mahalle": b["mahalle"], "kat": b["kat"],
+             **({"bak": ll(*b["bak"])} if b.get("bak") else {})}
         ))
 
 for tid, ad, (x, y), rakim in ((z[0], z[1], z[2], z[3]) for z in ZIRVELER):

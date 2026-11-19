@@ -164,5 +164,19 @@ export const HARITA_YAPILARI: HaritaYapisi[] =
       "x": 25.8682386,
       "y": 39.610108600000004
     }
+  },
+  {
+    "id": "bina_kahvehane",
+    "wikiId": "mekan_1791406291022_hotli",
+    "ad": "Merkez Kahvehanesi",
+    "tur": "yapı",
+    "mahalle": "yer_merkez",
+    "kat": 1,
+    "yukseklik": 5,
+    "taban": 172.6,
+    "merkez": {
+      "x": 25.867037399999997,
+      "y": 39.6091684
+    }
   }
 ];
