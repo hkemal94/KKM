@@ -25,6 +25,7 @@ import { yasayanGorseller } from '../../lib/silinenGorseller';
 import { EkranGoruntuleri } from './EkranGoruntuleri';
 import { DurumOzeti, OyunKapagi } from './DurumOzeti';
 import { BinaPlanlari } from './BinaPlanlari';
+import { PlanGalerisi } from './PlanGalerisi';
 import { ORTAK_DEPO, ORTAK_KLASOR } from '../../lib/oyunAssetleri';
 import { YOL_HARITASI_YOLLARI } from '../../lib/depoBelgesi';
 import { SayfaRayi } from '../SayfaRayi';
@@ -54,7 +55,7 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
  * ayrı depoda; oraya yalnız Ayarlar sekmesinin "Oyuna gönder" düğmesi PR açar.
  */
 
-type Sekme = 'kunye' | 'surec' | 'mekanik' | 'ekran' | 'asset' | 'bina' | 'depo' | 'yol' | 'ayar';
+type Sekme = 'kunye' | 'surec' | 'mekanik' | 'ekran' | 'asset' | 'bina' | 'plan' | 'depo' | 'yol' | 'ayar';
 type YeniKayit = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string };
 
 export interface OyunStudyoProps {
@@ -225,6 +226,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
   const depo = String((oyunKaydi?.metadata as { depo?: string } | undefined)?.depo || '').trim();
   /** The Imperial Kemskoy: deposu ya da adı "imperial" içeriyorsa bina ve kat planları sekmesi çıkar */
   const imperial = /imperial/i.test(depo) || /imperial/i.test(oyunAdi(oyunKaydi) || '');
+  /** Minigolf (19 Kasım): "Planlar ve çizimler" sekmesi, oyun deposundaki docs/galeri.json'dan */
+  const minigolfDeposu = /minigolf/i.test(depo) ? depo : (/golf/i.test(oyunAdi(oyunKaydi) || '') ? 'hkemal94/minigolf' : '');
   const gddSayim = useMemo(() => {
     let dolu = 0, toplam = 0;
     for (const [bolumId, secimler] of Object.entries(GDD_SECIMLERI)) {
@@ -241,7 +244,8 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       setSekme('kunye');
     }
     if (!imperial && sekme === 'bina') setSekme('kunye');
-  }, [depo, sekme, imperial]);
+    if (!minigolfDeposu && sekme === 'plan') setSekme('kunye');
+  }, [depo, sekme, imperial, minigolfDeposu]);
   const [pdfDurumu, setPdfDurumu] = useState<'' | 'hazirlaniyor' | 'hata'>('');
   const [yeniIs, setYeniIs] = useState<string | null>(null);
   const [yeniBaslik, setYeniBaslik] = useState('');
@@ -552,6 +556,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
           { id: 'mekanik', label: `Mekanikler ve notlar${fikirler.length ? ` · ${fikirler.length}` : ''}` },
           ...(depo ? [{ id: 'ekran', label: 'Ekran görüntüleri' }, { id: 'asset', label: 'Assetler' }] : []),
           ...(imperial ? [{ id: 'bina', label: 'Bina ve kat planları' }] : []),
+          ...(minigolfDeposu ? [{ id: 'plan', label: 'Planlar ve çizimler' }] : []),
           ...(depo ? [{ id: 'depo', label: 'Depodaki belge' }, { id: 'yol', label: 'Yol haritası' }, { id: 'ayar', label: 'Ayarlar' }] : [])
         ]}
         aktifId={sekme}
@@ -565,6 +570,7 @@ const OyunEkrani: React.FC<OyunStudyoProps & { oyunId: string; onGeri: () => voi
       {sekme === 'asset' && depo && <OyunAssetleri depo={depo} kaynak={oyunAdi(oyunKaydi) || 'Oyun'} ajan="oyun-gelistiricisi"
         bosYazi="Bu oyunun deposunda görsel ya da 3B model dosyası yok; çizimleri kodla yapılıyor olabilir." />}
       {sekme === 'bina' && imperial && <BinaPlanlari />}
+      {sekme === 'plan' && minigolfDeposu && <PlanGalerisi depo={minigolfDeposu} />}
       {sekme === 'depo' && depo && <DepoBelgesi key="depo" depo={depo} />}
       {sekme === 'yol' && depo && <DepoBelgesi key="yol" depo={depo} yollar={YOL_HARITASI_YOLLARI}
         bulunamazsa="Bu oyunun deposunda henüz yol haritası yok (docs/yol-haritasi.md). Oyun ajanı yazınca burada görünür." />}
