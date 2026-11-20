@@ -251,24 +251,39 @@ def main():
         yaz("Birahane yeri yola kapalı", not giren, ", ".join(giren) or "içinden yol geçmiyor")
     else:
         yaz("Birahane yeri", False, "yok")
-    # 10) kıyı köyü: düz terasta, Sahil Yolu'nun deniz yanında (Kemal, 20 Kasım)
-    if "kiyi-koy-terasi" in korunan:
-        kt = korunan["kiyi-koy-terasi"]
-        gx_ = b["x0"] + np.arange(Z.shape[1]) * h
-        gy_ = b["y0"] + np.arange(Z.shape[0]) * h
-        from matplotlib.path import Path as _P
-        XX, YY = np.meshgrid(gx_, gy_)
-        m_ = _P(np.asarray(kt.buffer(-h).exterior.coords)).contains_points(np.column_stack([XX.ravel(), YY.ravel()])).reshape(Z.shape)
-        yaz("Kıyı köyü terası düz", float(np.ptp(Z[m_])) <= 0.5, f"içinde fark {np.ptp(Z[m_]):.2f} m, kot {Z[m_].mean():.1f} m")
+    # 10) kıyı köyü: bugünkü haritadaki sokak hatları, 0,70 ile taşınmış (Kemal, 20 Kasım akşam)
+    gs = open(os.path.join(KOK, "src", "data", "kurucuGomulu.ts"), encoding="utf-8").read()
+    gi = gs.index("JSON.parse(", gs.index("GOMULU_DUZEN")) + len("JSON.parse(")
+    kur = json.loads(json.loads(gs[gi:gs.index('");', gi) + 1]))["kurucuIslenen"]
+    ox, oy = b["odak"]
+
+    def tasi(lng, lat):
+        x, y = mt(lng, lat)
+        return (ox + b["olcek"] * (x - ox), oy + b["olcek"] * (y - oy))
+    kk = ["kurucu_yol_muqydtwz", "kurucu_yol_muqyfr79", "kurucu_yol_muqyfdcj", "kurucu_yol_muqygcwx",
+          "kurucu_yol_muqyfdcj_1", "kurucu_yol_muqyfdcj_2", "kurucu_yol_muqyfdcj_3", "kurucu_yol_muqyghd4",
+          "kurucu_yol_muqyh31i"]
+    agu = unary_union([y["g"] for y in G])
+    sap = []
+    for k_ in kk:
+        n_ = kur["yeniYollar"][k_]["n"]
+        g_ = LineString([tasi(n_[i], n_[i + 1]) for i in range(0, len(n_), 2)])
+        uc = 5.0 if g_.length > 12 else 0.0     # uçlar değdikleri yola oturtulur (birkaç metre)
+        ds = [agu.distance(g_.interpolate(t)) for t in np.arange(uc, g_.length - uc + 0.01, 4.0)]
+        sap.append(max(ds) if ds else 0.0)
+    yaz("Kıyı köyü sokakları bugünkü haritadakiyle aynı hat (0,70 ile taşınmış)", max(sap) <= 1.0,
+        f"{len(kk)} yol, taşınmış eski hattan en çok {max(sap):.2f} m sapma")
+    if "birahane-yeri" in korunan:
+        bb = kur["yeniBinalar"]["kurucu_bina_mw1zb16h"]
+        bq = Point(tasi(bb["x"], bb["y"]))
+        # ölçek küçülünce bina yola binmesin diye ön yüzü yol kenarından 1,5 m geri çekilir (en çok birkaç metre)
+        yaz("Birahane yeri eski binanın taşınmış yerinde", korunan["birahane-yeri"].centroid.distance(bq) <= 6.0,
+            f"fark {korunan['birahane-yeri'].centroid.distance(bq):.2f} m, kıyıya {kiyi.distance(korunan['birahane-yeri']):.0f} m")
         sy = next((y["g"] for y in G if y["p"].get("ad") == "Sahil Yolu"), None)
         if sy is not None:
-            c_ = kt.centroid
-            q_ = sy.interpolate(sy.project(c_))
-            ic_ = [kt, korunan["birahane-yeri"]] if "birahane-yeri" in korunan else [kt]
-            yaz("Kıyı köyü Sahil Yolu'nun deniz yanında", all(kiyi.distance(g_) < kiyi.distance(q_) for g_ in ic_),
-                f"teras kıyıya {kiyi.distance(kt):.0f} m, Sahil Yolu {kiyi.distance(q_):.0f} m")
-    else:
-        yaz("Kıyı köyü terası", False, "yok")
+            q_ = sy.interpolate(sy.project(bq))
+            yaz("Kıyı köyü Sahil Yolu'nun deniz yanında", kiyi.distance(korunan["birahane-yeri"]) < kiyi.distance(q_),
+                f"birahane yeri kıyıya {kiyi.distance(korunan['birahane-yeri']):.0f} m, Sahil Yolu {kiyi.distance(q_):.0f} m")
     print("Zemin denetimi (yol yatağıyla):")
     sorun += zd.main()
     print("Sonuç:", "hepsi temiz" if sorun == 0 else f"{sorun} sorun")

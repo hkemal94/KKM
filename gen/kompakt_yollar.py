@@ -12,13 +12,13 @@ Kurallar:
     tarlaları), patika (tepeler), merdiven (Sahil Merdiveni). Eğim: ana ve ara ≤ %10, sokak, geçit
     ve toprak ≤ %15; basamaklı geçit, patika, merdiven serbest.
   - Köyler Ege köyü gibi (Kemal, 20 Kasım): meydandan çıkan, eğime koşut kıvrılan sokaklar (eş
-    yükselti eğrileri, kıyı köyünde kıyıya koşut), yamaç aşağı kısa geçitler, düzensiz kavşaklar,
+    yükselti eğrileri), yamaç aşağı kısa geçitler, düzensiz kavşaklar,
     birkaç meydancık. Sokaklar arası ~80 m: iki yanda yol kenarı parseli (3. adım) için düz şerit kalır.
   - Dirlik Stadı (132 x 100 m: 100 x 64 saha ve tribün payı) zeminde düz bir sekiye oturur (kazı ve
     dolgu 1'e 3 şevle); stat çevresi sokak sekinin üstünde, köyün sokakları ondan çıkar.
-  - Kıyı köyü (Kemal, 20 Kasım) bugünkü haritadaki gibi Sahil Yolu ile deniz arasında: kıyıya koşut düz
-    bir terasa oturur (kumsal korunur; deniz yanı 1'e 3, kara yanı 1'e 2 şev). Sahil Yolu'nun köydeki
-    kesimi terasın kara yanından yeniden aranır; hattın geri kalanı aynen kalır.
+  - Kıyı köyü (Kemal, 20 Kasım akşam) bugünkü haritadaki köyün sokak hatlarıyla aynı: Kurucu'nun kalıcı
+    hâlindeki dokuz yol ve birahanenin yeri adanın küçültmesiyle (0,70) taşınır; zemin değişmez (teras yok).
+    Sahil Yolu köyün önünde eski hattının küçültülmüşünden geçer; hattın geri kalanı aynen kalır.
   - Stat, Merkez Meydanı, The Imperial sahanlığı ve kıyı köyündeki birahane yeri yola kapalı.
   - Dere üstünde kısa köprü; köprüde zemin oyulmaz.
 
@@ -362,7 +362,9 @@ for s in np.arange(0, kiyi.length, ADIM):
     q = adaylar[int(np.argmin(puan))]
     duraklar.append((s, tuple(q)))
 for yid in KOY_KIYI:
-    q = YERLESIM[yid]["xy"]
+    # kıyı köyünün ilk durağı 1. adımdaki yeri (zemin yumuşatmasının merkezi): hattın köy dışındaki kesimleri
+    # aynen kalsın; köyün önündeki kesim aşağıda eski hattın küçültülmüşüyle yeniden çizilir
+    q = m(YERLESIM[yid]["yumusatmaNokta"]) if "yumusatmaNokta" in YERLESIM[yid] else YERLESIM[yid]["xy"]
     s = kiyi.project(Point(q))
     duraklar = [d_ for d_ in duraklar if min(abs(d_[0] - s), kiyi.length - abs(d_[0] - s)) > 650]
     duraklar.append((s, q))
@@ -403,90 +405,83 @@ if not SAHIL.is_simple:
     SAHIL = max(SAHIL.geoms, key=lambda g: g.area) if SAHIL.geom_type == "MultiPolygon" else SAHIL
     SAHIL = LineString(SAHIL.exterior.coords)
 print(f"  {len(nok)} durak, {atlanan} atlandı, uzunluk {SAHIL.length / 1000:.1f} km, basit: {SAHIL.is_simple}")
-# ------------------------------------------------------------------ kıyı köyü terası (Kemal, 20 Kasım)
-# Kıyı köyü bugünkü haritadaki gibi Sahil Yolu ile deniz arasında. Orada yamaç dik (%20–25): köy kıyıya
-# koşut düz bir terasa oturur. Kumsal (Kuzey Plajı) olduğu gibi kalır; terasın deniz yanı dolgusu 1'e 3,
-# kara yanı kazısı 1'e 2 şevle eski zemine iner (kıyıda duvar yok). Sahil Yolu terasın kara yanından geçer.
-# Teras Sahil Yolu'nun ilk hattından sonra açılır: hattın köy dışındaki kesimleri aynen kalır.
+# ------------------------------------------------------------------ kıyı köyü (Kemal, 20 Kasım akşam)
+# Birahanenin olduğu köy bugünkü haritadaki sokak hatlarıyla aynı: KKM Kurucu'nun kalıcı hâlindeki
+# (src/data/kurucuGomulu.ts) dokuz yolu (dördü köyü Sahil Yolu'ndan Sahil Yolu'na dolanan kuşak, beşi içteki
+# sokaklar) ve Taraftar Birahanesi'nin binası adanın küçültmesiyle (kucult: 0,70, aynı odak) taşınır. Kompakt
+# kıyı burada eski kıyının küçültülmüşüdür; köyün kıyıya uzaklığı da 0,70 oranında kalır. Biçim, sıra ve
+# bağlanış aynı, yalnız ölçek ve yer değişir. Zemin değişmez (sokaklar eğim sınırının içinde): teras yok,
+# kumsal ve kıyı şeridi aynen. Sahil Yolu köyün önünde eski hattının küçültülmüşünden geçer; köyün iki ucu
+# ona eski yerlerinden bağlanır. Hattın köy dışındaki kesimleri aynen kalır.
 from shapely.ops import nearest_points, substring  # noqa: E402
 
-
-def _yumusak_gecis(a, b, x):
-    t = np.clip((x - a) / (b - a), 0.0, 1.0)
-    return t * t * (3 - 2 * t)
-
-
 KK_ID = "yerlesim_stadyum_kiyi"
-KK_YARI = 105.0                      # köy sokağının yarı boyu (m)
-KK_SOKAK_U = 70.0                    # köy sokağının kıyıya uzaklığı
-KK_DENIZ_U, KK_KARA_U = 34.0, 96.0   # terasın deniz ve kara kenarı (kıyıya uzaklık)
-KK_UC_PAY = 22.0                     # teras sokağın uçlarından bu kadar taşar (uçtaki ev payı)
-_kc = Point(YERLESIM[KK_ID]["xy"])
-_kh = ADA.exterior
-_ks0 = _kh.project(_kc)
-_kp = substring(_kh, _ks0 - KK_YARI - 120, _ks0 + KK_YARI + 120)
-_kp = LineString(yumusat(list(_kp.simplify(15).coords), tur=3, sade=15))
+_gs = open(os.path.join(KOK, "src", "data", "kurucuGomulu.ts"), encoding="utf-8").read()
+_gi = _gs.index("JSON.parse(", _gs.index("GOMULU_DUZEN")) + len("JSON.parse(")
+KURUCU = json.loads(json.loads(_gs[_gi:_gs.index('");', _gi) + 1]))["kurucuIslenen"]
+# (Kurucu kimliği, kademe): kuşak köyü Sahil Yolu'na bağlar (ara), içtekiler köy sokağı
+KK_ESKI = [("kurucu_yol_muqydtwz", "ara"), ("kurucu_yol_muqyfr79", "ara"), ("kurucu_yol_muqyfdcj", "ara"),
+           ("kurucu_yol_muqygcwx", "ara"), ("kurucu_yol_muqyfdcj_1", "sokak"), ("kurucu_yol_muqyfdcj_2", "sokak"),
+           ("kurucu_yol_muqyfdcj_3", "sokak"), ("kurucu_yol_muqyghd4", "sokak"), ("kurucu_yol_muqyh31i", "sokak")]
+KK_BIRAHANE_ESKI = "kurucu_bina_mw1zb16h"      # Taraftar Birahanesi (Kurucu'daki madde bağı)
 
 
-def _kiyidan(u):
-    """Kıyı parçasını kara yanına u m kaydırır."""
-    for _s in (1.0, -1.0):
-        g = _kp.offset_curve(_s * u)
-        g = max(getattr(g, "geoms", [g]), key=lambda q: q.length)
-        if ADA.contains(g.interpolate(0.5, normalized=True)) and \
-                _kh.distance(g.interpolate(0.5, normalized=True)) > 0.6 * u:
-            return g
-    sys.exit("HATA: kıyı köyü kıyı parçası kaydırılamadı")
+def _eskiden(n):
+    """Kurucu'nun düz [boylam, enlem, ...] dizisi → kompakt adada metre noktaları."""
+    return [kucult(*m((n[i], n[i + 1]))) for i in range(0, len(n), 2)]
 
 
-_ks = _kiyidan(KK_SOKAK_U)
-_t0 = _ks.project(_kc)
-KK_SOKAK = substring(_ks, _t0 - KK_YARI, _t0 + KK_YARI)
-_kd, _kk = _kiyidan(KK_DENIZ_U), _kiyidan(KK_KARA_U)
-_ta, _tb = _t0 - KK_YARI - KK_UC_PAY, _t0 + KK_YARI + KK_UC_PAY
-_ld = substring(_kd, _kd.project(_ks.interpolate(_ta)), _kd.project(_ks.interpolate(_tb)))
-_lk = substring(_kk, _kk.project(_ks.interpolate(_ta)), _kk.project(_ks.interpolate(_tb)))
-KK_TERAS = Polygon(list(_ld.coords) + list(_lk.coords)[::-1]).buffer(0)
-_ic = maske(KK_TERAS)
-_z0 = Z0.copy()
-KK_KOT = round(float(np.percentile(Z0[_ic], 40)), 1)   # kazı ağır basar: deniz yanı dolgu az kalır
-_d = ndimage.distance_transform_edt(~_ic) * H
-_hedef = KK_KOT + np.clip(Z0 - KK_KOT, -_d / 3.0, _d / 2.0)
-# yalnız yakın çevre ve kara; kumsal korunur (kıyının 14 m içi değişmez, 28 m'ye kadar yumuşak geçiş)
-_w = (1 - _yumusak_gecis(120.0, 180.0, _d)) * KARA * _yumusak_gecis(14.0, 28.0, D_KARA)
-Z0 = Z0 + ndimage.gaussian_filter((_hedef - Z0) * _w, 1.0) * (D_KARA >= 14.0)
-Z0[_ic] = KK_KOT
-Z0 = np.where(KARA & (_w > 0), np.maximum(Z0, 0.3), Z0)
-KK_DEGISEN = np.abs(Z0 - _z0) > 0.3
-KK_SEV = np.abs(Z0 - _z0) > 1.5          # terasın ve şevinin belirgin kısmı (Sahil Yolu bunun dışından geçer)
-print(f"Kıyı köyü terası: kot {KK_KOT} m, en çok kazı {float((_z0 - Z0).max()):.1f} m, "
-      f"en çok dolgu {float((Z0 - _z0).max()):.1f} m, teras {KK_TERAS.area / 1e4:.2f} ha, "
-      f"değişen {int(KK_DEGISEN.sum()) * H * H / 1e4:.1f} ha, kumsal (kıyının 14 m içi) değişmedi: "
-      f"{bool(np.abs(Z0 - _z0)[KARA & (D_KARA < 14)].max() < 0.05)}")
-# yol araması için zemin yeniden (yalnız teras çevresi değişir)
-Z = Z0.copy()
-ZR = ndimage.gaussian_filter(ndimage.grey_closing(Z, size=(5, 5)), 1.0)
-_sk = ndimage.binary_dilation(maske(SEKI) | KK_DEGISEN, iterations=6)
-ZR = np.where(_sk, ndimage.gaussian_filter(Z, 1.0), ZR)
-ZR[maske(SEKI)] = SEKI_KOT
-ZR[maske(KK_TERAS)] = KK_KOT
-_yan = ndimage.maximum_filter(np.hypot(*np.gradient(ndimage.gaussian_filter(Z, 1.0), H)), size=3)
-YAN_CEZA = 1.0 + 6.0 * np.clip(_yan - 0.18, 0, None) + 3.0 * np.clip((40.0 - D_KARA) / 18.0, 0, 1)
-YAN_CEZA = YAN_CEZA * np.where(ZR - Z > 2.5, 12.0, 1.0)
+KK_HAT = {k: LineString(_eskiden(KURUCU["yeniYollar"][k]["n"])) for k, _ in KK_ESKI}
+_ESKI_UZ = {k: LineString([m((n[i], n[i + 1])) for i in range(0, len(n), 2)]).length
+            for k, n in ((k, KURUCU["yeniYollar"][k]["n"]) for k, _ in KK_ESKI)}
+_es = KURUCU["yolDuzeni"]["yol_sahil"]["0"]
+ESKI_SAHIL_K = LineString(_eskiden(_es))          # bugünkü Sahil Yolu'nun küçültülmüşü
+# köyün iki ucu: kuşağın ilk ve son yolunun Sahil Yolu'ndaki ucu (eskisinde de orada bağlanır)
+_u1 = Point(KK_HAT["kurucu_yol_muqydtwz"].coords[0])
+_u2 = Point(KK_HAT["kurucu_yol_muqygcwx"].coords[0])
+_t1, _t2 = sorted((ESKI_SAHIL_K.project(_u1), ESKI_SAHIL_K.project(_u2)))
+KK_SAHIL_PAY = 100.0                               # köyün iki yanında eski hat bu kadar daha izlenir
+CEKIRDEK = substring(ESKI_SAHIL_K, _t1 - KK_SAHIL_PAY, _t2 + KK_SAHIL_PAY)
+# Sahil Yolu'nun yönüne çevir
+if SAHIL.project(Point(CEKIRDEK.coords[0])) > SAHIL.project(Point(CEKIRDEK.coords[-1])):
+    CEKIRDEK = LineString(list(CEKIRDEK.coords)[::-1])
+# köy yollarının uçları değdikleri yolun üstüne oturur (küçültmede kayan milimetreler, J1'de eski 4 m'lik açıklık)
+for _k in KK_HAT:
+    _c = list(KK_HAT[_k].coords)
+    for _ui in (0, -1):
+        _P = Point(_c[_ui])
+        _ad = [g for k2, g in KK_HAT.items() if k2 != _k] + [CEKIRDEK]
+        _g = min(_ad, key=lambda g: g.distance(_P))
+        if _g.distance(_P) < 4.0:
+            _q = _g.interpolate(_g.project(_P))
+            _c[_ui] = (_q.x, _q.y)
+    KK_HAT[_k] = LineString(_c)
+KK_KUSAK = Polygon(list(KK_HAT["kurucu_yol_muqydtwz"].coords) + list(KK_HAT["kurucu_yol_muqyfr79"].coords)[1:]
+                   + list(KK_HAT["kurucu_yol_muqyfdcj"].coords)[1:]
+                   + list(KK_HAT["kurucu_yol_muqygcwx"].coords)[::-1][1:]).buffer(0)
+_kc = unary_union(list(KK_HAT.values())).centroid
+print(f"Kıyı köyü: eski haritadaki {len(KK_HAT)} yol 0,70 ile taşındı, köyün ortası kıyıya "
+      f"{kiyi.distance(_kc):.0f} m, kuşak {KK_KUSAK.area / 1e4:.2f} ha")
 
-# Kıyı köyü kesimi (Kemal, 20 Kasım): köy Sahil Yolu'nun deniz yanında. Köyün iki yanında 550 m'lik
-# kesim yeniden aranır: terasın ve şevinin kara yanından, dirseksiz; hattın geri kalanı aynen kalır.
-_kdis = ndimage.binary_dilation(KK_SEV, iterations=2)
-_sk0 = SAHIL.project(Point(YERLESIM[KK_ID]["xy"]))
-_sa, _sb = _sk0 - 550.0, 2.0 * round((_sk0 + 550.0) / 2.0)   # çift metre: kesim sonrası hücreler aynı kalır
+# Sahil Yolu'nun köy kesimi: eski hattın küçültülmüşü (köyün iki yanında 100 m daha) ve iki yanda ilk hatta
+# eğim sınırlı arama. Kesim, ilk hattın köy durağına yaptığı kıvrımı da kapsar.
+_sk0 = SAHIL.project(Point(m(YERLESIM[KK_ID].get("yumusatmaNokta")) if "yumusatmaNokta" in YERLESIM[KK_ID]
+                          else YERLESIM[KK_ID]["xy"]))
+_ca, _cb = SAHIL.project(Point(CEKIRDEK.coords[0])), SAHIL.project(Point(CEKIRDEK.coords[-1]))
+_sa = min(_sk0 - 550.0, _ca - 300.0)
+_sb = 2.0 * round(max(_sk0 + 550.0, _cb + 300.0) / 2.0)   # çift metre: kesim sonrası hücreler aynı kalır
 if _sa < 0 or _sb > SAHIL.length:
     sys.exit("HATA: kıyı köyü kesimi Sahil Yolu'nun başlangıcına denk geldi")
 _pa, _pb = SAHIL.interpolate(_sa), SAHIL.interpolate(_sb)
-_yk = yol_ara((_pa.x, _pa.y), disk((_pb.x, _pb.y), 12), EGIM["ana"], pay=600,
-              carpan=carpan_sahil * np.where(_kdis, 40.0, 1.0), yasak=YASAK_TEMEL | maske(KK_TERAS, 6))
-if _yk is None:
+_kyasak = YASAK_TEMEL | maske(KK_KUSAK, 8)
+_c0, _c1 = CEKIRDEK.coords[0], CEKIRDEK.coords[-1]
+_y1 = yol_ara((_pa.x, _pa.y), disk(_c0, 8), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_kyasak & ~disk(_c0, 20))
+_y2 = yol_ara(_c1, disk((_pb.x, _pb.y), 12), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_kyasak & ~disk(_c1, 20))
+if _y1 is None or _y2 is None:
     sys.exit("HATA: Sahil Yolu'nun kıyı köyü kesimi bulunamadı")
-_yk = yumusat(list(_yk[:-1]) + [(_pb.x, _pb.y)], tur=3, sade=6.0)
+_y1 = yumusat(list(_y1[:-1]) + [_c0], tur=3, sade=6.0)
+_y2 = yumusat([_c1] + list(_y2[1:-1]) + [(_pb.x, _pb.y)], tur=3, sade=6.0)
+_yk = [tuple(c) for c in _y1[:-1]] + list(CEKIRDEK.coords) + [tuple(c) for c in _y2[1:]]
 _p1, _p3 = substring(SAHIL, 0, _sa), substring(SAHIL, _sb, SAHIL.length)
 SAHIL = LineString(list(_p1.coords)[:-1] + _yk + list(_p3.coords)[1:])
 _L0, _Lk = _p1.length + (_sb - _sa) + _p3.length, LineString(_yk).length
@@ -494,7 +489,10 @@ _s0 = np.linspace(0, _L0, max(2, int(math.ceil(_L0 / 2.0)) + 1))      # yol yata
 SAHIL_PARCALAR[id(SAHIL)] = [_p1, LineString(_yk), _p3]
 SAHIL_ORNEK = {id(SAHIL): np.r_[_s0[_s0 < _sa], _sa + np.linspace(0, _Lk, max(2, int(math.ceil(_Lk / 2.0)) + 1)),
                                 _s0[_s0 > _sb] - _sb + _sa + _Lk]}
-print(f"  kıyı köyü kesimi yeniden: {LineString(_yk).length:.0f} m, basit: {SAHIL.is_simple}")
+print(f"  kıyı köyü kesimi yeniden: {LineString(_yk).length:.0f} m (eski hattın küçültülmüşü {CEKIRDEK.length:.0f} m), "
+      f"basit: {SAHIL.is_simple}")
+# köyün yeri artık taşınan sokakların ortası (bağlantılar buna göre)
+YERLESIM[KK_ID]["xy"] = (_kc.x, _kc.y)
 ekle(SAHIL, "ana", "Sahil Yolu", genislik=9.0)
 
 # ================================================================== 2. köy dokuları (Ege köyü)
@@ -807,69 +805,33 @@ for _yid, _ara in (("yerlesim_liman", 85.0), ("yerlesim_iskele", 80.0), ("yerles
     koy_dokusu(_yid, _ara)
 
 # ------------------------------------------------------------------ kıyı köyü (Taraftar Birahanesi)
-# Bugünkü haritadaki gibi Sahil Yolu ile deniz arasında (Kemal, 20 Kasım): terasın üstünde kıyıya koşut
-# köy sokağı (iki yanı ev sırası), Sahil Yolu'na yakın ucundan yukarı kısa bağlantı (≤ %15) ve
-# ortasından basamaklı kısa geçit. Birahanenin yeri terasın deniz yanında, bağlantının ağzında:
-# Kuzey Plajı'na bakar, köydedir, Sahil Yolu'na yakındır. Bina 3. adımda.
+# Bugünkü haritadaki köyün sokakları, taşınmış hâliyle (yukarıda KK_HAT). Birahanenin yeri: eski binanın
+# ölçüsü (22 x 15 m), önündeki kuşak yolunun aynı yerinde ve aynı yanında (Kuzey Plajı'na bakar). Eskisinde
+# bina yolun kenarına bitişikti; ölçek küçülünce bina yola binmesin diye ön yüzü yol kenarından 1,5 m geride
+# durur (yol boyundaki yeri değişmez). Bina 3. adımda.
 _ky = KK_ID
-BIRAHANE_YERI = None
-_A = KK_SOKAK
-kaynak_ekle(_A, _ky, "sokak", "kos")
-_sm_k = cizgi_maske([SAHIL], 1)
-# bağlantı: köy sokağının Sahil Yolu'na yakın ucundan Sahil Yolu'na, eğim sınırlı arama
-_ucs = sorted([0.0, _A.length], key=lambda t: SAHIL.distance(_A.interpolate(t)))
-_C = None
-for _bt in _ucs:
-    _bu = _A.interpolate(_bt)
-    _yol = yol_ara((_bu.x, _bu.y), _sm_k & disk((_bu.x, _bu.y), 400), 0.9 * EGIM["sokak"], pay=400,
-                   yasak=YASAK_TEMEL | (maske(KK_TERAS) & ~disk((_bu.x, _bu.y), 30)))
-    if _yol is None:
-        continue
-    for _sd in (9.0, 6.0, 3.5):
-        _yy = yumusat(_yol, tur=2, sade=_sd)
-        if en_buyuk_egim(LineString(_yy)) <= 0.95 * EGIM["sokak"]:
-            break
-    _q = nearest_points(SAHIL, Point(_yy[-1]))[0]
-    _yy = [(_bu.x, _bu.y)] + list(_yy[1:-1]) + [(_q.x, _q.y)]
-    _C = LineString(_yy)
-    kaynak_ekle(_C, _ky, "sokak", "kol")
-    break
-if _C is None:
-    print("  UYARI: kıyı köyü bağlantısı açılamadı")
-# ortasından Sahil Yolu'na kısa geçit (dikse basamaklı)
-_o = _A.interpolate(0.5, normalized=True)
-_so = nearest_points(SAHIL, _o)[0]
-_B = LineString([(_o.x, _o.y), (_so.x, _so.y)])
-_dik = en_buyuk_egim(_B) > 0.9 * EGIM["sokak"]
-kaynak_ekle(_B, _ky, "gecit" if _dik else "sokak", "kol", yuzey="basamak" if _dik else None)
-# birahane yeri: 30 x 24 m, terasta sokağın deniz yanında, bağlantının ağzına en yakın uygun yer
-_aday = []
-if _C is not None:
-    _bt = _ucs[0]
-    for _dt in np.arange(18.0, 120.0, 4.0):
-        _t = abs(_bt - _dt)
-        _P = _A.interpolate(_t)
-        _tt = np.subtract(_A.interpolate(min(_t + 5, _A.length)).coords[0], _A.interpolate(max(_t - 5, 0)).coords[0])
-        _tt = _tt / np.hypot(*_tt)
-        _nn = np.array([-_tt[1], _tt[0]])
-        if float(ornek(D_KARA, _P.x + _nn[0] * 10, _P.y + _nn[1] * 10)) > float(ornek(D_KARA, _P.x, _P.y)):
-            _nn = -_nn                                                   # deniz yanına
-        _m = np.array([_P.x, _P.y]) + _nn * 18.0
-        _by = Polygon([tuple(_m + a_ * 15 * _tt + b_ * 12 * _nn) for a_, b_ in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
-        if (KK_TERAS.buffer(2).contains(_by) and ADA.buffer(-15).contains(_by) and SAHIL.distance(_by) >= 6.0
-                and not any(k["geom"].intersects(_by.buffer(3)) for k in KOY_HAT if k["koy"] == _ky)):
-            BIRAHANE_YERI = _by
-            break
-if BIRAHANE_YERI is not None:
-    YASAK_TEMEL = YASAK_TEMEL | maske(BIRAHANE_YERI, 3)
-    print(f"  birahane yeri: terasta, kıyıya {BIRAHANE_YERI.distance(kiyi):.0f} m, Sahil Yolu'na "
-          f"{BIRAHANE_YERI.distance(SAHIL):.0f} m, bağlantının ağzına {BIRAHANE_YERI.distance(_C.interpolate(0)):.0f} m")
-else:
-    print("  UYARI: birahane yeri sığmadı")
-print(f"  Sahil Yolu kıyıya {float(ornek(D_KARA, _so.x, _so.y)):.0f} m (köy sokağı {KK_SOKAK_U:.0f} m)")
-print(f"  kıyı köyü: köy sokağı {_A.length:.0f} m (Sahil Yolu'nun deniz yanında), bağlantı "
-      f"{_C.length if _C is not None else 0:.0f} m (en dik %{100 * en_buyuk_egim(_C) if _C is not None else 0:.0f}), "
-      f"geçit {_B.length:.0f} m{' basamaklı' if _dik else ''}, birahane yeri {'açıldı' if BIRAHANE_YERI is not None else 'YOK'}")
+for _k, _kd in KK_ESKI:
+    kaynak_ekle(KK_HAT[_k], _ky, _kd, "kiyi")
+_bb = KURUCU["yeniBinalar"][KK_BIRAHANE_ESKI]
+KK_BIRAHANE_TASINMIS = Point(kucult(*m((_bb["x"], _bb["y"]))))
+_on = KK_HAT["kurucu_yol_muqyfdcj"]
+_P = _on.interpolate(_on.project(KK_BIRAHANE_TASINMIS))
+_tt = np.subtract(_on.coords[-1], _on.coords[0])
+_tt = _tt / np.hypot(*_tt)
+_nn = np.array([-_tt[1], _tt[0]])
+if np.dot(_nn, [KK_BIRAHANE_TASINMIS.x - _P.x, KK_BIRAHANE_TASINMIS.y - _P.y]) < 0:
+    _nn = -_nn                                                  # eskisindeki yanına
+_bm = np.array([_P.x, _P.y]) + _nn * (GENISLIK["ara"] / 2 + 1.5 + _bb["boy"] / 2)
+BIRAHANE_YERI = Polygon([tuple(_bm + a_ * _bb["en"] / 2 * _tt + b_ * _bb["boy"] / 2 * _nn)
+                         for a_, b_ in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
+_bc = min((k["geom"].distance(BIRAHANE_YERI) - k["genislik"] / 2,) for k in KOY_HAT if k["koy"] == _ky)
+YASAK_TEMEL = YASAK_TEMEL | maske(BIRAHANE_YERI, 3)
+print(f"  birahane yeri: {_bb['en']:.0f} x {_bb['boy']:.0f} m, taşınmış eski yerinden "
+      f"{BIRAHANE_YERI.centroid.distance(KK_BIRAHANE_TASINMIS):.1f} m geride, kıyıya {BIRAHANE_YERI.distance(kiyi):.0f} m, "
+      f"Sahil Yolu'na {BIRAHANE_YERI.distance(SAHIL):.0f} m, en yakın yol kenarına {_bc[0]:.1f} m")
+for _k, _kd in KK_ESKI:
+    print(f"  {_k}: {_kd}, eski {_ESKI_UZ[_k]:.0f} m → {KK_HAT[_k].length:.0f} m, en dik %{100 * en_buyuk_egim(KK_HAT[_k]):.1f}")
+print(f"  Sahil Yolu'nun köy önü (eski hattın küçültülmüşü): {CEKIRDEK.length:.0f} m, en dik %{100 * en_buyuk_egim(CEKIRDEK):.1f}")
 
 # ------------------------------------------------------------------ adlı caddeler
 def adlandir(yid, ad, kiyiya=False):
@@ -1032,8 +994,12 @@ for _t_ in np.arange(0, STAT_CEVRE.exterior.length, 5.0):
     _puan = abs(float(ornek(_Zilk, *_dis)) - SEKI_KOT) + 0.01 * Point(ky).distance(_q)
     if _puan < _en_iyi:
         _sq, _en_iyi = _q, _puan
-baglanti((_sq.x, _sq.y), koy_hedef("yerlesim_stadyum_kiyi") | sahil_parca(ky, 250),
-         "ana", "Stadyum Bağlantısı", pay=1200, sinir_carpan=0.8)   # sekiden inişte yatağa uysun
+# eskisinde köyün batı ucunun Sahil Yolu'na bağlandığı yere iner
+_j1 = KK_HAT["kurucu_yol_muqydtwz"].coords[0]
+_sbg = baglanti((_sq.x, _sq.y), disk(_j1, 10),
+                "ana", "Stadyum Bağlantısı", pay=1200, sinir_carpan=0.8)   # sekiden inişte yatağa uysun
+if _sbg is not None and Point(_sbg["geom"].coords[-1]).distance(Point(_j1)) < 12.0:
+    _sbg["geom"] = LineString(list(_sbg["geom"].coords)[:-1] + [_j1])   # köyün kuşak yoluyla aynı kavşakta
 # Çiftlik Bağlantısı: Çiftlik köyünden en yakın Sahil Yolu'na
 cf = YERLESIM["yerlesim_ciftlik"]["xy"]
 baglanti(koye_en_yakin("yerlesim_ciftlik", kiyi.interpolate(kiyi.project(Point(cf))).coords[0]),
@@ -1502,13 +1468,10 @@ ozellik.append({"type": "Feature", "properties": {"katman": "korunan", "tur": "s
 ozellik.append({"type": "Feature", "properties": {"katman": "korunan", "tur": "seki", "kotM": SEKI_KOT,
                                                   "not": "Stadın düz sekisi (stat ve çevre sokağı); dışı 1'e 3 şev"},
                 "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in SEKI.exterior.coords]]}})
-ozellik.append({"type": "Feature", "properties": {"katman": "korunan", "tur": "kiyi-koy-terasi", "kotM": KK_KOT,
-                                                  "not": "Kıyı köyünün düz terası (Sahil Yolu'nun deniz yanında); deniz yanı 1'e 3, kara yanı 1'e 2 şev"},
-                "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in KK_TERAS.exterior.coords]]}})
 if BIRAHANE_YERI is not None:
     ozellik.append({"type": "Feature", "properties": {
         "katman": "korunan", "tur": "birahane-yeri",
-        "not": "Taraftar Birahanesi için ayrılan yer (30 x 24 m); bina 3. adımda. Yola kapalı"},
+        "not": "Taraftar Birahanesi için ayrılan yer: bugünkü haritadaki binanın taşınmış yeri (önündeki yolun kenarından 1,5 m geride), ölçüsü 22 x 15 m; bina 3. adımda. Yola kapalı"},
         "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in BIRAHANE_YERI.exterior.coords]]}})
 for m_ in MEYDANCIK:
     ozellik.append({"type": "Feature", "properties": {"katman": "meydancik", "koy": m_["koy"]},
