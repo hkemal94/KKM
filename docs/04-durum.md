@@ -74,7 +74,14 @@ olduğu gibi) ve haritaya bağlı viki alanlarını (rakım, harita konumu, işa
 bilgisayara indirir ve `users/{uid}/haritaYedekleri/{id}` (+ `parcalar/`) altına tek toplu yazmada yazar. En
 çok 3 yedek; dördüncüde en eskisi yalnız Kemal onaylarsa silinir. "Yedekten geri yükle" önce farkı gösterir,
 onayla şimdiki hâli indirir, harita kaydını tek yazmada döndürür; viki alanları ayrı kutuyla. Kural
-(`firestore.rules`) yayımlanmadan kart yalnız bilgisayara indirir. Drive'a yükleme sonra.
+(`firestore.rules`) yayımlanmadan kart bilgisayara indirir ve Drive'a yazar.
+
+**Drive'a yedek** (19 Kasım, Kemal: "KKM doğrudan Drive'a"; `lib/haritaDrive.ts`): "Yedeği al" yedeği Kemal'in
+Drive'ında "KKM Yedekleri" klasörüne de yükler (klasör yoksa açılır; klasör ve dosyalar `appProperties` ile
+bulunur). İzin yalnız `drive.file` (KKM yalnız kendi açtığı dosyaları görür); Google penceresi düğmeye basınca
+açılır, belirteç yalnız bellekte durur. Kart Drive'daki son 3 yedeği gösterir; 3'ten fazlası varsa yalnız
+söyler, Drive'da hiçbir yedeği KKM silmez. "Drive'dan geri yükle" aynı önizleme ve onaydan geçer. Drive API
+Google Cloud'da açık olmalı.
 
 Eski sekme koruması: harita kaydında `kurucuSayac` (Kurucu taslağını yazan her iş bir artırır: Kurucu, 3B ev
 kartı, ajans kararı, geri yükleme) ve `adaKusagi` (yoksa 2 = bugünkü ada; 3 = kompakt ada, C adımı yazar).
