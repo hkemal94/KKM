@@ -48,8 +48,8 @@ export const TOHUMLAR: Tohum[] = [
   // Yer adları
   // Zirvelerin mahallesi haritadaki sınıra göre (2. soru turu)
   { ad: 'Ada Tepesi', tur: 'yer_adi', bolge: 'merkez', profil: { yerTuru: 'Tepe · 742 m (adanın en yüksek noktası)', adinKokeni: 'Adanın en yüksek tepesi' } },
-  { ad: 'Kuzey Sırtı', tur: 'yer_adi', bolge: 'merkez', profil: { yerTuru: 'Sırt · 386 m', adinKokeni: 'Yönünden: adanın kuzeyindeki sırt' } },
-  { ad: 'Çetmi Sırtı', tur: 'yer_adi', bolge: 'merkez', profil: { yerTuru: 'Sırt · 254 m', adinKokeni: "Küçükçetmi'den: Eskibey Ailesi'nin geldiği köy" } },
+  { ad: 'Kuzey Sırtı', tur: 'yer_adi', bolge: 'merkez', profil: { yerTuru: 'Sırt · 440 m', adinKokeni: 'Yönünden: adanın kuzeyindeki sırt' } },
+  { ad: 'Çetmi Sırtı', tur: 'yer_adi', bolge: 'merkez', profil: { yerTuru: 'Sırt · 290 m', adinKokeni: "Küçükçetmi'den: Eskibey Ailesi'nin geldiği köy" } },
   { ad: 'Fener Burnu', tur: 'yer_adi', bolge: 'liman', profil: { yerTuru: 'Burun · 118 m', adinKokeni: "Deniz Feneri'nden: fenerin durduğu burun" } },
   { ad: 'Güney Burnu', tur: 'yer_adi', bolge: 'iskele', profil: { yerTuru: 'Burun · 96 m', adinKokeni: 'Yönünden: adanın güneyindeki burun' } },
   { ad: 'İskele Koyu', tur: 'yer_adi', bolge: 'iskele', profil: { yerTuru: 'Koy, plaj' } },
