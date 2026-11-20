@@ -360,7 +360,7 @@ Bunlar kanon, kullanılabilir:
 - **Dirlik Stadı**, **Dirlik Spor Kulübü** — Stadyum Mahallesi
 - **Küçükçetmi Sürek Kulübü** — Çiftlik Mahallesi
 - **The Imperial Kemsköy** — İskele Mahallesi
-- **Kuzey Sırtı** (386 m), **Çetmi Sırtı** (254 m) — zirveler
+- **Kuzey Sırtı** (440 m), **Çetmi Sırtı** (290 m) — zirveler
 - **Fener Burnu** (118 m) — burun, Liman Mahallesi; yamacında Deniz Feneri (Kemal, 22 Ekim; 5 Kasım)
 - **Güney Burnu** (96 m) — burun, İskele Mahallesi (Kemal, 22 Ekim)
 - **Liman İdare Binası** — Liman Mahallesi
