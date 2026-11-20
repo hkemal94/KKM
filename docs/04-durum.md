@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 19 Kasım 2026 akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 20 Kasım 2026 (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); önceki: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
@@ -59,8 +59,12 @@ olmayanlar buraya yazıldı; KKM'nin ekranında ve kayıtlarında bu PR'la bir �
 - **Kitap zaman çizelgesi:** taslak ajansta (Kemal'in 16–19 Kasım cevaplarıyla). KKM'de karşılığı Atölye →
   Zaman çizgisi'nin dönemleri (`kkm_ayar` → `donemler`), onlar yalnız Kemal "Ekle"ye basınca yazılır; ajansın
   bunun için bir karar türü yok, bu PR'da da eklenmedi.
-- **Kompakt ada:** A adımı birleşti (#236). B adımı (yeni ada üreteci) Cuma'yı bekliyor: Kemal kuralı yayımlar,
-  yedeği alır. Yol haritasında `kompakt-ada-b`. Akşamki kararlar yukarıda.
+- **Kompakt ada:** A adımı birleşti (#236). **20 Kasım (Cuma) hazırlık bitti:** Kemal Firestore kuralını yayımladı
+  (10:08), harita yedeği alındı (10:10; bulut + Drive "KKM Yedekleri" + indirme; 244 yapı, 154 yol, 6 bağ, 4 evde
+  oturan, 11 viki maddesi). Sıradaki B adımı (yeni ada üreteci, `kompakt-ada-b`): Kemal planı onaylayınca başlar.
+- **Firebase ve AI Studio (20 Kasım, Kemal):** Authorized domains'te yalnız firebaseapp.com, web.app ve
+  kemskomutamerkezi.cloud.run kaldı; AI Studio yayını (kems-komuta-merkezi.ai.studio) kapatıldı. KKM yalnız
+  https://kemskomutamerkezi.cloud.run/ adresinden açılır.
 - **Vikide 3B görünüm:** modeli olan binanın maddesinde künyenin görsel alanında "Görsel · 3B" seçimi (`components/wiki/Madde3B.tsx`, bina kütüphanesinin `ModelOnizleme`'si). Eşleme kodda sabit tablo, maddenin kimliğiyle (`lib/maddeModelleri.ts`); kayda yazılmaz. Merkez Camii, Sağlık Ocağı ve Postane de kendi modelleriyle bağlandı (19 Kasım, Kemal); The Imperial vikide hafif kopyasıyla iner (`binalar/the-imperial-kemskoy-viki.glb`, 242 KB; asıl 834 KB'lık model harita, Kurucu ve galeride aynen). Karakol ve kahvehane kendi modelleriyle bağlandı (19 Kasım, Kemal; `duzada-jandarma-karakolu.glb`, `merkez-kahvehanesi.glb`). Haritada eski "Dükkânlı Ev" (`bina_apt1`) artık Düzada Jandarma Karakolu: adı, madde bağı ve etiketi üreteçten, modeli `HARITA_YAPILARI`'ndan; Kurucu'da "kamu" diye işaretli olsa da kendi modeli kalır. Merkez Kahvehanesi haritada (19 Kasım, Kemal: ajansın adaylarından B): meydanın kuzeydoğu üçgeninde, kavşağın köşesinde `bina_kahvehane`; üreteçte en son konur, öteki yapı ve arsalar yerinden oynamaz. Önü meydana bakar: üreteç yapıya `bak` noktası (meydanın ortası) yazar, 3B model önünü oraya çevirir (`modelYerlesimi.ts`).
 - **Dirlik Stadı bölümü** (Imperial gibi ayrı bölüm) planlandı, yapılmadı; yol haritasında `dirlik-stadi-bolumu`.
   Viki maddesine yalnız Kemal'in kararları ajansın "Uygula" satırıyla gider.
