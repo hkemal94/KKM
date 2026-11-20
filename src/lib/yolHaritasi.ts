@@ -439,6 +439,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Merkez Kahvehanesi haritada: Merkez Meydanı\'nın kuzeydoğu üçgeninde, kavşağın köşesinde (aday B); kendi modeliyle, önü ve çınarı meydana bakar; adı, etiketi ve viki maddesi bağlı', not: 'Üreteçte yeni yapı (bina_kahvehane), en son konur: öteki 7722 öğe aynen. Oturum 13 × 11 m, meydan üçgeninin ~80 m²\'si altında kalır; Müstakil Ev\'e ~3 m. Kayda bir şey yazılmaz.' },
   { id: 'oyun-oyna-dugmesi', paket: 'K', kimde: 'claude', nereden: '19 Kasım · Kemal', bitti: true,
     ad: 'Oyun sayfalarında "Oyna" düğmesi: sayfanın üstünde ve "Depoda aç"ın yanında; oyun yeni sekmede açılır', not: 'Adres oyunun deposundan türetilir (bilinen beş oyunda sabit tablo, lib/depoBelgesi.ts → oyunAdresi). Depo alanı boş oyunda düğme görünmez. Kayda bir şey yazılmaz.' },
+  { id: 'kunye-dogum-yili', paket: 'W', kimde: 'claude', nereden: '20 Kasım · Kemal', bitti: true,
+    ad: 'Kişi künyesinde ayrı "Doğum yılı" alanı (Yaşam\'ın önünde); soy ağacı kutusu önce onu okur ("1990" → "1990–"), Yaşam\'da ölüm yılı yazılıysa ekler, boşsa Yaşam\'a düşer', not: 'Veri göçü yok: alanı Kemal maddeyi düzenleyip doldurur. Metindeki "Doğum:", "Doğum tarihi:", "Doğum yılı:" satırları bu alana okunur. "Bilinmiyor" soy ağacında boş sayılır. Alan isteğe bağlı: doluluk yüzdesine girmez, Boşluklar\'da sorulmaz. Soy ağacı künye adlarını Türkçe harflerle doğru eşler ("Soyadı" ~ soyadi).' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,

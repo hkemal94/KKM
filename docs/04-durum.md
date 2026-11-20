@@ -5,6 +5,11 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
+## 20 Kasım: kişi künyesinde Doğum yılı
+
+Kemal: kişi künyesine ayrı bir "Doğum yılı" alanı (Yaşam yerinde kalır). Soy ağacı kutusu önce Doğum yılı'nı
+okur ("1990–"), Yaşam'da ölüm yılı varsa ekler; Doğum yılı boşsa Yaşam'ı. Veri göçü yok, alanı Kemal doldurur.
+
 ## 19 Kasım akşam: Kemal'in son kararları
 
 Kemal: "Bütün son güncellemeleri KKM'ye işle." Ajansın karar türü olan kararlar (Mini Golf Duzada kartı ve tasarım

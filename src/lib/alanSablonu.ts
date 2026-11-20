@@ -82,7 +82,7 @@ export function baslangicSablonu(anahtar: string): SablonAlani[] {
 }
 
 /**
- * Kayıttaki şablonu okur. Kayıtta olmayan yeni hazır alanlar sona eklenir
+ * Kayıttaki şablonu okur. Kayıtta olmayan yeni hazır alanlar başlangıç şablonundaki yerine eklenir
  * (kod sonradan alan eklerse kaybolmasın); bozuk girdiler atlanır.
  */
 export function sablonuOku(ham: unknown): VikiSablonu {
@@ -109,7 +109,13 @@ export function sablonuOku(ham: unknown): VikiSablonu {
         ...(a.ozel ? { ozel: true } : {})
       });
     }
-    for (const b of bas) if (!temiz.some(t => t.id === b.id)) temiz.push(b);
+    // Kayıtta olmayan hazır alan, başlangıç şablonunda önündeki alanın arkasına girer
+    // (20 Kasım: "Doğum yılı" Yaşam'ın yanında görünsün); önünde alan yoksa başa
+    bas.forEach((b, n) => {
+      if (temiz.some(t => t.id === b.id)) return;
+      const onceki = bas.slice(0, n).reverse().find(o => temiz.some(t => t.id === o.id));
+      temiz.splice(onceki ? temiz.findIndex(t => t.id === onceki.id) + 1 : 0, 0, b);
+    });
     s[anahtar] = temiz;
   }
   return s;
