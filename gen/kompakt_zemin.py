@@ -101,8 +101,8 @@ ADA = Polygon([_metre(_ll(x, y)) for x, y in ADA.exterior.coords])
 MAHALLE_KABA = {k: _kucult_geom(v) for k, v in ESKI_MAHALLE.items()}
 
 # ---------------------------------------------------------------- The Imperial
-# Kemal (20 Kasım): otel bir tepede, uçurum üstünde; kıyısına merdivenle inilir,
-# dipte küçük bir kum cebi ve iskele. Yapılar küçülmez (ölçüleri aynı), yalnız yeri
+# Kemal (20 Kasım): otel bir tepede, alçak bir yarın üstünde (künyedeki "uçurum");
+# kıyısına merdivenle inilir, dipte küçük bir kum cebi ve iskele. Yapılar küçülmez (ölçüleri aynı), yalnız yeri
 # taşınır: kum cebinin küçültülmüş yerine oturtulur, sonra sahanlığın önü kıyıdan
 # en az IMP_ON_PAY metre olsun diye içeri itilir (yamaç yumuşasın, duvar olmasın).
 def _ozellik_m(fid):
@@ -119,9 +119,11 @@ _imp_eski = {k: _ozellik_m(v) for k, v in {
 _kum_eski = Polygon(_imp_eski["kum"]).centroid if len(_imp_eski["kum"]) > 3 else \
     LineString(_imp_eski["kum"]).centroid
 _oc = Polygon(_imp_eski["otel"]).centroid
-# Otelin bugünkü yerindeki yükselti (duzada.py'nin arazisi): sahanlık kotu bu kalır.
-IMP_KOT = round(float(ESKI["yukselti"](_oc.x, _oc.y)), 1)
-IMP_ON_PAY = 75.0
+# Sahanlık kotu (Kemal, 20 Kasım, 3. tur: 58 m "hâlâ çok yüksek"; örnek fotoğraftaki
+# yamaç kadar alçak bir tepe): 15–25 m aralığının ortası. Kıyı tavanı ve kaya bandı
+# bu kotta kendiliğinden yükselir; otel çevresinin en yükseği olur.
+IMP_KOT = 20.0
+IMP_ON_PAY = 45.0
 IMP_KUM_KAYMA = 45.0      # kum cebi, dip terasın kıyı boyunca bu kadar yanında (m)
 _kx, _ky = kucult(_kum_eski.x, _kum_eski.y)
 _kq = ADA.exterior.interpolate(ADA.exterior.project(Point(_kx, _ky)))
@@ -149,15 +151,15 @@ _vx, _vy = _ic.x - _kq.x, _ic.y - _kq.y
 _vn = math.hypot(_vx, _vy)
 IMP_DIP_TERAS = (_kq.x + _vx / _vn * IMP_TERAS_GERI, _kq.y + _vy / _vn * IMP_TERAS_GERI)
 # Merdivenin geçeceği hat (öneri, ince çizgi): sahanlığın kıyıya en yakın ucundan
-# dip terasa beş kollu zikzak. Merdivenin kendisi 2. adımda.
+# dip terasa üç kollu kısa zikzak (alçak yar). Merdivenin kendisi 2. adımda.
 _sah0 = unary_union([Polygon(IMP["otel"]), Polygon(IMP["teras"])])
 _bas_m = _sah0.exterior.interpolate(_sah0.exterior.project(Point(*IMP_DIP_TERAS)))
 _ddx, _ddy = IMP_DIP_TERAS[0] - _bas_m.x, IMP_DIP_TERAS[1] - _bas_m.y
 _dl = math.hypot(_ddx, _ddy)
 _px, _py = -_ddy / _dl, _ddx / _dl
 _zz = [(_bas_m.x, _bas_m.y)]
-for _k, _t in enumerate((0.18, 0.36, 0.54, 0.72, 0.88)):
-    _yan = 22.0 if _k % 2 == 0 else -22.0
+for _k, _t in enumerate((0.33, 0.66)):
+    _yan = 16.0 if _k % 2 == 0 else -16.0
     _zz.append((_bas_m.x + _ddx * _t + _px * _yan, _bas_m.y + _ddy * _t + _py * _yan))
 _zz.append(IMP_DIP_TERAS)
 IMP_MERDIVEN = LineString(_zz)
@@ -461,12 +463,18 @@ for _y in YERLESIMLER:
     _lp = ndimage.gaussian_filter(Z, max(4.0, _r / 2.5 / HUCRE))
     Z = Z * (1 - _w) + (_lp + 0.3 * (Z - _lp)) * _w
 
-# The Imperial tepesi: sahanlık düz (IMP_KOT), çevresi her yönde inen bir tepe;
-# arkada hafif bir boyun kalır, otel kendi tepesinde durur.
+# The Imperial tepesi: sahanlık düz (IMP_KOT), çevresi her yönde ondan aşağı iner
+# (alçak, yuvarlak bir tepe); 150 m'den sonra arazi kendi hâline döner, arkada
+# hafif bir boyun kalabilir. Arazi zaten alçaksa yükseltilmez (çukur açılmaz).
 SAHANLIK = _icinde(IMP_SAHANLIK)
 _dp = ndimage.distance_transform_edt(~SAHANLIK) * HUCRE
-_w = (1 - smoothstep(110.0, 280.0, _dp)) * KARA
-Z = Z * (1 - _w) + (IMP_KOT - 0.13 * _dp) * _w
+_w = (1 - smoothstep(150.0, 320.0, _dp)) * KARA
+_tepe = IMP_KOT - 0.6 - 9.0 * smoothstep(0.0, 140.0, _dp) - 0.03 * _dp
+Z = Z * (1 - _w) + np.minimum(Z, _tepe) * _w
+# Sahanlığın hemen çevresi düz basamaktan yamaca yumuşak geçer
+_wy = (1 - smoothstep(0.0, 40.0, _dp)) * KARA
+Z = Z * (1 - _wy) + np.minimum(np.maximum(Z, IMP_KOT - 0.10 * _dp - 4.0 * smoothstep(10.0, 40.0, _dp)),
+                               IMP_KOT - 0.6) * _wy
 Z = np.where(SAHANLIK, IMP_KOT, Z)
 # Merdiven yamacı: hattın üstünde zemin terastan kum cebine düzgün iner
 _hat = np.asarray(IMP_MERDIVEN.coords)
