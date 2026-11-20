@@ -251,6 +251,24 @@ def main():
         yaz("Birahane yeri yola kapalı", not giren, ", ".join(giren) or "içinden yol geçmiyor")
     else:
         yaz("Birahane yeri", False, "yok")
+    # 10) kıyı köyü: düz terasta, Sahil Yolu'nun deniz yanında (Kemal, 20 Kasım)
+    if "kiyi-koy-terasi" in korunan:
+        kt = korunan["kiyi-koy-terasi"]
+        gx_ = b["x0"] + np.arange(Z.shape[1]) * h
+        gy_ = b["y0"] + np.arange(Z.shape[0]) * h
+        from matplotlib.path import Path as _P
+        XX, YY = np.meshgrid(gx_, gy_)
+        m_ = _P(np.asarray(kt.buffer(-h).exterior.coords)).contains_points(np.column_stack([XX.ravel(), YY.ravel()])).reshape(Z.shape)
+        yaz("Kıyı köyü terası düz", float(np.ptp(Z[m_])) <= 0.5, f"içinde fark {np.ptp(Z[m_]):.2f} m, kot {Z[m_].mean():.1f} m")
+        sy = next((y["g"] for y in G if y["p"].get("ad") == "Sahil Yolu"), None)
+        if sy is not None:
+            c_ = kt.centroid
+            q_ = sy.interpolate(sy.project(c_))
+            ic_ = [kt, korunan["birahane-yeri"]] if "birahane-yeri" in korunan else [kt]
+            yaz("Kıyı köyü Sahil Yolu'nun deniz yanında", all(kiyi.distance(g_) < kiyi.distance(q_) for g_ in ic_),
+                f"teras kıyıya {kiyi.distance(kt):.0f} m, Sahil Yolu {kiyi.distance(q_):.0f} m")
+    else:
+        yaz("Kıyı köyü terası", False, "yok")
     print("Zemin denetimi (yol yatağıyla):")
     sorun += zd.main()
     print("Sonuç:", "hepsi temiz" if sorun == 0 else f"{sorun} sorun")
