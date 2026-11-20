@@ -127,7 +127,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   özelleştirilip otel oldu (1960'lar, bir şirkete geçti: İstanbul merkezli,
   Türkiye'nin en büyük şirketlerinden, bir devlet bankasının iştiraki; adı
   yok — W3 63–64. tur). Parlak dönemi hep sürdü; her
-  dönemde farklı yüksek profilli misafirler. Otelin sahili uçurumun dibinde
+  dönemde farklı yüksek profilli misafirler. Otelin sahili kayalık yamacın dibinde
   ayrı küçük bir cep.
 - **Elektrik** — 1950–1960'lar: önce otelin jeneratörü, köy hemen ardından.
 - **Eski kilise** — 18. yüzyıl, İskele'de, boş; belediye bakar ama kapalı.
@@ -243,7 +243,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   ~1.000 kişilik. Her 12 Mayıs kulüp günü: stadda mahallelerin karışık
   takımlarıyla dostluk maçı.
 - **Otel** — giriş katı, 4 oda katı ve kuleler (Kemal, 14 Kasım), kesme taş;
-  İskele'de yarımada ucunda, uçurumun üstünde (sahili dipte ayrı bir cep). 20
+  İskele'de yarımada ucunda, kayalık yamacın üstünde (sahili dipte ayrı bir cep). 20
   oda.
 - **Doğa** — feribot yolunda yunus. Yaban domuzu (eski sürek avının
   hedefi), yaban tavşanı, keklik; kıyıda martı ve karabatak; baharda ve
@@ -308,7 +308,7 @@ Ayrıntı: `docs/soru-cevap/madde-1.md`.
 - **Kemsköy Caddesi** — Kems Company dükkânı, Eski Kilise, barlar ve
   meyhaneler bu caddede. **Sade Meyhane** caddede değil: otelin yanında,
   koya bakan yamaçta (Kemal, 8 Kasım 2026: harita doğru).
-- **Otel** — Sahil Merdiveni otelden uçurum boyunca inen taş merdiven;
+- **Otel** — Sahil Merdiveni otelden kayalık yamaç boyunca inen taş merdiven;
   dipte otelin kum cebi ve tahta iskele; Otel Yolu otele çıkar. Otelin
   restoranı otelin içinde, sol kulede; ayrı bir restoran yapısı yok (Kemal,
   7 Kasım 2026).
@@ -339,7 +339,7 @@ Ayrıntı: `docs/soru-cevap/madde-2.md`.
 ## The Imperial Kemsköy
 
 Bütün projenin başlangıç noktası. Haydarpaşa Gar binasının küçüğü gibi
-tasarlanmış; denize kıyı bir uçurumun yanında. Taş merdivenlerle aşağıdaki
+tasarlanmış; denize kıyı, kayalık bir yamacın üstünde. Taş merdivenlerle aşağıdaki
 küçük sahil alanına iniliyor.
 
 Kendi tanımı: *"1954 kuruluş tarihli, neo-klasik üslupta inşa edilmiş
