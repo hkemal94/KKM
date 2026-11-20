@@ -19,7 +19,8 @@ import kompakt_zemin_denetim as zd  # noqa: E402
 
 KOK = os.path.dirname(BURASI)
 YOLLAR = os.path.join(KOK, "public", "harita", "duzada-yollar.geojson")
-EGIM = {"ana": 0.10, "sokak": 0.15, "toprak": 0.15}
+EGIM = {"ana": 0.10, "ara": 0.10, "sokak": 0.15, "gecit": 0.15, "toprak": 0.15}
+SERBEST = ("patika", "merdiven", "basamak")   # eğim sınırı yok (basamaklı geçit dahil)
 PENCERE = 20.0      # m; eğim bu uzunlukta ölçülür
 OTURMA = 1.0        # m; yol yüzeyi ile zemin arasında en çok fark (köprü dışında)
 KIYI_PAY = 15.0     # m; yol kıyıya bundan çok yaklaşmaz (merdiven hariç)
@@ -60,7 +61,9 @@ def main():
     for f in yollar:
         c = np.asarray(f["geometry"]["coordinates"], float)
         x, y = mt(c[:, 0], c[:, 1])
-        G.append(dict(p=f["properties"], xy=np.column_stack([x, y]), z=c[:, 2], g=LineString(np.column_stack([x, y]))))
+        p_ = dict(f["properties"])
+        p_["k"] = "basamak" if p_["kademe"] == "gecit" and p_["tur"] == "basamak" else p_["kademe"]
+        G.append(dict(p=p_, xy=np.column_stack([x, y]), z=c[:, 2], g=LineString(np.column_stack([x, y]))))
 
     # köprü kesimleri (yolun üstünde, uzunluk boyunca)
     kop_g = {}
@@ -70,9 +73,11 @@ def main():
 
     uz = {}
     for y in G:
-        uz[y["p"]["tur"]] = uz.get(y["p"]["tur"], 0.0) + y["g"].length
+        uz[y["p"]["kademe"]] = uz.get(y["p"]["kademe"], 0.0) + y["g"].length
     T = sum(uz.values())
-    print("Uzunluk:", ", ".join(f"{k} {v / 1000:.1f} km" for k, v in sorted(uz.items())), f"· toplam {T / 1000:.1f} km")
+    sira = ["ana", "ara", "sokak", "gecit", "toprak", "patika", "merdiven"]
+    print("Uzunluk (kademe):", ", ".join(f"{k} {uz[k] / 1000:.1f} km (%{100 * uz[k] / T:.0f})" for k in sira if k in uz),
+          f"· toplam {T / 1000:.1f} km")
     yaz("Toprak yol payı (uzunluk)", uz.get("toprak", 0) / T <= 0.12,
         f"%{100 * uz.get('toprak', 0) / T:.1f} (patikayla %{100 * (uz.get('toprak', 0) + uz.get('patika', 0)) / T:.1f})")
 
@@ -81,7 +86,7 @@ def main():
         en, asan, top = 0.0, 0.0, 0.0
         kim = ""
         for y in G:
-            if y["p"]["tur"] != tur:
+            if y["p"]["k"] != tur:
                 continue
             g = LineString(np.column_stack([y["xy"], y["z"]]))
             L = y["g"].length
@@ -99,10 +104,10 @@ def main():
                 kim += f" @ {q[0]:.0f},{q[1]:.0f}"
         yaz(f"Eğim, {tur} (sınır %{lim * 100:.0f})", asan == 0,
             f"en dik %{en * 100:.1f} ({kim}); sınırı aşan {asan:.0f} m")
-    for tur in ("patika", "merdiven"):
+    for tur in SERBEST:
         en = 0.0
         for y in G:
-            if y["p"]["tur"] == tur and y["g"].length > PENCERE:
+            if y["p"]["k"] == tur and y["g"].length > PENCERE:
                 g = LineString(np.column_stack([y["xy"], y["z"]]))
                 s = np.arange(0, y["g"].length + 0.01, 2.0)
                 pts = np.array([g.interpolate(t).coords[0] for t in s])
@@ -143,7 +148,7 @@ def main():
     kiyi = ada.exterior
     en_y, kim = 1e9, ""
     for y in G:
-        if y["p"]["tur"] == "merdiven":
+        if y["p"]["k"] in ("merdiven", "basamak"):
             if not ada.buffer(0.5).contains(y["g"]):
                 yaz("Merdiven karada", False, "merdivenin bir kısmı denizde")
             continue
@@ -152,7 +157,7 @@ def main():
             dd = -1
         if dd < en_y:
             en_y, kim = dd, y["p"].get("ad") or y["p"]["id"]
-    yaz("Kıyıya taşma (merdiven hariç)", en_y >= KIYI_PAY, f"kıyıya en yakın yol {en_y:.0f} m ({kim}); sınır {KIYI_PAY:.0f} m")
+    yaz("Kıyıya taşma (merdiven ve basamaklı geçit hariç)", en_y >= KIYI_PAY, f"kıyıya en yakın yol {en_y:.0f} m ({kim}); sınır {KIYI_PAY:.0f} m")
 
     # 4) kendi kendini kesme
     kesen = [y["p"].get("ad") or y["p"]["id"] for y in G if not y["g"].is_simple]
@@ -221,6 +226,31 @@ def main():
     yaz("Otel Yolu sahanlığa çıkıyor", oy is not None and imp["sahanlik"].buffer(3).contains(Point(oy["xy"][-1])),
         f"son nokta sahanlığa {imp['sahanlik'].distance(Point(oy['xy'][-1])):.1f} m" if oy else "yok")
 
+    # 8) alanlar: her yolda kalıcı kimlik, kademe, tür, ad, viki, genişlik
+    gerek = ("id", "kademe", "tur", "kurucuTuru", "ad", "vikiId", "genislik")
+    eksik = [y["p"].get("id", "?") for y in G if any(k_ not in y["p"] for k_ in gerek)]
+    idler = [y["p"]["id"] for y in G]
+    yaz("Her yolda alanlar (id, kademe, tur, kurucuTuru, ad, vikiId, genislik)", not eksik, ", ".join(eksik[:5]) or "tam")
+    yaz("Kimlikler tekil", len(idler) == len(set(idler)), f"{len(idler)} yol, {len(set(idler))} kimlik")
+    adli = {y["p"]["ad"]: y["p"]["id"] for y in G if y["p"]["ad"]}
+    yaz("Adlı yol kimliği addan (kalıcı)", all(v.startswith("yol_") for v in adli.values()) and len(adli) == sum(1 for y in G if y["p"]["ad"]),
+        f"{len(adli)} adlı yol")
+    # 9) stat sekisi düz, birahane yeri yola kapalı
+    if "seki" in korunan:
+        gx_ = b["x0"] + np.arange(Z.shape[1]) * h
+        gy_ = b["y0"] + np.arange(Z.shape[0]) * h
+        from matplotlib.path import Path as _P
+        XX, YY = np.meshgrid(gx_, gy_)
+        sk = korunan["seki"].buffer(-h)
+        m_ = _P(np.asarray(sk.exterior.coords)).contains_points(np.column_stack([XX.ravel(), YY.ravel()])).reshape(Z.shape)
+        yaz("Stat sekisi düz", float(np.ptp(Z[m_])) <= 0.3, f"içinde fark {np.ptp(Z[m_]):.2f} m, kot {Z[m_].mean():.1f} m")
+    else:
+        yaz("Stat sekisi", False, "yok")
+    if "birahane-yeri" in korunan:
+        giren = [y["p"].get("ad") or y["p"]["id"] for y in G if y["g"].intersects(korunan["birahane-yeri"].buffer(-0.5))]
+        yaz("Birahane yeri yola kapalı", not giren, ", ".join(giren) or "içinden yol geçmiyor")
+    else:
+        yaz("Birahane yeri", False, "yok")
     print("Zemin denetimi (yol yatağıyla):")
     sorun += zd.main()
     print("Sonuç:", "hepsi temiz" if sorun == 0 else f"{sorun} sorun")
