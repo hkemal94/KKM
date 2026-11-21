@@ -47,16 +47,19 @@ CIKTI = os.path.join(KOK, "public", "harita", "duzada-parseller.geojson")
 # Kademeye göre parsel: cephe (yol boyunca, m), derinlik (yoldan içeri, m). Tür satırı.
 OLCU = {   # DENEME
     "bitisik": {"ana": (8.0, 16.0), "ara": (7.5, 15.0), "sokak": (7.0, 14.0), "gecit": (6.0, 12.0)},
-    "avlulu": {"ara": (18.0, 24.0), "sokak": (15.0, 20.0), "gecit": (12.0, 16.0)},
+    # Kemal 21 Kasım: daha seyrek (DENEME)
+    "avlulu": {"ara": (21.0, 30.0), "sokak": (18.0, 26.0), "gecit": (15.0, 20.0)},
     "buyuk": {"ana": (24.0, 32.0)},
 }
 CEPHE_OYNAMA = {"bitisik": 0.20, "avlulu": 0.15, "buyuk": 0.10}   # DENEME: cephe ± bu oranda değişir (sıra ev çeşitliliği)
-ARA_PAY = {"bitisik": 0.0, "avlulu": 1.0, "buyuk": 2.0}           # DENEME: komşu parseller arası (m); bitişikte ortak duvar
+ARA_PAY = {"bitisik": 0.0, "avlulu": 3.0, "buyuk": 2.0}           # DENEME: komşu parseller arası (m); bitişikte ortak duvar; avlulu 3 m (Kemal 21 Kasım: daha seyrek)
 KALDIRIM = 1.0          # DENEME: yol kenarı ile parsel önü arası (m)
 KOSE_PAY = 2.0          # DENEME: kavşakta öbür yolun kenarından en az bu kadar geri (m)
 DERINLIK_EN_AZ = 0.6    # DENEME: köşede sığmazsa derinlik bu orana kadar kısalır
 CEPHE_EN_AZ = 0.7       # DENEME: sığmazsa cephe bu orana kadar kısalır
 ADIM = 2.0              # m; parsel sığmayınca yol boyunca bu kadar ilerlenir
+ON_SEHIM = 1.0          # m; eğri yolda ön kenarın ortası kaldırımdan en çok bu kadar açılır (denetim 1,5 m)
+CAKISMA_PAYI = 0.2      # m²; komşu parselle en çok bu kadar değebilir (denetim 0,5 m²; koordinat yuvarlaması için pay)
 BUKUM_SINIRI = 30.0     # DENEME: cephe boyunca yol bundan çok dönerse (derece) parsel konmaz (yelpaze parsel olmasın)
 EGIM_SINIRI = 0.30      # DENEME: parselin ortalama eğimi en çok %30 (yaklaşık 17 derece)
 KIYI_SERIDI = 25.0      # DENEME: kıyıdan bu kadar içerisi parselsiz (m)
@@ -212,7 +215,7 @@ def komsu_cakisir(poly):
     if _agac is not None:
         hepsi = [_konan[i] for i in _agac.query(poly)]
     hepsi += _bekleyen
-    return any(poly.intersection(q).area > 0.5 for q in hepsi)
+    return any(poly.intersection(q).area > CAKISMA_PAYI for q in hepsi)
 
 
 _bekleyen = []   # bu yolda konan ama ağaca henüz girmemiş parseller
@@ -235,6 +238,9 @@ def dene(y, s, w, d, taraf, o, L):
     b = (p1.x + n1[0] * o, p1.y + n1[1] * o)
     c = (p1.x + n1[0] * (o + d), p1.y + n1[1] * (o + d))
     e = (p0.x + n0[0] * (o + d), p0.y + n0[1] * (o + d))
+    # eğri yolun dış yanında ön kenarın ortası yoldan açılır (kiriş sehimi); denetimin payından önce dur
+    if g.distance(Point((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)) > o + ON_SEHIM:
+        return None, "gecersiz"
     poly = Polygon([a, b, c, e])
     if not poly.is_valid or poly.area < 0.6 * w * d:
         return None, "gecersiz"
