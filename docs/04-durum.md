@@ -1,17 +1,9 @@
 # Durum
 
-**Son güncelleme: 21 Kasım 2026 gece (Taraftar Birahanesi plajda); önceki: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 21 Kasım 2026 gece (tek harita 4. adım: evler ve yapılar arsalarda); önceki: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
-
-## 21 Kasım gece: Taraftar Birahanesi plajda
-
-Kemal: "Plaja taşıdığım yer gelsin." Birahane, Kemal'in Kurucu'da plaja doğru taşıdığı son yerin (16 Kasım) adanın
-küçültmesiyle (0,70, aynı odak) taşınmışına kondu: taban modelin tabanı 20 x 27,5 m, önü Kuzey Plajı'na, kıyıya 42 m.
-Kumsal payı (arsalarda kıyıdan 85 m) birahane için gevşedi, çünkü yeri Kemal seçti (DENEME); 25 m kıyı şeridine girmez.
-Arkasından köy sokağına yaklaşık 200 m'lik bir geçit bağlanır. Yollar, arsalar, kareler ve yapılar yeniden üretildi;
-yalnız harita verisi, ekranda bir şey değişmez.
 
 ## 21 Kasım gece: tek harita 4. adım: evler ve yapılar arsalarda
 

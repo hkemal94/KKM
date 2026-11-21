@@ -805,45 +805,32 @@ for _yid, _ara in (("yerlesim_liman", 85.0), ("yerlesim_iskele", 80.0), ("yerles
     koy_dokusu(_yid, _ara)
 
 # ------------------------------------------------------------------ kıyı köyü (Taraftar Birahanesi)
-# Bugünkü haritadaki köyün sokakları, taşınmış hâliyle (yukarıda KK_HAT).
-# Birahanenin yeri (Kemal 21 Kasım: "plaja taşıdığım yer gelsin"): Kemal'in Kurucu'da plaja doğru taşıdığı son
-# yer (Kems-Ajans kkm/harita-duzeni.json, 16 Kasım; gen/kompakt-yapilar-eski.json'da donmuş) köyle aynı
-# küçültmeyle (0,70, aynı odak) taşınır. Taban modelin tabanı (taraftar-birahanesi.glb 20 x 27,5 m, DENEME);
-# önü en yakın kıyıya, yani Kuzey Plajı'na bakar. Kumsal payı (arsalarda kıyıdan 85 m) burada gevşer: yeri
-# Kemal seçti (DENEME); 25 m'lik kıyı şeridine yine girmez. Köyün sokağına arkasından dar bir geçitle bağlanır.
+# Bugünkü haritadaki köyün sokakları, taşınmış hâliyle (yukarıda KK_HAT). Birahanenin yeri: modelinin tabanı
+# (Kemal 21 Kasım: ayrılan yer modele göre büyüsün; taraftar-birahanesi.glb 20 x 27,5 m, DENEME), önündeki
+# kuşak yolunun aynı yerinde ve aynı yanında (Kuzey Plajı'na bakar; eskisi 22 x 15 m idi). Eskisinde
+# bina yolun kenarına bitişikti; ölçek küçülünce bina yola binmesin diye ön yüzü yol kenarından 1,5 m geride
+# durur (yol boyundaki yeri değişmez). Bina 3. adımda.
 _ky = KK_ID
 for _k, _kd in KK_ESKI:
     kaynak_ekle(KK_HAT[_k], _ky, _kd, "kiyi")
-_eski = json.load(open(os.path.join(BURASI, "kompakt-yapilar-eski.json"), encoding="utf-8"))
-_bb = next(e for e in _eski["yapilar"] if e["id"] == KK_BIRAHANE_ESKI)
-BIRAHANE_OLCU = (20.0, 27.5)          # DENEME: cephe x derinlik (modelin tabanı)
-BIRAHANE_KIYI_SERIDI = 25.0           # kıyı şeridi (arsalarla aynı); kumsal payı birahanede yok (Kemal seçti, DENEME)
-KK_BIRAHANE_TASINMIS = Point(kucult(*m(_bb["eskiKonum"])))
-_q = kiyi.interpolate(kiyi.project(KK_BIRAHANE_TASINMIS))
-_on = np.subtract(_q.coords[0], KK_BIRAHANE_TASINMIS.coords[0]); _on = _on / np.hypot(*_on)    # plaja
-_yan = np.array([-_on[1], _on[0]])
-_bm = np.array(KK_BIRAHANE_TASINMIS.coords[0])
-# ön yüz kıyı şeridine girerse merkez içeri çekilir
-while kiyi.distance(Point(_bm + _on * BIRAHANE_OLCU[1] / 2)) < BIRAHANE_KIYI_SERIDI:
-    _bm = _bm - _on * 0.5
-BIRAHANE_YERI = Polygon([tuple(_bm + a_ * BIRAHANE_OLCU[0] / 2 * _yan + b_ * BIRAHANE_OLCU[1] / 2 * _on)
+_bb = dict(KURUCU["yeniBinalar"][KK_BIRAHANE_ESKI])
+_bb["en"], _bb["boy"] = 20.0, 27.5     # DENEME: modelin tabanı (cephe x derinlik)
+KK_BIRAHANE_TASINMIS = Point(kucult(*m((_bb["x"], _bb["y"]))))
+_on = KK_HAT["kurucu_yol_muqyfdcj"]
+_P = _on.interpolate(_on.project(KK_BIRAHANE_TASINMIS))
+_tt = np.subtract(_on.coords[-1], _on.coords[0])
+_tt = _tt / np.hypot(*_tt)
+_nn = np.array([-_tt[1], _tt[0]])
+if np.dot(_nn, [KK_BIRAHANE_TASINMIS.x - _P.x, KK_BIRAHANE_TASINMIS.y - _P.y]) < 0:
+    _nn = -_nn                                                  # eskisindeki yanına
+_bm = np.array([_P.x, _P.y]) + _nn * (GENISLIK["ara"] / 2 + 1.5 + _bb["boy"] / 2)
+BIRAHANE_YERI = Polygon([tuple(_bm + a_ * _bb["en"] / 2 * _tt + b_ * _bb["boy"] / 2 * _nn)
                          for a_, b_ in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
-# arkasından köy sokağına geçit (eğim sınırıyla, A*)
-_arka = _bm - _on * (BIRAHANE_OLCU[1] / 2 + 2.0)
-_hedef = maske(unary_union([KK_HAT[k] for k, _ in KK_ESKI]), GENISLIK["sokak"] / 2 + 1.0)
-_g = yol_ara(tuple(_arka), _hedef, EGIM["gecit"], yasak=YASAK_TEMEL | maske(BIRAHANE_YERI, 1))
-if _g is None:
-    raise SystemExit("birahane geçidi bulunamadı")
-_ag = unary_union([KK_HAT[k] for k, _ in KK_ESKI])
-_g[-1] = nearest_points(_ag, Point(_g[-1]))[0].coords[0]          # ucu sokağın çizgisine oturur
-_g[0] = tuple(_bm - _on * (BIRAHANE_OLCU[1] / 2 + GENISLIK["gecit"] / 2 + 0.3))   # öbür ucu binanın arka yüzünde
-BIRAHANE_GECIDI = LineString(_g).simplify(0.5)
-kaynak_ekle(BIRAHANE_GECIDI, _ky, "gecit", "kiyi")
-_bc = min((k["geom"].distance(BIRAHANE_YERI) - k["genislik"] / 2,) for k in KOY_HAT if k["koy"] == _ky and k["geom"] is not BIRAHANE_GECIDI)
+_bc = min((k["geom"].distance(BIRAHANE_YERI) - k["genislik"] / 2,) for k in KOY_HAT if k["koy"] == _ky)
 YASAK_TEMEL = YASAK_TEMEL | maske(BIRAHANE_YERI, 3)
-print(f"  birahane yeri: {BIRAHANE_OLCU[0]:.0f} x {BIRAHANE_OLCU[1]:.1f} m, Kurucu'daki son yerinden (taşınmış) "
-      f"{BIRAHANE_YERI.centroid.distance(KK_BIRAHANE_TASINMIS):.1f} m, kıyıya {BIRAHANE_YERI.distance(kiyi):.0f} m, "
-      f"geçit {BIRAHANE_GECIDI.length:.0f} m (en dik %{100 * en_buyuk_egim(BIRAHANE_GECIDI):.1f}), köyün öbür sokaklarına {_bc[0]:.1f} m")
+print(f"  birahane yeri: {_bb['en']:.0f} x {_bb['boy']:.0f} m, taşınmış eski yerinden "
+      f"{BIRAHANE_YERI.centroid.distance(KK_BIRAHANE_TASINMIS):.1f} m geride, kıyıya {BIRAHANE_YERI.distance(kiyi):.0f} m, "
+      f"Sahil Yolu'na {BIRAHANE_YERI.distance(SAHIL):.0f} m, en yakın yol kenarına {_bc[0]:.1f} m")
 for _k, _kd in KK_ESKI:
     print(f"  {_k}: {_kd}, eski {_ESKI_UZ[_k]:.0f} m → {KK_HAT[_k].length:.0f} m, en dik %{100 * en_buyuk_egim(KK_HAT[_k]):.1f}")
 print(f"  Sahil Yolu'nun köy önü (eski hattın küçültülmüşü): {CEKIRDEK.length:.0f} m, en dik %{100 * en_buyuk_egim(CEKIRDEK):.1f}")
@@ -1486,7 +1473,7 @@ ozellik.append({"type": "Feature", "properties": {"katman": "korunan", "tur": "s
 if BIRAHANE_YERI is not None:
     ozellik.append({"type": "Feature", "properties": {
         "katman": "korunan", "tur": "birahane-yeri",
-        "not": "Taraftar Birahanesi için ayrılan yer: Kemal'in Kurucu'da plaja taşıdığı son yerin taşınmışı (21 Kasım), ölçüsü 20 x 27,5 m (modelin tabanı, DENEME), önü plaja; kumsal payı gevşek (Kemal seçti, DENEME), 25 m kıyı şeridi dışında; arkasından geçitle köy sokağına bağlı. Yola kapalı"},
+        "not": "Taraftar Birahanesi için ayrılan yer: bugünkü haritadaki binanın taşınmış yeri (önündeki yolun kenarından 1,5 m geride), ölçüsü 20 x 27,5 m (modelin tabanı; Kemal 21 Kasım, DENEME); bina 4. adımda. Yola kapalı"},
         "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in BIRAHANE_YERI.exterior.coords]]}})
 for m_ in MEYDANCIK:
     ozellik.append({"type": "Feature", "properties": {"katman": "meydancik", "koy": m_["koy"]},

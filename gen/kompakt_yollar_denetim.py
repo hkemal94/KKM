@@ -274,15 +274,15 @@ def main():
     yaz("Kıyı köyü sokakları bugünkü haritadakiyle aynı hat (0,70 ile taşınmış)", max(sap) <= 1.0,
         f"{len(kk)} yol, taşınmış eski hattan en çok {max(sap):.2f} m sapma")
     if "birahane-yeri" in korunan:
-        # Kemal 21 Kasım: Kurucu'da plaja taşıdığı son yer (kkm/harita-duzeni.json, 16 Kasım; gen/kompakt-yapilar-eski.json)
-        _es = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "kompakt-yapilar-eski.json"), encoding="utf-8"))
-        _bk = next(e for e in _es["yapilar"] if e["id"] == "kurucu_bina_mw1zb16h")["eskiKonum"]
-        bq = Point(tasi(*_bk))
-        _fark = korunan["birahane-yeri"].centroid.distance(bq)
-        yaz("Birahane yeri Kemal'in Kurucu'da plaja taşıdığı yerin taşınmışında", _fark <= 6.0,
-            f"fark {_fark:.2f} m, kıyıya {kiyi.distance(korunan['birahane-yeri']):.0f} m")
-        yaz("Birahane yeri 25 m kıyı şeridinin dışında", kiyi.distance(korunan["birahane-yeri"]) >= 25.0 - 0.05,
-            f"kıyıya {kiyi.distance(korunan['birahane-yeri']):.1f} m")
+        bb = kur["yeniBinalar"]["kurucu_bina_mw1zb16h"]
+        bq = Point(tasi(bb["x"], bb["y"]))
+        # ölçek küçülünce bina yola binmesin diye ön yüzü yol kenarından 1,5 m geri çekilir (en çok birkaç metre).
+        # Kemal 21 Kasım: yer modele göre derinleşti (15 → 27,5 m); ön yüz yerinde, merkez derinlik farkının yarısı kadar geride
+        _rk = list(korunan["birahane-yeri"].minimum_rotated_rectangle.exterior.coords)
+        _derin = max(math.dist(_rk[0], _rk[1]), math.dist(_rk[1], _rk[2]))
+        _pay = 6.0 + max(0.0, (_derin - bb["boy"]) / 2)
+        yaz("Birahane yeri eski binanın taşınmış yerinde", korunan["birahane-yeri"].centroid.distance(bq) <= _pay,
+            f"fark {korunan['birahane-yeri'].centroid.distance(bq):.2f} m, kıyıya {kiyi.distance(korunan['birahane-yeri']):.0f} m")
         sy = next((y["g"] for y in G if y["p"].get("ad") == "Sahil Yolu"), None)
         if sy is not None:
             q_ = sy.interpolate(sy.project(bq))
