@@ -251,15 +251,19 @@ def main():
         yaz("Birahane yeri yola kapalı", not giren, ", ".join(giren) or "içinden yol geçmiyor")
     else:
         yaz("Birahane yeri", False, "yok")
-    # 10) kıyı köyü: bugünkü haritadaki sokak hatları, 0,70 ile taşınmış (Kemal, 20 Kasım akşam)
+    # 10) kıyı köyü: bugünkü haritadaki sokak hatları, 0,70 ile taşınmış (Kemal, 20 Kasım akşam), bütünüyle kıyıya
+    #     kaymış (Kemal, 21 Kasım)
     gs = open(os.path.join(KOK, "src", "data", "kurucuGomulu.ts"), encoding="utf-8").read()
     gi = gs.index("JSON.parse(", gs.index("GOMULU_DUZEN")) + len("JSON.parse(")
     kur = json.loads(json.loads(gs[gi:gs.index('");', gi) + 1]))["kurucuIslenen"]
     ox, oy = b["odak"]
 
+    # Kemal 21 Kasım: köy kıyıya doğru bütünüyle kaydı (duzada-sinirlar.geojson "kaymaM")
+    _kay = next((f["properties"].get("kaymaM") for f in yer if f["properties"]["id"] == "yerlesim_stadyum_kiyi"), None) or (0.0, 0.0)
+
     def tasi(lng, lat):
         x, y = mt(lng, lat)
-        return (ox + b["olcek"] * (x - ox), oy + b["olcek"] * (y - oy))
+        return (ox + b["olcek"] * (x - ox) + _kay[0], oy + b["olcek"] * (y - oy) + _kay[1])
     kk = ["kurucu_yol_muqydtwz", "kurucu_yol_muqyfr79", "kurucu_yol_muqyfdcj", "kurucu_yol_muqygcwx",
           "kurucu_yol_muqyfdcj_1", "kurucu_yol_muqyfdcj_2", "kurucu_yol_muqyfdcj_3", "kurucu_yol_muqyghd4",
           "kurucu_yol_muqyh31i"]

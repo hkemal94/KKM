@@ -426,9 +426,19 @@ KK_ESKI = [("kurucu_yol_muqydtwz", "ara"), ("kurucu_yol_muqyfr79", "ara"), ("kur
 KK_BIRAHANE_ESKI = "kurucu_bina_mw1zb16h"      # Taraftar Birahanesi (Kurucu'daki madde bağı)
 
 
+# Kemal 21 Kasım: köy kıyıya doğru bütünüyle kayar (gen/kompakt_zemin.py → duzada-sinirlar.geojson "kaymaM")
+KK_KAYMA = tuple(YERLESIM[KK_ID].get("kaymaM", (0.0, 0.0)))
+
+
+def kk_tasi(x, y):
+    """Eski haritadaki kıyı köyü noktası → kompakt adada: küçültme (0,70, aynı odak) + köyün kıyıya kayması."""
+    k = kucult(x, y)
+    return (k[0] + KK_KAYMA[0], k[1] + KK_KAYMA[1])
+
+
 def _eskiden(n):
     """Kurucu'nun düz [boylam, enlem, ...] dizisi → kompakt adada metre noktaları."""
-    return [kucult(*m((n[i], n[i + 1]))) for i in range(0, len(n), 2)]
+    return [kk_tasi(*m((n[i], n[i + 1]))) for i in range(0, len(n), 2)]
 
 
 KK_HAT = {k: LineString(_eskiden(KURUCU["yeniYollar"][k]["n"])) for k, _ in KK_ESKI}
@@ -815,7 +825,7 @@ for _k, _kd in KK_ESKI:
     kaynak_ekle(KK_HAT[_k], _ky, _kd, "kiyi")
 _bb = dict(KURUCU["yeniBinalar"][KK_BIRAHANE_ESKI])
 _bb["en"], _bb["boy"] = 20.0, 27.5     # DENEME: modelin tabanı (cephe x derinlik)
-KK_BIRAHANE_TASINMIS = Point(kucult(*m((_bb["x"], _bb["y"]))))
+KK_BIRAHANE_TASINMIS = Point(kk_tasi(*m((_bb["x"], _bb["y"]))))
 _on = KK_HAT["kurucu_yol_muqyfdcj"]
 _P = _on.interpolate(_on.project(KK_BIRAHANE_TASINMIS))
 _tt = np.subtract(_on.coords[-1], _on.coords[0])
@@ -983,6 +993,8 @@ baglanti(koye_en_yakin("yerlesim_iskele", MZ), koy_hedef("yerlesim_merkez") | ag
          "ana", "Güney Sırt Yolu", pay=1500)
 # Stadyum Bağlantısı: stat çevresinden kıyı köyüne (Kuzey Plajı, Taraftar Birahanesi)
 ky = YERLESIM["yerlesim_stadyum_kiyi"]["xy"]
+# sekiden çıkış noktası köyün kaymadan önceki yerine göre seçilir: stat çevresi ve stat köyü aynı kalsın (Kemal 21 Kasım)
+ky_cikis = (ky[0] - KK_KAYMA[0], ky[1] - KK_KAYMA[1])
 # stat sekisinin çevre sokağından, sekinin doğal zeminle aynı kotta olduğu (kazı ve dolgu yok)
 # kenarından çıkar: iniş şevden değil, zeminden başlar
 _Zilk = HAM.astype(float) * B["birim"]
@@ -993,7 +1005,7 @@ for _t_ in np.arange(0, STAT_CEVRE.exterior.length, 5.0):
     _v = np.array([_q.x - _sm.x, _q.y - _sm.y])
     _v = _v / np.hypot(*_v)
     _dis = (_q.x + 30 * _v[0], _q.y + 30 * _v[1])
-    _puan = abs(float(ornek(_Zilk, *_dis)) - SEKI_KOT) + 0.01 * Point(ky).distance(_q)
+    _puan = abs(float(ornek(_Zilk, *_dis)) - SEKI_KOT) + 0.01 * Point(ky_cikis).distance(_q)
     if _puan < _en_iyi:
         _sq, _en_iyi = _q, _puan
 # eskisinde köyün batı ucunun Sahil Yolu'na bağlandığı yere iner
