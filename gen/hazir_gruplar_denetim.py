@@ -357,6 +357,21 @@ def main():
         toplam_acik += acik
         yaz(f"{c['id']} ({c['en']}x{c['boy']} kare, {c['ogeSayisi']} öğe)", not s_, "; ".join(s_[:4]) or "kareler, evler, yollar, eğim")
     print(f"  bilgi: kenarda açık biten yol {toplam_acik} (konunca yönetim ekranında komşu yola bağlanır)")
+    import hazir_gruplar as hg
+    kirp_sorun = []
+    for c in cesitler:
+        k = c["kirpma"]
+        for (a, b, d) in {(k["sol"], k["sag"], k["arka"]), (k["sol"], 0, 0), (0, k["sag"], 0), (0, 0, k["arka"])}:
+            if a == b == d == 0:
+                continue
+            kc = hg.kirpilmis(c["grup"], c["cesit"], a, b, d)
+            s_ = ["kural dışı"] if kc is None else cesit_denetimi(kc, v["olculer"]["yolEgimSiniri"], var)[0]
+            if kc is not None and [kc["en"], kc["boy"]] != [c["en"] - a - b, c["boy"] - d]:
+                s_.append("boy tutmuyor")
+            if s_:
+                kirp_sorun.append(f"{c['id']} {a}/{b}/{d}: {s_[0]}")
+    yaz("kırpılmış hâller (her çeşidin en çok kırpılmış köşeleri) denetimden geçer", not kirp_sorun,
+        "; ".join(kirp_sorun[:4]) or f"{sum(1 for c in cesitler if any(c['kirpma'][x] for x in ('sol', 'sag', 'arka')))} çeşit kırpılabilir")
     yaz("Kemsköy yazımı", "Kemskoy" not in json.dumps(v, ensure_ascii=False), "ö ile")
 
     print("Adada konabilirlik (her yol kesiminin yanı, şerit başına bir yer; DENEME eşikler):")
@@ -368,7 +383,28 @@ def main():
         for s, c0 in yer:
             o, u, n = ada.serit_cercevesi(s, c0) if s else c0
             mh[(ada.mahalle_of(o + u * c["en"] / 2 + n * c["boy"] / 2) or "?").replace("yer_", "")] += 1
-        print(f"  {c['id']:<28} {len(yer):>4} yer  " + ", ".join(f"{k} {n}" for k, n in sorted(mh.items(), key=lambda t: -t[1])))
+        ek = ""
+        if len(yer) < 3 and any(c["kirpma"][x] for x in ("sol", "sag", "arka")):
+            import itertools
+            kp = c["kirpma"]
+            birlesim = sorted(itertools.product(range(kp["sol"] + 1), range(kp["sag"] + 1), range(kp["arka"] + 1)),
+                              key=lambda t: (-(c["en"] - t[0] - t[1]) * (c["boy"] - t[2]), t))
+            bulunan, en_buyuk = set(), None
+            for (a, b, d) in birlesim:
+                if a == b == d == 0:
+                    continue
+                kc = hg.kirpilmis(c["grup"], c["cesit"], a, b, d)
+                for s, c0 in ada.yerler(kc):
+                    anahtar = (s["yol"], s["taraf"], s["kesim"]) if s else tuple(np.round(c0[0], 0))
+                    if anahtar not in bulunan:
+                        bulunan.add(anahtar)
+                        en_buyuk = en_buyuk or f"{kc['en']}x{kc['boy']}"
+                        if ayrinti:
+                            print(f"      kırpılmış {a}/{b}/{d} ({kc['en']}x{kc['boy']}): {s['yol']} {s['taraf']} kesim {s['kesim']} sütun {c0}" if s else "")
+                if len(bulunan) >= 6:
+                    break
+            ek = f"  · kırpılarak +{len(bulunan)} yer" + (f" (en büyüğü {en_buyuk})" if en_buyuk else "")
+        print(f"  {c['id']:<28} {len(yer):>4} yer  " + ", ".join(f"{k} {n}" for k, n in sorted(mh.items(), key=lambda t: -t[1])) + ek)
         if ayrinti:
             for s, c0 in yer[:3]:
                 print(f"      {s['yol']} {s['taraf']} kesim {s['kesim']} sütun {c0}" if s else f"      kıyı {c0[0].round(0)}")

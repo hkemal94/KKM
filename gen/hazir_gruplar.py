@@ -93,6 +93,7 @@ OLCU = {
     "yazlikOnPay": 3.0,
     "ozelPay": 1.0,                  # özel yapının kendi karelerinden içeri payı (m)
     "duvarYukseklik": 1.6,
+    "siraEvGovdeCarpani": 1.22,     # Kemal 21 Kasım: sıra ev gövdeleri değsin; model tabandan bu kadar geniş (kompakt_yapilar.py ile aynı)
     "dukkanOrani": 0.6,
     "carsiDukkanOrani": 0.85,       # çarşı sokağında ve kordonda             # meydana / pazara bakan sıra evde dükkânlı ev oranı
     "bodrumKotFarki": 1.5,          # taban bu kadardan çok eğimliyse ev kademeli (alt kat yamaca gömülü)
@@ -956,7 +957,8 @@ def _arsa_icerigi(g, c, a, yerel, sid):
         en, boy = cephe_m, min(OLCU["bitisikEvDerinlik"], derin_m - (2.0 if d > 1 else 0))
         merkez = _taban(cer, yon, en, boy, 0.0)
         out.append({"yerel": yerel("b"), "tip": "bina", "tur": "dukkanli" if dukkan else "ev", "model": model,
-                    "arsa": a["yerel"], "merkez": merkez, "en": r1(en), "boy": r1(boy), "yon": yon, "bitisik": True})
+                    "arsa": a["yerel"], "merkez": merkez, "en": r1(en), "boy": r1(boy), "yon": yon, "bitisik": True,
+                    "modelEn": r1(en * OLCU["siraEvGovdeCarpani"])})
         return out
     if duzen == "depo":
         model = M["depo"][0]
@@ -1093,6 +1095,110 @@ def _model_olculeri():
 MODEL_OLCU = {}
 
 
+def _kurali(g, c):
+    tam = uret_cesit(g, c)
+    tam["kirpma"] = kirpma_kurali(g, c, tam)
+    return tam
+
+
+# ------------------------------------------------------------------ kırpma (Kemal, 21 Kasım: grup sığmazsa kenar kareleri kırpılır)
+KORUNAN_HARF = set("MP#R")   # meydan, pazar, özel yapı, rıhtım kırpılmaz
+
+
+def kirp_tanim(c, sol, sag, arka):
+    """Çeşit tanımının sol / sağ sütunları ve arka sıraları atılmış hâli (0. sıra hiç atılmaz). Olmazsa None."""
+    H = c["harita"]
+    D, W = len(H), len(H[0])
+    if sol + sag >= W or arka >= D:
+        return None
+    atilan = [H[j][i] for j in range(D) for i in range(W) if i < sol or i >= W - sag or j >= D - arka]
+    if any(h in KORUNAN_HARF for h in atilan):
+        return None
+    yeni = dict(c)
+    yeni["harita"] = [r[sol:W - sag] for r in H[:D - arka]]
+    yeni["ozel"] = [((i0 - sol, j0, w, d), t, y) for (i0, j0, w, d), t, y in c.get("ozel", [])]
+    W2, D2 = W - sol - sag, D - arka
+    yeni["donati"] = [(t[0], t[1] - sol, t[2]) + tuple(t[3:]) for t in c.get("donati", [])
+                      if 0 <= t[1] - sol <= W2 and t[2] <= D2]
+    return yeni
+
+
+def kirpma_kurali(g, c, tam):
+    """Her kenardan en çok kaç kare atılabilir; kutunun içindeki her birleşim denetimden geçer."""
+    import itertools
+    import hazir_gruplar_denetim as hd
+    var = _modeller_var()
+
+    def gecerli(sol, sag, arka):
+        if sol == sag == arka == 0:
+            return True
+        t = kirp_tanim(c, sol, sag, arka)
+        if t is None:
+            return False
+        try:
+            k = uret_cesit(g, t)
+        except AssertionError:
+            return False
+        if hd.cesit_denetimi(k, YOL_EGIM, var)[0]:
+            return False
+        if c["yer"] == "yol" and not any(h in "astgpmMP" for h in k["harita"][0]):
+            return False                                   # girişsiz kalmasın
+        if tam["ozet"].get("bina") and k["ozet"].get("bina", 0) < 1:
+            return False
+        if k["en"] < 2 or k["boy"] < 2:
+            return False
+        return True
+    W, D = tam["en"], tam["boy"]
+    yarim = lambda n: max(0, n // 2)
+    en_cok = {"sol": 0, "sag": 0, "arka": 0}
+    for ad, f in (("sol", lambda k: (k, 0, 0)), ("sag", lambda k: (0, k, 0)), ("arka", lambda k: (0, 0, k))):
+        sinir = yarim(W) if ad != "arka" else yarim(D)
+        k = 0
+        while k + 1 <= sinir and gecerli(*f(k + 1)):
+            k += 1
+        en_cok[ad] = k
+    onbellek = {}
+    while True:
+        bozuk = None
+        for a, b, d in itertools.product(range(en_cok["sol"] + 1), range(en_cok["sag"] + 1), range(en_cok["arka"] + 1)):
+            if (a, b, d) not in onbellek:
+                onbellek[(a, b, d)] = gecerli(a, b, d)
+            if not onbellek[(a, b, d)]:
+                bozuk = (a, b, d)
+                break
+        if not bozuk:
+            break
+        ad = max(en_cok, key=en_cok.get)
+        en_cok[ad] -= 1
+    return {"sol": en_cok["sol"], "sag": en_cok["sag"], "arka": en_cok["arka"],
+            "enKucuk": [W - en_cok["sol"] - en_cok["sag"], D - en_cok["arka"]],
+            "kural": "0. sıra (konduğu yol / kıyı) atılmaz; sol, sağ sütunlardan ve arka sıralardan en çok bu kadar atılır, "
+                     "kutunun içindeki her birleşim denetimden geçer; meydan, pazar, özel yapı ve rıhtım karesi atılmaz; "
+                     "arsalar ve evler kırpılmış haritadan yeniden kurulur"}
+
+
+def kirpilmis(g_id, c_harf, sol, sag, arka):
+    """7. adım ve denetim için: kırpılmış çeşidi üretir (kuralın dışındaysa None)."""
+    g = next(x for x in GRUPLAR if x["id"] == g_id)
+    c = next(x for x in g["cesitler"] if x["c"] == c_harf)
+    if not MODEL_OLCU:
+        MODEL_OLCU.update(_model_olculeri())
+    t = kirp_tanim(c, sol, sag, arka)
+    if t is None:
+        return None
+    k = uret_cesit(g, t)
+    k["kirpildi"] = {"sol": sol, "sag": sag, "arka": arka}
+    return k
+
+
+def _modeller_var():
+    var = set()
+    for kok, _, dosyalar in os.walk(os.path.join(KOK, "public", "modeller")):
+        for d in dosyalar:
+            var.add(os.path.relpath(os.path.join(kok, d), os.path.join(KOK, "public", "modeller")).replace(os.sep, "/"))
+    return var
+
+
 def main():
     MODEL_OLCU.update(_model_olculeri())
     cikti_gruplar = []
@@ -1100,7 +1206,7 @@ def main():
         cikti_gruplar.append({
             "id": g["id"], "ad": g["ad"], "aciklama": g["aciklama"], "eskiSablon": g.get("eski"),
             "kaynak": g["kaynak"], "ilham": g["ilham"],
-            "cesitler": [uret_cesit(g, c) for c in g["cesitler"]],
+            "cesitler": [_kurali(g, c) for c in g["cesitler"]],
         })
     veri = {
         "not": "Hazır gruplar, taslak (Kemal onaylamadı). gen/hazir_gruplar.py üretir. Kayda yazılmaz; 7. adımdaki "
@@ -1113,6 +1219,9 @@ def main():
             "en": "yol boyunca kare sayısı (i)", "boy": "yoldan içeri kare sayısı (j)",
             "egim": "uygun yamaç (%); yukselir: arka = yoldan içeri doğru yükselir, iki yana = sekili grup yokuş yukarı da aşağı da konur",
             "seki": "yamaçta her sıra arasında istinat (seki) duvarı",
+            "kirpma": "grup sığmazsa kenar kareleri kırpılır (Kemal, 21 Kasım): sol, sag (sütun), arka (sıra) en çok; "
+                      "enKucuk en küçük geçerli boy; kırpılmış hâli üreteç kurar (gen/hazir_gruplar.py → kirpilmis)",
+            "modelEn": "sıra evde (bitisik) model bu genişliğe uydurulur; taban en ile kalır (gövdeler değsin)",
             "ogeler": "yerel metre: x = 8·i yol boyunca, y = 8·j yoldan içeri; yön adları on (konduğu yola), arka, sol, sag",
             "yerel": "öğenin çeşit içindeki kimliği; konunca kayıtta grup: { kimlik, sablon, yerel }",
             "tip": "yol (kareler, kenarlar), alan (meydan, yesil, bostan, zeytinlik, bag, oyun, otopark, mezarlik, rihtim, "

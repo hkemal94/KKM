@@ -62,6 +62,8 @@ BOS_ORANI = {   # DENEME: arsanın boş kalma oranı (seyrek köy hissi; 21 Kas�
 }
 DAR_CEPHE = 8.5          # 1 kare cepheli (dar) avlulu arsa: dar ev konur
 DAR_YAN_PAY = 0.5        # DENEME: dar evin iki yanında kalan pay (m)
+SIRA_EV_GOVDE = 1.22     # DENEME (Kemal, 21 Kasım: sıra ev gövdeleri değsin): bitişik arsadaki evin modeli tabanından bu
+                         # kadar geniş çizilir (modelin kendi yan bahçe payı taşar, gövdeler değer); taban aynı kalır
 SIRA_EV_EN_DAR = 6.0     # DENEME: bitişik parsel bundan darsa yanındakiyle tek sıra ev olur (m)
 ON_PAY = {"bitisik": 0.0, "avlulu": 1.5, "buyuk": 2.0}     # DENEME: parsel önünden geri çekilme (m)
 YAN_PAY = {"avlulu": 1.0}                                   # DENEME: avlulu evin yan sınırdan payı (m)
@@ -317,6 +319,8 @@ def yapi_ekle(kimlik, taban, u_on, dosya, tur, ozellik):
     if dosya:
         me, mb, myu = olcu(dosya)
         p["modelOlcusu"] = [me, mb, myu]
+        if ozellik.get("parselTuru") == "bitisik":
+            p["modelEn"] = round(en * SIRA_EV_GOVDE, 1)
     arsalar = [PARSELLER[i]["id"] for i in PARSEL_AGACI.query(taban) if PARSELLER[i]["g"].intersection(taban).area > 4.0]
     p["kareler"] = kapladigi_kareler(taban, arsalar)
     YAPILAR.append({"type": "Feature", "properties": p,
@@ -816,6 +820,8 @@ def uret():
             "en": "ex boyunca taban (m)", "boy": "ona dik taban (m)",
             "modelOlcusu": "modelin kendi tabanı ve yüksekliği [en, boy, yükseklik] (m); en/boy farklıysa harita "
                            "modeli tabana uydurur (bugünkü harita gibi)",
+            "modelEn": "yalnız bitişik arsadaki evde: model bu genişliğe uydurulur (tabandan geniş; modelin yan bahçe "
+                       "payı komşuya taşar, gövdeler değer). Taban, kareler ve denetim en ile çalışır",
             "cepheYonu": "önün pusula yönü (kuzey 0, saat yönünde)",
             "kotM": "tabanın ortalama rakımı (m)", "kotFarkiM": "tabandaki en yüksek ile en alçak nokta farkı (m)",
             "parsel": "oturduğu arsa (duzada-parseller.geojson); parseller: birden çok arsayı kaplayan sıra ev",
@@ -828,6 +834,7 @@ def uret():
             "bak": "önü bu noktaya bakar (meydana bakan yapılar)",
         },
         "olculer": {"not": "Hepsi DENEME (Kemal onaylamadı)", "bosOrani": BOS_ORANI, "siraEvEnDar": SIRA_EV_EN_DAR,
+                    "siraEvGovdeCarpani": SIRA_EV_GOVDE,
                     "darCephe": DAR_CEPHE, "darYanPay": DAR_YAN_PAY, "onPay": ON_PAY, "yanPay": YAN_PAY, "arkaPay": ARKA_PAY, "evAlanOrani": EV_ALAN_ORANI, "kiyiOrani": KIYI_ORANI,
                     "kiyiYakinM": KIYI_YAKIN_M, "ciftlikOrani": CIFTLIK_ORANI, "depoOrani": DEPO_ORANI,
                     "uzunEvOrani": UZUN_EV_ORANI, "meydanDukkanOrani": MEYDAN_DUKKAN_ORANI, "aramaM": ARAMA_M,
