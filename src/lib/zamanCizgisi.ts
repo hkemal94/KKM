@@ -4,19 +4,18 @@ import { getArticleBody, getKunyeFields, getEkBilgiler, WIKI_TYPES } from '../co
 /**
  * Evren zaman çizgisi ve dönemler (5. gece, 7 Ekim; vvd'den).
  *
- * Tarihler künyeden okunur (kuruluş, açılış, yapım, "Faaliyette: 1954–"…);
- * hiçbir tarih uydurulmaz, okunamayan değer çizgiye konmaz, ayrı listelenir.
+ * Tarihler künyeden okunur (20 Kasım, Kemal: mekânın faaliyeti, ailenin adaya
+ * gelişi, kişinin doğum yılı ve yaşamı); hiçbir tarih uydurulmaz, okunamayan
+ * değer satırda "tarih belirsiz" görünür.
  * Dönemler Kemal'in: adı ve yılları o verir, `kkm_ayar` → `donemler`'e
  * "Ekle"ye basınca yazılır. Adaylar yazılarda geçen "… dönemi" sözlerinden
  * çıkar; aday yalnız öneridir. Vikinin bir "şimdi"si yoktur: bitişi olmayan
  * aralık açık uçlu çizilir.
  */
 
-/** Tarih alanı sayılan künye etiketleri (Evren Raporu'nun tarihçesiyle aynı) */
-const TARIH_ALANI = /kuruluş|kurulus|açılış|acilis|yapım|yapim|inşa|insa|faaliyet|oluşum|olusum|sayılma|kapan|dönüşüm|donusum|köken|koken|tarih|dönem|donem/i;
-
 const ACILIS_ALANI = /açılış|acilis/i;
 const FAALIYET_ALANI = /faaliyet/i;
+const KURULUS_ALANI = /kuruluş|kurulus|yapım|yapim|inşa|insa/i;
 
 /**
  * Açılışı yazılı maddede "Faaliyette" satırı çizgiye ve tarihçeye girmez
@@ -30,61 +29,158 @@ export function faaliyetiSuz<T extends { label: string; value: string }>(alanlar
   return acilisVar ? alanlar.filter(f => !FAALIYET_ALANI.test(f.label)) : alanlar;
 }
 
-export interface ZamanKaydi {
-  maddeId: string;
-  madde: string;
-  tur: ItemType;
-  alan: string;
-  /** Künyede yazdığı gibi (";"dan önceki kısım) */
-  metin: string;
+/** Okunan tarih: yoksa `bit` tek tarih (nokta); null ise açık uçlu aralık ("1954–") */
+export interface TarihAraligi {
   bas: number;
-  /** Yoksa tek tarih (nokta); null ise açık uçlu aralık ("1954–") */
   bit?: number | null;
+  /**
+   * Açık uçlu aralığın başlangıcı yaklaşıksa başlangıcın en geç yılı:
+   * "1980'ler–" → 1980…1989, "18. yüzyıl–" → 1700…1799, "1920–1940'lar–" → 1920…1949
+   */
+  basSon?: number;
   /** "1980'ler", "19. yüzyıl" gibi yaklaşık değer */
   yaklasik: boolean;
 }
 
-export interface OkunamayanTarih { maddeId: string; madde: string; alan: string; metin: string }
+interface TarihParcasi { bas: number; son: number; yaklasik: boolean; konum: number; bitis: number }
 
-/** "1980–1990'lar" → { bas: 1980, bit: 1999 }; okunamazsa null */
-export function tarihiOku(deger: string): Omit<ZamanKaydi, 'maddeId' | 'madde' | 'tur' | 'alan' | 'metin'> | null {
-  const s = deger.split(';')[0].trim();
-  const yy = s.match(/(\d{1,2})\.\s*yüzyıl/i);
-  const yillar = Array.from(s.matchAll(/\b(1\d{3}|20\d{2})(\s*'\s*(?:ler|lar)\w*|\s*-?\s*(?:ler|lar)\b)?/gi))
-    .map(m => ({ yil: Number(m[1]), onyil: !!m[2] && Number(m[1]) % 10 === 0, son: (m.index ?? 0) + m[0].length }));
-  if (!yillar.length) {
-    if (!yy) return null;
-    const bas = (Number(yy[1]) - 1) * 100;
-    return { bas, bit: bas + 99, yaklasik: true };
+/** Metindeki yıl ve yüzyıl sözleri, yazıldığı sırayla ("19. yüzyıl sonu", "1980'ler", "1954") */
+function tarihParcalari(s: string): TarihParcasi[] {
+  const l: TarihParcasi[] = [];
+  const re = /(\d{1,2})\.\s*yüzyıl(?:ın)?(?:\s+(başı|başları|ortası|ortaları|sonu|sonları))?|\b(1\d{3}|20\d{2})(\s*'\s*(?:ler|lar)\w*|\s*-?\s*(?:ler|lar)\b)?/gi;
+  for (const m of s.matchAll(re)) {
+    const konum = m.index ?? 0, bitis = konum + m[0].length;
+    if (m[1]) {
+      const y = (Number(m[1]) - 1) * 100;
+      const dilim = (m[2] || '').toLocaleLowerCase('tr');
+      const [b, e] = dilim.startsWith('baş') ? [y, y + 33] : dilim.startsWith('orta') ? [y + 33, y + 66] : dilim.startsWith('son') ? [y + 66, y + 99] : [y, y + 99];
+      l.push({ bas: b, son: e, yaklasik: true, konum, bitis });
+    } else {
+      const yil = Number(m[3]);
+      const onyil = !!m[4] && yil % 10 === 0;
+      l.push({ bas: yil, son: onyil ? yil + 9 : yil, yaklasik: onyil, konum, bitis });
+    }
   }
-  const ilk = yillar[0];
-  const tire = /^\s*[–—-]/.test(s.slice(ilk.son));
-  if (tire && yillar[1]) {
-    const ikinci = yillar[1];
-    return { bas: ilk.yil, bit: ikinci.onyil ? ikinci.yil + 9 : ikinci.yil, yaklasik: ilk.onyil || ikinci.onyil };
+  return l;
+}
+
+/** Tarihe benzer bir şey yazılmış mı (yıl, yüzyıl, dönem ya da tire) */
+const tarihGibi = (s: string) => /\d|yüzyıl|dönem|[–—-]/i.test(s);
+
+/**
+ * Tek bir parça (";" ile ayrılmış). Parantez içi açıklamadır, başlangıç
+ * sayılmaz: "Köy döneminden– (1980 sonrası yenilendi)" okunamaz (20 Kasım,
+ * Kemal). Parantezin dışında tarihe benzer hiçbir şey yoksa ("Devlet
+ * misafirhanesi (1954)") parantezdeki yıl okunur.
+ */
+function parcayiOku(parca: string): TarihAraligi | null {
+  const disi = parca.replace(/\([^)]*\)/g, ' ').trim();
+  const s = tarihGibi(disi) ? disi : parca.trim();
+  const t = tarihParcalari(s);
+  if (!t.length) return null;
+  const ilk = t[0];
+  const sonra = s.slice(ilk.bitis);
+  const acikUc = (bas: number, son: number, yaklasik: boolean): TarihAraligi =>
+    ({ bas, bit: null, ...(son > bas ? { basSon: son } : {}), yaklasik });
+  const ikinci = t[1];
+  if (ikinci && /^\s*[–—-]\s*$/.test(s.slice(ilk.bitis, ikinci.konum))) {
+    // "1920–1940'lar–", "1950–1970 arası–": başlangıç bu aralıkta, sonu açık
+    if (/^\s*(?:arası\s*)?[–—-]/i.test(s.slice(ikinci.bitis))) return acikUc(ilk.bas, ikinci.son, true);
+    return { bas: ilk.bas, bit: ikinci.son, yaklasik: ilk.yaklasik || ikinci.yaklasik };
   }
-  // "1954–" ve "2024 ve sonrası": açık uçlu
-  if (tire || /^\s*(ve\s+)?sonras/i.test(s.slice(ilk.son))) return { bas: ilk.yil, bit: null, yaklasik: ilk.onyil };
-  if (ilk.onyil) return { bas: ilk.yil, bit: ilk.yil + 9, yaklasik: true };
-  return { bas: ilk.yil, yaklasik: false };
+  // "1954–", "18. yüzyıl–", "2024 ve sonrası": açık uçlu
+  if (/^\s*[–—-]/.test(sonra) || /^\s*(ve\s+)?sonras/i.test(sonra)) return acikUc(ilk.bas, ilk.son, ilk.yaklasik);
+  if (ilk.son > ilk.bas) return { bas: ilk.bas, bit: ilk.son, yaklasik: true };
+  return { bas: ilk.bas, yaklasik: false };
+}
+
+/**
+ * "1980–1990'lar" → { bas: 1980, bit: 1999 }; okunamazsa null. Yalnız ilk
+ * parça (";"dan önce) okunur; `sonrakiParcalar` ile ilk parçada tarihe benzer
+ * bir şey yoksa sonrakilere bakılır ("Eski yazlıkçı; 2000 sonrası yerleşti").
+ */
+export function tarihiOku(deger: string, secenek: { sonrakiParcalar?: boolean } = {}): TarihAraligi | null {
+  const parcalar = deger.split(';');
+  for (const p of secenek.sonrakiParcalar ? parcalar : parcalar.slice(0, 1)) {
+    const t = parcayiOku(p);
+    if (t) return t;
+    if (tarihGibi(p)) return null;
+  }
+  return null;
 }
 
 const vikiMaddeleri = (items: Item[]) => items.filter(i => WIKI_TYPES.includes(i.type) && !i.archived && !i.isProposal);
 
-export function zamanKayitlari(items: Item[]): { kayitlar: ZamanKaydi[]; okunamayanlar: OkunamayanTarih[] } {
-  const kayitlar: ZamanKaydi[] = [];
-  const okunamayanlar: OkunamayanTarih[] = [];
+// ---------------------------------------------------------------- zaman çizgisi satırları
+
+/**
+ * Zaman çizgisinin satırları (20 Kasım, Kemal): mekânların faaliyet yılları,
+ * ailelerin adaya gelişi, kişilerin yaşamı (ekranda ayrı katman). Künyesinde
+ * değer yazılı olan her madde bir satırdır; değer okunamıyorsa `aralik` null
+ * olur ve satırda "tarih belirsiz" görünür. Hiçbir tarih uydurulmaz.
+ */
+export type ZamanGrubu = 'mekan' | 'aile' | 'kisi';
+
+export interface ZamanSatiri {
+  maddeId: string;
+  madde: string;
+  tur: ItemType;
+  grup: ZamanGrubu;
+  /** Künyede yazdığı gibi: [alan adı, değer] */
+  degerler: Array<[string, string]>;
+  aralik: TarihAraligi | null;
+}
+
+const GRUP: Partial<Record<ItemType, ZamanGrubu>> = { 'mekân': 'mekan', 'dükkân': 'mekan', aile: 'aile', kisi: 'kisi', karakter: 'kisi' };
+
+/** Türkçe harfler sadeleşir, boşluk düşer: "Doğum yılı" ~ "dogumYili" */
+const sade = (s: string) => s.trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr')
+  .replace(/[çğıöşüâî]/g, h => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i' } as Record<string, string>)[h] || h)
+  .replace(/[^a-z0-9]+/g, '');
+
+/** "Bilinmiyor" yazılmış alan okunmaz ama yazılmış sayılır (satırda "tarih belirsiz") */
+const bilinmiyor = (s: string) => /^\s*bilinmiyor\W*$/i.test(s);
+
+export function zamanSatirlari(items: Item[]): { satirlar: ZamanSatiri[]; tarihsiz: Record<ZamanGrubu, number> } {
+  const satirlar: ZamanSatiri[] = [];
+  const tarihsiz: Record<ZamanGrubu, number> = { mekan: 0, aile: 0, kisi: 0 };
   for (const i of vikiMaddeleri(items)) {
-    for (const f of faaliyetiSuz([...getKunyeFields(i), ...getEkBilgiler(i)])) {
-      if (!TARIH_ALANI.test(f.label) || !f.value.trim()) continue;
-      const metin = f.value.split(';')[0].trim();
-      const t = tarihiOku(f.value);
-      if (t) kayitlar.push({ maddeId: i.id, madde: i.title.trim(), tur: i.type, alan: f.label, metin, ...t });
-      else if (/\d|yüzyıl|antik/i.test(metin)) okunamayanlar.push({ maddeId: i.id, madde: i.title.trim(), alan: f.label, metin });
+    const grup = GRUP[i.type];
+    if (!grup) continue;
+    const alanlar = [...getKunyeFields(i), ...getEkBilgiler(i)].filter(f => f.value.trim());
+    const bul = (id: string, adlar: string[]) => {
+      const s = new Set([id, ...adlar].map(sade));
+      return alanlar.find(f => f.id === id) || alanlar.find(f => s.has(sade(f.label)));
+    };
+    let degerler: Array<[string, string]> = [];
+    let aralik: TarihAraligi | null = null;
+    if (grup === 'mekan') {
+      const f = alanlar.find(x => ACILIS_ALANI.test(x.label)) || alanlar.find(x => FAALIYET_ALANI.test(x.label)) || alanlar.find(x => KURULUS_ALANI.test(x.label));
+      if (f) { degerler = [[f.label, f.value.trim()]]; aralik = tarihiOku(f.value); }
+    } else if (grup === 'aile') {
+      const f = bul('gelis', ['Adaya geliş', 'Geliş']);
+      if (f) { degerler = [[f.label, f.value.trim()]]; aralik = tarihiOku(f.value, { sonrakiParcalar: true }); }
+    } else {
+      const d = bul('dogumYili', ['Doğum yılı', 'Doğum', 'Doğum tarihi']);
+      const y = bul('yasam', ['Yaşam']);
+      degerler = [d, y].filter((f): f is NonNullable<typeof f> => !!f).map(f => [f.label, f.value.trim()]);
+      const td = d && !bilinmiyor(d.value) ? tarihiOku(d.value) : null;
+      const ty = y && !bilinmiyor(y.value) ? tarihiOku(y.value) : null;
+      if (td) {
+        // Doğum yılı önce (soy ağacındaki gibi); Yaşam'da ölüm yılı yazılıysa o da
+        const olum = ty && typeof ty.bit === 'number' && ty.bit >= td.bas && /\d\s*[–—-]\s*\d/.test(y?.value || '') ? ty.bit : null;
+        const son = td.bit ?? td.basSon ?? td.bas;
+        aralik = { bas: td.bas, bit: olum, ...(son > td.bas ? { basSon: son } : {}), yaklasik: td.yaklasik };
+      } else if (ty) {
+        // Tek yıl doğum sayılır: o yıldan sonrası açık uçlu
+        aralik = ty.bit === undefined ? { ...ty, bit: null } : ty;
+      }
     }
+    if (!degerler.length) { tarihsiz[grup]++; continue; }
+    satirlar.push({ maddeId: i.id, madde: i.title.trim(), tur: i.type, grup, degerler, aralik });
   }
-  kayitlar.sort((a, b) => a.bas - b.bas || a.madde.localeCompare(b.madde, 'tr'));
-  return { kayitlar, okunamayanlar };
+  satirlar.sort((a, b) => (a.aralik ? 0 : 1) - (b.aralik ? 0 : 1) || (a.aralik?.bas ?? 0) - (b.aralik?.bas ?? 0) || a.madde.localeCompare(b.madde, 'tr'));
+  return { satirlar, tarihsiz };
 }
 
 // ---------------------------------------------------------------- dönemler
