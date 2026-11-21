@@ -484,7 +484,7 @@ def fener_yeri(e, T, kiyi_en_az):
 
 
 def ayrilan_yer(e, g):
-    """1.–2. adımda ayrılan yer: taban o çokgen; önü en yakın yola."""
+    """1.–2. adımda ayrılan yer: taban o çokgen; önü en yakın yola (birahanede plaja)."""
     for i in YOL_AGACI.query(g):                     # ayrılan yere değen yol ucu (stat kapısı) tabandan çıkar
         g = g.difference(YOL_ALAN[i])
     if g.geom_type != "Polygon":
@@ -492,6 +492,8 @@ def ayrilan_yer(e, g):
     c = g.centroid
     yakin = min(YOL, key=lambda pg: pg[1].distance(c))
     q = yakin[1].interpolate(yakin[1].project(c))
+    if e["ozelYer"] == "birahane-yeri":
+        q = KIYI.interpolate(KIYI.project(c))      # Kemal 21 Kasım: önü plaja (Kuzey Plajı)
     on = np.subtract(q.coords[0], (c.x, c.y)); on = on / np.hypot(*on)
     return g, on, yakin[0]["id"]
 
