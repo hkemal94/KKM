@@ -1,0 +1,447 @@
+{
+ "eskiMerkezMeydani": [
+  25.8666614,
+  39.6090789
+ ],
+ "not": "Eski haritadaki viki bağlı yapılar (tek harita 4. adım; tek seferlik çıkarıldı, 21 Kasım 2026). Konum: 3B parçalardaki yapı işaretleri (duzada-harita, Kurucu'nun işlenmiş hâli) ve Kemal'in Kurucu dosyası (Kems-Ajans kkm/harita-duzeni.json, 16 Kasım). bag: viki = vikide maddesi / madde bağı var; oturan = evde oturan bağı var (kişiler yalnız kayıtta; burada yok). Ölçü: modelin kendi tabanı, modeli yoksa eski kutu.",
+ "yapilar": [
+  {
+   "id": "bina_imperial",
+   "vikiId": "kemskoy_hotel",
+   "ad": "The Imperial Kemsköy",
+   "bag": "viki",
+   "mahalle": "yer_iskele",
+   "eskiKonum": [
+    25.7907783,
+    39.5714794
+   ],
+   "eskiKiyiM": 77.1,
+   "eskiMeydanM": null,
+   "dosya": "binalar/the-imperial-kemskoy.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 107.0,
+    "boy": 115.5
+   },
+   "ozelYer": "imperial-otel"
+  },
+  {
+   "id": "bina_stad_tribun",
+   "vikiId": "viki_mekan_dirlik_stadi",
+   "ad": "Dirlik Stadı",
+   "bag": "viki",
+   "mahalle": "yer_stadyum",
+   "eskiKonum": [
+    25.9073895,
+    39.6282782
+   ],
+   "eskiKiyiM": 1462.7,
+   "eskiMeydanM": null,
+   "dosya": "binalar/dirlik-stadi.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 136.0,
+    "boy": 104.0
+   },
+   "ozelYer": "stat"
+  },
+  {
+   "id": "kurucu_bina_mw1zb16h",
+   "vikiId": "mekan_1791406293719_6ki1i",
+   "ad": "Taraftar Birahanesi",
+   "bag": "viki",
+   "mahalle": "yer_stadyum",
+   "eskiKonum": [
+    25.918744,
+    39.637206
+   ],
+   "eskiKiyiM": 80.2,
+   "eskiMeydanM": null,
+   "dosya": "binalar/taraftar-birahanesi.glb",
+   "kurucuTur": "kamu",
+   "olcu": {
+    "en": 20.0,
+    "boy": 27.5
+   },
+   "ozelYer": "birahane-yeri"
+  },
+  {
+   "id": "bina_fener",
+   "vikiId": "viki_mekan_fener",
+   "ad": "Deniz Feneri",
+   "bag": "viki",
+   "mahalle": "yer_liman",
+   "eskiKonum": [
+    25.7855318,
+    39.6402929
+   ],
+   "eskiKiyiM": 72.2,
+   "eskiMeydanM": null,
+   "dosya": "deniz/deniz-feneri.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 32.5,
+    "boy": 32.9
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_meyhane",
+   "vikiId": "viki_mekan_meyhane",
+   "ad": "Sade Meyhane",
+   "bag": "viki",
+   "mahalle": "yer_iskele",
+   "eskiKonum": [
+    25.7855297,
+    39.5778963
+   ],
+   "eskiKiyiM": 65.7,
+   "eskiMeydanM": null,
+   "dosya": "binalar/sade-meyhane.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 23.5,
+    "boy": 19.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "ek_eski_kilise",
+   "vikiId": "mekan_1791406292605_gha8n",
+   "ad": "Eski Kilise",
+   "bag": "viki",
+   "mahalle": "yer_iskele",
+   "eskiKonum": [
+    25.787494,
+    39.5779193
+   ],
+   "eskiKiyiM": 100.3,
+   "eskiMeydanM": null,
+   "dosya": "binalar/eski-kilise.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 13.2,
+    "boy": 24.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_liman_kafe",
+   "vikiId": "viki_mekan_liman_kafe",
+   "ad": "Dondurmacı Kızlar",
+   "bag": "viki",
+   "mahalle": "yer_liman",
+   "eskiKonum": [
+    25.7890969,
+    39.6250236
+   ],
+   "eskiKiyiM": 38.7,
+   "eskiMeydanM": null,
+   "dosya": null,
+   "kurucuTur": null,
+   "olcu": {
+    "en": 18.0,
+    "boy": 14.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_liman_ofis",
+   "vikiId": "viki_mekan_liman_idare",
+   "ad": "Liman İdare Binası",
+   "bag": "viki",
+   "mahalle": "yer_liman",
+   "eskiKonum": [
+    25.7896725,
+    39.6263928
+   ],
+   "eskiKiyiM": 47.4,
+   "eskiMeydanM": null,
+   "dosya": "binalar/liman-idare.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 21.0,
+    "boy": 22.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "ek_balik_hali",
+   "vikiId": "mekan_1791406293152_5flp7",
+   "ad": "Liman Balık Hali",
+   "bag": "viki",
+   "mahalle": "yer_liman",
+   "eskiKonum": [
+    25.7881704,
+    39.6244159
+   ],
+   "eskiKiyiM": 12.3,
+   "eskiMeydanM": null,
+   "dosya": "binalar/liman-balik-hali.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 24.0,
+    "boy": 22.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "ek_balik_lokantasi",
+   "vikiId": "mekan_1791406293432_jmrl9",
+   "ad": "Liman Balık Lokantası",
+   "bag": "viki",
+   "mahalle": "yer_liman",
+   "eskiKonum": [
+    25.7884503,
+    39.6247393
+   ],
+   "eskiKiyiM": 11.0,
+   "eskiMeydanM": null,
+   "dosya": "binalar/liman-balik-lokantasi.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 18.0,
+    "boy": 22.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_belediye",
+   "vikiId": "viki_mekan_belediye",
+   "ad": "Belediye Binası",
+   "bag": "viki",
+   "mahalle": "yer_merkez",
+   "eskiKonum": [
+    25.866514,
+    39.609438
+   ],
+   "eskiKiyiM": 4625.1,
+   "eskiMeydanM": 27.0,
+   "dosya": "binalar/belediye.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 22.0,
+    "boy": 18.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_pazar",
+   "vikiId": "mekan_pazar",
+   "ad": "Merkez Pazarı",
+   "bag": "viki",
+   "mahalle": "yer_merkez",
+   "eskiKonum": [
+    25.8668996,
+    39.6087678
+   ],
+   "eskiKiyiM": 4696.9,
+   "eskiMeydanM": 25.0,
+   "dosya": "binalar/merkez-pazari.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 43.4,
+    "boy": 25.6
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_apt1",
+   "vikiId": "mekan_1791406291488_7jtvw",
+   "ad": "Düzada Jandarma Karakolu",
+   "bag": "viki",
+   "mahalle": "yer_merkez",
+   "eskiKonum": [
+    25.8663019,
+    39.6089143
+   ],
+   "eskiKiyiM": 4684.5,
+   "eskiMeydanM": 8.6,
+   "dosya": "binalar/duzada-jandarma-karakolu.glb",
+   "kurucuTur": "kamu",
+   "olcu": {
+    "en": 14.0,
+    "boy": 12.1
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_kahvehane",
+   "vikiId": "mekan_1791406291022_hotli",
+   "ad": "Merkez Kahvehanesi",
+   "bag": "viki",
+   "mahalle": "yer_merkez",
+   "eskiKonum": [
+    25.8670235,
+    39.6091575
+   ],
+   "eskiKiyiM": 4652.9,
+   "eskiMeydanM": 0.0,
+   "dosya": "binalar/merkez-kahvehanesi.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 14.2,
+    "boy": 13.0
+   },
+   "ozelYer": null,
+   "bak": [
+    25.866664,
+    39.609078
+   ]
+  },
+  {
+   "id": "bina_okul",
+   "vikiId": "mekan_okul",
+   "ad": "Düzada İlkokulu",
+   "bag": "viki",
+   "mahalle": "yer_merkez",
+   "eskiKonum": [
+    25.8682936,
+    39.6101358
+   ],
+   "eskiKiyiM": 4536.8,
+   "eskiMeydanM": 150.6,
+   "dosya": "binalar/okul.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 28.0,
+    "boy": 19.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "kurucu_bina_muzkrwr7",
+   "vikiId": "marka_dirlik",
+   "ad": "Dirlik Spor Kulübü",
+   "bag": "viki",
+   "mahalle": "yer_stadyum",
+   "eskiKonum": [
+    25.9078457,
+    39.6289203
+   ],
+   "eskiKiyiM": 1382.5,
+   "eskiMeydanM": null,
+   "dosya": null,
+   "kurucuTur": "kamu",
+   "olcu": {
+    "en": 22,
+    "boy": 15
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_surek",
+   "vikiId": "marka_1782600611254_j7gg5",
+   "ad": "Küçükçetmi Sürek Kulübü",
+   "bag": "viki",
+   "mahalle": "yer_ciftlik",
+   "eskiKonum": [
+    25.9232488,
+    39.57855
+   ],
+   "eskiKiyiM": 1495.0,
+   "eskiMeydanM": null,
+   "dosya": null,
+   "kurucuTur": null,
+   "olcu": {
+    "en": 54.0,
+    "boy": 26.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "bina_zeytinyagi",
+   "vikiId": "madde_1794596168449_degzx",
+   "ad": "Yağ Fabrikası",
+   "bag": "viki",
+   "mahalle": "yer_ciftlik",
+   "eskiKonum": [
+    25.923813,
+    39.5742479
+   ],
+   "eskiKiyiM": 1111.2,
+   "eskiMeydanM": null,
+   "dosya": "binalar/zeytinyagi-fabrikasi.glb",
+   "kurucuTur": null,
+   "olcu": {
+    "en": 36.7,
+    "boy": 25.0
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "konut_merkez_1",
+   "vikiId": null,
+   "ad": null,
+   "bag": "oturan",
+   "mahalle": "yer_merkez",
+   "eskiKonum": [
+    25.866103,
+    39.609699
+   ],
+   "eskiKiyiM": 4598.9,
+   "eskiMeydanM": 71.9,
+   "dosya": null,
+   "kurucuTur": null,
+   "olcu": null,
+   "ozelYer": null
+  },
+  {
+   "id": "konut_yer_iskele_179",
+   "vikiId": null,
+   "ad": null,
+   "bag": "oturan",
+   "mahalle": "yer_iskele",
+   "eskiKonum": [
+    25.78494,
+    39.5780445
+   ],
+   "eskiKiyiM": 74.1,
+   "eskiMeydanM": null,
+   "dosya": null,
+   "kurucuTur": null,
+   "olcu": null,
+   "ozelYer": null
+  },
+  {
+   "id": "kurucu_bina_muqyfdck_10",
+   "vikiId": null,
+   "ad": null,
+   "bag": "oturan",
+   "mahalle": "yer_stadyum",
+   "eskiKonum": [
+    25.9177983,
+    39.6354721
+   ],
+   "eskiKiyiM": 281.4,
+   "eskiMeydanM": null,
+   "dosya": null,
+   "kurucuTur": "ev",
+   "olcu": {
+    "en": 10,
+    "boy": 11
+   },
+   "ozelYer": null
+  },
+  {
+   "id": "kurucu_bina_muqyfdck_9",
+   "vikiId": null,
+   "ad": null,
+   "bag": "oturan",
+   "mahalle": "yer_stadyum",
+   "eskiKonum": [
+    25.9179448,
+    39.634695
+   ],
+   "eskiKiyiM": 340.6,
+   "eskiMeydanM": null,
+   "dosya": null,
+   "kurucuTur": "ev",
+   "olcu": {
+    "en": 10,
+    "boy": 11
+   },
+   "ozelYer": null
+  }
+ ]
+}
