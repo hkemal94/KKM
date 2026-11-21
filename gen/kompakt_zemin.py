@@ -196,10 +196,15 @@ for _yid, _tanim, _mid, (_ex_, _ey_), _ha, _hedef in YERLESIM_ESKI:
             _vx, _vy, _vn = _c.x - _q.x, _c.y - _q.y, math.hypot(_c.x - _q.x, _c.y - _q.y)
         _yx, _yy = _q.x + _vx / _vn * _hedef, _q.y + _vy / _vn * _hedef
     YERLESIMLER.append({
+        # nokta: yerleşimin kaydedilen yeri. Kıyı köyü (Kemal, 20 Kasım akşam) bugünkü haritadaki köyle aynı
+        # sokaklarla, adanın küçültmesiyle taşınır (gen/kompakt_yollar.py): yeri eski köyün küçültülmüşü.
+        # "yeni" yalnız zeminin yerleşim yumuşatmasının merkezidir; kıyı köyünde Kuzey Plajı kıyısındaki
+        # yumuşatma aynen kalsın diye eski yerinde durur (kumsal ve kıyı şeridi değişmez).
+        "nokta": kucult(_ex_, _ey_) if _yid == "yerlesim_stadyum_kiyi" else (_yx, _yy),
         "id": _yid, "tanim": _tanim, "mahalle": _mid, "eski": (_ex_, _ey_), "yeni": (_yx, _yy),
         "yaricap": math.sqrt(_ha * 1e4 / math.pi), "kiyiNokta": (_q.x, _q.y),
         "eskiKiyi": ESKI_ADA.exterior.distance(Point(_ex_, _ey_)),
-        "yeniKiyi": ADA.exterior.distance(Point(_yx, _yy))})
+        "yeniKiyi": ADA.exterior.distance(Point(*(kucult(_ex_, _ey_) if _yid == "yerlesim_stadyum_kiyi" else (_yx, _yy))))})
 KUZEY_PLAJI_NOKTA = next(y["kiyiNokta"] for y in YERLESIMLER if y["id"] == "yerlesim_stadyum_kiyi")
 
 # ---------------------------------------------------------------- ızgara
@@ -960,8 +965,9 @@ for _y in YERLESIMLER:
     ozellik.append({"type": "Feature", "properties": {
         "katman": "yerlesim", "id": _y["id"], "tanim": _y["tanim"], "mahalle": _y["mahalle"],
         "yaricapM": round(_y["yaricap"]), "kiyiyaUzaklikM": round(_y["yeniKiyi"]),
-        "eskiKiyiyaUzaklikM": round(_y["eskiKiyi"]), "eskiNokta": _ll(*_y["eski"])},
-        "geometry": {"type": "Point", "coordinates": _ll(*_y["yeni"])}})
+        "eskiKiyiyaUzaklikM": round(_y["eskiKiyi"]), "eskiNokta": _ll(*_y["eski"]),
+        **({"yumusatmaNokta": _ll(*_y["yeni"])} if _y["nokta"] != _y["yeni"] else {})},
+        "geometry": {"type": "Point", "coordinates": _ll(*_y["nokta"])}})
     print(f"  {_y['tanim']:42s} kıyıya {_y['eskiKiyi']:5.0f} → {_y['yeniKiyi']:4.0f} m, yarıçap {_y['yaricap']:.0f} m")
 ozellik.append({"type": "Feature", "properties": {"katman": "yer", "id": "kuzey_plaji_kiyi",
                 "tanim": "Kuzey Plajı kıyısı (Stadyum Bağlantısı'nın kıyıya ulaştığı kesim)"},
