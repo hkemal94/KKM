@@ -1,9 +1,31 @@
 # Durum
 
-**Son güncelleme: 21 Kasım 2026 gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); önceki: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 21 Kasım 2026 gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); önceki: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 21 Kasım gece: tek harita 5. adım: hazır gruplar
+
+Yalnız veri ve üreteç (`gen/hazir_gruplar.py` → `public/harita/hazir-gruplar.json`, denetim `gen/hazir_gruplar_denetim.py`);
+ekranda ve kayıtlarda bir şey değişmez. Grubu konduran düğme 7. adımdaki yönetim ekranında. Ölçüler DENEME.
+Önizlemeler `docs/gorseller/tek-harita-5/`.
+
+- Kurucu'nun eski on şablonunun hepsi yenilendi; altı yeni grup (zeytinyağı fabrikası çevresi, eski kilise ve şapel
+  çevresi, cami ve kahvehane meydanı, çarşı sokağı, mezarlık ve zeytinlik kenarı, şaraphane avlusu) ve boş kareler için
+  açık alan grupları (park, bahçe, meydancık, çeşme başı, oyun alanı). 21 grup, 46 çeşit; köy meydanı ve tepe köyü A/B/C.
+- Her çeşit 8 m'lik kare ızgaraya oturur (0. sıra konduğu yola ya da kıyıya bitişik); meydan çevresinde bitişik, kenarda
+  avlulu evler, önleri yola ya da meydana döner. Grup konunca her öğe ayrı kayıt olur (grup etiketiyle).
+- Yalnız KKM'nin modelleri. Kaynaklar: ajansın araştırma notu (Adatepe, Bozcaada, Ayvalık…) ve Kemal'in Pinterest Düzada panosu.
+- **Kemal'in dört cevabı (21 Kasım):**
+  1. Stadyum'un dik (%20–24) boş kareleri için sekili park ve sekili bahçe kalır.
+  2. Sıra ev modeli gövdeler değecek kadar büyür: bitişik arsadaki evde model tabandan 1,22 kat geniş çizilir
+     (`modelEn`; DENEME). Hem hazır gruplarda hem `duzada-yapilar.geojson`'daki 210 sıra evde; taban, kareler ve öbür
+     alanlar aynı. 3B harita 6. adımda okur.
+  3. Grup sığmazsa kenar kareleri kırpılır: her çeşitte `kirpma` (sol, sağ sütun ve arka sıradan en çok kaç kare,
+     en küçük boy); 0. sıra, meydan, pazar, özel yapı ve rıhtım kırpılmaz; kırpılmış hâl de denetimden geçer. Tepe köyü B'nin
+     tam hâli adada hiçbir yere oturmuyordu; kırpılmış hâlleri 7 yere oturuyor (en büyüğü 11×10, Çiftlik'te).
+  4. Viki yapılarının modelleri (cami, kilise, kahvehane…) gruplarda tür örneği olarak tekrar eder; viki maddesine bağlanmaz.
 
 ## 21 Kasım gece: kıyı köyü ve Kuzey Plajı yarı yarıya yaklaştı
 
