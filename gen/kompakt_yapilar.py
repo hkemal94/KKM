@@ -1,0 +1,789 @@
+"""Kompakt Düzada yapıları — tek harita, 4. adım (21 Kasım 2026, Kemal'in 20 Kasım kararları).
+
+Girdi : public/harita/duzada-zemin.bin, duzada-sinirlar.geojson, duzada-yollar.geojson, duzada-parseller.geojson,
+        gen/kompakt-yapilar-eski.json (eski haritadaki viki bağlı yapılar; tek seferlik çıkarıldı),
+        src/data/binaKatalogu.json ve public/modeller/ (KKM'nin kendi modelleri ve ölçüleri)
+Çıktı : public/harita/duzada-yapilar.geojson   yapıların tabanı (koordinatlar [boylam, enlem])
+
+Kurallar:
+  - Viki bağlı yapılar (vikide maddesi, madde bağı ya da evde oturanı olan) eski haritadaki yerlerinin kompakt
+    adadaki karşılığına taşınır: eski yer adanın küçültmesiyle (0,70, aynı odak) ve yerleşimin kayması kadar
+    taşınır, yapı oraya en yakın uygun yere oturur (önü bir yola bakar, yola, öbür yapılara, korunan alana
+    taşmaz, kendi mahallesinde kalır). Merkez Meydanı'na bakanlar yine meydana bakar; kıyıdakiler kıyıda
+    kalır. The Imperial, Dirlik Stadı ve Taraftar Birahanesi 1.–2. adımda ayrılan yerlerine oturur.
+    Kimlikleri eskisiyle aynı: Kurucu'daki madde bağı, evde oturanlar ve 3B haritanın eşlemesi kopmaz.
+  - Öbür yapılar parsellere yeniden dizilir: her parsele türüne uygun bir ev (bitişikte sıra ev, avlulu
+    parselde avlulu ev, büyükte büyük yapı / dükkân); önü yola bakar, parselin içinde avlu payı kalır.
+    Bir kısmı boş kalır (seyrek köy). Hangi parselin boş kalacağı ve hangi modelin konacağı yapının
+    kimliğinden gelir (KKM'deki sabitSec / sans ile aynı hesap): yeniden üretimde aynı sonuç.
+  - Yalnız KKM'nin kendi modelleri (binaKatalogu.json'daki Kurucu türleri ve özel yapılar). Modeli
+    olmayan viki yapısı bugünkü gibi kutu kalır (dosya: null).
+  - Ad yok: yalnız vikide adı olan yapı adını taşır; adsız yapıya ad konmaz.
+  - Kayda yazmaz; yalnız dosya üretir. 6. adımda 3B harita bunu okur.
+
+Bütün ölçüler ve oranlar Kemal onaylamadı: hepsi DENEME.
+
+Çalıştırma: python gen/kompakt_yapilar.py      (parseller üretilmiş olmalı)
+Denetim   : python gen/kompakt_yapilar_denetim.py
+"""
+import json, math, os, struct, sys, warnings
+
+import numpy as np
+from shapely.geometry import LineString, Point, Polygon, shape, mapping
+from shapely.ops import transform, unary_union
+from shapely.strtree import STRtree
+from shapely import prepared
+
+BURASI = os.path.dirname(os.path.abspath(__file__))
+KOK = os.path.dirname(BURASI)
+sys.path.insert(0, BURASI)
+from kompakt_zemin_denetim import oku  # noqa: E402
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)   # shapely.ops.transform (öbür üreteçlerle aynı)
+
+HARITA = os.path.join(KOK, "public", "harita")
+IZGARA = os.path.join(HARITA, "duzada-zemin.bin")
+SINIR = os.path.join(HARITA, "duzada-sinirlar.geojson")
+YOLLAR = os.path.join(HARITA, "duzada-yollar.geojson")
+PARSEL = os.path.join(HARITA, "duzada-parseller.geojson")
+ESKI = os.path.join(BURASI, "kompakt-yapilar-eski.json")
+KARELER = os.path.join(HARITA, "duzada-kareler.json")
+KATALOG = os.path.join(KOK, "src", "data", "binaKatalogu.json")
+MODELLER = os.path.join(KOK, "public", "modeller")
+CIKTI = os.path.join(HARITA, "duzada-yapilar.geojson")
+
+# ------------------------------------------------------------------ ölçüler (hepsi DENEME)
+BOS_ORANI = {   # DENEME: arsanın boş kalma oranı (seyrek köy hissi; 21 Kasım: arsa sayısı düştü, oranlar da düştü;
+                #  boş kareler ileride park / bahçe ile dolacak, Stadyum'un seyrekliği sorun değil)
+    "bitisik": 0.03,
+    "buyuk": 0.20,
+    "avlulu": {"yerlesim_merkez": 0.15, "yerlesim_liman": 0.22, "yerlesim_iskele": 0.22,
+               "yerlesim_stadyum": 0.35, "yerlesim_stadyum_kiyi": 0.20, "yerlesim_ciftlik": 0.35},
+}
+DAR_CEPHE = 8.5          # 1 kare cepheli (dar) avlulu arsa: dar ev konur
+DAR_YAN_PAY = 0.5        # DENEME: dar evin iki yanında kalan pay (m)
+SIRA_EV_EN_DAR = 6.0     # DENEME: bitişik parsel bundan darsa yanındakiyle tek sıra ev olur (m)
+ON_PAY = {"bitisik": 0.0, "avlulu": 1.5, "buyuk": 2.0}     # DENEME: parsel önünden geri çekilme (m)
+YAN_PAY = {"avlulu": 1.0}                                   # DENEME: avlulu evin yan sınırdan payı (m)
+ARKA_PAY = {"bitisik": 2.0, "avlulu": 4.0, "buyuk": 4.0}    # DENEME: evin arkasında kalan en az avlu (m)
+EV_ALAN_ORANI = {"avlulu": 0.50, "buyuk": 0.55}            # DENEME: ev tabanı parselin en çok bu kadarı (gerisi avlu)
+KIYI_ORANI = 0.15        # DENEME: kıyıya yakın avlulu parselde yazlık oranı
+KIYI_YAKIN_M = 200.0     # DENEME: "kıyıya yakın" sınırı (m)
+CIFTLIK_ORANI = 0.6      # DENEME: Çiftlik'te avlulu parselde çiftlik evi oranı
+DEPO_ORANI = 0.15        # DENEME: büyük parselde depo / atölye oranı (Liman, Çiftlik)
+UZUN_EV_ORANI = 0.15     # DENEME: büyük parselde uzun ev oranı
+MEYDAN_DUKKAN_ORANI = 0.6  # DENEME: meydana / meydancığa bakan bitişik parselde dükkânlı ev oranı
+# Viki bağlı yapıların yer araması
+ARAMA_M = 320.0          # DENEME: hedef yerin çevresinde aranan yarıçap (m)
+ADIM_M = 2.0             # DENEME: yol boyunca örnek aralığı (m)
+KALDIRIM = 1.0           # parsellerle aynı (3. adım)
+YAPI_ARASI = 1.5         # DENEME: viki yapısının öbür yapılara en az uzaklığı (m)
+EGIM_VIKI = 0.20         # DENEME: viki yapısının tabanındaki en çok eğim (yükseklik farkı / köşegen)
+KIYI_EN_AZ = {"liman": 3.0, "diger": 10.0}   # DENEME: tabanın kıyı çizgisine en az uzaklığı (m)
+MEYDAN_BAKAR_M = 30.0    # eski haritada Merkez Meydanı'na bu kadar yakın olan meydana bakar
+KIYI_BAGLI_M = 60.0      # eski haritada kıyıya bu kadar yakın olan kıyıda kalır
+
+# ------------------------------------------------------------------ yardımcılar
+B, HAM = oku(IZGARA)
+Z = HAM.astype(float) * B["birim"]
+H = B["hucre"]
+
+
+def m(p):
+    return ((p[0] - B["lng0"]) * B["mPerLng"], (p[1] - B["lat0"]) * B["mPerLat"])
+
+
+def ll(x, y):
+    return [round(B["lng0"] + x / B["mPerLng"], 7), round(B["lat0"] + y / B["mPerLat"], 7)]
+
+
+def gm(g):
+    return transform(lambda x, y, z=None: ((np.asarray(x) - B["lng0"]) * B["mPerLng"],
+                                           (np.asarray(y) - B["lat0"]) * B["mPerLat"]), shape(g))
+
+
+def kucult(x, y):
+    ox, oy = B["odak"]
+    return (ox + B["olcek"] * (x - ox), oy + B["olcek"] * (y - oy))
+
+
+def kot(x, y):
+    """Zeminden çift doğrusal yükseklik (m)."""
+    fx = (np.asarray(x, float) - B["x0"]) / H
+    fy = (np.asarray(y, float) - B["y0"]) / H
+    i = np.clip(np.floor(fy).astype(int), 0, B["boy"] - 2)
+    j = np.clip(np.floor(fx).astype(int), 0, B["en"] - 2)
+    ty, tx = np.clip(fy - i, 0, 1), np.clip(fx - j, 0, 1)
+    return (Z[i, j] * (1 - tx) * (1 - ty) + Z[i, j + 1] * tx * (1 - ty)
+            + Z[i + 1, j] * (1 - tx) * ty + Z[i + 1, j + 1] * tx * ty)
+
+
+def sans(kimlik):
+    """KKM'deki `sans` (lib/binaKutuphanesi.ts) ile birebir: kimlikten tekrar üretilebilir 0–1 sayı."""
+    h = 2166136261
+    b = kimlik.encode("utf-16-le")
+    for k in range(0, len(b), 2):
+        h ^= b[k] | (b[k + 1] << 8)
+        h = (h * 16777619) & 0xFFFFFFFF
+    h ^= h >> 16; h = (h * 0x85EBCA6B) & 0xFFFFFFFF
+    h ^= h >> 13; h = (h * 0xC2B2AE35) & 0xFFFFFFFF
+    h ^= h >> 16
+    return h / 4294967296
+
+
+def sabit_sec(kimlik, liste):
+    return liste[int(sans(kimlik) * len(liste)) % len(liste)]
+
+
+def model_olcusu(dosya):
+    """glb'nin tabanı (metre; ön +Z). Sıkıştırılmış konumlar (KHR_mesh_quantization) açılır."""
+    ham = open(os.path.join(MODELLER, dosya), "rb").read()
+    n = struct.unpack("<I", ham[12:16])[0]
+    js = json.loads(ham[20:20 + n])
+    acc, dugum, ag = js["accessors"], js.get("nodes", []), js.get("meshes", [])
+
+    def matris(d):
+        if "matrix" in d:
+            return np.array(d["matrix"]).reshape(4, 4).T
+        x, y, z, w = d.get("rotation", [0, 0, 0, 1])
+        R = np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+                      [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+                      [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
+        M = np.eye(4); M[:3, :3] = R @ np.diag(d.get("scale", [1, 1, 1])); M[:3, 3] = d.get("translation", [0, 0, 0])
+        return M
+    alt, ust = np.full(3, np.inf), np.full(3, -np.inf)
+
+    def yuru(i, P):
+        nonlocal alt, ust
+        d = dugum[i]; M = P @ matris(d)
+        if "mesh" in d:
+            for pr in ag[d["mesh"]]["primitives"]:
+                a = acc[pr["attributes"]["POSITION"]]
+                mn, mx = np.array(a["min"], float), np.array(a["max"], float)
+                if a.get("normalized"):
+                    bol = {5120: 127.0, 5121: 255.0, 5122: 32767.0, 5123: 65535.0}[a["componentType"]]
+                    mn, mx = mn / bol, mx / bol
+                for k in range(8):
+                    v = M @ np.array([mn[0] if k & 1 else mx[0], mn[1] if k & 2 else mx[1], mn[2] if k & 4 else mx[2], 1])
+                    alt, ust = np.minimum(alt, v[:3]), np.maximum(ust, v[:3])
+        for c in d.get("children", []):
+            yuru(c, M)
+    for r in js["scenes"][js.get("scene", 0)]["nodes"]:
+        yuru(r, np.eye(4))
+    return round(float(ust[0] - alt[0]), 1), round(float(ust[2] - alt[2]), 1), round(float(ust[1] - alt[1]), 1)
+
+
+def dikdortgen(c, u, en, boy):
+    """Merkez c, en ekseni u (birim), boyu ona dik. Köşeler saat yönünün tersine."""
+    v = (-u[1], u[0])
+    a, b = en / 2, boy / 2
+    return Polygon([(c[0] - u[0] * a - v[0] * b, c[1] - u[1] * a - v[1] * b),
+                    (c[0] + u[0] * a - v[0] * b, c[1] + u[1] * a - v[1] * b),
+                    (c[0] + u[0] * a + v[0] * b, c[1] + u[1] * a + v[1] * b),
+                    (c[0] - u[0] * a + v[0] * b, c[1] - u[1] * a + v[1] * b)])
+
+
+def pusula(v):
+    """Metre düzlemindeki yön (x doğu, y kuzey) → pusula açısı (kuzey 0, saat yönünde)."""
+    return round(math.degrees(math.atan2(v[0], v[1])) % 360, 1)
+
+
+# ------------------------------------------------------------------ veri
+SF = json.load(open(SINIR, encoding="utf-8"))["features"]
+YF = json.load(open(YOLLAR, encoding="utf-8"))["features"]
+PF = json.load(open(PARSEL, encoding="utf-8"))["features"]
+ESKI_J = json.load(open(ESKI, encoding="utf-8"))
+KAT = json.load(open(KATALOG, encoding="utf-8"))
+
+ADA = gm(next(f["geometry"] for f in SF if f["properties"]["katman"] == "ada"))
+KIYI = ADA.exterior
+MAHALLE = {f["properties"]["id"]: gm(f["geometry"]) for f in SF if f["properties"]["katman"] == "mahalle"}
+YERLESIM = {f["properties"]["id"]: f["properties"] | {"m": m(f["geometry"]["coordinates"])}
+            for f in SF if f["properties"]["katman"] == "yerlesim"}
+IMPERIAL = {f["properties"]["tur"]: gm(f["geometry"]) for f in SF
+            if f["properties"]["katman"] == "imperial" and f["geometry"]["type"] == "Polygon"}
+ZIRVE = {f["properties"]["ad"]: m(f["geometry"]["coordinates"]) for f in SF if f["properties"]["katman"] == "zirve"}
+
+YOL = [(f["properties"], gm(f["geometry"])) for f in YF if f["properties"]["katman"] == "yol"]
+YOL_ALAN = [g.buffer(p["genislik"] / 2, cap_style=2) for p, g in YOL]
+YOL_AGACI = STRtree(YOL_ALAN)
+KORUNAN = [(f["properties"], gm(f["geometry"])) for f in YF if f["properties"]["katman"] in ("korunan", "meydancik")]
+MEYDAN = next(g for p, g in KORUNAN if p.get("tur") == "meydan")
+MEYDANCIK = [g for p, g in KORUNAN if p["katman"] == "meydancik"]
+STAT = next(g for p, g in KORUNAN if p.get("tur") == "stat")
+BIRAHANE_YERI = next(g for p, g in KORUNAN if p.get("tur") == "birahane-yeri")
+ENGEL_SABIT = [g for p, g in KORUNAN if p.get("tur") != "seki"] + [IMPERIAL[k] for k in ("sahanlik", "otel", "dip-teras") if k in IMPERIAL]
+
+PARSELLER = []
+for f in PF:
+    p = f["properties"]
+    if p["katman"] != "parsel":
+        continue
+    c = [m(q) for q in f["geometry"]["coordinates"][0]]
+    PARSELLER.append({**p, "kose": c, "g": Polygon(c)})
+PARSELLER.sort(key=lambda p: p["id"])
+PARSEL_AGACI = STRtree([p["g"] for p in PARSELLER])
+
+# Kare ızgara (3. adım düzeltmesi): her arsanın kareleri; ev arsasının karelerinin içinde kalır
+KJ = json.load(open(KARELER, encoding="utf-8"))
+ARSA_KARE = {}
+for _s in KJ["seritler"]:
+    _o, _u, _n = np.array(m(_s["o"])), np.array(_s["u"]) * [B["mPerLng"], B["mPerLat"]], np.array(_s["n"]) * [B["mPerLng"], B["mPerLat"]]
+    for _j, _metre, _dk, _ai, _ad in _s["s"]:
+        if _ai < 0:
+            continue
+        for _r in range(_ad):
+            _q = [_o + _j * _u + _r * _n, _o + (_j + 1) * _u + _r * _n, _o + (_j + 1) * _u + (_r + 1) * _n, _o + _j * _u + (_r + 1) * _n]
+            ARSA_KARE.setdefault(KJ["arsalar"][_ai], []).append((f"k_{_s['yol']}_{_s['taraf']}_{_metre:g}_{_r}", Polygon(_q)))
+ARSA_ALAN = {k: unary_union([g for _, g in v]) for k, v in ARSA_KARE.items()}
+
+
+def kapladigi_kareler(taban, arsalar):
+    return sorted(kid for a in arsalar for kid, g in ARSA_KARE.get(a, []) if g.intersection(taban).area > 4.0)
+
+# Kurucu türleri → modeller (KKM'deki KURUCU_MODELLERI ile aynı süzgeç)
+DISARIDA = {"binalar/haydarpasa-buyuk-olcek.glb"}
+KURUCU = {t: [d for d in l if d not in DISARIDA] for t, l in KAT["kurucu_turleri"].items()}
+OLCU = {}
+
+
+def olcu(dosya):
+    if dosya not in OLCU:
+        OLCU[dosya] = model_olcusu(dosya)
+    return OLCU[dosya]
+
+
+IMPERIAL_VE_OZEL = sorted(set(KAT["ozel"].values()) | set(KAT.get("kaliplar", {}).values()) - DISARIDA)
+EV = KURUCU["ev"]
+DUKKANLI = [d for d in KURUCU["dukkanli"] if d != "binalar/kahvehane-meyhane.glb"]   # türün kahvehane modeli bir mekân gibi görünmesin
+CIFTLIK = KURUCU["ciftlik"]
+YAZLIK = KURUCU["yazlik"]
+DEPO = KURUCU["depo"]
+UZUN_EV = ["binalar/ev-karisik-uzun.glb"]
+DAR_EV = None   # en dar üç ev modeli (aşağıda, ölçüler okununca)
+TUR_ADI = {}
+for t, l in KURUCU.items():
+    for d in l:
+        TUR_ADI.setdefault(d, t)
+
+
+def _dar_ev():
+    return sorted(EV, key=lambda d: (olcu(d)[0], d))[:3]
+
+
+def tur_of(dosya):
+    return TUR_ADI.get(dosya, "ozel")
+
+
+# ------------------------------------------------------------------ yapı kaydı
+YAPILAR = []          # çıktı
+DOLU = []             # yerleşmiş tabanlar (çakışma için)
+TUKENEN = set()       # viki yapısının üstüne geldiği parseller
+
+
+def yapi_ekle(kimlik, taban, u_on, dosya, tur, ozellik):
+    """taban: metre çokgeni; u_on: önün baktığı yön (birim, x doğu y kuzey)."""
+    for tolerans in (0.0, 0.05, 0.1, 0.2, 0.4):     # yuvarlanmış koordinatlarla da geçerli çokgen kalsın
+        t = taban.simplify(tolerans) if tolerans else taban
+        if t.geom_type == "Polygon" and Polygon([m(ll(x, y)) for x, y in t.exterior.coords]).is_valid:
+            taban = t
+            break
+    c = taban.centroid
+    rr = taban.minimum_rotated_rectangle
+    k = list(rr.exterior.coords)
+    # en: öne dik kenar (cephe boyunca), boy: öne koşut
+    e1 = np.subtract(k[1], k[0]); e2 = np.subtract(k[2], k[1])
+    if abs(np.dot(e1, u_on)) < abs(np.dot(e2, u_on)):
+        en_v, boy_v = e1, e2
+    else:
+        en_v, boy_v = e2, e1
+    en, boy = float(np.hypot(*en_v)), float(np.hypot(*boy_v))
+    ex = en_v / en
+    if ex[0] * (-u_on[1]) + ex[1] * u_on[0] < 0:    # ex, önden bakınca sağa doğru (yoldan bakınca sol)
+        ex = -ex
+    kc = [(x, y) for x, y in taban.exterior.coords]
+    z = kot([q[0] for q in kc], [q[1] for q in kc])
+    p = {
+        "katman": "yapi", "id": kimlik, "tur": tur, "dosya": dosya,
+        **ozellik,
+        "merkez": ll(c.x, c.y),
+        # KKM'deki ModelYeri ile aynı eksenler: x doğu, y güney (Kurucu düzlemi)
+        "ex": [round(float(ex[0]), 4), round(float(-ex[1]), 4)],
+        "yol": [round(float(u_on[0]), 4), round(float(-u_on[1]), 4)],
+        "en": round(en, 1), "boy": round(boy, 1),
+        "cepheYonu": pusula(u_on),
+        "kotM": round(float(np.mean(z)), 1), "kotFarkiM": round(float(np.max(z) - np.min(z)), 1),
+    }
+    if dosya:
+        me, mb, myu = olcu(dosya)
+        p["modelOlcusu"] = [me, mb, myu]
+    arsalar = [PARSELLER[i]["id"] for i in PARSEL_AGACI.query(taban) if PARSELLER[i]["g"].intersection(taban).area > 4.0]
+    p["kareler"] = kapladigi_kareler(taban, arsalar)
+    YAPILAR.append({"type": "Feature", "properties": p,
+                    "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in taban.exterior.coords]]}})
+    DOLU.append(taban)
+
+
+def mahalle_of(g):
+    c = g.centroid
+    for k, mg in MAHALLE.items():
+        if mg.contains(c):
+            return k
+    return min(MAHALLE, key=lambda k: MAHALLE[k].distance(c))
+
+
+# ------------------------------------------------------------------ 1. viki bağlı yapılar
+ESKI_MEYDAN = m(ESKI_J["eskiMerkezMeydani"])
+_km = kucult(*ESKI_MEYDAN)
+KAYMA = {k: (v["m"][0] - kucult(*m(v["eskiNokta"]))[0], v["m"][1] - kucult(*m(v["eskiNokta"]))[1])
+         for k, v in YERLESIM.items()}
+KAYMA["yerlesim_merkez"] = (MEYDAN.centroid.x - _km[0], MEYDAN.centroid.y - _km[1])   # meydan çapası
+MAH_YERLESIM = {}
+for k, v in YERLESIM.items():
+    MAH_YERLESIM.setdefault(v["mahalle"], []).append(k)
+
+
+LIMAN_KAYMASI = {}    # kıyıdaki öbek (Liman'ın liman kıyısı): birlikte kıyıya kayar
+
+
+def hedef(e):
+    """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması)."""
+    p = m(e["eskiKonum"])
+    k = kucult(*p)
+    adaylar = MAH_YERLESIM.get(e["mahalle"], [])
+    ys = min(adaylar, key=lambda y: math.dist(k, YERLESIM[y]["m"])) if adaylar else None
+    d = KAYMA.get(ys, (0.0, 0.0))
+    g = LIMAN_KAYMASI.get(e["id"], (0.0, 0.0))
+    return (k[0] + d[0] + g[0], k[1] + d[1] + g[1]), ys
+
+
+def isaretli_kiyi(q):
+    """Kıyıya uzaklık: karada artı, denizde eksi (m)."""
+    d = KIYI.distance(Point(q))
+    return d if ADA.contains(Point(q)) else -d
+
+
+def liman_obekleri():
+    """Eski haritada kıyıda duran viki yapıları (liman kıyısı) yerleşim yerleşim bir öbek: öbek bütün olarak,
+    eski kıyı uzaklığının 0,70'i kıyıda kalacak kadar kıyıya dik kayar; yapılar birbirine göre yerini korur."""
+    LIMAN_KAYMASI.clear()
+    obek = {}
+    for e in ESKI_J["yapilar"]:
+        if e["ozelYer"] or e["bag"] != "viki" or e["eskiKiyiM"] > KIYI_BAGLI_M:
+            continue
+        T, ys = hedef(e)
+        obek.setdefault(ys, []).append((e, T))
+    for ys, l in sorted(obek.items(), key=lambda kv: str(kv[0])):
+        G = np.mean([T for e, T in l], axis=0)
+        istenen = B["olcek"] * float(np.mean([e["eskiKiyiM"] for e, T in l]))
+        Q = KIYI.interpolate(KIYI.project(Point(G))).coords[0]
+        v = np.subtract(Q, G); v = v / np.hypot(*v)
+        if isaretli_kiyi(G) < 0:
+            v = -v                                   # denizdeyse karaya doğru
+        en_iyi = min(np.arange(-500.0, 500.1, 2.0), key=lambda t: (round(abs(isaretli_kiyi(G - v * t) - istenen) / 4), abs(t)))
+        for e, T in l:
+            LIMAN_KAYMASI[e["id"]] = (float(-v[0] * en_iyi), float(-v[1] * en_iyi))
+
+
+def uygun(taban, mah, kiyi_en_az):
+    if not MAHALLE[mah].contains(taban):
+        return False
+    if not ADA.buffer(-kiyi_en_az).contains(taban):
+        return False
+    for i in YOL_AGACI.query(taban):
+        if YOL_ALAN[i].intersection(taban).area > 0.05:
+            return False
+    for g in ENGEL_SABIT:
+        if g.intersects(taban):
+            return False
+    for g in DOLU:
+        if g.distance(taban) < YAPI_ARASI:
+            return False
+    kc = list(taban.exterior.coords) + [taban.centroid.coords[0]]
+    z = kot([q[0] for q in kc], [q[1] for q in kc])
+    kosegen = math.hypot(*np.subtract(taban.bounds[2:], taban.bounds[:2]))
+    if np.min(z) < 0.5 or (np.max(z) - np.min(z)) / kosegen > EGIM_VIKI:
+        return False
+    return True
+
+
+def yol_kenari_adaylari(T, en, boy, meydana):
+    """Yol boyunca, iki yanda, önü yola bakan taban adayları (merkez, ön yönü, yol kimliği)."""
+    alan = Point(T).buffer(ARAMA_M)
+    for i, (p, g) in enumerate(YOL):
+        if not g.intersects(alan):
+            continue
+        if meydana and g.distance(MEYDAN) > 6:
+            continue
+        L = g.length
+        s = 0.0
+        while s <= L:
+            q = g.interpolate(s)
+            if q.distance(Point(T)) <= ARAMA_M:
+                a = g.interpolate(max(0, s - 1)); b = g.interpolate(min(L, s + 1))
+                t = np.subtract(b.coords[0], a.coords[0]); tl = np.hypot(*t)
+                if tl > 1e-6:
+                    t = t / tl
+                    if meydana and q.distance(MEYDAN) > 9.0:
+                        s += ADIM_M
+                        continue
+                    for yan in (1, -1):
+                        n = np.array([-t[1], t[0]]) * yan     # yoldan yapıya
+                        uz = p["genislik"] / 2 + KALDIRIM + boy / 2
+                        c = np.array(q.coords[0]) + n * uz
+                        if meydana and MEYDAN.distance(Point(c)) < MEYDAN.distance(q):
+                            continue    # meydanın içine değil, karşısına
+                        yield c, -n, t, p["id"]
+            s += ADIM_M
+
+
+def yerlestir_viki(e):
+    T, ys = hedef(e)
+    en, boy = e["olcu"]["en"], e["olcu"]["boy"]
+    liman = e["eskiKiyiM"] <= KIYI_BAGLI_M
+    kiyi_en_az = KIYI_EN_AZ["liman" if liman else "diger"]
+    meydana = e.get("eskiMeydanM") is not None and e["eskiMeydanM"] <= MEYDAN_BAKAR_M
+    if e["id"] == "bina_fener":
+        return T, ys, fener_yeri(e, T, kiyi_en_az), meydana, liman
+    en_iyi = None
+    for c, on, t, yid in yol_kenari_adaylari(T, en, boy, meydana):
+        puan = math.dist(c, T)
+        if liman and e["id"] not in LIMAN_KAYMASI:
+            puan += 3.0 * max(0.0, KIYI.distance(Point(c)) - max(boy, B["olcek"] * e["eskiKiyiM"]))
+        if en_iyi and puan >= en_iyi[0]:
+            continue
+        taban = dikdortgen(c, t, en, boy)
+        if not uygun(taban, e["mahalle"], kiyi_en_az):
+            continue
+        en_iyi = (puan, taban, on, yid)
+    if en_iyi is None and e["id"] == "bina_fener":
+        en_iyi = fener_yeri(e, T, kiyi_en_az)
+    return T, ys, en_iyi, meydana, liman
+
+
+def fener_yeri(e, T, kiyi_en_az):
+    """Fener yol kenarında değil, burunda: hedefin çevresinde ızgara; önü denize bakar."""
+    en, boy = e["olcu"]["en"], e["olcu"]["boy"]
+    burun = ZIRVE.get("Fener Burnu", T)       # eski fener de bu burundaydı (künye: Liman'ın kuzeybatı ucu)
+    en_iyi = None
+    for dx in np.arange(-250, 251, 5.0):
+        for dy in np.arange(-250, 251, 5.0):
+            c = (burun[0] + dx, burun[1] + dy)
+            q = KIYI.interpolate(KIYI.project(Point(c)))
+            on = np.subtract(q.coords[0], c); ol = np.hypot(*on)
+            if ol < 1e-6:
+                continue
+            on = on / ol
+            puan = 0.3 * math.dist(c, burun) + abs(ol - B["olcek"] * e["eskiKiyiM"])
+            if en_iyi and puan >= en_iyi[0]:
+                continue
+            taban = dikdortgen(c, (on[1], -on[0]), en, boy)
+            if uygun(taban, e["mahalle"], kiyi_en_az):
+                en_iyi = (puan, taban, on, None)
+    return en_iyi
+
+
+def ayrilan_yer(e, g):
+    """1.–2. adımda ayrılan yer: taban o çokgen; önü en yakın yola."""
+    for i in YOL_AGACI.query(g):                     # ayrılan yere değen yol ucu (stat kapısı) tabandan çıkar
+        g = g.difference(YOL_ALAN[i])
+    if g.geom_type != "Polygon":
+        g = max(g.geoms, key=lambda q: q.area)
+    c = g.centroid
+    yakin = min(YOL, key=lambda pg: pg[1].distance(c))
+    q = yakin[1].interpolate(yakin[1].project(c))
+    on = np.subtract(q.coords[0], (c.x, c.y)); on = on / np.hypot(*on)
+    return g, on, yakin[0]["id"]
+
+
+KAYITLAR = []        # rapor için: viki bağlı yapının eski ve yeni yeri
+YERLESEMEYEN = []
+
+
+def viki_yapilari():
+    liman_obekleri()
+    sira = sorted(ESKI_J["yapilar"], key=lambda e: (e["ozelYer"] is None,
+                                                   not (e.get("eskiMeydanM") is not None and e["eskiMeydanM"] <= MEYDAN_BAKAR_M),
+                                                   -(e["olcu"]["en"] * e["olcu"]["boy"] if e["olcu"] else 0), e["id"]))
+    for e in sira:
+        dosya = e["dosya"]
+        if e["bag"] == "oturan" or (not dosya and e.get("kurucuTur") in KURUCU and e["bag"] == "viki"):
+            dosya = sabit_sec(e["id"], KURUCU[e["kurucuTur"] or "ev"])    # bugünkü haritanın seçtiği model
+        if e["olcu"] is None:
+            me, mb, _ = olcu(dosya)
+            e = {**e, "olcu": {"en": me, "boy": mb}}
+        ozel = {"vikiId": e["vikiId"], "ad": e["ad"], "bag": e["bag"], "eskiKonum": e["eskiKonum"]}
+        if e["ozelYer"]:
+            g = {"imperial-otel": IMPERIAL.get("otel"), "stat": STAT, "birahane-yeri": BIRAHANE_YERI}[e["ozelYer"]]
+            taban, on, yid = ayrilan_yer(e, g)
+            T, ys = hedef(e)
+            yontem = "ayrılan yer (" + e["ozelYer"] + ")"
+        elif e["bag"] == "oturan":
+            # Evde oturanı olan ev: hedefe en yakın uygun parselde, parselin evi olarak
+            T, ys = hedef(e)
+            sonuc = oturan_parseli(e, T, dosya)
+            if sonuc is None:
+                YERLESEMEYEN.append((e, "hedefin çevresinde boş, uygun parsel yok"))
+                continue
+            taban, on, yid, prs, dosya = sonuc
+            TUKENEN.add(prs["id"])
+            ozel["parsel"] = prs["id"]
+            yontem = "en yakın parsel"
+        else:
+            T, ys, sonuc, meydana, liman = yerlestir_viki(e)
+            if sonuc is None:
+                YERLESEMEYEN.append((e, "hedefin çevresinde uygun yer yok"))
+                continue
+            _, taban, on, yid = sonuc
+            yontem = ("Fener Burnu'nda, kıyıya eskisinin 0,70'i uzaklıkta" if e["id"] == "bina_fener" else
+                      "oranla karşılığı" + (", meydana bakar" if meydana else "")
+                      + (", kıyıda (liman öbeği birlikte kıyıya kaydı)" if e["id"] in LIMAN_KAYMASI else ", kıyıda" if liman else ""))
+        ozel["yol"] = yid
+        ozel["tasima"] = {"yontem": yontem, "hedef": ll(*T), "hedeftenM": round(taban.centroid.distance(Point(T)), 1)}
+        ozel["mahalle"] = mahalle_of(taban)
+        ozel["yerlesim"] = ys
+        if e.get("bak") or (e.get("eskiMeydanM") is not None and e["eskiMeydanM"] <= MEYDAN_BAKAR_M):
+            q = MEYDAN.exterior.interpolate(MEYDAN.exterior.project(taban.centroid))
+            ozel["bak"] = ll(*q.coords[0])          # önü meydana (KKM'deki `bak` alanı gibi)
+        if e["ozelYer"] != "imperial-otel" and e["ozelYer"] != "stat":
+            for i in PARSEL_AGACI.query(taban.buffer(YAPI_ARASI)):
+                if PARSELLER[i]["g"].intersects(taban.buffer(YAPI_ARASI)):
+                    TUKENEN.add(PARSELLER[i]["id"])
+        yapi_ekle(e["id"], taban, tuple(on), dosya, tur_of(dosya) if dosya else (e.get("kurucuTur") or "kutu"), ozel)
+        KAYITLAR.append((e, YAPILAR[-1]["properties"]))
+
+
+# ------------------------------------------------------------------ 2. parsellere evler
+def parsel_cercevesi(prs):
+    """Parselin önü (ilk kenar), yönleri: u yol boyunca, n_ic yoldan içeri."""
+    a, b = np.array(prs["kose"][0]), np.array(prs["kose"][1])
+    u = b - a; u = u / np.hypot(*u)
+    n = np.array([-u[1], u[0]])
+    if np.dot(np.array(prs["g"].centroid.coords[0]) - a, n) < 0:
+        n = -n
+    return a, b, u, n
+
+
+def ev_tabani(a, u, n, s0, s1, t0, t1):
+    return Polygon([tuple(a + u * s0 + n * t0), tuple(a + u * s1 + n * t0),
+                    tuple(a + u * s1 + n * t1), tuple(a + u * s0 + n * t1)])
+
+
+def oturan_parseli(e, T, dosya):
+    """Evde oturanı olan ev: hedefe en yakın boş parsel (büyük parsel dışında). Bitişik parselde en dar ev
+    modeli konur (geniş model dar parsele sıkışmasın)."""
+    adaylar = sorted((p for p in PARSELLER if p["mahalle"] == e["mahalle"] and p["id"] not in TUKENEN
+                      and p["tur"] != "buyuk"), key=lambda p: p["g"].centroid.distance(Point(T)))
+    dar = min(EV, key=lambda d: (olcu(d)[0], d))
+    for prs in adaylar[:40]:
+        d = dar if prs["tur"] == "bitisik" else dosya
+        me, mb, _ = olcu(d)
+        taban, on = parsel_evi(prs, [prs], me, mb)
+        if taban is not None and not any(g.intersects(taban) for g in DOLU):
+            return taban, on, prs["yol"], prs, d
+    return None
+
+
+def parsel_evi(prs, grup, en, boy):
+    """Parselin (ya da sıra ev grubunun) içinde ev tabanı. Sığmazsa None."""
+    tur = prs["tur"]
+    a, _, u, n = parsel_cercevesi(grup[0])
+    _, b, _, _ = parsel_cercevesi(grup[-1])
+    L = float(np.dot(b - a, u))
+    D = min(p["derinlikM"] for p in grup)
+    alan = unary_union([ARSA_ALAN.get(p["id"], p["g"]) for p in grup])
+    on = ON_PAY[tur]
+    if tur == "bitisik":
+        # ortak duvar: cephe boyunca tam; eğri yolda parselin kendi biçimini izler
+        t1 = on + min(boy, D - on - ARKA_PAY[tur])
+        if t1 - on < 6.0:
+            return None, None
+        serit = ev_tabani(a, u, n, -60.0, L + 60.0, on + 0.02, t1)
+        taban = alan.intersection(serit)
+        if taban.geom_type != "Polygon" or taban.area < 0.8 * L * (t1 - on):
+            return None, None
+        taban = taban.simplify(0.05)
+        for d in DOLU[-4:]:                          # eğride komşu parseller hafifçe biniyor: ortak duvara kırp
+            if d.intersects(taban):
+                taban = taban.difference(d.buffer(0.02))
+        if taban.geom_type != "Polygon" or taban.area < 0.8 * L * (t1 - on):
+            return None, None
+        return taban, -n
+    if tur == "avlulu" and L <= DAR_CEPHE:
+        # dar avlulu arsa (1 kare cephe): dar ev, cepheye sığacak kadar daralır; arkada avlu
+        en = L - 2 * DAR_YAN_PAY
+        boy = min(boy, D - on - ARKA_PAY[tur])
+        if boy < 6.0:
+            return None, None
+        taban = ev_tabani(a, u, n, DAR_YAN_PAY, DAR_YAN_PAY + en, on, on + boy)
+        return (taban, -n) if alan.buffer(0.05).contains(taban) else (None, None)
+    if boy > D - on - ARKA_PAY[tur] or en * boy > EV_ALAN_ORANI[tur] * prs["alanM2"]:
+        return None, None
+    yan = YAN_PAY.get(tur, 1.0)
+    if en > L - 2 * yan:
+        return None, None
+    if tur == "avlulu":
+        sola = sans(prs["id"] + "#yan") < 0.5
+        denemeler = np.arange(yan, L - yan - en + 1e-6, 1.0)
+        denemeler = denemeler if sola else denemeler[::-1]
+    else:
+        orta = (L - en) / 2
+        denemeler = sorted(np.arange(yan, L - yan - en + 1e-6, 1.0), key=lambda s: abs(s - orta))
+    ic = alan.buffer(0.05)
+    for geri in (on, on + 1.0, on + 2.0):
+        if boy > D - geri - ARKA_PAY[tur]:
+            break
+        for s0 in denemeler:
+            taban = ev_tabani(a, u, n, s0, s0 + en, geri, geri + boy)
+            if ic.contains(taban):
+                return taban, -n
+    return None, None
+
+
+def model_listesi(prs, meydana):
+    """Parselin türüne ve yerine göre model havuzu (yalnız KKM'nin modelleri)."""
+    tur, kim, ys = prs["tur"], prs["id"], prs["yerlesim"]
+    if tur == "avlulu" and prs["cepheM"] <= DAR_CEPHE:
+        return DAR_EV
+    if tur == "bitisik":
+        if meydana and sans(kim + "#dukkan") < MEYDAN_DUKKAN_ORANI:
+            return DUKKANLI
+        return [d for d in EV if d not in UZUN_EV]
+    if tur == "buyuk":
+        r = sans(kim + "#buyuk")
+        if ys in ("yerlesim_liman", "yerlesim_ciftlik") and r < DEPO_ORANI:
+            return DEPO
+        if r > 1 - UZUN_EV_ORANI:
+            return UZUN_EV
+        return DUKKANLI
+    if ys == "yerlesim_ciftlik" and sans(kim + "#ciftlik") < CIFTLIK_ORANI:
+        return CIFTLIK
+    if ys != "yerlesim_ciftlik" and KIYI.distance(prs["g"]) < KIYI_YAKIN_M and sans(kim + "#yazlik") < KIYI_ORANI:
+        return YAZLIK
+    return EV
+
+
+SAYAC = {"bos": {}, "sigmadi": {}, "viki": 0}
+
+
+def say(k, tur):
+    SAYAC[k][tur] = SAYAC[k].get(tur, 0) + 1
+
+
+def parsel_evleri():
+    yanlar = {}
+    for p in PARSELLER:
+        yanlar.setdefault((p["yol"], p["taraf"]), []).append(p)
+    meydan_cevre = unary_union([MEYDAN] + MEYDANCIK).buffer(14)
+    for anahtar in sorted(yanlar):
+        sira = sorted(yanlar[anahtar], key=lambda p: p["konumM"])
+        # bitişik dar parseller yan yana birleşir (tek sıra ev)
+        gruplar, i = [], 0
+        while i < len(sira):
+            g = [sira[i]]
+            while (g[0]["tur"] == "bitisik" and sum(p["cepheM"] for p in g) < SIRA_EV_EN_DAR and i + 1 < len(sira)
+                   and sira[i + 1]["tur"] == "bitisik" and sira[i + 1]["konumM"] - (g[-1]["konumM"] + g[-1]["cepheM"]) < 0.6):
+                i += 1; g.append(sira[i])
+            gruplar.append(g); i += 1
+        onceki = None
+        for g in gruplar:
+            prs = g[0]
+            tur = prs["tur"]
+            if any(p["id"] in TUKENEN for p in g):
+                SAYAC["viki"] += len(g)
+                onceki = None
+                continue
+            oran = BOS_ORANI[tur] if tur != "avlulu" else BOS_ORANI["avlulu"][prs["yerlesim"]]
+            if sans(prs["id"] + "#bos") < oran:
+                say("bos", tur); onceki = None
+                continue
+            meydana = prs["g"].intersects(meydan_cevre)
+            havuz = model_listesi(prs, meydana)
+            kimlik = "ev_" + prs["id"][4:]
+            ilk = sabit_sec(kimlik, havuz)
+            sirali = havuz[havuz.index(ilk):] + havuz[:havuz.index(ilk)]
+            if onceki in sirali and len(sirali) > 1:          # yan yana aynı model olmasın
+                sirali.remove(onceki); sirali.append(onceki)
+            yerlesti = False
+            for dosya in sirali:
+                me, mb, _ = olcu(dosya)
+                taban, on = parsel_evi(prs, g, me, mb)
+                if taban is None:
+                    continue
+                if any(d.intersects(taban) and d.intersection(taban).area > 0.05 for d in DOLU[-3:]):
+                    continue
+                yapi_ekle(kimlik, taban, tuple(on), dosya, tur_of(dosya),
+                          {"parsel": prs["id"], **({"parseller": [p["id"] for p in g]} if len(g) > 1 else {}),
+                           "parselTuru": tur, "yol": prs["yol"], "mahalle": prs["mahalle"], "yerlesim": prs["yerlesim"]})
+                onceki, yerlesti = dosya, True
+                break
+            if not yerlesti and tur != "bitisik":
+                for dosya in sorted(EV + YAZLIK, key=lambda d: (olcu(d)[0] * olcu(d)[1], d)):
+                    me, mb, _ = olcu(dosya)
+                    taban, on = parsel_evi(prs, g, me, mb)
+                    if taban is not None:
+                        yapi_ekle(kimlik, taban, tuple(on), dosya, tur_of(dosya),
+                                  {"parsel": prs["id"], "parselTuru": tur, "yol": prs["yol"], "mahalle": prs["mahalle"],
+                                   "yerlesim": prs["yerlesim"]})
+                        onceki, yerlesti = dosya, True
+                        break
+            if not yerlesti:
+                say("sigmadi", tur); onceki = None
+
+
+def uret():
+    global DAR_EV
+    DAR_EV = _dar_ev()
+    global YAPILAR, DOLU, TUKENEN, KAYITLAR, YERLESEMEYEN, SAYAC
+    YAPILAR, DOLU, TUKENEN, KAYITLAR, YERLESEMEYEN = [], [], set(), [], []
+    SAYAC = {"bos": {}, "sigmadi": {}, "viki": 0}
+    viki_yapilari()
+    parsel_evleri()
+    return {
+        "type": "FeatureCollection",
+        "not": "Kompakt ada yapıları, taslak (Kemal onaylamadı). gen/kompakt_yapilar.py üretir.",
+        "alanlar": {
+            "id": "kararlı kimlik. Viki bağlı yapıda eski haritadaki kimliği (Kurucu bağı, evde oturanlar, 3B eşlemesi "
+                  "kopmasın); parsel evinde ev_<parsel kimliği>",
+            "tur": "KKM Kurucu türü (ev | dukkanli | ciftlik | yazlik | depo | kamu) ya da ozel (yapının kendi modeli) "
+                   "ya da kutu (modeli yok, bugünkü gibi kutu)",
+            "dosya": "public/modeller/ altındaki model; null: modeli yok",
+            "merkez": "taban merkezi [boylam, enlem]",
+            "ex": "modelin +X ekseni, x doğu y güney (KKM'deki ModelYeri.ex gibi)",
+            "yol": "önün baktığı yön, x doğu y güney (ModelYeri.yol gibi); model ön = +Z",
+            "en": "ex boyunca taban (m)", "boy": "ona dik taban (m)",
+            "modelOlcusu": "modelin kendi tabanı ve yüksekliği [en, boy, yükseklik] (m); en/boy farklıysa harita "
+                           "modeli tabana uydurur (bugünkü harita gibi)",
+            "cepheYonu": "önün pusula yönü (kuzey 0, saat yönünde)",
+            "kotM": "tabanın ortalama rakımı (m)", "kotFarkiM": "tabandaki en yüksek ile en alçak nokta farkı (m)",
+            "parsel": "oturduğu arsa (duzada-parseller.geojson); parseller: birden çok arsayı kaplayan sıra ev",
+            "kareler": "tabanın kapladığı kareler (duzada-kareler.json kimlikleri)",
+            "vikiId": "vikideki maddesi (viki bağlı yapıda)", "ad": "vikideki adı (yalnız viki bağlı yapıda)",
+            "bag": "viki: maddesi / madde bağı var; oturan: evde oturanı var (kişiler yalnız kayıtta)",
+            "eskiKonum": "eski haritadaki yeri [boylam, enlem]",
+            "tasima": "nasıl taşındı: yöntem, eski yerin kompakt adadaki karşılığı (hedef) ve yapının ona uzaklığı",
+            "bak": "önü bu noktaya bakar (meydana bakan yapılar)",
+        },
+        "olculer": {"not": "Hepsi DENEME (Kemal onaylamadı)", "bosOrani": BOS_ORANI, "siraEvEnDar": SIRA_EV_EN_DAR,
+                    "darCephe": DAR_CEPHE, "darYanPay": DAR_YAN_PAY, "onPay": ON_PAY, "yanPay": YAN_PAY, "arkaPay": ARKA_PAY, "evAlanOrani": EV_ALAN_ORANI, "kiyiOrani": KIYI_ORANI,
+                    "kiyiYakinM": KIYI_YAKIN_M, "ciftlikOrani": CIFTLIK_ORANI, "depoOrani": DEPO_ORANI,
+                    "uzunEvOrani": UZUN_EV_ORANI, "meydanDukkanOrani": MEYDAN_DUKKAN_ORANI, "aramaM": ARAMA_M,
+                    "yapiArasi": YAPI_ARASI, "egimViki": EGIM_VIKI, "kiyiEnAz": KIYI_EN_AZ},
+        "features": YAPILAR,
+    }
+
+
+if __name__ == "__main__":
+    fc = uret()
+    with open(CIKTI, "w", encoding="utf-8") as f:
+        json.dump(fc, f, ensure_ascii=False, separators=(",", ":"))
+        f.write("\n")
+    from collections import Counter
+    print(f"{len(YAPILAR)} yapı yazıldı → {os.path.relpath(CIKTI, KOK)}")
+    print("  türe göre:", dict(Counter(f["properties"]["tur"] for f in YAPILAR)))
+    print("  mahalleye göre:", dict(Counter(f["properties"]["mahalle"] for f in YAPILAR)))
+    print("  boş bırakılan parsel:", SAYAC["bos"], " sığmayan:", SAYAC["sigmadi"], " viki yapısının altında kalan:", SAYAC["viki"])
+    for e, p in KAYITLAR:
+        print(f"  {e['id']:26s} {(e['ad'] or '(evde oturan)'):26s} {p['tasima']['yontem']:40s} hedeften {p['tasima']['hedeftenM']:6.1f} m  {p['mahalle']}")
+    for e, neden in YERLESEMEYEN:
+        print(f"  YERLEŞEMEDİ: {e['id']} ({e['ad']}): {neden}")
