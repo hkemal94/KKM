@@ -6,7 +6,7 @@ Bakılanlar:
     hariç; statın sekisinde yalnız viki bağlı yapı durabilir)
   - parsel evi kendi arsasının karelerinin (ya da sıra ev grubunun) dışına taşmaz
   - her yapı karada ve kendi mahallesinde (yazılan mahalle, tabanın merkezinin bulunduğu mahalle)
-  - eski haritadaki her viki bağlı yapı yerleşti
+  - eski haritadaki her viki bağlı yapı ve Kemal'in seçtiği yedi yapı yerleşti
   - yalnız KKM'nin modelleri (her dosya public/modeller/ altında ve katalogda)
   - kararlı çıktı: üreteç iki kez çalışınca aynı sonuç, dosyadakiyle de aynı
 
@@ -95,6 +95,10 @@ def main():
     eksik = [e["id"] for e in Y.ESKI_J["yapilar"] if e["id"] not in var]
     yaz("eski haritadaki viki bağlı her yapı yerleşti", not eksik, f"{len(Y.ESKI_J['yapilar']) - len(eksik)} / "
         f"{len(Y.ESKI_J['yapilar'])}" + (f", eksik: {eksik}" if eksik else ""))
+
+    secilen = [k[0] for k in Y.KEMAL_SECTI if k[0] not in var]
+    yaz("Kemal'in seçtiği 7 yapı (aday 1, 21 Kasım) yerleşti", not secilen, f"{len(Y.KEMAL_SECTI) - len(secilen)} / {len(Y.KEMAL_SECTI)}"
+        + (f", eksik: {secilen}" if secilen else ""))
 
     # yalnız KKM'nin modelleri
     katalog = set(Y.IMPERIAL_VE_OZEL) | {d for l in Y.KURUCU.values() for d in l}

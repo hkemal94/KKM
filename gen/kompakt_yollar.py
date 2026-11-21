@@ -805,14 +805,16 @@ for _yid, _ara in (("yerlesim_liman", 85.0), ("yerlesim_iskele", 80.0), ("yerles
     koy_dokusu(_yid, _ara)
 
 # ------------------------------------------------------------------ kıyı köyü (Taraftar Birahanesi)
-# Bugünkü haritadaki köyün sokakları, taşınmış hâliyle (yukarıda KK_HAT). Birahanenin yeri: eski binanın
-# ölçüsü (22 x 15 m), önündeki kuşak yolunun aynı yerinde ve aynı yanında (Kuzey Plajı'na bakar). Eskisinde
+# Bugünkü haritadaki köyün sokakları, taşınmış hâliyle (yukarıda KK_HAT). Birahanenin yeri: modelinin tabanı
+# (Kemal 21 Kasım: ayrılan yer modele göre büyüsün; taraftar-birahanesi.glb 20 x 27,5 m, DENEME), önündeki
+# kuşak yolunun aynı yerinde ve aynı yanında (Kuzey Plajı'na bakar; eskisi 22 x 15 m idi). Eskisinde
 # bina yolun kenarına bitişikti; ölçek küçülünce bina yola binmesin diye ön yüzü yol kenarından 1,5 m geride
 # durur (yol boyundaki yeri değişmez). Bina 3. adımda.
 _ky = KK_ID
 for _k, _kd in KK_ESKI:
     kaynak_ekle(KK_HAT[_k], _ky, _kd, "kiyi")
-_bb = KURUCU["yeniBinalar"][KK_BIRAHANE_ESKI]
+_bb = dict(KURUCU["yeniBinalar"][KK_BIRAHANE_ESKI])
+_bb["en"], _bb["boy"] = 20.0, 27.5     # DENEME: modelin tabanı (cephe x derinlik)
 KK_BIRAHANE_TASINMIS = Point(kucult(*m((_bb["x"], _bb["y"]))))
 _on = KK_HAT["kurucu_yol_muqyfdcj"]
 _P = _on.interpolate(_on.project(KK_BIRAHANE_TASINMIS))
@@ -1471,7 +1473,7 @@ ozellik.append({"type": "Feature", "properties": {"katman": "korunan", "tur": "s
 if BIRAHANE_YERI is not None:
     ozellik.append({"type": "Feature", "properties": {
         "katman": "korunan", "tur": "birahane-yeri",
-        "not": "Taraftar Birahanesi için ayrılan yer: bugünkü haritadaki binanın taşınmış yeri (önündeki yolun kenarından 1,5 m geride), ölçüsü 22 x 15 m; bina 3. adımda. Yola kapalı"},
+        "not": "Taraftar Birahanesi için ayrılan yer: bugünkü haritadaki binanın taşınmış yeri (önündeki yolun kenarından 1,5 m geride), ölçüsü 20 x 27,5 m (modelin tabanı; Kemal 21 Kasım, DENEME); bina 4. adımda. Yola kapalı"},
         "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in BIRAHANE_YERI.exterior.coords]]}})
 for m_ in MEYDANCIK:
     ozellik.append({"type": "Feature", "properties": {"katman": "meydancik", "koy": m_["koy"]},

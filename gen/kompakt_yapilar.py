@@ -551,6 +551,68 @@ def viki_yapilari():
                     TUKENEN.add(PARSELLER[i]["id"])
         yapi_ekle(e["id"], taban, tuple(on), dosya, tur_of(dosya) if dosya else (e.get("kurucuTur") or "kutu"), ozel)
         KAYITLAR.append((e, YAPILAR[-1]["properties"]))
+    kemal_secti()
+
+
+# Eski haritada yeri olmayan yedi yapı: Kemal 21 Kasım'da ajansın 1. adaylarını seçti. Nokta, adayın arsasının
+# (ya da boş yerin) merkezi; yapı oradaki arsaya oturur, arsadaki ev kalkar. Kimlik yapi_<maddenin başlığı>.
+KEMAL_SECTI = [   # (kimlik, vikiId, vikideki adı, model, nasıl, nokta [boylam, enlem], taban (m, DENEME))
+    ("yapi_merkez_camii", "mekan_1791406290403_o0m2j", "Düzada Merkez Camii", "binalar/merkez-camii.glb", "arsa", (25.8732724, 39.6039286), None),
+    ("yapi_saglik_ocagi", "mekan_1791406292051_49pt1", "Düzada Sağlık Ocağı", "binalar/saglik-ocagi.glb", "arsa", (25.8768161, 39.6027212), None),
+    ("yapi_merkez_postanesi", "mekan_1791406291758_f8hzx", "Merkez Postanesi", "binalar/merkez-postanesi.glb", "arsa", (25.8743975, 39.6060943), None),
+    ("yapi_merkez_eczanesi", "mekan_1791406292321_vti5e", "Merkez Eczanesi", None, "dukkanli", (25.8745293, 39.6044842), None),
+    ("yapi_efendi_kuruyemis", "madde_1791557701651", "Efendi Kuruyemiş", None, "dukkanli", (25.8227675, 39.6148875), None),
+    ("yapi_iskele_mescidi", "madde_1794596168679_jaq4c", "İskele Mescidi", None, "arsa", (25.8176895, 39.5869425), (10.0, 12.0)),
+    ("yapi_rum_mezarligi", "mekan_1791406292869_vkdn7", "Rum Mezarlığı", None, "bos-yer", (25.8196917, 39.5828715), (20.0, 24.0)),
+]
+KEMAL_YONTEM = "Kemal seçti (aday 1, 21 Kasım)"
+
+
+def arsa_bul(nokta):
+    q = Point(m(nokta))
+    return min(PARSELLER, key=lambda p: p["g"].distance(q) + 0.01 * p["g"].centroid.distance(q))
+
+
+def arsaya_oturt(prs, en, boy):
+    """Arsanın ortasına, önü yola (1 m geri); arsadan büyükse arsaya sığacak kadar daralır (DENEME)."""
+    a, b, u, n = parsel_cercevesi(prs)
+    L = float(np.dot(b - a, u)); D = prs["derinlikM"]
+    en, boy = min(en, L - 1.0), min(boy, D - 2.0)
+    s0 = (L - en) / 2
+    return ev_tabani(a, u, n, s0, s0 + en, 1.0, 1.0 + boy), -n
+
+
+def kemal_secti():
+    for kimlik, viki, ad, dosya, nasil, nokta, olcu_ in KEMAL_SECTI:
+        oz = {"vikiId": viki, "ad": ad, "bag": "viki", "eskiKonum": None}
+        if nasil == "bos-yer":
+            # Rum Mezarlığı: Eski Kilise'nin yanındaki boş yer; kiliseyle aynı yöne
+            kil = next(f["properties"] for f in YAPILAR if f["properties"]["id"] == "ek_eski_kilise")
+            ex = np.array([kil["ex"][0], -kil["ex"][1]])
+            taban = dikdortgen(m(nokta), ex, *olcu_)
+            on = np.array([kil["yol"][0], -kil["yol"][1]])
+            tur, yid = "alan", None
+        else:
+            prs = arsa_bul(nokta)
+            TUKENEN.add(prs["id"])
+            yid = prs["yol"]
+            oz["parsel"] = prs["id"]
+            if nasil == "dukkanli":
+                dosya = sabit_sec(kimlik, DUKKANLI)
+                me, mb, _ = olcu(dosya)
+                taban, on = parsel_evi(prs, [prs], me, mb)
+            else:
+                me, mb = olcu_ if olcu_ else olcu(dosya)[:2]
+                taban, on = arsaya_oturt(prs, me, mb)
+            tur = tur_of(dosya) if dosya else "kutu"
+        for i in PARSEL_AGACI.query(taban.buffer(YAPI_ARASI)):
+            if PARSELLER[i]["g"].intersects(taban.buffer(YAPI_ARASI)):
+                TUKENEN.add(PARSELLER[i]["id"])
+        oz.update({"yol": yid, "tasima": {"yontem": KEMAL_YONTEM, "hedef": [round(nokta[0], 7), round(nokta[1], 7)],
+                                         "hedeftenM": round(taban.centroid.distance(Point(m(nokta))), 1)},
+                   "mahalle": mahalle_of(taban), "yerlesim": None})
+        yapi_ekle(kimlik, taban, tuple(on), dosya, tur, oz)
+        KAYITLAR.append(({"id": kimlik, "ad": ad}, YAPILAR[-1]["properties"]))
 
 
 # ------------------------------------------------------------------ 2. parsellere evler
@@ -761,6 +823,7 @@ def uret():
             "vikiId": "vikideki maddesi (viki bağlı yapıda)", "ad": "vikideki adı (yalnız viki bağlı yapıda)",
             "bag": "viki: maddesi / madde bağı var; oturan: evde oturanı var (kişiler yalnız kayıtta)",
             "eskiKonum": "eski haritadaki yeri [boylam, enlem]",
+            "eskiKonum_": "eski haritada yeri olmayan yapıda null (Kemal'in seçtiği aday yer)",
             "tasima": "nasıl taşındı: yöntem, eski yerin kompakt adadaki karşılığı (hedef) ve yapının ona uzaklığı",
             "bak": "önü bu noktaya bakar (meydana bakan yapılar)",
         },
