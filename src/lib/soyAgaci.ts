@@ -8,7 +8,7 @@ import { tarihiOku } from './zamanCizgisi';
  * (patronu, iş ortağı), arkadaşlık ve rekabet yanda renkli çizgi.
  *
  * Dönem sürümleri (Kemal'in seçimi): bağın yılları (`relations[].bas/bit`)
- * ve kişinin "Yaşam" alanı. Bir yıl ya da dönem seçilince yalnız o
+ * ve kişinin "Doğum yılı" ya da "Yaşam" alanı. Bir yıl ya da dönem seçilince yalnız o
  * aralıkta geçerli bağlar ve yaşayan kişiler görünür; yılı yazılmamış olan
  * her zaman görünür. Hiçbir şey kayda yazılmaz; ağaç bağlardan çizilir.
  */
@@ -49,6 +49,32 @@ export interface SoyVerisi { kisiler: SoyKisi[]; baglar: SoyBagi[]; aileler: Arr
 
 const KISI = new Set(['kisi', 'karakter']);
 
+/** "Bilinmiyor" yazılmış alan boş sayılır (20 Kasım) */
+const bilinen = (s: string) => (/^\s*bilinmiyor\W*$/i.test(s) ? '' : s.trim());
+
+/**
+ * Kutudaki yıllar (20 Kasım, Kemal): önce künyedeki "Doğum yılı" ("1990" → "1990–");
+ * Yaşam'da ölüm yılı yazılıysa ("1990–2050") o da eklenir. Doğum yılı boşsa ya da
+ * yıl okunamıyorsa eskisi gibi Yaşam. Yalnız okunur, kayda yazılmaz.
+ */
+export function yasamOku(dogumHam: string, yasamHam: string): { yasam?: { bas: number; bit: number | null }; yasamMetni?: string } {
+  const dogum = bilinen(dogumHam);
+  const yasamMetni = bilinen(yasamHam);
+  const ty = yasamMetni ? tarihiOku(yasamMetni) : null;
+  const td = dogum ? tarihiOku(dogum) : null;
+  if (td) {
+    const olum = ty && typeof ty.bit === 'number' && ty.bit >= td.bas && /\d\s*[–—-]\s*\d/.test(yasamMetni) ? ty.bit : null;
+    // Onyıl ("1990'lar") yazıldıysa o yazı kalır; tek yıl yalnız yıl olarak
+    const bas = td.yaklasik ? dogum.replace(/\s*[–—-]\s*$/, '') : String(td.bas);
+    return { yasam: { bas: td.bas, bit: olum }, yasamMetni: `${bas}–${olum ?? ''}` };
+  }
+  // Tek yıl doğum sayılır: o yıldan sonrası açık uçlu
+  return {
+    ...(ty ? { yasam: { bas: ty.bas, bit: ty.bit === undefined ? null : ty.bit } } : {}),
+    ...(yasamMetni ? { yasamMetni } : {})
+  };
+}
+
 export function soyVerisi(items: Item[], degerOku: (i: Item, alanId: string) => string): SoyVerisi {
   const canli = items.filter(i => !i.archived && !i.isProposal);
   const aileler = canli.filter(i => i.type === 'aile').map(i => ({ id: i.id, ad: i.title.trim() })).sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
@@ -61,14 +87,12 @@ export function soyVerisi(items: Item[], degerOku: (i: Item, alanId: string) => 
     const aile = aileAdi ? adiCoz(aileAdi, aileKayitlari) : null;
     const dogumAdi = degerOku(i, 'dogumAilesi') || degerOku(i, 'dogumSoyadi');
     const dogumAile = dogumAdi ? adiCoz(dogumAdi, aileKayitlari) : null;
-    const yasamMetni = degerOku(i, 'yasam').trim();
-    const t = yasamMetni ? tarihiOku(yasamMetni) : null;
+    const { yasam, yasamMetni } = yasamOku(degerOku(i, 'dogumYili'), degerOku(i, 'yasam'));
     return {
       id: i.id, ad: i.title.trim(),
       ...(aile ? { aileId: aile.id } : {}),
       ...(dogumAile ? { dogumAileId: dogumAile.id } : {}),
-      // Tek yıl doğum sayılır: o yıldan sonrası açık uçlu
-      ...(t ? { yasam: { bas: t.bas, bit: t.bit === undefined ? null : t.bit } } : {}),
+      ...(yasam ? { yasam } : {}),
       ...(yasamMetni ? { yasamMetni } : {}),
       ...(degerOku(i, 'profession').trim() ? { rol: degerOku(i, 'profession').trim() } : {})
     };

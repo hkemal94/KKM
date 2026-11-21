@@ -38,6 +38,9 @@ export const DEFAULT_QUESTIONS_BY_CAT: Record<string, KunyeSorusu[]> = {
     { id: 'region', label: 'Mahalle', question: 'Hangi mahallede yaşar?', fieldPath: 'metadata.region' },
     { id: 'workplace', label: 'Çalıştığı yer', question: 'Hangi mekânda ya da kurumda çalışır?', fieldPath: 'metadata.profile.workplace' },
     { id: 'origin', label: 'Köken', question: 'Adalı mı, sonradan mı geldi? Nereden?', fieldPath: 'metadata.profile.origin', esAdlar: ['Nereli', 'Uyruk'] },
+    // Doğum yılı (20 Kasım, Kemal): soy ağacı kartı önce bunu okur ("1990" → "1990–"), yoksa Yaşam'ı.
+    // İsteğe bağlı: Yaşam zaten yılları tutabilir, doluluk yüzdesi düşmesin.
+    { id: 'dogumYili', label: 'Doğum yılı', question: 'Hangi yıl doğdu? (yalnız yıl: 1990)', fieldPath: 'metadata.profile.dogumYili', istegeBagli: true, esAdlar: ['Doğum', 'Doğum tarihi'] },
     // Soy ağacı (6. gece): o yılda yaşayanlar süzülür
     { id: 'yasam', label: 'Yaşam', question: 'Hangi yıllar arasında yaşadı? (aralık olarak: 1920–1987)', fieldPath: 'metadata.profile.yasam' },
     // Kişi ↔ Aile (yapisal-4, 26): aile sayfasında üyeler buradan listelenir

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Maximize2, Minus, Plus, Search, X } from 'lucide-react';
 import type { Item } from '../../types';
 import { schemaKeyFor, getKunyeFields, getEkBilgiler } from '../wiki/wikiSchema';
+import { DEFAULT_QUESTIONS_BY_CAT } from '../wiki/kunyeSorulari';
 import { donemleriOku } from '../../lib/zamanCizgisi';
 import { maddeGorseli, siluetMi } from '../../lib/maddeGorseli';
 import {
@@ -60,11 +61,19 @@ const yilMetni = (b: { bas?: number; bit?: number }) => (b.bas === undefined ? '
 const kisalt = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 const basHarfler = (ad: string) => ad.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toLocaleUpperCase('tr');
 
+/** Türkçe harfler sadeleşir, boşluk düşer: "Soyadı" ~ "soyadi", "Doğum yılı" ~ "dogumYili" (20 Kasım) */
+const sade = (s: string) => s.trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr')
+  .replace(/[çğıöşüâî]/g, h => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i' } as Record<string, string>)[h] || h)
+  .replace(/[^a-z0-9]+/g, '');
+
 /** Künye değeri: alan kimliğiyle ya da etiketiyle ("Eşi" gibi türe sonradan eklenen alanlar) */
 const degerOku = (i: Item, id: string) => {
   if (!schemaKeyFor(i.type)) return '';
   const alanlar = getKunyeFields(i);
-  const etiket = (f: { label: string }) => f.label.trim().toLocaleLowerCase('tr') === id;
+  // Kimlik ve hazır alanın adları (ör. dogumYili → "Doğum yılı", "Doğum", "Doğum tarihi")
+  const hazir = DEFAULT_QUESTIONS_BY_CAT.kisi.find(f => f.id === id);
+  const adlar = new Set([id, ...(hazir ? [hazir.label, ...(hazir.esAdlar || [])] : [])].map(sade));
+  const etiket = (f: { label: string }) => adlar.has(sade(f.label));
   // Şemada yoksa metindeki künye satırından ("* Eşi: …") okunur
   return (alanlar.find(f => f.id === id) || alanlar.find(etiket) || getEkBilgiler(i).find(etiket))?.value || '';
 };
@@ -417,7 +426,7 @@ export const SoyAgaci: React.FC<Props> = ({ items, onMaddeAc, ilkAile = null }) 
                         {kisalt(k.ad, 18)}
                       </text>
                       <text x={14 + PORTRE_R * 2 + 12} y={k.rol ? 43 : 52} fontSize={11} className="fill-[#6A5E4C] dark:fill-[#A6B0C9]" fontFamily="ui-monospace, monospace">
-                        {k.yasamMetni && !/^bilinmiyor$/i.test(k.yasamMetni) ? k.yasamMetni.replace(/-$/, '–') : '—'}
+                        {k.yasamMetni ? k.yasamMetni.replace(/-$/, '–') : '—'}
                       </text>
                       {k.rol && (
                         <text x={14 + PORTRE_R * 2 + 12} y={60} fontSize={10.5} className="fill-[#6A5E4C] dark:fill-[#A6B0C9]">{kisalt(k.rol, 22)}</text>
