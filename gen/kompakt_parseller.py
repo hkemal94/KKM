@@ -1,33 +1,32 @@
-"""Kompakt Düzada yol kenarı parselleri — tek harita, 3. adım (20 Kasım 2026, Kemal'in kararları).
+"""Kompakt Düzada kare ızgara ve arsalar — tek harita, 3. adımın düzeltmesi (21 Kasım 2026, Kemal).
 
 Girdi : public/harita/duzada-zemin.bin (yol yatağı açılmış zemin), public/harita/duzada-sinirlar.geojson,
         public/harita/duzada-yollar.geojson
-Çıktı : public/harita/duzada-parseller.geojson   parseller (koordinatlar [boylam, enlem])
+Çıktı : public/harita/duzada-kareler.json      kare ızgara (hafif biçim; köşeler şerit başından hesaplanır)
+        public/harita/duzada-parseller.geojson  arsalar (koordinatlar [boylam, enlem]); her arsa kendi karelerini sayar
 
-Kurallar:
-  - Cities Skylines'taki gibi yol kenarı kareli parsel: her parsel bir yola cephe verir, cephesi yola
-    koşut, derinliği yola dik. Eğri yolda parsel yolun ofset hattını izler (dörtgen), düz yolda dikdörtgen.
-  - Ölçü yolun kademesine uyar: ana yol kenarında büyük ve derin, ara yolda orta, sokakta ve geçitte küçük.
-  - Tür: bitisik (Merkez Meydanı ve meydancıkların çevresi; aralıksız, ortak duvar), avlulu (köyler ve
-    yerleşim kenarları; parseller arasında dar pay), buyuk (ana yol kenarı, meydan çevresi dışında).
-  - Parsel yalnız yerleşim alanında (köy sokaklarının çevresi, yerleşimin yarıçapı içinde). Tarla,
-    zeytinlik, orman, kumsal, dik yamaç, yol yatağı, kıyı şeridi, korunan alanlar (meydan, stat, seki,
-    birahane yeri, The Imperial) ve meydancıklar dışarıda.
-  - Ad yok. Her parselin kararlı kimliği yolun kimliği, yolun hangi yanı ve yol başından uzaklığından
-    gelir: prs_<yol>_<sol|sag>_<metre>. Yol değişmedikçe aynı parsel aynı kimliği alır.
-  - Kayda yazmaz; yalnız dosya üretir. 4. adımda evler bu parsellere oturur.
+Kemal 21 Kasım: "Cities Skylines'taki gibi eşit karelerden oluşan bir ızgara."
+  - Yol, en çok SADELESTIRME kadar sapan düz kesimlere ayrılır. Her kesimin iki yanında yoldan içeri
+    eşit kareler dizilir (KARE x KARE m, en çok DERINLIK_KARE sıra); kareler kesimin yönüne hizalı.
+  - Kareler önce ön sıradan dağıtılır (bütün yolların 1. sırası, sonra 2. sıra ...): kavşakta ve kıvrımda
+    çakışan karede yoldan yakın olan kalır, öbürü atılır. Arkası atılan sütunun daha derin karesi de olmaz.
+    Tabanının eğimi %30'u aşan kare çizilmez (Kemal 21 Kasım). Başka yolun şeridine KOSE_PAY'den yakın, kıyı şeridine, kumsala, korunan alana, The Imperial'a,
+    yerleşim alanının dışına düşen kare yok.
+  - Arsa birkaç kareden olur ve kare çizgilerine oturur: bitişik 1x2 (Merkez Meydanı ve meydancıkların
+    çevresi), avlulu 3x4 (köyler; araya en az 1 boş kare; kıvrımda dar avlulu 1x4, 1x3), büyük 3-4 x 4 (ana yol kenarı).
+    Sığmazsa tabloda sıradaki küçük ölçü denenir. Eğim en çok %30; arsa kendi yerleşiminin mahallesinde.
+  - Ad yok. Kimlikler kararlı: arsa prs_<yol>_<sol|sag>_<metre>, kare k_<yol>_<sol|sag>_<metre>_<sıra>
+    (metre: sütun önünün yol başından uzaklığı; sıra: yoldan içeri 0, 1, 2, 3).
+  - Kayda yazmaz; yalnız dosya üretir. 4. adımda evler bu arsalara oturur; 7. adımda kareler tek tek boyanır.
 
 Ölçü değerleri Kemal onaylamadı: hepsi DENEME.
 
 Çalıştırma: python gen/kompakt_parseller.py   (önce zemin ve yollar üretilmiş olmalı)
-            Yol ağı değişirse sonra python gen/kompakt_merkez_sinirlari.py (Merkez hedef alanın
-            üstündeyse yalnız Merkez sınırlarını yeniden hesaplar), python gen/kompakt_stadyum_kolu.py
-            (tek seferlik), python gen/kompakt_mahalle_yerlesim.py
-            (yerleşim mahalle sınırını aşıyorsa sınırı kaydırır) ve bu dosya bir kez daha.
+            Yol ağı değişirse sonra python gen/kompakt_merkez_sinirlari.py, python gen/kompakt_stadyum_kolu.py
+            (tek seferlik), python gen/kompakt_mahalle_yerlesim.py ve bu dosya bir kez daha.
 Denetim   : python gen/kompakt_parseller_denetim.py
 """
 import json, math, os, sys, warnings
-
 import numpy as np
 from scipy import ndimage
 from shapely.geometry import LineString, Point, Polygon, shape
@@ -46,35 +45,36 @@ IZGARA = os.path.join(KOK, "public", "harita", "duzada-zemin.bin")
 SINIR = os.path.join(KOK, "public", "harita", "duzada-sinirlar.geojson")
 YOLLAR = os.path.join(KOK, "public", "harita", "duzada-yollar.geojson")
 CIKTI = os.path.join(KOK, "public", "harita", "duzada-parseller.geojson")
+KARE_CIKTI = os.path.join(KOK, "public", "harita", "duzada-kareler.json")
+
 
 # ------------------------------------------------------------------ ölçüler (hepsi DENEME)
-# Kademeye göre parsel: cephe (yol boyunca, m), derinlik (yoldan içeri, m). Tür satırı.
-OLCU = {   # DENEME
-    "bitisik": {"ana": (8.0, 16.0), "ara": (7.5, 15.0), "sokak": (7.0, 14.0), "gecit": (6.0, 12.0)},
-    # Kemal 21 Kasım: daha da seyrek (DENEME)
-    "avlulu": {"ara": (24.0, 34.0), "sokak": (21.0, 30.0), "gecit": (18.0, 24.0)},
-    "buyuk": {"ana": (24.0, 32.0)},
+KARE = 8.0              # DENEME: kare boyu (m); Kemal 21 Kasım "8x8 m"
+DERINLIK_KARE = 4       # DENEME: yoldan içeri en çok bu kadar sıra kare (Cities Skylines gibi)
+SADELESTIRME = 0.6      # DENEME: kesim yoldan en çok bu kadar sapar (m); kıvrımlı yol kısa düz kesimlere bölünür
+# Arsa ölçüleri kare sayısıyla: (cephe, derinlik). İlki asıl ölçü, sonrakiler sığmazsa denenir.
+ARSA = {   # DENEME
+    "bitisik": [(1, 2)],                                   # 8 x 16 m, ortak duvar
+    # 24 x 32 m (Kemal 21 Kasım: daha da seyrek); kıvrımda dar avlulu 1x4, 1x3 (Kemal 21 Kasım)
+    "avlulu": [(3, 4), (3, 3), (2, 4), (2, 3), (1, 4), (1, 3)],
+    "buyuk": [(4, 4), (3, 4), (3, 3)],                     # 32 x 32 m ya da 24 x 32 m
 }
-CEPHE_OYNAMA = {"bitisik": 0.20, "avlulu": 0.15, "buyuk": 0.10}   # DENEME: cephe ± bu oranda değişir (sıra ev çeşitliliği)
-ARA_PAY = {"bitisik": 0.0, "avlulu": 5.0, "buyuk": 2.0}           # DENEME: komşu parseller arası (m); bitişikte ortak duvar; avlulu 5 m (Kemal 21 Kasım: daha da seyrek)
-KALDIRIM = 1.0          # DENEME: yol kenarı ile parsel önü arası (m)
-KOSE_PAY = 2.0          # DENEME: kavşakta öbür yolun kenarından en az bu kadar geri (m)
-DERINLIK_EN_AZ = 0.6    # DENEME: köşede sığmazsa derinlik bu orana kadar kısalır
-CEPHE_EN_AZ = 0.7       # DENEME: sığmazsa cephe bu orana kadar kısalır
-ADIM = 2.0              # m; parsel sığmayınca yol boyunca bu kadar ilerlenir
-ON_SEHIM = 1.0          # m; eğri yolda ön kenarın ortası kaldırımdan en çok bu kadar açılır (denetim 1,5 m)
-CAKISMA_PAYI = 0.2      # m²; komşu parselle en çok bu kadar değebilir (denetim 0,5 m²; koordinat yuvarlaması için pay)
-BUKUM_SINIRI = 30.0     # DENEME: cephe boyunca yol bundan çok dönerse (derece) parsel konmaz (yelpaze parsel olmasın)
-EGIM_SINIRI = 0.30      # DENEME: parselin ortalama eğimi en çok %30 (yaklaşık 17 derece)
-KIYI_SERIDI = 25.0      # DENEME: kıyıdan bu kadar içerisi parselsiz (m)
+BUYUK_UC_ORANI = 0.5    # DENEME: büyük arsaların bu kadarı 3 kare cepheyle başlar (çeşitlilik; kararlı)
+ARA_KARE = {"bitisik": 0, "avlulu": 1, "buyuk": 0}   # DENEME: aynı sırada arsadan sonra boş kalan kare; avlulu en az 1 (≈ 8 m)
+KALDIRIM = 1.0          # DENEME: yol kenarı ile ilk sıra karenin önü arası (m)
+KOSE_PAY = 2.0          # DENEME: kare başka yolun kenarından en az bu kadar geri (m)
+CAKISMA_PAYI = 0.2      # m²; iki kare en çok bu kadar değebilir (denetim 0,5 m²; koordinat yuvarlaması için pay)
+EGIM_SINIRI = 0.30      # DENEME: arsanın ortalama eğimi en çok %30 (yaklaşık 17 derece)
+KIYI_SERIDI = 25.0      # DENEME: kıyıdan bu kadar içerisi karesiz (m)
 KUMSAL_PAY = 60.0       # DENEME: kumlu kıyıda kumsal şeridi (m; kıyı şeridine ek)
 YERLESIM_KUSAGI = 55.0  # DENEME: köy sokağının bu kadar çevresi yerleşim alanı (m)
 YERLESIM_CARPAN = 1.25  # DENEME: yerleşim alanı yerleşimin yarıçapının bu katını geçmez
 BITISIK_MEYDAN = 110.0  # DENEME: Merkez Meydanı'nın bu kadar çevresi bitişik (m)
 BITISIK_MEYDANCIK = 30.0  # DENEME: meydancığın bu kadar çevresi bitişik (m)
 KORUNAN_PAY = 3.0       # DENEME: korunan alanlardan en az bu kadar uzak (m)
-CEPHE_YOLLARI = ("ana", "ara", "sokak", "gecit")   # toprak (tarla yolu), patika, merdiven parsel almaz
+CEPHE_YOLLARI = ("ana", "ara", "sokak", "gecit")   # toprak (tarla yolu), patika, merdiven kare almaz
 SIRA = {"ana": 0, "ara": 1, "sokak": 2, "gecit": 3}
+TUR_KADEME = {"bitisik": ("ana", "ara", "sokak", "gecit"), "avlulu": ("ara", "sokak", "gecit"), "buyuk": ("ana",)}
 
 # ------------------------------------------------------------------ girdiler
 B, HAM = oku(IZGARA)
@@ -193,175 +193,263 @@ def egim(poly_kose):
     return float(math.hypot(gx, gy)), float(np.mean(z))
 
 
-def yon(g, s, L):
-    """s noktasındaki birim teğet (±4 m ortalama)."""
-    a = g.interpolate(max(0.0, s - 4.0))
-    b = g.interpolate(min(L, s + 4.0))
-    vx, vy = b.x - a.x, b.y - a.y
-    n = math.hypot(vx, vy) or 1.0
-    return vx / n, vy / n
 
 
-# ------------------------------------------------------------------ yerleştirme
-PARSELLER = []
-_konan = []                       # yerleşen poligonlar
-_agac = None
-_agac_n = 0
-red = {"yerlesim": 0, "yasak": 0, "yol": 0, "komsu": 0, "egim": 0, "gecersiz": 0}
+# ------------------------------------------------------------------ kesimler
+def sade_indis(p, tol):
+    """Douglas-Peucker; tutulan köşelerin sırası (özgün köşeler)."""
+    tut = np.zeros(len(p), bool)
+    tut[0] = tut[-1] = True
+    yigin = [(0, len(p) - 1)]
+    while yigin:
+        i, j = yigin.pop()
+        if j <= i + 1:
+            continue
+        a, b = p[i], p[j]
+        v = b - a
+        n = math.hypot(*v)
+        ara = p[i + 1:j]
+        if n < 1e-6:          # kapalı halka (Sahil Yolu): uçlar aynı noktada, en uzak köşeden bölünür
+            d = np.hypot(ara[:, 0] - a[0], ara[:, 1] - a[1])
+        else:
+            d = np.abs((ara[:, 0] - a[0]) * v[1] - (ara[:, 1] - a[1]) * v[0]) / n
+        k = int(np.argmax(d))
+        if d[k] > tol:
+            tut[i + 1 + k] = True
+            yigin += [(i, i + 1 + k), (i + 1 + k, j)]
+    return np.flatnonzero(tut)
 
 
-def komsu_cakisir(poly):
-    global _agac, _agac_n
-    if _agac_n != len(_konan):
-        _agac = STRtree(_konan) if _konan else None
-        _agac_n = len(_konan)
-    hepsi = []
-    if _agac is not None:
-        hepsi = [_konan[i] for i in _agac.query(poly)]
-    hepsi += _bekleyen
-    return any(poly.intersection(q).area > CAKISMA_PAYI for q in hepsi)
+def kademe_tur(y, nokta):
+    """Sütunun türü (sütun önünün ortasına göre)."""
+    if BITISIK_P.contains(nokta) and y["kademe"] in TUR_KADEME["bitisik"]:
+        return "bitisik"
+    return "buyuk" if y["kademe"] == "ana" else "avlulu"
 
 
-_bekleyen = []   # bu yolda konan ama ağaca henüz girmemiş parseller
+def tohum(metin):
+    return sum(ord(ch) * (i + 1) for i, ch in enumerate(metin)) % (2 ** 32)
 
 
-def dene(y, s, w, d, taraf, o, L):
-    """s'den başlayıp w cepheli, d derinlikli parsel; uygun değilse None ve nedeni."""
+SERITLER = []     # her kesimin bir yanı: kare şeridi
+red = {"yerlesim": 0, "yasak": 0, "dik": 0, "yol": 0, "cakisma": 0, "egim": 0, "mahalle": 0, "sigmadi": 0}
+
+print("Kareler ...")
+sirali = sorted([y for y in YOLLISTE if y["kademe"] in CEPHE_YOLLARI],
+                key=lambda y: (SIRA[y["kademe"]], -y["g"].length, y["id"]))
+# öncelik: Merkez Meydanı'na yakın yollar önce (bitişik kuşak), sonra kademe sırası
+yakin = sorted([y for y in sirali if y["g"].intersects(BITISIK_ALAN)],
+               key=lambda y: (y["g"].distance(MEYDAN) if MEYDAN is not None else 0, y["id"]))
+oncelik = {y["id"]: i for i, y in enumerate(yakin + [y for y in sirali if y not in yakin])}
+
+for y in sirali:
+    if YER_BIRLESIK.distance(y["g"]) > 1.0:
+        continue
+    pts = np.asarray(y["g"].coords)
+    ind = sade_indis(pts, SADELESTIRME)
+    o = y["genislik"] / 2 + KALDIRIM
+    for kno in range(len(ind) - 1):
+        i0, i1 = ind[kno], ind[kno + 1]
+        A, Bn = pts[i0], pts[i1]
+        v = Bn - A
+        Lk = math.hypot(*v)
+        n_sutun = int((Lk + 1e-6) // KARE)
+        if n_sutun < 1:
+            continue
+        u = v / Lk
+        for taraf, tad in ((1, "sol"), (-1, "sag")):
+            nv = np.array([-u[1] * taraf, u[0] * taraf])
+            # kesim içindeki gerçek yol köşeleri bu yana taşıyorsa şerit o kadar geri çekilir
+            ara = pts[i0:i1 + 1]
+            sapma = max(0.0, float(np.max((ara - A) @ nv)))
+            bas = (Lk - n_sutun * KARE) / 2
+            O = A + u * bas + nv * (o + sapma)
+            SERITLER.append(dict(y=y, taraf=tad, kesim=int(kno), O=O, u=u, n=nv, n_sutun=n_sutun,
+                                 sutun=[None] * n_sutun))
+
+# sütunlar: her sütun yolun bir noktasında, yerleşim ve tür o noktadan
+ADAY = []         # (sıra, öncelik, şerit no, sütun no)
+for si, sr in enumerate(SERITLER):
+    y = sr["y"]
     g = y["g"]
-    if s + w > L:
-        return None, "yol"
-    t0 = yon(g, s, L)
-    t1 = yon(g, s + w, L)
-    if math.degrees(math.acos(max(-1.0, min(1.0, t0[0] * t1[0] + t0[1] * t1[1])))) > BUKUM_SINIRI:
-        return None, "gecersiz"
-    p0 = g.interpolate(s)
-    p1 = g.interpolate(s + w)
-    n0 = (-t0[1] * taraf, t0[0] * taraf)
-    n1 = (-t1[1] * taraf, t1[0] * taraf)
-    a = (p0.x + n0[0] * o, p0.y + n0[1] * o)
-    b = (p1.x + n1[0] * o, p1.y + n1[1] * o)
-    c = (p1.x + n1[0] * (o + d), p1.y + n1[1] * (o + d))
-    e = (p0.x + n0[0] * (o + d), p0.y + n0[1] * (o + d))
-    # eğri yolun dış yanında ön kenarın ortası yoldan açılır (kiriş sehimi); denetimin payından önce dur
-    if g.distance(Point((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)) > o + ON_SEHIM:
-        return None, "gecersiz"
-    poly = Polygon([a, b, c, e])
-    if not poly.is_valid or poly.area < 0.6 * w * d:
-        return None, "gecersiz"
-    m = poly.centroid
-    if not ADA_IC.contains(poly):
-        return None, "yasak"
-    if YASAK_P.intersects(poly):
-        return None, "yasak"
-    # yol yatağı: kendi yolu dahil hiçbir yol şeridine girmez; öbür yollarda köşe payı
+    for j in range(sr["n_sutun"]):
+        on = sr["O"] + sr["u"] * (KARE * j)
+        orta = Point(*(on + sr["u"] * (KARE / 2) + sr["n"] * 4.0))
+        yid = yerlesim_bul(orta)
+        if yid is None:
+            red["yerlesim"] += 1
+            continue
+        s = g.project(Point(*on))
+        sr["sutun"][j] = dict(metre=int(round(s)), yerlesim=yid, tur=kademe_tur(y, orta), derinlik=0, kare=[])
+
+
+def kare_poly(sr, j, r):
+    a = sr["O"] + sr["u"] * (KARE * j) + sr["n"] * (KARE * r)
+    b = a + sr["u"] * KARE
+    return Polygon([tuple(a), tuple(b), tuple(b + sr["n"] * KARE), tuple(a + sr["n"] * KARE)])
+
+
+def kare_uygun(y, poly):
+    if not ADA_IC.contains(poly) or YASAK_P.intersects(poly):
+        return "yasak"
+    # Kemal 21 Kasım: %30'dan dik yamaçta kare çizilmez (kare tabanının eğimi)
+    if egim(list(poly.exterior.coords)[:4])[0] > EGIM_SINIRI:
+        return "dik"
     for i in SERIT_AGAC.query(poly):
         serit = YOL_SERIT[i]
         if YOLLISTE[i] is y:
             if poly.intersection(serit).area > 0.3:
-                return None, "yol"
+                return "yol"
         elif poly.distance(serit) < KOSE_PAY:
-            return None, "yol"
-    if komsu_cakisir(poly):
-        return None, "komsu"
-    # cephe yönü ön kenarın (a-b) dikinden: parselden yola
-    kx, ky = b[0] - a[0], b[1] - a[1]
-    kn = math.hypot(kx, ky) or 1.0
-    yola = (ky / kn * taraf, -kx / kn * taraf)
-    return (poly, (a, b, c, e), m, t0, yola), None
+            return "yol"
+    return None
 
 
-def yerlestir(y, tur_sec):
-    g = y["g"]
-    L = g.length
-    o = y["genislik"] / 2 + KALDIRIM
-    rng = np.random.default_rng(sum(ord(ch) * (i + 1) for i, ch in enumerate(y["id"])) % (2 ** 32))
-    for taraf, tad in ((1, "sol"), (-1, "sag")):
-        s = KOSE_PAY
-        while s < L - 4.0:
-            # türü o noktanın yerine göre seç (parsel önünün ortası)
-            t_ = yon(g, s, L)
-            q = g.interpolate(min(L, s + 6.0))
-            on = Point(q.x - t_[1] * taraf * (o + 4), q.y + t_[0] * taraf * (o + 4))
-            yid = yerlesim_bul(on)
-            if yid is None:
-                red["yerlesim"] += 1
-                s += 4 * ADIM
+# kareler sıra sıra: önce bütün yolların ön sırası; çakışmada yola yakın olan (ve öncelikli yol) kalır
+KOVA = {}          # 16 m'lik kovalar: kabul edilen kareler
+KOVA_M = 2 * KARE
+
+
+def kovalar(poly):
+    x0, y0, x1, y1 = poly.bounds
+    for kx in range(int(math.floor(x0 / KOVA_M)), int(math.floor(x1 / KOVA_M)) + 1):
+        for ky in range(int(math.floor(y0 / KOVA_M)), int(math.floor(y1 / KOVA_M)) + 1):
+            yield (kx, ky)
+
+
+sira_listesi = sorted(((oncelik[sr["y"]["id"]], sr["y"]["id"], sr["taraf"], sr["kesim"], si)
+                       for si, sr in enumerate(SERITLER)))
+for r in range(DERINLIK_KARE):
+    for _, _, _, _, si in sira_listesi:
+        sr = SERITLER[si]
+        for j, st in enumerate(sr["sutun"]):
+            if st is None or st["derinlik"] != r:
                 continue
-            tur = tur_sec(y, on)
-            if tur is None:
-                s += 4 * ADIM
-                continue
-            w0, d0 = OLCU[tur][y["kademe"]]
-            w0 = w0 * (1 + rng.uniform(-CEPHE_OYNAMA[tur], CEPHE_OYNAMA[tur]))
-            sonuc, neden = None, None
-            for fw, fd in ((1.0, 1.0), (1.0, 0.8), (CEPHE_EN_AZ, 1.0), (1.0, DERINLIK_EN_AZ), (CEPHE_EN_AZ, DERINLIK_EN_AZ)):
-                sonuc, neden = dene(y, s, w0 * fw, d0 * fd, taraf, o, L)
-                if sonuc is not None:
-                    w, d = w0 * fw, d0 * fd
-                    break
-            if sonuc is None:
+            poly = kare_poly(sr, j, r)
+            neden = kare_uygun(sr["y"], poly)
+            if neden is None:
+                for kv in kovalar(poly):
+                    if any(poly.intersection(q).area > CAKISMA_PAYI for q in KOVA.get(kv, ())):
+                        neden = "cakisma"
+                        break
+            if neden is not None:
                 red[neden] += 1
-                s += ADIM
+                st["derinlik"] = -r - 1 if r else -1   # bu sütunda derin kare yok
                 continue
-            poly, kose, m, t0, yola = sonuc
-            e_, kot = egim(kose)
-            if e_ > EGIM_SINIRI:
-                red["egim"] += 1
-                s += ADIM
-                continue
-            # cephe yönü: parselden yola bakış (kuzey 0, saat yönünde derece)
-            cy = (math.degrees(math.atan2(yola[0], yola[1])) + 360) % 360
-            PARSELLER.append(dict(
-                id=f"prs_{y['id']}_{tad}_{int(round(s))}", tur=tur, yol=y["id"], yolKademe=y["kademe"],
-                taraf=tad, konumM=round(s, 1), cepheYonu=round(cy, 1), cepheM=round(w, 1), derinlikM=round(d, 1),
-                alanM2=round(poly.area, 1), kotM=round(kot, 1), egim=round(100 * e_, 1),
-                mahalle=mahalle_bul(m), yerlesim=yid, poly=poly))
-            _bekleyen.append(poly)
-            s += w + ARA_PAY[tur]
+            for kv in kovalar(poly):
+                KOVA.setdefault(kv, []).append(poly)
+            st["kare"].append(poly)
+            st["derinlik"] = r + 1
+    print(f"  {r + 1}. sıra: {sum(1 for sr in SERITLER for st in sr['sutun'] if st and len(st['kare']) > r)} kare")
+for sr in SERITLER:
+    for st in sr["sutun"]:
+        if st is not None:
+            st["derinlik"] = len(st["kare"])
+
+# ------------------------------------------------------------------ arsalar
+PARSELLER = []
 
 
-def tur_bitisik(y, p):
-    return "bitisik" if BITISIK_P.contains(p) and y["kademe"] in OLCU["bitisik"] else None
+def arsa_dene(sr, j, w, d, tur):
+    sut = sr["sutun"][j:j + w]
+    if len(sut) < w or any(st is None or st["tur"] != tur or st["derinlik"] < d or st.get("arsa") for st in sut):
+        return None, "sigmadi"
+    a = sr["O"] + sr["u"] * (KARE * j)
+    b = a + sr["u"] * (KARE * w)
+    c = b + sr["n"] * (KARE * d)
+    e = a + sr["n"] * (KARE * d)
+    kose = (tuple(a), tuple(b), tuple(c), tuple(e))
+    poly = Polygon(kose)
+    e_, kot = egim(kose)
+    if e_ > EGIM_SINIRI:
+        return None, "egim"
+    yid = sut[0]["yerlesim"]
+    m = poly.centroid
+    if not MAHALLE[YERLESIM[yid]["mahalle"]].contains(m):
+        return None, "mahalle"
+    return (poly, kose, e_, kot, yid), None
 
 
-def tur_genel(y, p):
-    if BITISIK_P.contains(p):
-        return None                       # bitişik kuşak ilk turda doldu
-    if y["kademe"] == "ana":
-        return "buyuk"
-    return "avlulu"
+for sr in sorted(SERITLER, key=lambda sr: (oncelik[sr["y"]["id"]], sr["taraf"], sr["kesim"])):
+    y = sr["y"]
+    tad = sr["taraf"]
+    rng = np.random.default_rng(tohum(f"{y['id']}_{tad}_{sr['kesim']}"))
+    j = 0
+    onceki_bos = True          # bir önceki sütunda arsa yok
+    while j < sr["n_sutun"]:
+        st = sr["sutun"][j]
+        if st is None or st["derinlik"] == 0:
+            j += 1
+            onceki_bos = True
+            continue
+        tur = st["tur"]
+        if tur == "avlulu" and not onceki_bos:
+            j += 1                 # avlulunun önünde en az 1 boş kare
+            onceki_bos = True
+            continue
+        olcu = ARSA[tur]
+        if tur == "buyuk" and rng.random() < BUYUK_UC_ORANI:
+            olcu = olcu[1:]
+        sonuc, neden = None, "sigmadi"
+        for w, d in olcu:
+            sonuc, neden = arsa_dene(sr, j, w, d, tur)
+            if sonuc is not None:
+                break
+        if sonuc is None:
+            red[neden] += 1
+            j += 1
+            onceki_bos = True
+            continue
+        poly, kose, e_, kot, yid = sonuc
+        yola = (-sr["n"][0], -sr["n"][1])
+        cy = (math.degrees(math.atan2(yola[0], yola[1])) + 360) % 360
+        aid = f"prs_{y['id']}_{tad}_{st['metre']}"
+        kareler = []
+        for q in range(j, j + w):
+            sq = sr["sutun"][q]
+            sq["arsa"] = aid
+            sq["arsaDerinlik"] = d
+            kareler += [f"k_{y['id']}_{tad}_{sq['metre']}_{r}" for r in range(d)]
+        PARSELLER.append(dict(
+            id=aid, tur=tur, yol=y["id"], yolKademe=y["kademe"], taraf=tad,
+            konumM=round(y["g"].project(Point(*kose[0])), 1), cepheYonu=round(cy, 1),
+            cepheM=round(w * KARE, 1), derinlikM=round(d * KARE, 1), alanM2=round(poly.area, 1),
+            kotM=round(kot, 1), egim=round(100 * e_, 1), mahalle=mahalle_bul(poly.centroid), yerlesim=yid,
+            kareler=kareler, poly=poly))
+        j += w + ARA_KARE[tur]
+        onceki_bos = ARA_KARE[tur] > 0
 
-
-print("Parseller ...")
-sirali = sorted([y for y in YOLLISTE if y["kademe"] in CEPHE_YOLLARI],
-                key=lambda y: (SIRA[y["kademe"]], -y["g"].length, y["id"]))
-# 1. tur: meydan çevresi bitişik (meydana yakın yoldan başlayarak), 2. tur: öbürleri kademe sırasıyla
-yakin = sorted([y for y in sirali if y["g"].intersects(BITISIK_ALAN)],
-               key=lambda y: (y["g"].distance(MEYDAN) if MEYDAN is not None else 0, y["id"]))
-for tur_sec, liste in ((tur_bitisik, yakin), (tur_genel, sirali)):
-    for y in liste:
-        yerlestir(y, tur_sec)
-        _konan.extend(_bekleyen)
-        _bekleyen.clear()
-
-# kimlik çakışması (aynı yolun aynı yanında aynı metre) olmaz ama yine de denetlenir
-assert len({p["id"] for p in PARSELLER}) == len(PARSELLER), "kimlik çakıştı"
+# kimlikler: aynı yolun aynı yanında aynı metrede iki sütun olursa kare kimliği çakışır (olmamalı)
+_sayac = {}
+for sr in SERITLER:
+    for st in sr["sutun"]:
+        if st is not None and st["derinlik"]:
+            k = (sr["y"]["id"], sr["taraf"], st["metre"])
+            _sayac[k] = _sayac.get(k, 0) + 1
+assert all(v == 1 for v in _sayac.values()), f"kare kimliği çakıştı: {[k for k, v in _sayac.items() if v > 1][:5]}"
+assert len({p["id"] for p in PARSELLER}) == len(PARSELLER), "arsa kimliği çakıştı"
 
 # ------------------------------------------------------------------ yaz
 ALANLAR = {
-    "id": "kararlı kimlik: prs_<yol kimliği>_<sol|sag>_<yol başından metre>; yol değişmedikçe aynı kalır",
-    "tur": "bitisik (meydan çevresi, ortak duvar) | avlulu (köy ve yerleşim kenarı) | buyuk (ana yol kenarı)",
+    "id": "kararlı kimlik: prs_<yol kimliği>_<sol|sag>_<metre>; metre ilk sütunun önünün yol başından uzaklığı",
+    "tur": "bitisik (meydan çevresi, ortak duvar, 1x2 kare) | avlulu (köy, 3x4 kare) | buyuk (ana yol kenarı, 3-4 x 4 kare)",
     "yol": "cephe verdiği yolun kimliği (duzada-yollar.geojson)", "yolKademe": "o yolun kademesi",
-    "taraf": "yolun çizim yönüne göre hangi yanı", "konumM": "parsel önünün yol başından uzaklığı (m)",
-    "cepheYonu": "parselden yola bakış yönü, derece (kuzey 0, saat yönünde)",
-    "cepheM": "yol boyunca cephe (m)", "derinlikM": "yoldan içeri derinlik (m)", "alanM2": "alan (m²)",
-    "kotM": "ortalama rakım (m)", "egim": "ortalama eğim (%)",
+    "taraf": "yolun çizim yönüne göre hangi yanı", "konumM": "arsa önünün yol başından uzaklığı (m)",
+    "cepheYonu": "arsadan yola bakış yönü, derece (kuzey 0, saat yönünde)",
+    "cepheM": "yol boyunca cephe (m; kare boyunun katı)", "derinlikM": "yoldan içeri derinlik (m; kare boyunun katı)",
+    "alanM2": "alan (m²)", "kotM": "ortalama rakım (m)", "egim": "ortalama eğim (%)",
     "mahalle": "mahalle kimliği", "yerlesim": "yerleşim kimliği (duzada-sinirlar.geojson)",
+    "kareler": "arsanın kareleri (duzada-kareler.json kimlikleri)",
 }
-OLCULER = {"not": "Hepsi DENEME (Kemal onaylamadı)",
-           "olcu": {t: {k: {"cepheM": v[0], "derinlikM": v[1]} for k, v in d_.items()} for t, d_ in OLCU.items()},
-           "cepheOynama": CEPHE_OYNAMA, "araPay": ARA_PAY, "kaldirimM": KALDIRIM, "kosePayM": KOSE_PAY,
-           "egimSiniri": EGIM_SINIRI, "bukumSiniri": BUKUM_SINIRI, "kiyiSeridiM": KIYI_SERIDI, "kumsalPayM": KUMSAL_PAY,
+OLCULER = {"not": "Hepsi DENEME (Kemal onaylamadı)", "kareM": KARE, "derinlikKare": DERINLIK_KARE,
+           "sadelestirmeM": SADELESTIRME,
+           "arsaKare": {t: [list(x) for x in v] for t, v in ARSA.items()},
+           # eski denetimle uyum: tür ve kademeye göre en büyük ölçü (m)
+           "olcu": {t: {k: {"cepheM": max(w for w, _ in ARSA[t]) * KARE, "derinlikM": max(d for _, d in ARSA[t]) * KARE}
+                        for k in TUR_KADEME[t]} for t in ARSA},
+           "cepheOynama": {t: 0.0 for t in ARSA}, "araKare": ARA_KARE, "buyukUcOrani": BUYUK_UC_ORANI,
+           "kaldirimM": KALDIRIM, "kosePayM": KOSE_PAY,
+           "egimSiniri": EGIM_SINIRI, "kiyiSeridiM": KIYI_SERIDI, "kumsalPayM": KUMSAL_PAY,
            "yerlesimKusagiM": YERLESIM_KUSAGI, "yerlesimCarpan": YERLESIM_CARPAN,
            "bitisikMeydanM": BITISIK_MEYDAN, "bitisikMeydancikM": BITISIK_MEYDANCIK}
 ozellik = []
@@ -377,14 +465,54 @@ for yid, g in YER_ALAN.items():
                                      + [[ll(*c) for c in r.coords] for r in pp.interiors]}})
 with open(CIKTI, "w", encoding="utf-8") as f:
     json.dump({"type": "FeatureCollection",
-               "not": "Kompakt ada yol kenarı parselleri, taslak (Kemal onaylamadı). gen/kompakt_parseller.py üretir.",
+               "not": "Kompakt ada arsaları (kare ızgaraya oturur), taslak (Kemal onaylamadı). gen/kompakt_parseller.py üretir.",
                "alanlar": ALANLAR, "olculer": OLCULER, "features": ozellik},
               f, ensure_ascii=False, separators=(",", ":"))
 
+
+def dd(v):
+    """metre vektörü -> derece (boylam, enlem) vektörü."""
+    return [round(v[0] / B["mPerLng"], 10), round(v[1] / B["mPerLat"], 10)]
+
+
+arsa_no = {p["id"]: i for i, p in enumerate(sorted(PARSELLER, key=lambda p: p["id"]))}
+seritler = []
+kare_say = 0
+for sr in sorted(SERITLER, key=lambda sr: (sr["y"]["id"], sr["taraf"], sr["kesim"])):
+    sut = []
+    for j, st in enumerate(sr["sutun"]):
+        if st is None or not st["derinlik"]:
+            continue
+        a = st.get("arsa")
+        sut.append([j, st["metre"], st["derinlik"], arsa_no[a] if a else -1, st.get("arsaDerinlik", 0)])
+        kare_say += st["derinlik"]
+    if not sut:
+        continue
+    seritler.append({"yol": sr["y"]["id"], "taraf": sr["taraf"], "kesim": sr["kesim"], "o": ll(*sr["O"]),
+                     "u": dd(sr["u"] * KARE), "n": dd(sr["n"] * KARE), "s": sut})
+KARE_ALANLAR = {
+    "seritler": "her yol kesiminin bir yanındaki kare şeridi: yol, taraf (sol|sag), kesim (yolun kaçıncı düz kesimi)",
+    "o": "şeridin 0. sütun, 0. sıra karesinin yola bakan ön köşesi [boylam, enlem]",
+    "u": "bir kare boyunca yol yönünde adım [boylam, enlem farkı]",
+    "n": "bir kare boyunca yoldan içeri adım [boylam, enlem farkı]",
+    "s": "sütunlar: [sütun no j, metre, kare sayısı (derinlik), arsa sırası (arsalar listesinde; -1 boş), arsanın derinliği]",
+    "kare": "sütunun r. karesi (r = 0 yola bitişik): köşeler o + j*u + r*n, o + (j+1)*u + r*n, o + (j+1)*u + (r+1)*n, "
+            "o + j*u + (r+1)*n; kimlik k_<yol>_<taraf>_<metre>_<r>; r < arsanın derinliği ise arsanın karesi, değilse boş",
+}
+with open(KARE_CIKTI, "w", encoding="utf-8") as f:
+    json.dump({"not": "Kompakt ada kare ızgarası, taslak (Kemal onaylamadı). gen/kompakt_parseller.py üretir.",
+               "kareM": KARE, "alanlar": KARE_ALANLAR, "olculer": OLCULER,
+               "arsalar": [p["id"] for p in sorted(PARSELLER, key=lambda p: p["id"])], "seritler": seritler},
+              f, ensure_ascii=False, separators=(",", ":"))
+
 from collections import Counter  # noqa: E402
-print(f"  parsel: {len(PARSELLER)}")
+dolu = sum(len(p["kareler"]) for p in PARSELLER)
+print(f"  kare: {kare_say} (arsada {dolu}, boş {kare_say - dolu}) · şerit: {len(seritler)}")
+print(f"  arsa: {len(PARSELLER)}")
 print("  türe göre:", dict(Counter(p["tur"] for p in PARSELLER)))
+print("  ölçüye göre:", dict(Counter(f"{p['tur']} {int(p['cepheM'] // KARE)}x{int(p['derinlikM'] // KARE)}" for p in PARSELLER)))
 print("  mahalleye göre:", dict(Counter(p["mahalle"] for p in PARSELLER)))
 print("  yerleşime göre:", dict(Counter(p["yerlesim"] for p in PARSELLER)))
-print("  sığmayan denemeler:", red)
-print(f"Yazıldı: {os.path.relpath(CIKTI, KOK)} ({os.path.getsize(CIKTI) / 1e6:.2f} MB)")
+print("  atılan kare ve sığmayan arsa denemeleri:", red)
+for yol_ in (CIKTI, KARE_CIKTI):
+    print(f"Yazıldı: {os.path.relpath(yol_, KOK)} ({os.path.getsize(yol_) / 1e6:.2f} MB)")
