@@ -18,7 +18,8 @@ Girdi : gen/kompakt-sinirlar.json, public/harita/duzada-sinirlar.geojson, duzada
         kayıtları; duzada-yollar.geojson'da yalnız yolların "mahalle" alanı (kimlik ve çizgi aynı).
         Zemin değişmez.
 
-Sıra: ... → kompakt_parseller.py → bu dosya → kompakt_mahalle_yerlesim.py → kompakt_parseller.py.
+Sıra: ... → kompakt_parseller.py → bu dosya → kompakt_stadyum_kolu.py → kompakt_mahalle_yerlesim.py →
+kompakt_parseller.py.
 İkinci çalıştırmada Merkez zaten hedefte olduğu için sınırlar yerinde kalır.
 Değerler onaysız: DENEME.
 
@@ -90,9 +91,6 @@ ESKI = {f["properties"]["id"]: transform(mt, shape(f["geometry"])) for f in sabi
         if f["properties"]["katman"] == "mahalle"}
 IDS = list(ESKI)
 KOMSU_IDS = [k for k in IDS if k != MERKEZ]
-if ESKI[MERKEZ].area / 1e6 <= MERKEZ_TABAN_KM2 * HEDEF_ORAN * 1.02:
-    print(f"Merkez zaten hedefte ({ESKI[MERKEZ].area / 1e6:.1f} km²); sınırlar aynı kaldı.")
-    sys.exit(0)
 ZIRVE = next(mt(*f["geometry"]["coordinates"]) for f in geo["features"]
              if f["properties"]["katman"] == "zirve" and f["properties"]["id"] == "tepe_ana")
 DERE = [(transform(mt, shape(f["geometry"])), f["properties"]["alanKm2"]) for f in geo["features"]
@@ -170,6 +168,33 @@ def uzaklik(kaynak):
     return out
 
 
+def ortak_hat(a, b):
+    # birleştirmede köşe noktaları milimetrelik kayabilir: a'nın sınırının b'ye değen kısmı
+    h = a.boundary.intersection(b.buffer(0.3))
+    parca = [q for q in getattr(h, "geoms", [h]) if q.geom_type in ("LineString", "MultiLineString")]
+    if not parca:
+        return []
+    u = unary_union(parca)
+    if u.is_empty or u.length == 0:
+        return []
+    m = linemerge(u) if u.geom_type == "MultiLineString" else u
+    return [q.simplify(0.5) for q in getattr(m, "geoms", [m]) if q.length > 30]
+
+
+def dogallik(h):
+    t = np.arange(0, h.length, hk / 2)
+    q = np.array([h.interpolate(s).coords[0] for s in t])
+    i = np.clip(np.round((q[:, 0] - B["x0"]) / hk).astype(int), 0, EN - 1)
+    j = np.clip(np.round((q[:, 1] - B["y0"]) / hk).astype(int), 0, BOY - 1)
+    d = DERE01[j, i] > 0.35
+    s = (SIRT01[j, i] > 0.35) & ~d
+    return round(float(d.mean()), 2), round(float(s.mean()), 2)
+
+
+# ------------------------------------------------------------------ Merkez payı (kompakt_stadyum_kolu.py bu satıra kadar ödünç alır)
+if ESKI[MERKEZ].area / 1e6 <= MERKEZ_TABAN_KM2 * HEDEF_ORAN * 1.02:
+    print(f"Merkez zaten hedefte ({ESKI[MERKEZ].area / 1e6:.1f} km²); sınırlar aynı kaldı.")
+    sys.exit(0)
 ESKI_M = ETIKET == NM
 koy = [y for y, m in YER_MAH.items() if m == MERKEZ and y in YER_ALAN]
 # Merkez yalnız zirveden büyür (her yöne kendi yamacı kadar); köy her durumda Merkez'de kalır ama
@@ -288,29 +313,6 @@ for f_ in yuzler:
 YENI = {k: v.buffer(0) for k, v in YENI.items()}
 
 # ------------------------------------------------------------------ sınır hatları
-def ortak_hat(a, b):
-    # birleştirmede köşe noktaları milimetrelik kayabilir: a'nın sınırının b'ye değen kısmı
-    h = a.boundary.intersection(b.buffer(0.3))
-    parca = [q for q in getattr(h, "geoms", [h]) if q.geom_type in ("LineString", "MultiLineString")]
-    if not parca:
-        return []
-    u = unary_union(parca)
-    if u.is_empty or u.length == 0:
-        return []
-    m = linemerge(u) if u.geom_type == "MultiLineString" else u
-    return [q.simplify(0.5) for q in getattr(m, "geoms", [m]) if q.length > 30]
-
-
-def dogallik(h):
-    t = np.arange(0, h.length, hk / 2)
-    q = np.array([h.interpolate(s).coords[0] for s in t])
-    i = np.clip(np.round((q[:, 0] - B["x0"]) / hk).astype(int), 0, EN - 1)
-    j = np.clip(np.round((q[:, 1] - B["y0"]) / hk).astype(int), 0, BOY - 1)
-    d = DERE01[j, i] > 0.35
-    s = (SIRT01[j, i] > 0.35) & ~d
-    return round(float(d.mean()), 2), round(float(s.mean()), 2)
-
-
 eski_hat = {}
 for f in sabit["features"]:
     if f["properties"]["katman"] == "sinir":

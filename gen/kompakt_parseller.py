@@ -21,7 +21,8 @@ Kurallar:
 
 Çalıştırma: python gen/kompakt_parseller.py   (önce zemin ve yollar üretilmiş olmalı)
             Yol ağı değişirse sonra python gen/kompakt_merkez_sinirlari.py (Merkez hedef alanın
-            üstündeyse yalnız Merkez sınırlarını yeniden hesaplar), python gen/kompakt_mahalle_yerlesim.py
+            üstündeyse yalnız Merkez sınırlarını yeniden hesaplar), python gen/kompakt_stadyum_kolu.py
+            (tek seferlik), python gen/kompakt_mahalle_yerlesim.py
             (yerleşim mahalle sınırını aşıyorsa sınırı kaydırır) ve bu dosya bir kez daha.
 Denetim   : python gen/kompakt_parseller_denetim.py
 """
