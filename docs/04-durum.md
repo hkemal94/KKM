@@ -1,9 +1,44 @@
 # Durum
 
-**Son güncelleme: 20 Kasım 2026 (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); önceki: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 21 Kasım 2026 akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); önceki: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 21 Kasım akşam: tek harita 3. adımın düzeltmesi: eşit kare ızgara
+
+Kemal: "Cities Skylines'taki gibi eşit karelerden oluşan bir ızgara." Yalnız harita verisi ve üreteç; KKM'nin ekranında
+ve kayıtlarında bir şey değişmez. Ölçülerin hepsi DENEME.
+
+- **Kare ızgara:** yol düz kesimlere bölünür; her kesimin iki yanında yola hizalı 8×8 m kareler (Kemal: 8 m kalsın),
+  yoldan içeri en çok 4 sıra. Kavşakta ve kıvrımda çakışan kareden yola yakın olan kalır.
+  - Kareler yalnız köylerin yerleşim alanında; tabanı %30'dan dik yamaçta kare çizilmez (Kemal).
+  - 18.637 kare; ızgara `public/harita/duzada-kareler.json`'da (0,45 MB). 7. adımdaki yönetim ekranında kareler tek tek
+    boyanacak.
+- **Arsalar karelerden:** bitişik 1×2 kare (meydan ve meydancık çevresi), avlulu 3×4 (köyler; yanında en az 1 boş kare),
+  büyük 3–4×4 (ana yol kenarı). Sığmazsa küçülür; kıvrımda dar avlulu 1×4, 1×3 (Kemal).
+  - 1625 arsa; her arsa kendi karelerini sayar (`kareler`). Kimlik, yol, cephe yönü, tür, mahalle aynı biçimde.
+- Mahalle sınırları, yollar ve öbür kararlar (bitişik kuşak, kıyı, kumsal, korunan alan, The Imperial) aynı.
+- 4. adım (evler) bu arsalara göre yeniden kurulacak.
+
+## 21 Kasım: tek harita 3. adım: kareli parseller ve mahalle sınırları
+
+Kemal'in kararları. Yalnız harita verisi ve üreteçler; KKM'nin ekranında ve kayıtlarında bir şey değişmez.
+Ölçülerin hepsi DENEME.
+
+- **Parseller:** her parsel bir yola cephe verir (Cities Skylines gibi).
+  - Merkez Meydanı'nın 110 m, meydancıkların 30 m çevresinde bitişik (sıra ev, ortak duvar).
+  - Köylerde avlulu ve "daha da seyrek": ara yolda 24×34, sokakta 21×30, geçitte 18×24 m; aralarında 5 m.
+  - Ana yol kenarında büyük (24×32 m).
+  - Yalnız yerleşim alanında: tarla, orman, kumsal, kıyı şeridi (25 m), yol yatağı ve %30'dan dik yamaç parselsiz.
+  - Toplam 2365 parsel. Her parselin kalıcı kimliği, yolu, cephe yönü, türü ve mahallesi var; 4. adımda evler
+    parsellere oturur.
+- **Mahalle sınırları:** her yerleşimin parselleri kendi mahallesinde.
+  - Merkez yaklaşık üçte bir küçüldü (24,1 → 16,1 km²). Köyü ve Ada Tepesi'nin zirvesi Merkez'de kaldı; tepenin dış
+    yamaçları komşu mahallelere geçti. Yeni sınırlar sırt ve dere hatlarında.
+  - Stadyum'un Merkez ile Çiftlik arasında güneye inen kolu Çiftlik'e geçti.
+  - Merkez'e değmeyen 20 Kasım sınırları aynı kaldı, yalnız eski Merkez toprağına uzadı.
+- Yolların çizgisi ve kimliği değişmedi; yalnız mahalle alanları yeni sınıra göre yazıldı.
 
 ## 20 Kasım: Bağ ağı mahalle kümeleriyle açılır
 
