@@ -60,6 +60,16 @@ Kemal'in kararları. Yalnız harita verisi ve üreteçler; KKM'nin ekranında ve
   - Merkez'e değmeyen 20 Kasım sınırları aynı kaldı, yalnız eski Merkez toprağına uzadı.
 - Yolların çizgisi ve kimliği değişmedi; yalnız mahalle alanları yeni sınıra göre yazıldı.
 
+## 21 Kasım: zaman çizgisi okunur (Kemal'in 20 Kasım kararları)
+
+- Görünümler → Zaman çizgisi'nde satırlar üç grupta: Mekânlar (Faaliyette; açılış yazılıysa açılış),
+  Aileler (Adaya geliş), Kişiler (Doğum yılı ve Yaşam; açılıp kapanan katman, kapalı başlar). Grup içinde yıla göre.
+- Eksen parçalı: boş yüzyıllar "≈" ve kesik çizgili dar şeritle sıkışır; 1900 sonrası geniş. Açık uçlu aralık
+  sağ kenara uzanır ("bugün" yazılmaz); "1980'ler–", "18. yüzyıl–" gibi başlangıçlar soluk görünür.
+- Düzeltme: "18. yüzyıl–" artık 1700–1799 kapalı aralık değil, açık uçlu. Parantez içi açıklama tarih sayılmaz;
+  okunamayan değer ("Köy döneminden–") satırında "tarih belirsiz". Kurum, olay, yer tarihleri çizgide yok.
+- Yalnız ekranda; kayda bir şey yazılmaz.
+
 ## 20 Kasım: Bağ ağı mahalle kümeleriyle açılır
 
 Kemal: bağ ağı çok karışık. Görünümler → Bağ ağı artık maddeleri mahallelerine göre kümeler (künyedeki Mahalle
