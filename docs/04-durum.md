@@ -5,6 +5,16 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
+## 20 Kasım: Bağ ağı mahalle kümeleriyle açılır
+
+Kemal: bağ ağı çok karışık. Görünümler → Bağ ağı artık maddeleri mahallelerine göre kümeler (künyedeki Mahalle
+alanı ekranda tek biçime getirilir; birden çok mahalle yazan "Birden çok mahalle", "Adada oturmaz" kendi kümesi,
+boş olan "Mahallesiz"). Açılışta yalnız aile, sahiplik ve bulunduğu yer bağları görünür; iş, tanışıklık, olay,
+genel bağ düğmeyle açılır. Aynı iki madde arasındaki bağlar tek çizgi. Bir maddeye basınca ya da arama kutusundan
+seçince odak: yalnız o ve komşuları (1 ya da 2 adım), "Odaktan çık" ile döner. Eski elle yerleşim
+(`kkm_ayar` → `bagAgiYerlesim`) kullanılmaz: kayıt silinmedi, yazılmaz; "Yerleşimi kaydet" kalktı.
+Kayıtlarda bir şey değişmez.
+
 ## 20 Kasım: Görünümler soy ağacıyla açılır
 
 Kemal: Görünümler sayfası Soy ağacı sekmesiyle açılsın. Sekme sırası Soy ağacı, Zaman çizgisi, Bağ ağı.
