@@ -1,9 +1,29 @@
 # Durum
 
-**Son güncelleme: 21 Kasım 2026 akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); önceki: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 21 Kasım 2026 gece (tek harita 4. adım: evler ve yapılar arsalarda); önceki: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 21 Kasım gece: tek harita 4. adım: evler ve yapılar arsalarda
+
+Yalnız harita verisi ve üreteç (`gen/kompakt_yapilar.py`, `public/harita/duzada-yapilar.geojson`); KKM'nin ekranında ve
+kayıtlarında bir şey değişmez, 3B harita bu dosyayı 6. adımda okur. Ölçüler ve boş arsa oranı DENEME.
+
+- **Viki bağlı yapılar** (vikide maddesi, madde bağı ya da evde oturanı olan 22 yapı) eski yerlerinin kompakt adadaki
+  karşılığına taşındı (adanın küçültmesi 0,70 ve yerleşimin kayması); kimlikleri aynı, Kurucu bağı ve evde oturanlar
+  kopmaz. Meydana bakanlar yine meydana bakar, liman yapıları birlikte kıyıda.
+- **Öbür yapılar** kare ızgaralı arsalara yeniden dizildi: bitişikte sıra ev, avlulu arsada avlulu ev, büyükte dükkân;
+  önü yola, arkada avlu. Yalnız KKM'nin modelleri.
+- **Kemal'in dört cevabı (21 Kasım):**
+  1. Eski haritada yeri olmayan 7 yapı ajansın 1. adaylarına kondu: Merkez Camii, Sağlık Ocağı, Postane (Merkez),
+     Eczane (meydandaki dükkânlı ev), Efendi Kuruyemiş (Liman'da dükkânlı ev), İskele Mescidi (Kemsköy Caddesi'nin
+     arkasında), Rum Mezarlığı (Eski Kilise'nin yanında). Yerleşme yöntemi "Kemal seçti (aday 1, 21 Kasım)"; arsadaki
+     ev kalktı. Mescit ve eczanenin, kuruyemişin kendi modeli yok (mescit kutu, öbür ikisi dükkânlı ev).
+  2. Dar (1 kare cepheli) arsadaki dar ev kalır.
+  3. Köylerin doluluğu böyle kalır (boş kareler ileride park / bahçe ile dolacak).
+  4. Taraftar Birahanesi'nin ayrılan yeri modele göre büyüdü (22 x 15 → 20 x 27,5 m): köyün aynı yerinde, kuşak yolunun
+     aynı yanında, önü aynı yöne. Yollar, arsalar ve kareler bu yüzden yeniden üretildi.
 
 ## 21 Kasım akşam: tek harita 3. adımın düzeltmesi: eşit kare ızgara
 
