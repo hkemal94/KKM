@@ -1,9 +1,28 @@
 # Durum
 
-**Son güncelleme: 20 Kasım 2026 (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); önceki: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 21 Kasım 2026 (tek harita 3. adım: kareli parseller ve mahalle sınırları); önceki: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 21 Kasım: tek harita 3. adım: kareli parseller ve mahalle sınırları
+
+Kemal'in kararları. Yalnız harita verisi ve üreteçler; KKM'nin ekranında ve kayıtlarında bir şey değişmez.
+Ölçülerin hepsi DENEME.
+
+- **Parseller:** her parsel bir yola cephe verir (Cities Skylines gibi).
+  - Merkez Meydanı'nın 110 m, meydancıkların 30 m çevresinde bitişik (sıra ev, ortak duvar).
+  - Köylerde avlulu ve "daha da seyrek": ara yolda 24×34, sokakta 21×30, geçitte 18×24 m; aralarında 5 m.
+  - Ana yol kenarında büyük (24×32 m).
+  - Yalnız yerleşim alanında: tarla, orman, kumsal, kıyı şeridi (25 m), yol yatağı ve %30'dan dik yamaç parselsiz.
+  - Toplam 2365 parsel. Her parselin kalıcı kimliği, yolu, cephe yönü, türü ve mahallesi var; 4. adımda evler
+    parsellere oturur.
+- **Mahalle sınırları:** her yerleşimin parselleri kendi mahallesinde.
+  - Merkez yaklaşık üçte bir küçüldü (24,1 → 16,1 km²). Köyü ve Ada Tepesi'nin zirvesi Merkez'de kaldı; tepenin dış
+    yamaçları komşu mahallelere geçti. Yeni sınırlar sırt ve dere hatlarında.
+  - Stadyum'un Merkez ile Çiftlik arasında güneye inen kolu Çiftlik'e geçti.
+  - Merkez'e değmeyen 20 Kasım sınırları aynı kaldı, yalnız eski Merkez toprağına uzadı.
+- Yolların çizgisi ve kimliği değişmedi; yalnız mahalle alanları yeni sınıra göre yazıldı.
 
 ## 20 Kasım: Görünümler soy ağacıyla açılır
 
