@@ -1,19 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BoxSelect, Link2, LocateFixed, Minus, Plus, RotateCcw, Save, X } from 'lucide-react';
+import { BoxSelect, Link2, LocateFixed, Minus, Plus, RotateCcw, Search, X } from 'lucide-react';
 import type { Item, ItemType } from '../../types';
 import { BAG_TURLERI, type BagTuru } from '../../utils/relations';
 import { kaynakTurleri, uygunTurler } from '../../lib/bagKurallari';
 import { TYPE_LABELS, schemaKeyFor, getKunyeFields } from '../wiki/wikiSchema';
 import { TUR_RENGI, TUR_NOKTASI } from './turRenkleri';
 import {
-  agKur, bagEkle, diz, kenarAdi, yerlesimKaydi, yerlesimOku,
-  type AgKenari, type KenarTuru, type Konum
+  ACILIS_OBEKLERI, BAG_OBEKLERI, agKur, bagEkle, ciftleriKur, kenarAdi, komsuAdimlari, kumeliDiz, mahalleKumeleri, odakDiz,
+  type AgCifti, type BagObegi, type Konum
 } from '../../lib/bagAgi';
 
 /**
- * Atölye → Bağ ağı (5. gece). Maddeler nokta, bağlar çizgi. Türe göre
- * renk; tür ve bağ süzgeci; bir maddeye basınca komşuları öne çıkar.
- * Noktalar sürüklenir; yerleşim "Yerleşimi kaydet"le `kkm_ayar`'a yazılır.
+ * Görünümler → Bağ ağı. Maddeler nokta, bağlar çizgi; aynı iki madde arasında
+ * tek çizgi. 20 Kasım (Kemal: "çok karışık"): açılışta maddeler mahalle
+ * kümelerinde, yalnız aile, sahiplik ve bulunduğu yer bağları görünür; öbür
+ * bağ öbekleri düğmeyle açılır. Bir maddeye basınca odak: yalnız o ve
+ * komşuları (1 ya da 2 adım). Noktalar sürüklenebilir ama yerleşim kayda
+ * yazılmaz; eski kayıtlı yerleşim (`bagAgiYerlesim`) okunmaz.
  * Ağdan bağ kurulur: seçili madde → "Bağ kur" → başka maddeye bas → tür → "Bağla"
  * (bağ ilk maddeye yazılır). Başka hiçbir şey kayda yazılmaz.
  */
@@ -21,7 +24,6 @@ import {
 interface Props {
   items: Item[];
   onUpdateItem: (item: Item) => Promise<void>;
-  onAddItem: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
   onMaddeAc: (id: string) => void;
 }
 
@@ -29,68 +31,103 @@ interface Props {
 const CIP_TURLERI: ItemType[] = ['yer', 'cadde', 'meydan', 'yer_adi', 'ada', 'mekân', 'dükkân', 'kulüp', 'marka', 'kisi', 'aile', 'olay', 'ürün', 'oda'];
 const turAnahtari = (t: ItemType): ItemType => (t === 'karakter' ? 'kisi' : t);
 
-/** Bağ türü → çizgi biçimi */
-const CIZGI: Record<KenarTuru, string> = {
-  'bulunduğu yer': '', sahibi: '', 'çalışanı': '', 'üyesi': '', 'akrabası': '',
-  'ait olduğu marka': '', 'ilgili olay': '6 4', 'tanıdığı kişi': '6 4', 'genel bağlantı': '2 4', 'künye': '1 3',
-  ebeveyni: '', 'eşi': '', 'kardeşi': '', patronu: '', 'iş ortağı': '', 'arkadaşı': '6 4', rakibi: '6 4'
+/** Bağ öbeği → çizgi biçimi */
+const CIZGI: Record<BagObegi, string> = {
+  aile: '', sahiplik: '9 3', yer: '', is: '6 4', tanidik: '2 4', olay: '6 4', genel: '1 3'
 };
-const KENAR_TURLERI: KenarTuru[] = [...BAG_TURLERI.map(b => b.id), 'künye'];
 
 const CIP = (secili: boolean) => `inline-flex items-center gap-1.5 min-h-8 px-2.5 py-0.5 rounded-full text-[11px] border cursor-pointer ${secili
   ? 'border-[#0E1C4F] dark:border-[#A6B0C9] text-[#0E1C4F] dark:text-[#F3EFE8] bg-white dark:bg-[#13204A]'
   : 'border-[#CFC5B4]/70 dark:border-[#2C3C72] text-[#6A5E4C]/70 dark:text-[#A6B0C9]/60 line-through decoration-1'}`;
 const DUGME = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold cursor-pointer border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A] text-[#0E1C4F] dark:text-[#F3EFE8] hover:border-[#F26B6F] disabled:opacity-40';
 const DOLU = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold cursor-pointer bg-[#0E1C4F] dark:bg-[#2C3C72] text-white disabled:opacity-40';
+const KART = 'absolute left-2 right-2 bottom-14 max-h-[45%] sm:left-3 sm:right-auto sm:bottom-auto sm:top-3 sm:w-[20rem] sm:max-h-[calc(100%-5rem)] overflow-y-auto rounded-xl bg-[#FAF8F5]/97 dark:bg-[#13204A]/97 border border-[#CFC5B4] dark:border-[#2C3C72] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] p-3 space-y-2.5';
 
-export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMaddeAc }) => {
+export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onMaddeAc }) => {
   const ag = useMemo(() => agKur(items, i => schemaKeyFor(i.type),
     (i, id) => getKunyeFields(i).find(f => f.id === id)?.value || ''), [items]);
-  const kayitli = useMemo(() => yerlesimOku(items), [items]);
-
-  // Konumlar: kayıtlı yerleşim + kayıtta olmayanlar için dizme
-  const [konumlar, setKonumlar] = useState<Map<string, Konum>>(() => diz(ag.dugumler, ag.kenarlar, kayitli));
-  const [degisti, setDegisti] = useState(false);
-  // Yeni madde gelirse (ya da kayıt değişirse) eksik konumlar dizilir; elle oynatılanlar korunur
-  useEffect(() => {
-    setKonumlar(eski => {
-      if (ag.dugumler.every(d => eski.has(d.id))) return eski;
-      const sabit = new Map<string, Konum>(eski);
-      for (const [id, k] of kayitli) if (!sabit.has(id)) sabit.set(id, k);
-      return diz(ag.dugumler, ag.kenarlar, sabit);
-    });
-  }, [ag, kayitli]);
+  const turBul = useMemo(() => { const m = new Map(ag.dugumler.map(d => [d.id, d.tur])); return (id: string) => m.get(id); }, [ag]);
+  const ciftler = useMemo(() => ciftleriKur(ag.kenarlar, turBul), [ag, turBul]);
+  const kume = useMemo(() => mahalleKumeleri(items, ag.dugumler), [items, ag]);
 
   const [turler, setTurler] = useState<Set<ItemType>>(() => new Set(CIP_TURLERI.filter(t => t !== 'oda')));
-  const [bagTurleri, setBagTurleri] = useState<Set<KenarTuru>>(() => new Set(KENAR_TURLERI));
+  const [obekler, setObekler] = useState<Set<BagObegi>>(() => new Set(ACILIS_OBEKLERI));
   const [secili, setSecili] = useState<string | null>(null);
+  const [derinlik, setDerinlik] = useState<1 | 2>(1);
   const [ara, setAra] = useState('');
+  const [aramaAcik, setAramaAcik] = useState(false);
   // Bağ kurma: seçili maddeden başka bir maddeye
   const [bagModu, setBagModu] = useState(false);
   const [hedef, setHedef] = useState<string | null>(null);
   const [yeniTur, setYeniTur] = useState<BagTuru>('genel bağlantı');
   const [yaziliyor, setYaziliyor] = useState(false);
   const [mesaj, setMesaj] = useState('');
-  // Toplu seçim (8 Ekim, Kemal: "aynı mahallede olanları yan yana alırım, tek
-  // seferde seçer mahalleye bağlarım"): kutu çizerek ya da tek tek basarak
-  // seçilir; seçili grup birlikte sürüklenir; hepsi tek hedefe bağlanır.
+  // Toplu seçim (8 Ekim): kutu çizerek ya da tek tek basarak seçilir; hepsi tek hedefe bağlanır
   const [topluKip, setTopluKip] = useState(false);
   const [coklu, setCoklu] = useState<Set<string>>(() => new Set());
   const [kutu, setKutu] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [topluHedef, setTopluHedef] = useState('');
   const [topluTur, setTopluTur] = useState<BagTuru>('bulunduğu yer');
+  // Elle oynatılan noktalar (yalnız bu açılışta; kayda yazılmaz)
+  const [elle, setElle] = useState<Map<string, Konum>>(() => new Map());
+
+  // Ekranın eni / boyu: kümeler ekrana göre satırlanır (telefonda dik, masaüstünde yatık)
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [oran, setOran] = useState(1.75);
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    // Çeyrek adımla yuvarlanır: pencere biraz değişince yerleşim oynamasın
+    const bak = () => { const r = el.getBoundingClientRect(); if (r.width && r.height) setOran(Math.min(2.5, Math.max(0.5, Math.round((r.width / r.height) * 4) / 4))); };
+    bak();
+    const g = new ResizeObserver(bak);
+    g.observe(el);
+    return () => g.disconnect();
+  }, []);
 
   const gorunenDugumler = useMemo(() => ag.dugumler.filter(d => turler.has(turAnahtari(d.tur))), [ag, turler]);
   const gorunenIdler = useMemo(() => new Set(gorunenDugumler.map(d => d.id)), [gorunenDugumler]);
-  const gorunenKenarlar = useMemo(() => ag.kenarlar.filter(e => bagTurleri.has(e.tur) && gorunenIdler.has(e.a) && gorunenIdler.has(e.b)), [ag, bagTurleri, gorunenIdler]);
-  const komsular = useMemo(() => {
-    if (!secili) return null;
-    const s = new Set([secili]);
-    for (const e of gorunenKenarlar) { if (e.a === secili) s.add(e.b); if (e.b === secili) s.add(e.a); }
-    return s;
-  }, [secili, gorunenKenarlar]);
-  // Bağ türü madde türüne özel (8 Ekim, `lib/bagKurallari.ts`): listede yalnız
-  // uyan türler; seçili tür uymuyorsa ilk uyan geçerli olur
+  const acikCiftler = useMemo(() => ciftler.filter(c => c.obekler.some(o => obekler.has(o)) && gorunenIdler.has(c.a) && gorunenIdler.has(c.b)), [ciftler, obekler, gorunenIdler]);
+
+  // Kümeli yerleşim (her açılışta aynı); küme içi çekim yalnız açık bağlarla değil bütün bağlarla
+  const kumeli = useMemo(() => kumeliDiz(gorunenDugumler, ciftler, kume.kumeler, kume.kumesi, oran), [gorunenDugumler, ciftler, kume, oran]);
+
+  // Odak: seçili madde ve komşuları
+  const adimlar = useMemo(() => (secili && gorunenIdler.has(secili) ? komsuAdimlari(secili, acikCiftler, derinlik) : null), [secili, acikCiftler, derinlik, gorunenIdler]);
+  const adi = (id: string) => ag.dugumler.find(d => d.id === id)?.ad || '';
+  const odakKonum = useMemo(() => (secili && adimlar ? odakDiz(secili, adimlar, acikCiftler, adi) : null),
+    [secili, adimlar, acikCiftler]); // eslint-disable-line react-hooks/exhaustive-deps
+  const odakta = !!odakKonum;
+  // Odak değişince elle oynatılanlar sıfırlanır (odak yerleşimi her seferinde yeniden kurulur)
+  const odakAnahtari = odakta ? `${secili}:${derinlik}` : 'kume';
+  useEffect(() => { setElle(new Map()); }, [odakAnahtari]);
+
+  const temelKonum = odakKonum || kumeli.konumlar;
+  const konumlar = useMemo(() => {
+    if (!elle.size) return temelKonum;
+    const m = new Map(temelKonum);
+    for (const [id, k] of elle) if (m.has(id)) m.set(id, k);
+    return m;
+  }, [temelKonum, elle]);
+
+  const ekrandakiDugumler = useMemo(() => (adimlar ? gorunenDugumler.filter(d => adimlar.has(d.id)) : gorunenDugumler), [gorunenDugumler, adimlar]);
+  const ekrandakiCiftler = useMemo(() => (adimlar ? acikCiftler.filter(c => adimlar.has(c.a) && adimlar.has(c.b)) : acikCiftler), [acikCiftler, adimlar]);
+  const baglantiSayisi = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const c of acikCiftler) { m.set(c.a, (m.get(c.a) || 0) + 1); m.set(c.b, (m.get(c.b) || 0) + 1); }
+    return m;
+  }, [acikCiftler]);
+  // Kümenin çemberi: üyelerinin o anki yerlerini sarar (nokta sürüklenince çember de genişler)
+  const kumeCemberleri = useMemo(() => {
+    if (odakta) return [];
+    return kumeli.yerler.map(y => {
+      const uyeler = ekrandakiDugumler.filter(d => kume.kumesi.get(d.id) === y.id);
+      const r = Math.max(y.r, ...uyeler.map(d => { const k = konumlar.get(d.id); return k ? Math.hypot(k.x - y.x, k.y - y.y) + 40 : 0; }));
+      return { ...y, r, ad: kume.kumeler.find(k => k.id === y.id)?.ad || '', sayi: uyeler.length };
+    }).filter(y => y.sayi);
+  }, [odakta, kumeli, ekrandakiDugumler, kume, konumlar]);
+
+  // Bağ türü madde türüne özel (8 Ekim, `lib/bagKurallari.ts`): listede yalnız uyan türler
   const turu = (id: string | null) => (id ? items.find(i => i.id === id)?.type : undefined);
   const tekTurler = useMemo<BagTuru[]>(() => {
     const k = turu(secili), h = turu(hedef);
@@ -104,34 +141,36 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
     return BAG_TURLERI.map(b => b.id).filter(t => kaynaklar.every(k => (h ? uygunTurler(k, h) : kaynakTurleri(k)).includes(t)));
   }, [coklu, topluHedef, items]); // eslint-disable-line react-hooks/exhaustive-deps
   const etkinTopluTur: BagTuru = topluTurler.includes(topluTur) ? topluTur : (topluTurler[0] ?? 'genel bağlantı');
-  const seciliBaglar = useMemo(() => (secili ? ag.kenarlar.filter(e => e.a === secili || e.b === secili) : []), [secili, ag]);
-  const adi = (id: string) => ag.dugumler.find(d => d.id === id)?.ad || '';
-  const baglantiSayisi = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const e of gorunenKenarlar) { m.set(e.a, (m.get(e.a) || 0) + 1); m.set(e.b, (m.get(e.b) || 0) + 1); }
-    return m;
-  }, [gorunenKenarlar]);
+  const seciliCiftler = useMemo(() => (secili ? ciftler.filter(c => c.a === secili || c.b === secili) : []), [secili, ciftler]);
+  // Odakta görünmeyen bağlar: kapalı öbekte ya da gizli türdeki maddeye
+  const gizliBag = useMemo(() => seciliCiftler.filter(c => !acikCiftler.includes(c)).length, [seciliCiftler, acikCiftler]);
 
-  // ---- Bakış: kaydırma ve yakınlaştırma (yalnız ekranda; kayda yazılmaz)
-  const svgRef = useRef<SVGSVGElement>(null);
+  // ---- Bakış: kaydırma ve yakınlaştırma (yalnız ekranda)
   const [bakis, setBakis] = useState({ x: 0, y: 0, olcek: 1 });
-  const sigdir = () => {
+  // Kümeli görünümde kümelerin çemberleri (adlarıyla) sığar, odakta noktalar
+  const tumu = (): Konum[] => (odakta || !kumeCemberleri.length
+    ? ekrandakiDugumler.map(d => konumlar.get(d.id)).filter(Boolean) as Konum[]
+    : kumeCemberleri.flatMap(k => [{ x: k.x - k.r, y: k.y - k.r - 30 }, { x: k.x + k.r, y: k.y + k.r }]));
+  const sigdir = (ks: Konum[] = tumu(), kartPayi = !!secili || topluKip || coklu.size > 0) => {
     const el = svgRef.current;
-    const ks = gorunenDugumler.map(d => konumlar.get(d.id)).filter(Boolean) as Konum[];
     if (!el || !ks.length) return;
-    const minX = Math.min(...ks.map(k => k.x)) - 60, maxX = Math.max(...ks.map(k => k.x)) + 60;
-    const minY = Math.min(...ks.map(k => k.y)) - 40, maxY = Math.max(...ks.map(k => k.y)) + 40;
+    const minX = Math.min(...ks.map(k => k.x)) - 70, maxX = Math.max(...ks.map(k => k.x)) + 70;
+    const minY = Math.min(...ks.map(k => k.y)) - 50, maxY = Math.max(...ks.map(k => k.y)) + 60;
     const { width, height } = el.getBoundingClientRect();
-    const olcek = Math.min(2, width / (maxX - minX), height / (maxY - minY));
-    setBakis({ olcek, x: width / 2 - ((minX + maxX) / 2) * olcek, y: height / 2 - ((minY + maxY) / 2) * olcek });
+    // Kart açıkken ağ kartın dışındaki boşluğa sığar: telefonda kart altta, masaüstünde solda
+    const telefon = width < 640;
+    const sol = kartPayi && !telefon ? 340 : 0;
+    const en = width - sol, yuk = kartPayi && telefon ? height * 0.52 : height;
+    const olcek = Math.min(1.6, en / (maxX - minX), yuk / (maxY - minY));
+    setBakis({ olcek, x: sol + en / 2 - ((minX + maxX) / 2) * olcek, y: yuk / 2 - ((minY + maxY) / 2) * olcek });
   };
-  // İlk açılışta bütün ağ ekrana sığsın
-  const sigdi = useRef(false);
-  useEffect(() => { if (!sigdi.current && konumlar.size) { sigdi.current = true; sigdir(); } }, [konumlar]);
+  // Açılışta, odağa girip çıkınca ve ekran biçimi değişince ağ ekrana sığar
+  const sigAnahtari = `${odakAnahtari}:${oran}:${gorunenDugumler.length}`;
+  useEffect(() => { sigdir(); }, [sigAnahtari]); // eslint-disable-line react-hooks/exhaustive-deps
   const yakinlas = (oran: number, cx?: number, cy?: number) => setBakis(b => {
     const el = svgRef.current?.getBoundingClientRect();
     const px = cx ?? (el ? el.width / 2 : 0), py = cy ?? (el ? el.height / 2 : 0);
-    const olcek = Math.max(0.2, Math.min(4, b.olcek * oran));
+    const olcek = Math.max(0.15, Math.min(4, b.olcek * oran));
     const o = olcek / b.olcek;
     return { olcek, x: px - (px - b.x) * o, y: py - (py - b.y) * o };
   });
@@ -146,21 +185,29 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
     el.addEventListener('wheel', tekerlek, { passive: false });
     return () => el.removeEventListener('wheel', tekerlek);
   }, []);
+  // Telefonda iki parmakla yakınlaştırma
+  const parmaklar = useRef(new Map<number, { x: number; y: number }>());
+  const tutam = useRef<number | null>(null);
 
   // ---- Sürükleme: noktaya basılıysa nokta, boşluğa basılıysa bakış kayar
   const surukle = useRef<{ tur: 'dugum' | 'bakis' | 'kutu'; id?: string; sx: number; sy: number; ox: number; oy: number; oynadi: boolean; grup?: Map<string, Konum>; toplu?: boolean } | null>(null);
-  // Ekran noktası → ağ düzlemi
   const agNoktasi = (cx: number, cy: number) => {
     const r = svgRef.current?.getBoundingClientRect();
     return { x: (cx - (r?.left ?? 0) - bakis.x) / bakis.olcek, y: (cy - (r?.top ?? 0) - bakis.y) / bakis.olcek };
   };
   const basla = (e: React.PointerEvent, id?: string) => {
     e.stopPropagation();
+    parmaklar.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (parmaklar.current.size === 2) {
+      const [p, q] = [...parmaklar.current.values()];
+      tutam.current = Math.hypot(p.x - q.x, p.y - q.y);
+      surukle.current = null;
+      return;
+    }
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
     const k = id ? konumlar.get(id) : null;
     const toplu = topluKip || e.shiftKey;
     if (id && k) {
-      // Seçili gruptan birine basıldıysa bütün grup birlikte kayar
       const grup = coklu.has(id) && coklu.size > 1
         ? new Map([...coklu].map(c => [c, konumlar.get(c)!] as const).filter(([, q]) => q)) : undefined;
       surukle.current = { tur: 'dugum', id, sx: e.clientX, sy: e.clientY, ox: k.x, oy: k.y, oynadi: false, grup, toplu };
@@ -170,38 +217,46 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
     } else surukle.current = { tur: 'bakis', sx: e.clientX, sy: e.clientY, ox: bakis.x, oy: bakis.y, oynadi: false };
   };
   const hareket = (e: React.PointerEvent) => {
+    if (parmaklar.current.has(e.pointerId)) parmaklar.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (parmaklar.current.size === 2 && tutam.current) {
+      const [p, q] = [...parmaklar.current.values()];
+      const d = Math.hypot(p.x - q.x, p.y - q.y);
+      const r = svgRef.current?.getBoundingClientRect();
+      yakinlas(d / tutam.current, (p.x + q.x) / 2 - (r?.left ?? 0), (p.y + q.y) / 2 - (r?.top ?? 0));
+      tutam.current = d;
+      return;
+    }
     const s = surukle.current;
     if (!s) return;
     const dx = e.clientX - s.sx, dy = e.clientY - s.sy;
-    if (Math.abs(dx) + Math.abs(dy) > 3) s.oynadi = true;
+    if (Math.abs(dx) + Math.abs(dy) > 4) s.oynadi = true;
     if (!s.oynadi) return;
     if (s.tur === 'dugum' && s.id) {
       const id = s.id;
       if (s.grup) {
         const g = s.grup;
-        setKonumlar(m => { const y = new Map(m); for (const [c, q] of g) y.set(c, { x: q.x + dx / bakis.olcek, y: q.y + dy / bakis.olcek }); return y; });
-      } else setKonumlar(m => new Map(m).set(id, { x: s.ox + dx / bakis.olcek, y: s.oy + dy / bakis.olcek }));
-      setDegisti(true);
+        setElle(m => { const y = new Map(m); for (const [c, q] of g) y.set(c, { x: q.x + dx / bakis.olcek, y: q.y + dy / bakis.olcek }); return y; });
+      } else setElle(m => new Map(m).set(id, { x: s.ox + dx / bakis.olcek, y: s.oy + dy / bakis.olcek }));
     } else if (s.tur === 'kutu') {
       const q = agNoktasi(e.clientX, e.clientY);
       setKutu({ x0: s.ox, y0: s.oy, x1: q.x, y1: q.y });
     } else setBakis(b => ({ ...b, x: s.ox + dx, y: s.oy + dy }));
   };
-  const birak = () => {
+  const birak = (e: React.PointerEvent) => {
+    parmaklar.current.delete(e.pointerId);
+    if (parmaklar.current.size < 2) tutam.current = null;
     const s = surukle.current;
     surukle.current = null;
     if (s?.tur === 'kutu') {
-      // Kutunun içindeki görünen maddeler seçime eklenir
       const k = kutu;
       setKutu(null);
       if (k && s.oynadi) {
         const [x0, x1] = [Math.min(k.x0, k.x1), Math.max(k.x0, k.x1)], [y0, y1] = [Math.min(k.y0, k.y1), Math.max(k.y0, k.y1)];
-        setCoklu(c => { const y = new Set(c); for (const d of gorunenDugumler) { const q = konumlar.get(d.id); if (q && q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) y.add(d.id); } return y; });
+        setCoklu(c => { const y = new Set(c); for (const d of ekrandakiDugumler) { const q = konumlar.get(d.id); if (q && q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) y.add(d.id); } return y; });
       }
       return;
     }
     if (!s || s.oynadi) return;
-    // Tıklama: toplu kipte seçime ekle / çıkar
     if (s.tur === 'dugum' && s.id && s.toplu) {
       const id = s.id;
       setCoklu(c => { const y = new Set(c); if (y.has(id)) y.delete(id); else y.add(id); return y; });
@@ -209,24 +264,28 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
       return;
     }
     if (s.tur === 'dugum' && s.id) dugumeBas(s.id);
-    else if (!bagModu) setSecili(null);
+  };
+  const birakIptal = (e: React.PointerEvent) => {
+    parmaklar.current.delete(e.pointerId);
+    if (parmaklar.current.size < 2) tutam.current = null;
+    surukle.current = null;
+  };
+  const odakla = (id: string) => {
+    setMesaj(''); setTopluKip(false); setCoklu(new Set()); setTopluHedef('');
+    // Gizli türdeki maddeyi aramayla seçince türü açılır
+    const t = turBul(id);
+    if (t && !turler.has(turAnahtari(t))) setTurler(s => new Set(s).add(turAnahtari(t)));
+    setSecili(id); setBagModu(false); setHedef(null);
   };
   const dugumeBas = (id: string) => {
     setMesaj('');
     if (bagModu && secili && id !== secili) { setHedef(id); return; }
-    setSecili(id); setBagModu(false); setHedef(null);
+    if (id === secili) return;
+    odakla(id);
   };
+  const odaktanCik = () => { setSecili(null); setBagModu(false); setHedef(null); setDerinlik(1); setMesaj(''); };
 
   // ---- Kayıt (yalnız düğmeyle)
-  const yerlesimiKaydet = async () => {
-    setYaziliyor(true); setMesaj('');
-    try {
-      const k = yerlesimKaydi(items, konumlar);
-      if (k.guncel) await onUpdateItem(k.guncel); else if (k.yeni) await onAddItem(k.yeni);
-      setDegisti(false); setMesaj('Yerleşim kaydedildi.');
-    } catch { setMesaj('Yerleşim kaydedilemedi; yeniden dene.'); }
-    finally { setYaziliyor(false); }
-  };
   const bagla = async () => {
     if (!secili || !hedef) return;
     const kaynak = items.find(i => i.id === secili);
@@ -254,63 +313,105 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
     setMesaj(`${kuruldu} bağ kuruldu${vardi ? ` · ${vardi} zaten vardı` : ''}${hata ? ` · ${hata} kaydedilemedi, yeniden dene` : ''}.`);
     if (!hata) setCoklu(new Set());
   };
-  const yenidenDiz = () => { setKonumlar(diz(ag.dugumler, ag.kenarlar)); setDegisti(true); setTimeout(sigdir, 0); };
 
-  // Arama: yazılan ada ilk uyan madde seçilir ve ortaya alınır
-  const bul = (q: string) => {
-    setAra(q);
-    const k = q.trim().toLocaleLowerCase('tr');
-    if (!k) return;
-    const d = gorunenDugumler.find(x => x.ad.toLocaleLowerCase('tr').includes(k));
-    const p = d && konumlar.get(d.id);
-    const el = svgRef.current?.getBoundingClientRect();
-    if (!d || !p || !el) return;
-    setSecili(d.id); setBagModu(false); setHedef(null);
-    setBakis(b => ({ ...b, x: el.width / 2 - p.x * b.olcek, y: el.height / 2 - p.y * b.olcek }));
-  };
+  // Arama: uyan maddeler listelenir, birine basınca odak
+  const bulunanlar = useMemo(() => {
+    const k = ara.trim().toLocaleLowerCase('tr');
+    if (!k) return [];
+    return ag.dugumler.filter(x => x.ad.toLocaleLowerCase('tr').includes(k))
+      .sort((a, b) => Number(!a.ad.toLocaleLowerCase('tr').startsWith(k)) - Number(!b.ad.toLocaleLowerCase('tr').startsWith(k)) || a.ad.localeCompare(b.ad, 'tr'))
+      .slice(0, 8);
+  }, [ara, ag]);
+  const aramadanSec = (id: string) => { odakla(id); setAra(''); setAramaAcik(false); };
 
-  const soluk = (id: string) => !!komsular && !komsular.has(id) && id !== hedef;
-  const kenarSoluk = (e: AgKenari) => !!secili && e.a !== secili && e.b !== secili;
+  const kenarCizgisi = (c: AgCifti) => c.obekler.find(o => obekler.has(o)) || c.obekler[0];
+  const kenarAdlari = (c: AgCifti) => [...new Set(c.kenarlar.map(e => kenarAdi(e) + (e.oneri ? ' (öneri)' : '')))].join(', ');
   const seciliMadde = secili ? ag.dugumler.find(d => d.id === secili) : null;
+  // Uzaktan bakınca yalnız mahalle ve seçili maddenin adı yazılır; yaklaştıkça hepsi
+  const adlarGorunur = odakta || bakis.olcek >= 0.5;
 
   return (
-    <div className="space-y-3">
-      {/* Süzgeçler */}
+    <div className="space-y-2.5">
+      {/* Arama ve bağ öbekleri */}
       <div className="flex flex-wrap items-center gap-1.5">
-        {CIP_TURLERI.filter(t => ag.dugumler.some(d => turAnahtari(d.tur) === t)).map(t => (
-          <button key={t} type="button" aria-pressed={turler.has(t)} className={CIP(turler.has(t))}
-            onClick={() => setTurler(s => { const y = new Set(s); if (y.has(t)) y.delete(t); else y.add(t); return y; })}>
-            <span className={`w-2.5 h-2.5 rounded-full ${TUR_NOKTASI[t]}`} />{TYPE_LABELS[t] || t}
+        <div className="relative w-full sm:w-64 sm:order-last sm:ml-auto">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6A5E4C] dark:text-[#A6B0C9]" aria-hidden="true" />
+          <input value={ara} onChange={e => { setAra(e.target.value); setAramaAcik(true); }} onFocus={() => setAramaAcik(true)}
+            onBlur={() => setTimeout(() => setAramaAcik(false), 150)}
+            onKeyDown={e => { if (e.key === 'Enter' && bulunanlar[0]) aramadanSec(bulunanlar[0].id); if (e.key === 'Escape') setAra(''); }}
+            placeholder="Madde ara, odakla…" aria-label="Madde ara ve odakla"
+            className="w-full text-[13px] bg-white dark:bg-[#13204A] border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg pl-8 pr-2.5 py-2 focus:outline-hidden focus:border-[#F26B6F]" />
+          {aramaAcik && ara.trim() && (
+            <ul className="absolute z-10 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] py-1">
+              {bulunanlar.length ? bulunanlar.map(d => (
+                <li key={d.id}>
+                  <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => aramadanSec(d.id)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-[#F3EFE8] dark:hover:bg-[#0E1733]">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${TUR_NOKTASI[turAnahtari(d.tur)]}`} />
+                    <span className="flex-1 min-w-0 truncate">{d.ad}</span>
+                    <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{TYPE_LABELS[d.tur] || d.tur}</span>
+                  </button>
+                </li>
+              )) : <li className="px-3 py-2 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]">Uyan madde yok.</li>}
+            </ul>
+          )}
+        </div>
+        <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9] mr-0.5">Bağlar:</span>
+        {BAG_OBEKLERI.filter(o => ciftler.some(c => c.obekler.includes(o.id))).map(o => (
+          <button key={o.id} type="button" aria-pressed={obekler.has(o.id)} className={CIP(obekler.has(o.id))}
+            onClick={() => setObekler(s => { const y = new Set(s); if (y.has(o.id)) y.delete(o.id); else y.add(o.id); return y; })}>
+            <svg width="18" height="6" aria-hidden="true"><line x1="0" y1="3" x2="18" y2="3" className="stroke-current" strokeWidth="1.6" strokeDasharray={CIZGI[o.id]} /></svg>
+            {o.ad}
           </button>
         ))}
-        <input value={ara} onChange={e => bul(e.target.value)} placeholder="Ağda madde bul…" aria-label="Ağda madde bul"
-          className="ml-auto w-full sm:w-56 text-[12px] bg-white dark:bg-[#13204A] border border-[#CFC5B4] dark:border-[#2C3C72] rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-[#F26B6F]" />
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {KENAR_TURLERI.filter(t => ag.kenarlar.some(e => e.tur === t)).map(t => (
-          <button key={t} type="button" aria-pressed={bagTurleri.has(t)} className={CIP(bagTurleri.has(t))}
-            onClick={() => setBagTurleri(s => { const y = new Set(s); if (y.has(t)) y.delete(t); else y.add(t); return y; })}>
-            <svg width="18" height="6" aria-hidden="true"><line x1="0" y1="3" x2="18" y2="3" className="stroke-current" strokeWidth="1.6" strokeDasharray={CIZGI[t]} /></svg>
-            {kenarAdi({ tur: t })}
-          </button>
-        ))}
-      </div>
+      <details className="group">
+        <summary className="cursor-pointer select-none text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9] w-fit">Madde türleri ({turler.size} açık)</summary>
+        <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+          {CIP_TURLERI.filter(t => ag.dugumler.some(d => turAnahtari(d.tur) === t)).map(t => (
+            <button key={t} type="button" aria-pressed={turler.has(t)} className={CIP(turler.has(t))}
+              onClick={() => setTurler(s => { const y = new Set(s); if (y.has(t)) y.delete(t); else y.add(t); return y; })}>
+              <span className={`w-2.5 h-2.5 rounded-full ${TUR_NOKTASI[t]}`} />{TYPE_LABELS[t] || t}
+            </button>
+          ))}
+        </div>
+      </details>
 
       <div className="relative rounded-2xl overflow-hidden border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#0E1733]">
-        <svg ref={svgRef} role="img" aria-label={`Bağ ağı: ${gorunenDugumler.length} madde, ${gorunenKenarlar.length} bağ`}
-          className={`block w-full h-[calc(100dvh-20rem)] min-h-[420px] touch-none select-none ${bagModu || topluKip ? 'cursor-crosshair' : 'cursor-grab'}`}
-          onPointerDown={e => basla(e)} onPointerMove={hareket} onPointerUp={birak} onPointerCancel={() => { surukle.current = null; }}>
+        <svg ref={svgRef} role="img" aria-label={`Bağ ağı: ${ekrandakiDugumler.length} madde, ${ekrandakiCiftler.length} çizgi`}
+          className={`block w-full h-[calc(100dvh-17rem)] min-h-[440px] touch-none select-none ${bagModu || topluKip ? 'cursor-crosshair' : 'cursor-grab'}`}
+          onPointerDown={e => basla(e)} onPointerMove={hareket} onPointerUp={birak} onPointerCancel={birakIptal}>
           <g transform={`translate(${bakis.x} ${bakis.y}) scale(${bakis.olcek})`}>
-            {gorunenKenarlar.map(e => {
-              const a = konumlar.get(e.a), b = konumlar.get(e.b);
+            {/* Mahalle kümeleri: hafif zemin ve ad */}
+            {kumeCemberleri.map(k => (
+              <g key={k.id}>
+                <circle cx={k.x} cy={k.y} r={k.r} className="fill-[#F3EFE8] dark:fill-[#13204A] stroke-[#CFC5B4] dark:stroke-[#2C3C72]" strokeWidth={1.2 / bakis.olcek} />
+                <text x={k.x} y={k.y - k.r - 10 / Math.sqrt(bakis.olcek)} textAnchor="middle" fontSize={15 / Math.sqrt(bakis.olcek)}
+                  className="fill-[#0E1C4F] dark:fill-[#F3EFE8] font-semibold cursor-pointer"
+                  onPointerDown={e => e.stopPropagation()}
+                  onClick={() => sigdir(ekrandakiDugumler.filter(d => kume.kumesi.get(d.id) === k.id).map(d => konumlar.get(d.id)).filter(Boolean) as Konum[])}>
+                  {k.ad} <tspan className="fill-[#6A5E4C] dark:fill-[#A6B0C9] font-normal">· {k.sayi}</tspan>
+                  <title>{`${k.ad}: ${k.sayi} madde. Basınca bu kümeye yaklaşır.`}</title>
+                </text>
+              </g>
+            ))}
+            {odakta && derinlik === 2 && odakKonum && (() => {
+              const r1 = Math.max(...[...(adimlar || [])].filter(([, d]) => d === 1).map(([id]) => { const k = odakKonum.get(id); return k ? Math.hypot(k.x, k.y) : 0; }), 0);
+              return r1 ? <circle r={r1} className="fill-none stroke-[#CFC5B4] dark:stroke-[#2C3C72]" strokeWidth={1 / bakis.olcek} strokeDasharray="4 6" /> : null;
+            })()}
+            {ekrandakiCiftler.map(c => {
+              const a = konumlar.get(c.a), b = konumlar.get(c.b);
               if (!a || !b) return null;
-              const vurgu = secili && !kenarSoluk(e);
+              const o = kenarCizgisi(c);
+              const vurgu = !!secili && (c.a === secili || c.b === secili);
+              const oneri = c.kenarlar.every(e => e.oneri);
+              const opak = vurgu ? 0.85 : o === 'yer' ? 0.2 : 0.45;
               return (
-                <line key={e.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                <line key={c.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
                   className={vurgu ? 'stroke-[#F26B6F]' : 'stroke-[#6A5E4C] dark:stroke-[#A6B0C9]'}
-                  strokeOpacity={kenarSoluk(e) ? 0.08 : vurgu ? 0.9 : 0.35} strokeWidth={(vurgu ? 1.8 : 1.1) / Math.sqrt(bakis.olcek)}
-                  strokeDasharray={e.oneri ? '3 3' : CIZGI[e.tur]}>
-                  <title>{`${adi(e.a)} — ${adi(e.b)} · ${kenarAdi(e)}${e.oneri ? ' (öneri)' : ''}`}</title>
+                  strokeOpacity={opak} strokeWidth={(vurgu ? 1.8 : o === 'yer' ? 0.9 : 1.3) / Math.sqrt(bakis.olcek)}
+                  strokeDasharray={oneri ? '3 3' : CIZGI[o]}>
+                  <title>{`${adi(c.a)} — ${adi(c.b)} · ${kenarAdlari(c)}`}</title>
                 </line>
               );
             })}
@@ -318,21 +419,30 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
               const a = konumlar.get(secili), b = konumlar.get(hedef);
               return a && b ? <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} className="stroke-[#F26B6F]" strokeWidth={2.2 / Math.sqrt(bakis.olcek)} strokeDasharray="5 4" /> : null;
             })()}
-            {gorunenDugumler.map(d => {
+            {ekrandakiDugumler.map(d => {
               const p = konumlar.get(d.id);
               if (!p) return null;
-              const r = 5 + Math.min(9, Math.sqrt(baglantiSayisi.get(d.id) || 0) * 2.2);
+              const mahalle = d.tur === 'yer';
+              const r = (mahalle ? 9 : 5) + Math.min(8, Math.sqrt(baglantiSayisi.get(d.id) || 0) * 1.8);
               const isaretli = d.id === secili || d.id === hedef || coklu.has(d.id) || d.id === topluHedef;
+              const uzak = adimlar?.get(d.id) === 2;
+              // Kümenin ortasındaki mahallenin adı kümenin başlığında zaten yazılı
+              const kumeOrtasi = !odakta && mahalle && kume.kumesi.get(d.id) === d.id;
+              const adYaz = (adlarGorunur && !kumeOrtasi) || isaretli || (odakta && mahalle);
               return (
-                <g key={d.id} transform={`translate(${p.x} ${p.y})`} opacity={soluk(d.id) ? 0.18 : 1}
+                <g key={d.id} transform={`translate(${p.x} ${p.y})`} opacity={uzak ? 0.75 : 1}
                   onPointerDown={e => basla(e, d.id)} className="cursor-pointer">
                   {isaretli && <circle r={r + 5} className={`stroke-[#F26B6F] ${coklu.has(d.id) ? 'fill-[#F26B6F]/15' : 'fill-none'}`} strokeWidth={2} strokeDasharray={d.id === topluHedef ? '3 2' : undefined} />}
                   <circle r={r} className={`${TUR_RENGI[d.tur] || 'fill-[#6A5E4C]'} stroke-[#FAF8F5] dark:stroke-[#0E1733]`} strokeWidth={1.5} />
-                  <text y={r + 12} textAnchor="middle" fontSize={11 / Math.sqrt(bakis.olcek)}
-                    className={`fill-[#0E1C4F] dark:fill-[#F3EFE8] stroke-[#FAF8F5] dark:stroke-[#0E1733] ${isaretli ? 'font-bold' : ''}`}
-                    style={{ paintOrder: 'stroke', strokeWidth: 3, strokeLinejoin: 'round' }}>
-                    {d.ad}
-                  </text>
+                  {/* Dokunma payı: telefonda küçük noktaya da basılsın */}
+                  <circle r={Math.max(r, 16 / bakis.olcek)} className="fill-transparent" />
+                  {adYaz && (
+                    <text y={r + 12 / Math.sqrt(bakis.olcek)} textAnchor="middle" fontSize={(d.id === secili ? 13 : 11) / Math.sqrt(bakis.olcek)}
+                      className={`fill-[#0E1C4F] dark:fill-[#F3EFE8] stroke-[#FAF8F5] dark:stroke-[#0E1733] ${isaretli || mahalle ? 'font-bold' : ''}`}
+                      style={{ paintOrder: 'stroke', strokeWidth: 3, strokeLinejoin: 'round' }}>
+                      {d.ad}
+                    </text>
+                  )}
                   <title>{`${d.ad} · ${TYPE_LABELS[d.tur] || d.tur} · ${baglantiSayisi.get(d.id) || 0} bağ`}</title>
                 </g>
               );
@@ -345,32 +455,33 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
         </svg>
 
         {/* Bakış düğmeleri */}
-        <div className="absolute right-3 top-3 flex flex-col gap-1">
+        <div className="absolute right-2 top-2 sm:right-3 sm:top-3 flex flex-col gap-1">
           <button type="button" onClick={() => yakinlas(1.25)} aria-label="Yakınlaştır" className={DUGME}><Plus className="w-3.5 h-3.5" /></button>
           <button type="button" onClick={() => yakinlas(0.8)} aria-label="Uzaklaştır" className={DUGME}><Minus className="w-3.5 h-3.5" /></button>
-          <button type="button" onClick={sigdir} aria-label="Ağı sığdır" title="Ağı sığdır" className={DUGME}><LocateFixed className="w-3.5 h-3.5" /></button>
-          <button type="button" onClick={() => { setTopluKip(t => !t); setSecili(null); setBagModu(false); setHedef(null); setMesaj(''); }} aria-pressed={topluKip}
-            title="Toplu seç: kutu çiz ya da maddelere tek tek bas (Shift ile de olur)"
-            className={topluKip ? DOLU : DUGME}><BoxSelect className="w-3.5 h-3.5" /></button>
+          <button type="button" onClick={() => sigdir()} aria-label="Ağı sığdır" title="Ağı sığdır" className={DUGME}><LocateFixed className="w-3.5 h-3.5" /></button>
+          {!odakta && (
+            <button type="button" onClick={() => { setTopluKip(t => !t); setMesaj(''); }} aria-pressed={topluKip}
+              title="Toplu seç: kutu çiz ya da maddelere tek tek bas (Shift ile de olur)" aria-label="Toplu seç"
+              className={topluKip ? DOLU : DUGME}><BoxSelect className="w-3.5 h-3.5" /></button>
+          )}
         </div>
 
-        {/* Alt şerit: sayı, yerleşim */}
-        <div className="absolute left-3 bottom-3 right-3 flex flex-wrap items-center gap-2 pointer-events-none">
+        {/* Alt şerit: sayı, sıfırlama */}
+        <div className="absolute left-2 bottom-2 right-2 sm:left-3 sm:bottom-3 sm:right-3 flex flex-wrap items-center gap-2 pointer-events-none">
           <span className="pointer-events-auto text-[11px] font-mono px-2 py-1 rounded-md bg-[#FAF8F5]/90 dark:bg-[#13204A]/90 text-[#6A5E4C] dark:text-[#A6B0C9]">
-            {gorunenDugumler.length} madde · {gorunenKenarlar.length} bağ
+            {odakta ? 'Odak · ' : `${kumeCemberleri.length} küme · `}{ekrandakiDugumler.length} madde · {ekrandakiCiftler.length} çizgi
           </span>
           <span className="flex-1" />
-          <button type="button" onClick={yenidenDiz} className={`${DUGME} pointer-events-auto`} title="Ağı baştan diz (kaydetmeden önce kayda yazılmaz)">
-            <RotateCcw className="w-3.5 h-3.5" /> Yeniden diz
-          </button>
-          <button type="button" onClick={() => void yerlesimiKaydet()} disabled={!degisti || yaziliyor} className={`${DOLU} pointer-events-auto`}>
-            <Save className="w-3.5 h-3.5" /> Yerleşimi kaydet
-          </button>
+          {elle.size > 0 && (
+            <button type="button" onClick={() => { setElle(new Map()); setTimeout(() => sigdir(), 0); }} className={`${DUGME} pointer-events-auto`} title="Sürüklenen noktalar yerine döner (kayda bir şey yazılmaz)">
+              <RotateCcw className="w-3.5 h-3.5" /> Düzeni sıfırla
+            </button>
+          )}
         </div>
 
         {/* Toplu seçim kartı */}
         {(topluKip || coklu.size > 0) && !seciliMadde && (
-          <div className="absolute left-3 top-3 w-[min(20rem,calc(100%-4.5rem))] max-h-[calc(100%-5rem)] overflow-y-auto rounded-xl bg-[#FAF8F5]/97 dark:bg-[#13204A]/97 border border-[#CFC5B4] dark:border-[#2C3C72] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] p-3 space-y-2.5">
+          <div className={KART}>
             <div className="flex items-start gap-2">
               <div className="flex-1 min-w-0">
                 <div className="text-[15px] font-semibold leading-snug">{coklu.size ? `${coklu.size} madde seçili` : 'Toplu seç'}</div>
@@ -412,25 +523,44 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
             {mesaj && <p className="text-[12px] text-[#F26B6F]" role="status">{mesaj}</p>}
           </div>
         )}
-        {/* Seçili madde kartı */}
+        {/* Odak kartı */}
         {seciliMadde && (
-          <div className="absolute left-3 top-3 w-[min(20rem,calc(100%-4.5rem))] max-h-[calc(100%-5rem)] overflow-y-auto rounded-xl bg-[#FAF8F5]/97 dark:bg-[#13204A]/97 border border-[#CFC5B4] dark:border-[#2C3C72] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] p-3 space-y-2.5">
+          <div className={KART}>
             <div className="flex items-start gap-2">
               <span className={`mt-1.5 w-2.5 h-2.5 rounded-full shrink-0 ${TUR_NOKTASI[turAnahtari(seciliMadde.tur)]}`} />
               <div className="flex-1 min-w-0">
                 <div className="text-[15px] font-semibold leading-snug">{seciliMadde.ad}</div>
-                <div className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{TYPE_LABELS[seciliMadde.tur] || seciliMadde.tur} · {seciliBaglar.length} bağ</div>
+                <div className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{TYPE_LABELS[seciliMadde.tur] || seciliMadde.tur} · {seciliCiftler.length} madde ile bağlı</div>
               </div>
-              <button type="button" onClick={() => { setSecili(null); setBagModu(false); setHedef(null); }} aria-label="Kapat" className="p-1 text-[#6A5E4C] dark:text-[#A6B0C9]"><X className="w-4 h-4" /></button>
+              <button type="button" onClick={odaktanCik} aria-label="Odaktan çık" title="Odaktan çık" className="p-1 text-[#6A5E4C] dark:text-[#A6B0C9]"><X className="w-4 h-4" /></button>
             </div>
-            {seciliBaglar.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <div className="inline-flex rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] overflow-hidden" role="group" aria-label="Kaç adım komşu">
+                {([1, 2] as const).map(n => (
+                  <button key={n} type="button" aria-pressed={derinlik === n} onClick={() => setDerinlik(n)}
+                    className={`px-3 py-1.5 text-[12px] font-semibold ${derinlik === n ? 'bg-[#0E1C4F] dark:bg-[#2C3C72] text-white' : 'bg-[#FAF8F5] dark:bg-[#13204A] text-[#0E1C4F] dark:text-[#F3EFE8]'}`}>
+                    {n} adım
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={odaktanCik} className={DUGME}>Odaktan çık</button>
+            </div>
+            {gizliBag > 0 && (
+              <p className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">
+                {gizliBag} bağ kapalı öbekte, ağda görünmüyor.{' '}
+                <button type="button" className="underline underline-offset-2 hover:text-[#F26B6F]"
+                  onClick={() => { setObekler(new Set(BAG_OBEKLERI.map(o => o.id))); setTurler(new Set(CIP_TURLERI)); }}>Bütün bağları aç</button>
+              </p>
+            )}
+            {seciliCiftler.length > 0 && (
               <ul className="space-y-1 text-[12px]">
-                {seciliBaglar.map(e => {
-                  const o = e.a === secili ? e.b : e.a;
+                {seciliCiftler.map(c => {
+                  const o = c.a === secili ? c.b : c.a;
+                  const acik = acikCiftler.includes(c);
                   return (
-                    <li key={e.id} className="flex items-baseline gap-1.5">
+                    <li key={c.id} className={`flex items-baseline gap-1.5 ${acik ? '' : 'opacity-55'}`}>
                       <button type="button" onClick={() => dugumeBas(o)} className="text-left underline decoration-[#0E1C4F]/30 dark:decoration-[#A6B0C9]/40 underline-offset-2 hover:decoration-[#F26B6F]">{adi(o)}</button>
-                      <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">· {kenarAdi(e)}{e.oneri ? ' (öneri)' : ''}</span>
+                      <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">· {kenarAdlari(c)}</span>
                     </li>
                   );
                 })}
@@ -468,9 +598,10 @@ export const BagAgi: React.FC<Props> = ({ items, onUpdateItem, onAddItem, onMadd
         )}
       </div>
       <p className="text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9] leading-relaxed">
-        Noktayı sürükle, boşluğu sürükleyerek gez, tekerlekle yakınlaştır. Toplu seçim: sağ üstteki kutu düğmesi (ya da Shift). Nokta ne kadar büyükse o kadar çok bağı var.
-        Çizgiler: düz = düzenleyicideki bağ ve üst madde, kesik = olay ve tanıdık, noktalı = künyedeki bağ alanı.
-        Yerleşim yalnız "Yerleşimi kaydet"e basınca kayda yazılır.
+        Maddeler mahallelerine göre kümelenir (künyedeki Mahalle alanı); kümenin adına basınca o kümeye yaklaşır.
+        Bir maddeye bas ya da ara: yalnız o ve komşuları kalır, "2 adım" bir halka daha açar. Boşluğu sürükleyerek gez,
+        tekerlekle ya da iki parmakla yakınlaştır. Aynı iki madde arasındaki bağlar tek çizgidir; nokta büyüdükçe bağı çoğalır.
+        Noktaları sürüklemek yalnız bu ekranı değiştirir, kayda yazılmaz.
       </p>
     </div>
   );

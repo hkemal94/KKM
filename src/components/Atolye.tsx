@@ -53,7 +53,7 @@ const Kurucu = lazy(() =>
 interface AtolyeProps {
   items: Item[];
   onAddItem: (itemData: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
-  /** Bağ ağında "Bağla" ve "Yerleşimi kaydet" */
+  /** Bağ ağında "Bağla" */
   onUpdateItem: (item: Item) => Promise<void>;
   /** Haritadaki notu silmek (yalnız "Evet, sil" ile) */
   onDeleteItem: (id: string) => Promise<void>;
@@ -205,7 +205,7 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
 
       {sekme === 'ag' && (
         <Suspense fallback={<div className="h-48 flex items-center justify-center font-mono text-xs text-[#6A5E4C] dark:text-[#A6B0C9] animate-pulse">Ağ kuruluyor…</div>}>
-          <BagAgi items={items} onUpdateItem={onUpdateItem} onAddItem={onAddItem} onMaddeAc={onMaddeAc} />
+          <BagAgi items={items} onUpdateItem={onUpdateItem} onMaddeAc={onMaddeAc} />
         </Suspense>
       )}
       {sekme === 'soy' && (
