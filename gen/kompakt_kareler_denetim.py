@@ -9,6 +9,7 @@ import json, math, os, sys, warnings
 from collections import Counter
 
 import numpy as np
+from scipy import ndimage
 from shapely.geometry import LineString, Polygon, shape
 from shapely.ops import transform, unary_union
 from shapely.strtree import STRtree
@@ -38,7 +39,19 @@ def main():
         if not os.path.exists(d_):
             print("Dosya yok. Önce: python gen/kompakt_parseller.py")
             sys.exit(1)
-    b, _ = zd.oku()
+    b, ham = zd.oku()
+    Z = ham.astype(float) * b["birim"]
+    h = b["hucre"]
+
+    def egim(g):
+        """Karenin içinden 3x3 örnek, düzleme uydurup eğim (üreteçle aynı yöntem)."""
+        a_, b_, c_, d_ = np.asarray(g.exterior.coords)[:4]
+        ornek = np.asarray([a_ + (b_ - a_) * u + ((d_ + (c_ - d_) * u) - (a_ + (b_ - a_) * u)) * v
+                            for u in (0.15, 0.5, 0.85) for v in (0.15, 0.5, 0.85)])
+        z = ndimage.map_coordinates(Z, [(ornek[:, 1] - b["y0"]) / h, (ornek[:, 0] - b["x0"]) / h], order=1)
+        A = np.column_stack([ornek[:, 0], ornek[:, 1], np.ones(len(ornek))])
+        (gx, gy, _), *_ = np.linalg.lstsq(A, z, rcond=None)
+        return math.hypot(gx, gy)
 
     def mt(x, y, z=None):
         return ((np.asarray(x) - b["lng0"]) * b["mPerLng"], (np.asarray(y) - b["lat0"]) * b["mPerLat"])
@@ -85,6 +98,8 @@ def main():
     bozuk = sum(1 for g in P if not g.is_valid or abs(g.area - K * K) > 0.5
                 or any(abs(math.dist(c, d) - K) > 0.05 for c, d in zip(g.exterior.coords[:-1], g.exterior.coords[1:])))
     yaz(f"her kare {K:g} x {K:g} m kare", bozuk == 0, f"{bozuk} kare")
+    dik = sum(1 for g in P if egim(g) > O["egimSiniri"] + 1e-3)
+    yaz(f"dik yamaçta kare yok (taban eğimi en çok %{100 * O['egimSiniri']:.0f}; Kemal 21 Kasım)", dik == 0, f"{dik} kare")
     agac = STRtree(P)
     cakis = 0
     for i, g in enumerate(P):

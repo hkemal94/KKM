@@ -10,10 +10,10 @@ Kemal 21 Kasım: "Cities Skylines'taki gibi eşit karelerden oluşan bir ızgara
     eşit kareler dizilir (KARE x KARE m, en çok DERINLIK_KARE sıra); kareler kesimin yönüne hizalı.
   - Kareler önce ön sıradan dağıtılır (bütün yolların 1. sırası, sonra 2. sıra ...): kavşakta ve kıvrımda
     çakışan karede yoldan yakın olan kalır, öbürü atılır. Arkası atılan sütunun daha derin karesi de olmaz.
-    Başka yolun şeridine KOSE_PAY'den yakın, kıyı şeridine, kumsala, korunan alana, The Imperial'a,
+    Tabanının eğimi %30'u aşan kare çizilmez (Kemal 21 Kasım). Başka yolun şeridine KOSE_PAY'den yakın, kıyı şeridine, kumsala, korunan alana, The Imperial'a,
     yerleşim alanının dışına düşen kare yok.
   - Arsa birkaç kareden olur ve kare çizgilerine oturur: bitişik 1x2 (Merkez Meydanı ve meydancıkların
-    çevresi), avlulu 3x4 (köyler; araya en az 1 boş kare), büyük 3-4 x 4 (ana yol kenarı).
+    çevresi), avlulu 3x4 (köyler; araya en az 1 boş kare; kıvrımda dar avlulu 1x4, 1x3), büyük 3-4 x 4 (ana yol kenarı).
     Sığmazsa tabloda sıradaki küçük ölçü denenir. Eğim en çok %30; arsa kendi yerleşiminin mahallesinde.
   - Ad yok. Kimlikler kararlı: arsa prs_<yol>_<sol|sag>_<metre>, kare k_<yol>_<sol|sag>_<metre>_<sıra>
     (metre: sütun önünün yol başından uzaklığı; sıra: yoldan içeri 0, 1, 2, 3).
@@ -55,7 +55,8 @@ SADELESTIRME = 0.6      # DENEME: kesim yoldan en çok bu kadar sapar (m); kıvr
 # Arsa ölçüleri kare sayısıyla: (cephe, derinlik). İlki asıl ölçü, sonrakiler sığmazsa denenir.
 ARSA = {   # DENEME
     "bitisik": [(1, 2)],                                   # 8 x 16 m, ortak duvar
-    "avlulu": [(3, 4), (3, 3), (2, 4), (2, 3)],            # 24 x 32 m (Kemal 21 Kasım: daha da seyrek)
+    # 24 x 32 m (Kemal 21 Kasım: daha da seyrek); kıvrımda dar avlulu 1x4, 1x3 (Kemal 21 Kasım)
+    "avlulu": [(3, 4), (3, 3), (2, 4), (2, 3), (1, 4), (1, 3)],
     "buyuk": [(4, 4), (3, 4), (3, 3)],                     # 32 x 32 m ya da 24 x 32 m
 }
 BUYUK_UC_ORANI = 0.5    # DENEME: büyük arsaların bu kadarı 3 kare cepheyle başlar (çeşitlilik; kararlı)
@@ -231,7 +232,7 @@ def tohum(metin):
 
 
 SERITLER = []     # her kesimin bir yanı: kare şeridi
-red = {"yerlesim": 0, "yasak": 0, "yol": 0, "cakisma": 0, "egim": 0, "mahalle": 0, "sigmadi": 0}
+red = {"yerlesim": 0, "yasak": 0, "dik": 0, "yol": 0, "cakisma": 0, "egim": 0, "mahalle": 0, "sigmadi": 0}
 
 print("Kareler ...")
 sirali = sorted([y for y in YOLLISTE if y["kademe"] in CEPHE_YOLLARI],
@@ -291,6 +292,9 @@ def kare_poly(sr, j, r):
 def kare_uygun(y, poly):
     if not ADA_IC.contains(poly) or YASAK_P.intersects(poly):
         return "yasak"
+    # Kemal 21 Kasım: %30'dan dik yamaçta kare çizilmez (kare tabanının eğimi)
+    if egim(list(poly.exterior.coords)[:4])[0] > EGIM_SINIRI:
+        return "dik"
     for i in SERIT_AGAC.query(poly):
         serit = YOL_SERIT[i]
         if YOLLISTE[i] is y:
