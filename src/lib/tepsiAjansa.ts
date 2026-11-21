@@ -2,7 +2,7 @@ import type { Item } from '../types';
 import { adayBilgisi, bekleyenAdaylar, eskiOneriler, seceneksizMi, sorulacaklar } from './adaylar';
 import { aracBul, yapayZekaOnerisi } from './studyo';
 import { base64, base64Coz, github, GithubHatasi } from './oyunAyarlari';
-import { guncelHaleYaz, yeniDosyaYaz } from './cakisma';
+import { guncelHaleYaz, hataninGuncelShasi, yeniDosyaYaz } from './cakisma';
 import { AJANS_DEPOSU } from './ajansDeposu';
 import { onayKayitlari } from './onaylar';
 
@@ -125,13 +125,18 @@ async function gizliDepoDali(anahtar: string, ad: string): Promise<string> {
 
 async function ajansaYazDene(anahtar: string, yol: string, icerik: Icerik, mesaj: string, ad: string): Promise<string> {
   const dal = await gizliDepoDali(anahtar, ad);
+  // 21 Kasım: 409'dan sonra okuma ucu eski sürümü verirse, tam içerik yazılırken (listeye ekleme değil)
+  // hatadaki güncel sha kullanılır; listeye eklemede güncel içerik gerektiği için yalnız yeniden okunur
+  let denenenSha: string | undefined;
+  let hatadakiSha: string | null = null;
   return guncelHaleYaz(
     async () => {
       try {
         const d = await github<{ sha: string; content?: string; encoding?: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}?ref=${encodeURIComponent(dal)}&t=${Date.now()}`);
         // Çok büyük dosyada GitHub içeriği vermez; üstüne eklenecekse körlemesine ezilmesin
         if (typeof icerik === 'function' && (d.encoding !== 'base64' || typeof d.content !== 'string')) throw new Error(`${yol} okunamadı; ${ad} gönderilmedi`);
-        return { sha: d.sha as string | undefined, ham: typeof d.content === 'string' ? base64Coz(d.content) : null };
+        const eskiOkuma = d.sha === denenenSha && hatadakiSha && typeof icerik === 'string';
+        return { sha: (eskiOkuma ? hatadakiSha : d.sha) as string | undefined, ham: typeof d.content === 'string' ? base64Coz(d.content) : null };
       } catch (e) {
         // İlk gönderim: dosya yok (404). Başka bir hata gerçek hatadır.
         if (!(e instanceof GithubHatasi) || e.durum !== 404) throw e;
@@ -139,6 +144,7 @@ async function ajansaYazDene(anahtar: string, yol: string, icerik: Icerik, mesaj
       }
     },
     async ({ sha, ham }) => {
+      denenenSha = sha;
       const metin = typeof icerik === 'function' ? icerik(ham) : icerik;
       const sonuc = await github<{ content: { html_url: string } }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${yol}`, {
         method: 'PUT',
@@ -146,6 +152,7 @@ async function ajansaYazDene(anahtar: string, yol: string, icerik: Icerik, mesaj
       });
       return sonuc.content.html_url;
     },
+    { cakisinca: e => { hatadakiSha = hataninGuncelShasi(e); } },
   );
 }
 
@@ -163,6 +170,18 @@ export function ajansaYeniDosyaYaz(anahtar: string, yol: string, icerik: string,
         govde: { message: mesaj, content: base64(icerik), branch: dal },
       });
       return sonuc.content.html_url;
+    }, {
+      // 21 Kasım: yazmadan hemen önce o adın depodaki hâli okunur (önceki deneme yazmış olabilir)
+      varMi: async y => {
+        try {
+          const d = await github<{ content?: string; html_url: string }>(anahtar, `/repos/${AJANS_DEPOSU}/contents/${y}?ref=${encodeURIComponent(dal)}&t=${Date.now()}`);
+          const ayni = typeof d.content === 'string' && base64Coz(d.content).replace(/\r\n/g, '\n') === icerik.replace(/\r\n/g, '\n');
+          return { ayni, sonuc: d.html_url };
+        } catch (e) {
+          if (e instanceof GithubHatasi && e.durum === 404) return null;
+          throw e;
+        }
+      },
     });
   });
 }

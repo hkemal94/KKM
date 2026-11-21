@@ -1,17 +1,23 @@
 # Durum
 
-**Son güncelleme: 21 Kasım 2026 gece (Taraftar Birahanesi plajda); önceki: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 21 Kasım 2026 gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); önceki: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
-## 21 Kasım gece: Taraftar Birahanesi plajda
+## 21 Kasım gece: kıyı köyü ve Kuzey Plajı yarı yarıya yaklaştı
 
-Kemal: "Plaja taşıdığım yer gelsin." Birahane, Kemal'in Kurucu'da plaja doğru taşıdığı son yerin (16 Kasım) adanın
-küçültmesiyle (0,70, aynı odak) taşınmışına kondu: taban modelin tabanı 20 x 27,5 m, önü Kuzey Plajı'na, kıyıya 42 m.
-Kumsal payı (arsalarda kıyıdan 85 m) birahane için gevşedi, çünkü yeri Kemal seçti (DENEME); 25 m kıyı şeridine girmez.
-Arkasından köy sokağına yaklaşık 200 m'lik bir geçit bağlanır. Yollar, arsalar, kareler ve yapılar yeniden üretildi;
-yalnız harita verisi, ekranda bir şey değişmez.
+Kemal: #262 (birahane plajda, geçitle) içine sinmedi, geri alındı. Yerine kıyı köyü ve kıyı birbirine yarı yarıya
+yaklaştı. Yalnız harita verisi; ekranda ve kayıtlarda bir şey değişmez. Ölçüler DENEME.
+
+- Köy eski haritadaki sokaklarıyla aynen (biçim, sıra, bağlanış) kıyıya doğru 53 m kaydı.
+- Kuzey Plajı'nın kıyı çizgisi köye doğru 53 m içeri girdi (koy derinleşti); kumsal kum kaldı, öbür kıyılar aynı.
+- Taraftar Birahanesi köydeki kendi yerinde (20 × 27,5 m), önü plaja; tabanın deniz yanı kumsala 20 m (kıyıya 105 m).
+  Kumsal yasağı gevşemedi.
+- Köy kıyıya kayınca plaj arkasındaki yamaca düşüyordu: köyün altında zemin plaja doğru en çok %7 ile yumuşak iner
+  (yalnız kazı). Zemin plajın 750 m dışında aynı kalır.
+- Sahil Yolu'nun köy kesimi köyle kaydı; Stadyum Bağlantısı yeniden çizildi ve köyün batı ucundaki eski kavşağa iner.
+  Stat köyünün bağlantıya yakın birkaç sokağı onunla birlikte yeniden çizildi.
 
 ## 21 Kasım gece: tek harita 4. adım: evler ve yapılar arsalarda
 

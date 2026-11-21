@@ -90,6 +90,11 @@ def kucult(x, y):
     return ODAK[0] + OLCEK * (x - ODAK[0]), ODAK[1] + OLCEK * (y - ODAK[1])
 
 
+def smoothstep_(a, b, x):
+    t = min(max((x - a) / (b - a), 0.0), 1.0)
+    return t * t * (3 - 2 * t)
+
+
 def _kucult_geom(g):
     return affinity.scale(g, OLCEK, OLCEK, origin=ODAK)
 
@@ -182,6 +187,39 @@ YERLESIM_ESKI = [
 ]
 # Stadyum Bağlantısı'nın bugün kıyıya ulaştığı yer: kıyı köyü ve Kuzey Plajı oraya.
 STADYUM_BAG_KIYI = (5464.0, 4003.0)
+
+# Kemal 21 Kasım: kıyı köyü (Taraftar Birahanesi'nin köyü) ile kıyı yarı yarıya yaklaşır. Köy eski haritadaki
+# sokaklarıyla aynen kalır, bütünüyle kıyıya doğru KK_KAYMA_M kayar (gen/kompakt_yollar.py kaymayı buradan,
+# duzada-sinirlar.geojson'daki "kaymaM"dan okur); Kuzey Plajı'nın kıyı çizgisi de köye doğru KIYI_ICERI_M içeri
+# girer (koy derinleşir; plaj kum kalır). Değişim yerel: KIYI_ICERI_TAM m çevrede tam, KIYI_ICERI_SON m'de sıfır;
+# öbür kıyılar aynı. Hedef: birahanenin deniz yanı kumsala (kıyı şeridi + kumsal payı, 85 m) 15–25 m.
+KK_KAYMA_M = 53.0        # DENEME
+KIYI_ICERI_M = 53.0      # DENEME
+# Kıyının içeri girmesi arazinin dolma / akış dengesini uzaklara kadar oynatabilir (çukur dolgusu, dere yatağı).
+# Öbür yerler aynı kalsın diye zemin bir kez de kıyı içeri girmeden üretilir (referans; alt süreç) ve plajın
+# KIYI_YEREL_TAM m dışında ona döner, KIYI_YEREL_SON m'den sonra birebir referanstır.
+KIYI_YEREL_TAM, KIYI_YEREL_SON = 500.0, 750.0   # DENEME
+REFERANS = os.environ.get("KOMPAKT_ZEMIN_REFERANS")
+if REFERANS:
+    KIYI_ICERI_M = 0.0
+KIYI_ICERI_TAM, KIYI_ICERI_SON = 250.0, 500.0   # DENEME
+KK_NOKTA_ESKI = kucult(5790.0, 3850.0)
+_kq0 = ADA.exterior.interpolate(ADA.exterior.project(Point(*KK_NOKTA_ESKI)))
+KK_YON = np.subtract(_kq0.coords[0], KK_NOKTA_ESKI); KK_YON = KK_YON / np.hypot(*KK_YON)   # köyden kıyıya
+KK_KAYMA = (float(KK_YON[0] * KK_KAYMA_M), float(KK_YON[1] * KK_KAYMA_M))
+
+
+def kiyi_ici(x, y):
+    """Kıyı noktasının içeri çekilmiş yeri (Kuzey Plajı kesiminde; uzakta aynı)."""
+    w = 1.0 - smoothstep_(KIYI_ICERI_TAM, KIYI_ICERI_SON, math.hypot(x - _kq0.x, y - _kq0.y))
+    return (x - KK_YON[0] * KIYI_ICERI_M * w, y - KK_YON[1] * KIYI_ICERI_M * w)
+
+
+# Kıyı türü (kum / kayalık) içeri çekilmeden önceki kıyıda hesaplanır, sonra noktalar aynı biçimde taşınır:
+# böylece öbür kıyıların türü ve örnek noktaları birebir aynı kalır.
+ADA0 = ADA
+ADA = Polygon([_metre(_ll(*kiyi_ici(x, y))) for x, y in ADA.exterior.coords])
+assert ADA.is_valid, "kıyı içeri çekilince ada geçersiz oldu"
 YERLESIMLER = []
 for _yid, _tanim, _mid, (_ex_, _ey_), _ha, _hedef in YERLESIM_ESKI:
     _yx, _yy = kucult(_ex_, _ey_)
@@ -200,11 +238,11 @@ for _yid, _tanim, _mid, (_ex_, _ey_), _ha, _hedef in YERLESIM_ESKI:
         # sokaklarla, adanın küçültmesiyle taşınır (gen/kompakt_yollar.py): yeri eski köyün küçültülmüşü.
         # "yeni" yalnız zeminin yerleşim yumuşatmasının merkezidir; kıyı köyünde Kuzey Plajı kıyısındaki
         # yumuşatma aynen kalsın diye eski yerinde durur (kumsal ve kıyı şeridi değişmez).
-        "nokta": kucult(_ex_, _ey_) if _yid == "yerlesim_stadyum_kiyi" else (_yx, _yy),
+        "nokta": (kucult(_ex_, _ey_)[0] + KK_KAYMA[0], kucult(_ex_, _ey_)[1] + KK_KAYMA[1]) if _yid == "yerlesim_stadyum_kiyi" else (_yx, _yy),
         "id": _yid, "tanim": _tanim, "mahalle": _mid, "eski": (_ex_, _ey_), "yeni": (_yx, _yy),
         "yaricap": math.sqrt(_ha * 1e4 / math.pi), "kiyiNokta": (_q.x, _q.y),
         "eskiKiyi": ESKI_ADA.exterior.distance(Point(_ex_, _ey_)),
-        "yeniKiyi": ADA.exterior.distance(Point(*(kucult(_ex_, _ey_) if _yid == "yerlesim_stadyum_kiyi" else (_yx, _yy))))})
+        "yeniKiyi": ADA.exterior.distance(Point(*((kucult(_ex_, _ey_)[0] + KK_KAYMA[0], kucult(_ex_, _ey_)[1] + KK_KAYMA[1]) if _yid == "yerlesim_stadyum_kiyi" else (_yx, _yy))))})
 KUZEY_PLAJI_NOKTA = next(y["kiyiNokta"] for y in YERLESIMLER if y["id"] == "yerlesim_stadyum_kiyi")
 
 # ---------------------------------------------------------------- ızgara
@@ -226,6 +264,14 @@ KARA = _Yol(np.asarray(ADA.exterior.coords)).contains_points(
 # Kara içi uzaklık (kıyıya) ve deniz içi uzaklık, metre
 D_KARA = ndimage.distance_transform_edt(KARA) * HUCRE
 D_DENIZ = ndimage.distance_transform_edt(~KARA) * HUCRE
+# Kuzey Plajı kıyısı içeri çekilince (yukarıda) kıyıya uzaklık iç kesimlerde de değişir; arazinin biçimi (plato,
+# dereler) içerde aynı kalsın diye uzaklık kıyının KIYI_UZAK_TAM m gerisinden sonra eski kıyıya göre ölçülür.
+KIYI_UZAK_TAM, KIYI_UZAK_SON = 150.0, 450.0   # DENEME
+_KARA0 = _Yol(np.asarray(ADA0.exterior.coords)).contains_points(
+    np.column_stack([GX.ravel(), GY.ravel()])).reshape(GX.shape)
+_D0 = ndimage.distance_transform_edt(_KARA0) * HUCRE
+_b = np.clip((_D0 - KIYI_UZAK_TAM) / (KIYI_UZAK_SON - KIYI_UZAK_TAM), 0, 1); _b = _b * _b * (3 - 2 * _b)
+D_KARA = np.where(KARA, D_KARA * (1 - _b) + _D0 * _b, 0.0)
 
 
 def smoothstep(a, b, x):
@@ -236,7 +282,7 @@ def smoothstep(a, b, x):
 # ---------------------------------------------------------------- kıyı türü
 # Kıyı her 20 m'de örneklenir. Koy (içbükey) → kum; burun (dışbükey) ve arkası
 # yüksek kıyı → kayalık. Sonra kıyı boyunca yumuşatılır, kısa parçalar kalmaz.
-_kh = ADA.exterior
+_kh = ADA0.exterior
 _n = int(_kh.length / 20.0)
 KIYI_NOKTA = np.array([_kh.interpolate(t, normalized=True).coords[0]
                        for t in np.linspace(0, 1, _n, endpoint=False)])
@@ -244,14 +290,14 @@ _ileri = np.roll(KIYI_NOKTA, -20, axis=0) - KIYI_NOKTA
 _geri = KIYI_NOKTA - np.roll(KIYI_NOKTA, 20, axis=0)
 _don = np.arctan2(_ileri[:, 1], _ileri[:, 0]) - np.arctan2(_geri[:, 1], _geri[:, 0])
 _don = (_don + np.pi) % (2 * np.pi) - np.pi
-if ADA.exterior.is_ccw is False:
+if ADA0.exterior.is_ccw is False:
     _don = -_don
 # Saat yönü tersine giden kıyıda sola dönüş dışbükey (burun), sağa dönüş içbükey (koy)
 _egrilik = ndimage.gaussian_filter1d(_don, 12, mode="wrap")
 # Eski arazide kıyının 400 m gerisinin rakımı (küçültmeden önceki yerde)
 _ex = ODAK[0] + (KIYI_NOKTA[:, 0] - ODAK[0]) / OLCEK
 _ey = ODAK[1] + (KIYI_NOKTA[:, 1] - ODAK[1]) / OLCEK
-_merk = np.array(ADA.centroid.coords[0])
+_merk = np.array(ADA0.centroid.coords[0])
 _ic = KIYI_NOKTA + 400 * (_merk - KIYI_NOKTA) / np.linalg.norm(_merk - KIYI_NOKTA, axis=1)[:, None]
 _arka = np.asarray(ESKI["yukselti"](ODAK[0] + (_ic[:, 0] - ODAK[0]) / OLCEK,
                                     ODAK[1] + (_ic[:, 1] - ODAK[1]) / OLCEK))
@@ -261,12 +307,13 @@ KUM_HEDEF = 0.33
 _puan = _puan - np.quantile(ndimage.gaussian_filter1d(_puan, 8, mode="wrap"), 1 - KUM_HEDEF)
 _kum0 = 1 / (1 + np.exp(-3 * _puan))
 _uz_imp = np.hypot(KIYI_NOKTA[:, 0] - IMP_KUM_NOKTA[0], KIYI_NOKTA[:, 1] - IMP_KUM_NOKTA[1])
-_uz_kp = np.hypot(KIYI_NOKTA[:, 0] - KUZEY_PLAJI_NOKTA[0], KIYI_NOKTA[:, 1] - KUZEY_PLAJI_NOKTA[1])
+_kp0 = ADA0.exterior.interpolate(ADA0.exterior.project(Point(*kucult(*STADYUM_BAG_KIYI))))   # içeri çekilmeden önce
+_uz_kp = np.hypot(KIYI_NOKTA[:, 0] - _kp0.x, KIYI_NOKTA[:, 1] - _kp0.y)
 _kum0 = np.where(_uz_imp < 400, 0.0, _kum0)           # otel tepesinin çevresi kayalık
 # Kemal (20 Kasım): dipte terasın ve iskelenin yanında, kayaların arasında küçük bir
 # kum cebi; iki yanı kayalık kalır.
-_s_imp = ADA.exterior.project(Point(*IMP_KUM_NOKTA))
-_kc = ADA.exterior.interpolate((_s_imp + IMP_KUM_KAYMA) % ADA.exterior.length)
+_s_imp = ADA0.exterior.project(Point(*IMP_KUM_NOKTA))
+_kc = ADA0.exterior.interpolate((_s_imp + IMP_KUM_KAYMA) % ADA0.exterior.length)
 IMP_KUM_CEBI = (_kc.x, _kc.y)
 _uz_cep = np.hypot(KIYI_NOKTA[:, 0] - _kc.x, KIYI_NOKTA[:, 1] - _kc.y)
 _kum0 = np.where(_uz_cep < 30, 1.0, _kum0)
@@ -274,6 +321,7 @@ _kum0 = np.where(_uz_kp < 260, 1.0, _kum0)            # Kuzey Plajı (Stadyum k�
 KUM_AGIRLIK = ndimage.gaussian_filter1d(_kum0, 2.5, mode="wrap")
 KUM_AGIRLIK = np.maximum(KUM_AGIRLIK, np.clip(1.6 - _uz_cep / 35.0, 0, 1))   # kum cebi tam kum
 KUM_MI = KUM_AGIRLIK > 0.5
+KIYI_NOKTA = np.array([kiyi_ici(x, y) for x, y in KIYI_NOKTA])     # Kuzey Plajı kesimi içeri (yukarıda)
 _agac = cKDTree(KIYI_NOKTA)
 _, _en_yakin = _agac.query(np.column_stack([GX.ravel(), GY.ravel()]), workers=-1)
 # En yakın kıyı noktasının türü; ada içinde iki kıyının ortasında sıçramasın diye
@@ -468,6 +516,18 @@ for _y in YERLESIMLER:
     _lp = ndimage.gaussian_filter(Z, max(4.0, _r / 2.5 / HUCRE))
     Z = Z * (1 - _w) + (_lp + 0.3 * (Z - _lp)) * _w
 
+# Kıyı köyü düzlüğü (Kemal 21 Kasım: köy ve kıyı yarı yarıya yaklaştı, birahane plajın hemen arkasında): köy
+# kıyıya kayınca eski arazinin plaj arkasındaki yamacına düşer. Köyün altında zemin plaja doğru yumuşak iner:
+# kıyıdan uzaklıkla en çok KK_DUZLUK_EGIM artan bir yüzeyin üstündeki arazi indirilir (yalnız kazı; dolgu yok).
+# Köyün çevresinde KK_DUZLUK_TAM m tam, KK_DUZLUK_SON m'de söner; kumsal ve kıyı şeridi değişmez.
+KK_DUZLUK_EGIM = 0.07                       # DENEME
+KK_DUZLUK_TAM, KK_DUZLUK_SON = 300.0, 460.0  # DENEME
+_kkn = next(_y["nokta"] for _y in YERLESIMLER if _y["id"] == "yerlesim_stadyum_kiyi")
+_uz = np.hypot(GX - _kkn[0], GY - _kkn[1])
+_w = (1 - smoothstep(KK_DUZLUK_TAM, KK_DUZLUK_SON, _uz)) * KARA
+_yuzey = np.maximum(taban_kiyi, 0.3 + KK_DUZLUK_EGIM * D_KARA)   # kumsalın kendi profili altına inilmez
+Z = Z * (1 - _w) + np.minimum(Z, _yuzey) * _w
+
 # The Imperial tepesi: sahanlık düz (IMP_KOT), çevresi her yönde ondan aşağı iner
 # (alçak, yuvarlak bir tepe); 150 m'den sonra arazi kendi hâline döner, arkada
 # hafif bir boyun kalabilir. Arazi zaten alçaksa yükseltilmez (çukur açılmaz).
@@ -592,6 +652,21 @@ Z = cukur_doldur(Z, KARA)
 for zid, ad, (px, py), rakim, *_ in ZIRVE_YENI:
     yakin = np.hypot(GX - px, GY - py) < 250
     print(f"  {ad:14s} kayıt {rakim:4d} m, ızgarada {np.where(yakin, Z, -1e9).max():6.1f} m")
+if REFERANS:
+    np.save(REFERANS, Z)
+    sys.exit(0)
+# Plajdan uzakta referans zemin (kıyı içeri girmeden)
+import subprocess, tempfile  # noqa: E402
+with tempfile.TemporaryDirectory() as _td:
+    _rf = os.path.join(_td, "referans.npy")
+    subprocess.run([sys.executable, os.path.abspath(__file__)] + sys.argv[1:], check=True,
+                   env=dict(os.environ, KOMPAKT_ZEMIN_REFERANS=_rf), stdout=subprocess.DEVNULL)
+    _Zref = np.load(_rf)
+_wy = 1 - smoothstep(KIYI_YEREL_TAM, KIYI_YEREL_SON, np.hypot(GX - _kq0.x, GY - _kq0.y))
+Z = _Zref * (1 - _wy) + Z * _wy
+Z = np.where(KARA, np.maximum(Z, 0.3), np.minimum(Z, -0.2))
+Z = cukur_doldur(Z, KARA)
+print(f"Yerel kıyı     : plajın {KIYI_YEREL_SON:.0f} m dışında zemin kıyı içeri girmeden önceki hâliyle aynı")
 ALICI, ALAN = akis(Z, KARA)
 alan_km2 = ALAN * HUCRE * HUCRE / 1e6
 
@@ -966,7 +1041,10 @@ for _y in YERLESIMLER:
         "katman": "yerlesim", "id": _y["id"], "tanim": _y["tanim"], "mahalle": _y["mahalle"],
         "yaricapM": round(_y["yaricap"]), "kiyiyaUzaklikM": round(_y["yeniKiyi"]),
         "eskiKiyiyaUzaklikM": round(_y["eskiKiyi"]), "eskiNokta": _ll(*_y["eski"]),
-        **({"yumusatmaNokta": _ll(*_y["yeni"])} if _y["nokta"] != _y["yeni"] else {})},
+        **({"yumusatmaNokta": _ll(*_y["yeni"])} if _y["nokta"] != _y["yeni"] else {}),
+        **({"kaymaM": [round(KK_KAYMA[0], 2), round(KK_KAYMA[1], 2)], "kiyiIceriM": KIYI_ICERI_M,
+            "not": "Kemal 21 Kasım: köy ve kıyı yarı yarıya yaklaştı (köy kayması ve kıyının içeri girmesi, DENEME)"}
+           if _y["id"] == "yerlesim_stadyum_kiyi" else {})},
         "geometry": {"type": "Point", "coordinates": _ll(*_y["nokta"])}})
     print(f"  {_y['tanim']:42s} kıyıya {_y['eskiKiyi']:5.0f} → {_y['yeniKiyi']:4.0f} m, yarıçap {_y['yaricap']:.0f} m")
 ozellik.append({"type": "Feature", "properties": {"katman": "yer", "id": "kuzey_plaji_kiyi",
