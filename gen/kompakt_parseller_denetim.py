@@ -95,6 +95,9 @@ def main():
         dagilim.setdefault(p["yerlesim"], Counter())[p["mahalle"]] += 1
     bolunen = {k: dict(v) for k, v in dagilim.items() if set(v) != {yer_mahalle.get(k)}}
     yaz("her yerleşimin parselleri tek mahallede (kendi mahallesinde; Kemal 21 Kasım)", not bolunen, bolunen or "")
+    _zirve = next(f for f in geo if f["properties"]["katman"] == "zirve" and f["properties"]["id"] == "tepe_ana")
+    yaz("Ada Tepesi'nin zirvesi Merkez Mahallesi'nde (Kemal 21 Kasım)",
+        mahalle["yer_merkez"].contains(transform(mt, shape(_zirve["geometry"]))), "")
     yaz("mahalle ve yerleşim bilinen", all(p["mahalle"] in mahalle and p["yerlesim"] in yerlesim_id for p in pr), "")
 
     # 2. kimlik
