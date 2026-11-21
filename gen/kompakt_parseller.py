@@ -15,6 +15,8 @@ Kemal 21 Kasım: "Cities Skylines'taki gibi eşit karelerden oluşan bir ızgara
   - Arsa birkaç kareden olur ve kare çizgilerine oturur: bitişik 1x2 (Merkez Meydanı ve meydancıkların
     çevresi), avlulu 3x4 (köyler; araya en az 1 boş kare; kıvrımda dar avlulu 1x4, 1x3), büyük 3-4 x 4 (ana yol kenarı).
     Sığmazsa tabloda sıradaki küçük ölçü denenir. Eğim en çok %30; arsa kendi yerleşiminin mahallesinde.
+  - Dondurmacı Kızlar çevresi (Kemal 21 Kasım, oyunla uyum): liman kumsalında arsa yok; araba yolunun arkasında
+    kumsal payı kalkar, ilk sıra arsa yolun hemen arkasında (gen/kompakt_dondurmaci.py).
   - Ad yok. Kimlikler kararlı: arsa prs_<yol>_<sol|sag>_<metre>, kare k_<yol>_<sol|sag>_<metre>_<sıra>
     (metre: sütun önünün yol başından uzaklığı; sıra: yoldan içeri 0, 1, 2, 3).
   - Kayda yazmaz; yalnız dosya üretir. 4. adımda evler bu arsalara oturur; 7. adımda kareler tek tek boyanır.
@@ -134,6 +136,13 @@ SERIT_AGAC = STRtree(YOL_SERIT)
 # ------------------------------------------------------------------ yasak alanlar
 _kiyi_bant = ADA.exterior.buffer(KIYI_SERIDI)
 _kumsal = unary_union([k.buffer(KIYI_SERIDI + KUMSAL_PAY) for k in KUM]) if KUM else Polygon()
+# Dondurmacı Kızlar çevresi (Kemal 21 Kasım; gen/kompakt_dondurmaci.py): oyunda mahalle araba yolunun hemen arkasında
+# başlar; orada kumsal payı kalkar. Araba yolu ile deniz arası (liman kumsalı) arsasız kalır.
+import kompakt_dondurmaci as DK  # noqa: E402
+DK_ARKA = DK.arka_serit(DK.cerceve(ADA, YERLESIM["yerlesim_liman"]["xy"]))
+_kumsal = _kumsal.difference(DK_ARKA)
+LIMAN_KUMSALI = [transform(mt, shape(f["geometry"])) for f in YOL if f["properties"]["katman"] == "kumsal"]
+_kumsal = unary_union([_kumsal] + LIMAN_KUMSALI)
 _korunan = unary_union([g.buffer(KORUNAN_PAY) for g in KORUNAN.values()] + [g.buffer(KORUNAN_PAY) for g in IMP]
                        + [g.buffer(KORUNAN_PAY) for _, g in MEYDANCIK] + KOPRU)
 YASAK = unary_union([_kiyi_bant, _kumsal, _korunan])
@@ -451,7 +460,9 @@ OLCULER = {"not": "Hepsi DENEME (Kemal onaylamadı)", "kareM": KARE, "derinlikKa
            "kaldirimM": KALDIRIM, "kosePayM": KOSE_PAY,
            "egimSiniri": EGIM_SINIRI, "kiyiSeridiM": KIYI_SERIDI, "kumsalPayM": KUMSAL_PAY,
            "yerlesimKusagiM": YERLESIM_KUSAGI, "yerlesimCarpan": YERLESIM_CARPAN,
-           "bitisikMeydanM": BITISIK_MEYDAN, "bitisikMeydancikM": BITISIK_MEYDANCIK}
+           "bitisikMeydanM": BITISIK_MEYDAN, "bitisikMeydancikM": BITISIK_MEYDANCIK,
+           # kumsal payının kalktığı şerit: Dondurmacı Kızlar'ın araba yolunun arkası (gen/kompakt_dondurmaci.py)
+           "kumsalIstisnasi": [[ll(*c) for c in DK_ARKA.exterior.coords]]}
 ozellik = []
 for p in sorted(PARSELLER, key=lambda p: p["id"]):
     pr = {"katman": "parsel"}

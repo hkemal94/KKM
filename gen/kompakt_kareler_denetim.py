@@ -150,7 +150,11 @@ def main():
     ic = prepared.prep(ada.buffer(-O["kiyiSeridiM"] + 0.5))
     yaz(f"kare kıyı şeridinin ({O['kiyiSeridiM']:.0f} m) içinde", all(ic.contains(g) for g in P),
         sum(1 for g in P if not ic.contains(g)))
-    kumsal = prepared.prep(unary_union([k.buffer(O["kiyiSeridiM"] + O["kumsalPayM"] - 0.5) for k in kum]))
+    _bant = unary_union([k.buffer(O["kiyiSeridiM"] + O["kumsalPayM"] - 0.5) for k in kum])
+    if O.get("kumsalIstisnasi"):        # Dondurmacı Kızlar'ın araba yolunun arkası (gen/kompakt_dondurmaci.py)
+        _bant = _bant.difference(transform(mt, shape({"type": "Polygon", "coordinates": O["kumsalIstisnasi"]})))
+    _liman = [transform(mt, shape(f["geometry"])).buffer(-0.5) for f in yd if f["properties"]["katman"] == "kumsal"]
+    kumsal = prepared.prep(unary_union([_bant] + _liman))
     yaz("kumsal şeridinde kare yok", not any(kumsal.intersects(g) for g in P), sum(1 for g in P if kumsal.intersects(g)))
     serit = [transform(mt, shape(f["geometry"])).buffer(f["properties"]["genislik"] / 2,
                                                        cap_style=2 if f["properties"]["kademe"] != "patika" else 1)

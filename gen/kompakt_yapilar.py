@@ -19,6 +19,10 @@ Kurallar:
   - Yalnız KKM'nin kendi modelleri (binaKatalogu.json'daki Kurucu türleri ve özel yapılar). Modeli
     olmayan viki yapısı bugünkü gibi kutu kalır (dosya: null).
   - Ad yok: yalnız vikide adı olan yapı adını taşır; adsız yapıya ad konmaz.
+  - Dondurmacı Kızlar çevresi (Kemal, 21 Kasım: "onun yeri çok önemli"): Dondurmacı Kızlar, Liman İdare Binası ve
+    oyundaki liman deposu oyunun liman düzenindeki yerlerine oturur (oyun belgesi 0.10, gen/kompakt_dondurmaci.py):
+    dükkân kumsalda, önü denize, T iskelenin kökünde; İdare ve depo sağda kumsalda, önleri denize. Liman kumsalına
+    öbür yapılar girmez.
   - Kayda yazmaz; yalnız dosya üretir. 6. adımda 3B harita bunu okur.
 
 Bütün ölçüler ve oranlar Kemal onaylamadı: hepsi DENEME.
@@ -214,7 +218,15 @@ MEYDAN = next(g for p, g in KORUNAN if p.get("tur") == "meydan")
 MEYDANCIK = [g for p, g in KORUNAN if p["katman"] == "meydancik"]
 STAT = next(g for p, g in KORUNAN if p.get("tur") == "stat")
 BIRAHANE_YERI = next(g for p, g in KORUNAN if p.get("tur") == "birahane-yeri")
+# Dondurmacı Kızlar çevresi (gen/kompakt_dondurmaci.py): oyunun liman düzeni, yollarla aynı çerçeve
+import kompakt_dondurmaci as DK  # noqa: E402
+DK_C = DK.cerceve(ADA, YERLESIM["yerlesim_liman"]["m"])
+LIMAN_KUMSALI = [gm(f["geometry"]) for f in YF if f["properties"]["katman"] == "kumsal"]
+DK_YAPILAR = ("bina_liman_kafe", "bina_liman_ofis")      # oyundaki yerine oturan viki yapıları
+DK_DEPO_ID = "yapi_liman_deposu"
+DK_DEPO_DOSYA = "binalar/depo-atolye.glb"                 # KKM'nin depo modeli (Kurucu türü depo)
 ENGEL_SABIT = [g for p, g in KORUNAN if p.get("tur") != "seki"] + [IMPERIAL[k] for k in ("sahanlik", "otel", "dip-teras") if k in IMPERIAL]
+ENGEL_SABIT += LIMAN_KUMSALI     # liman kumsalına yalnız oyunun üç yapısı (aşağıda dk_yeri)
 
 PARSELLER = []
 for f in PF:
@@ -500,6 +512,38 @@ def ayrilan_yer(e, g):
     return g, on, yakin[0]["id"]
 
 
+def dk_yol(taban, kademe=None):
+    """Tabana en yakın yol (kademe verilirse o kademeden)."""
+    adaylar = [(p, g) for p, g in YOL if kademe is None or p["kademe"] == kademe]
+    return min(adaylar, key=lambda pg: pg[1].distance(taban))[0]["id"]
+
+
+def dk_yeri(kimlik, en, boy):
+    """Oyunun liman düzenindeki yer (oyun belgesi 0.10): taban, önün yönü (denize), yol kimliği, yöntem."""
+    on = tuple(DK_C.deniz)
+    if kimlik == "bina_liman_kafe":
+        taban = DK.dukkan_tabani(DK_C)
+        return (taban, on, dk_yol(taban, "gecit"),
+                "oyunun liman düzeni (oyun belgesi 0.10): kumsalda, önü denize, T iskelenin kökünde")
+    c, _ = DK.idare_yeri(DK_C) if kimlik == "bina_liman_ofis" else DK.depo_yeri(DK_C)
+    taban = dikdortgen(c, tuple(DK_C.sag), en, boy)
+    return (taban, on, dk_yol(taban, "ara"),
+            "oyunun liman düzeni (oyun belgesi 0.10): dükkânın sağında kumsalda, önü denize, "
+            + ("~160 m" if kimlik == "bina_liman_ofis" else "~210 m"))
+
+
+def dk_depo():
+    """Oyundaki Liman Deposu'nun yeri (oyun belgesi 0.10). Vikide maddesi yok: ad konmaz (DENEME: KKM'nin depo modeli)."""
+    me, mb, _ = olcu(DK_DEPO_DOSYA)
+    taban, on, yid, yontem = dk_yeri(DK_DEPO_ID, me, mb)
+    c = taban.centroid
+    yapi_ekle(DK_DEPO_ID, taban, on, DK_DEPO_DOSYA, tur_of(DK_DEPO_DOSYA), {
+        "bag": "oyun", "oyun": "Dondurmacı Kızlar: liman deposu (oyun belgesi 0.10); vikide maddesi yok, ad yok",
+        "yol": yid, "tasima": {"yontem": yontem, "hedef": ll(c.x, c.y), "hedeftenM": 0.0},
+        "mahalle": mahalle_of(taban), "yerlesim": "yerlesim_liman"})
+    KAYITLAR.append(({"id": DK_DEPO_ID, "ad": "(liman deposu, adsız)"}, YAPILAR[-1]["properties"]))
+
+
 KAYITLAR = []        # rapor için: viki bağlı yapının eski ve yeni yeri
 YERLESEMEYEN = []
 
@@ -533,6 +577,11 @@ def viki_yapilari():
             TUKENEN.add(prs["id"])
             ozel["parsel"] = prs["id"]
             yontem = "en yakın parsel"
+        elif e["id"] in DK_YAPILAR:
+            T, ys = hedef(e)
+            if e["id"] == "bina_liman_kafe":
+                e = {**e, "olcu": {"en": DK.DUKKAN_OLCU, "boy": DK.DUKKAN_OLCU}}
+            taban, on, yid, yontem = dk_yeri(e["id"], e["olcu"]["en"], e["olcu"]["boy"])
         else:
             T, ys, sonuc, meydana, liman = yerlestir_viki(e)
             if sonuc is None:
@@ -555,6 +604,7 @@ def viki_yapilari():
                     TUKENEN.add(PARSELLER[i]["id"])
         yapi_ekle(e["id"], taban, tuple(on), dosya, tur_of(dosya) if dosya else (e.get("kurucuTur") or "kutu"), ozel)
         KAYITLAR.append((e, YAPILAR[-1]["properties"]))
+    dk_depo()
     kemal_secti()
 
 
@@ -827,7 +877,9 @@ def uret():
             "parsel": "oturduğu arsa (duzada-parseller.geojson); parseller: birden çok arsayı kaplayan sıra ev",
             "kareler": "tabanın kapladığı kareler (duzada-kareler.json kimlikleri)",
             "vikiId": "vikideki maddesi (viki bağlı yapıda)", "ad": "vikideki adı (yalnız viki bağlı yapıda)",
-            "bag": "viki: maddesi / madde bağı var; oturan: evde oturanı var (kişiler yalnız kayıtta)",
+            "bag": "viki: maddesi / madde bağı var; oturan: evde oturanı var (kişiler yalnız kayıtta); oyun: oyundaki "
+                   "yerinden gelen adsız yapı (Dondurmacı Kızlar'ın liman deposu)",
+            "oyun": "yalnız bag oyun olan yapıda: oyundaki karşılığı",
             "eskiKonum": "eski haritadaki yeri [boylam, enlem]",
             "eskiKonum_": "eski haritada yeri olmayan yapıda null (Kemal'in seçtiği aday yer)",
             "tasima": "nasıl taşındı: yöntem, eski yerin kompakt adadaki karşılığı (hedef) ve yapının ona uzaklığı",

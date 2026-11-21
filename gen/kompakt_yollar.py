@@ -21,6 +21,9 @@ Kurallar:
     Sahil Yolu köyün önünde eski hattının küçültülmüşünden geçer; hattın geri kalanı aynen kalır.
   - Stat, Merkez Meydanı, The Imperial sahanlığı ve kıyı köyündeki birahane yeri yola kapalı.
   - Dere üstünde kısa köprü; köprüde zemin oyulmaz.
+  - Dondurmacı Kızlar çevresi (Kemal, 21 Kasım: "onun yeri çok önemli"): oyunun liman düzeni (oyun belgesi 0.10)
+    Liman kıyısına oturur (gen/kompakt_dondurmaci.py): kıyıya koşut araba yolu, dükkânın önünde taş yürüyüş yolu,
+    suyun üstünde T iskele ve mendirek, aradaki liman kumsalı yola kapalı (giren köy sokağı araba yolunda kesilir).
 
 Zemin dosyası bir kez düzlenir: başlığa "yolYatagi" yazılır. Yeniden üretmek için önce
 python gen/kompakt_zemin.py, sonra python gen/kompakt_yollar.py.
@@ -1093,6 +1096,56 @@ print(f"  tarla yolu: {tarla}")
 for k in SOKAK_KENAR:
     ekle(k["geom"], k["kademe"], k.get("ad"), grup=k["koy"], genislik=k["genislik"], yuzey=k["yuzey"])
 
+# ================================================================== 6b. Dondurmacı Kızlar çevresi (Kemal, 21 Kasım)
+# Oyunun liman düzeni (oyun belgesi 0.10; gen/kompakt_dondurmaci.py): dükkânın önünde kumsal ve taş yürüyüş yolu,
+# ~20 m geride kıyıya koşut araba yolu. Liman kumsalına giren köy sokakları araba yolunun hattında kesilir
+# (kumsalda yol yok; kesilen sokak araba yoluna bağlanır). İskele, mendirek ve kumsal dosyaya ayrı öğe olarak yazılır.
+import kompakt_dondurmaci as DK  # noqa: E402
+
+print("Dondurmacı Kızlar çevresi ...")
+DK_C = DK.cerceve(ADA, YERLESIM["yerlesim_liman"]["xy"])
+_zy = DK.YOL_ON + DK.YOL_ENI / 2
+_kes = DK_C.poligon([(DK.YOL_SOL, _zy), (DK.KUMSAL_SAG, _zy), (DK.KUMSAL_SAG, -450.0), (DK.YOL_SOL, -450.0)])
+_yeni = []
+_kesilen = 0
+for y in YOLLAR:
+    if not y["geom"].intersects(_kes):
+        _yeni.append(y)
+        continue
+    _kesilen += 1
+    kalan = y["geom"].difference(_kes)
+    for g in ([kalan] if kalan.geom_type == "LineString" else list(getattr(kalan, "geoms", []))):
+        if g.geom_type == "LineString" and g.length >= 1.0:
+            _yeni.append(dict(y, geom=g, cikmaz=(False, False)))
+YOLLAR = _yeni
+# sağ ucu: kumsalın bittiği yerden sonra en yakın sokak kavşağına bağlanır (sokaklar kıyı boyunca sürer); yoksa
+# kesilen sokakların araba yoluna değdiği en sağdaki yerde biter
+_ay = DK.araba_yolu(DK_C)
+_dugum = {}
+for y in YOLLAR:
+    for c in (y["geom"].coords[0], y["geom"].coords[-1]):
+        _dugum[(round(c[0], 3), round(c[1], 3))] = _dugum.get((round(c[0], 3), round(c[1], 3)), 0) + 1
+_aday = [c for c, n_ in _dugum.items() if n_ >= 2
+         and DK.KUMSAL_SAG < DK_C.o(c)[0] < DK.KUMSAL_SAG + 60 and -60 < DK_C.o(c)[1] < _zy + 25]
+if _aday:
+    _uc = min(_aday, key=lambda c: math.dist(c, DK_C.h(DK.KUMSAL_SAG, _zy)))
+    _ay = LineString([DK_C.h(DK.YOL_SOL, _zy), DK_C.h(DK.KUMSAL_SAG, _zy), _uc])
+else:
+    _kav = [DK_C.o(c)[0] for y in YOLLAR for c in (y["geom"].coords[0], y["geom"].coords[-1])
+            if _ay.distance(Point(c)) < 0.3]
+    _ay = DK_C.hat([(DK.YOL_SOL, _zy), (max(_kav) if _kav else DK.KUMSAL_SAG, _zy)])
+DK_YOL = ekle(_ay, "ara", grup="yerlesim_liman", genislik=DK.YOL_ENI)
+# sol ucu Sahil Yolu'na bağlanır (köyleri ana yola bağlayan bağlantı gibi)
+_bag = baglanti(DK_C.h(DK.YOL_SOL, _zy), ag_maske(["ana"]), "ara", ters=True)
+_on, _yan1, _yan2 = DK.yuruyus_yolu(DK_C)
+for g in (_on, _yan1, _yan2):
+    ekle(g, "gecit", grup="yerlesim_liman", genislik=DK.YURUYUS_ENI, yuzey="taş")
+DK_ISKELE, DK_ISKELE_HAT = DK.iskele(DK_C, ADA)
+DK_MENDIREK, DK_MENDIREK_HAT = DK.mendirek(DK_C, ADA)
+DK_KUMSAL = DK.kumsal_alani(DK_C, ADA)
+print(f"  kıyıya uyum {DK_C.uyum_rms:.1f} m (oyunun kıyısından ortalama sapma), önü {DK_C.on_pusula:.0f}°; "
+      f"kumsala giren {_kesilen} yol kesildi; araba yolu {_ay.length:.0f} m, Sahil Yolu'na bağlantı {'var' if _bag else 'YOK'}")
+
 # ================================================================== 7. bağlılık: ağa değmeyen parçalar
 def bilesenler():
     geoms = [y["geom"] for y in YOLLAR]
@@ -1429,6 +1482,8 @@ ALANLAR = {
     "vikiId": "vikideki maddesi; yoksa boş",
     "genislik": "metre",
     "uzunlukM": "metre (bilgi)", "mahalle": "mahalle kimliği", "cikmaz": "[baş, son] uç çıkmaz mı",
+    "katman": "yol | kopru | korunan | meydancik | iskele (suyun üstünde, çokgen) | mendirek (suyun üstünde, çokgen; "
+              "hat: orta çizgisi) | kumsal (yola ve arsaya kapalı kumsal, çokgen)",
 }
 ozellik = []
 kullanilan_id = set()
@@ -1490,6 +1545,27 @@ if BIRAHANE_YERI is not None:
 for m_ in MEYDANCIK:
     ozellik.append({"type": "Feature", "properties": {"katman": "meydancik", "koy": m_["koy"]},
                     "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in m_["geom"].exterior.coords]]}})
+# Dondurmacı Kızlar çevresi (6b): suyun üstündeki iskele ve mendirek, yola ve arsaya kapalı liman kumsalı
+_dk_not = "Dondurmacı Kızlar oyunuyla uyumlu (oyun belgesi 0.10; gen/kompakt_dondurmaci.py); taslak, Kemal onaylamadı"
+ozellik.append({"type": "Feature", "properties": {
+    "katman": "iskele", "id": "iskele_dondurmaci", "tur": "ahşap", "genislik": DK.ISKELE_ENI,
+    "modeller": ["deniz/ahsap-iskele-duz.glb", "deniz/ahsap-iskele-t.glb"],
+    "uzunlukM": round(DK_ISKELE_HAT.length), "tBasiM": [DK.T_ENI, DK.T_DERINLIGI],
+    "not": "T iskele: Dondurmacı Kızlar'ın tam önünden kıyıya dik; ucunda T başı. " + _dk_not},
+    "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in DK_ISKELE.exterior.coords]]}})
+ozellik.append({"type": "Feature", "properties": {
+    "katman": "mendirek", "id": "mendirek_liman", "tur": "taş", "genislik": DK.MENDIREK_ENI,
+    "modeller": ["deniz/mendirek-duz.glb"],
+    "uzunlukM": round(DK_MENDIREK_HAT.length), "hat": [ll(*c) for c in DK_MENDIREK_HAT.coords],
+    "not": "Mendirek: sağda kıyıdan başlar, açıkta döner, solda açık biter (liman girişi solda). " + _dk_not},
+    "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in DK_MENDIREK.exterior.coords]]}})
+_kum = DK_KUMSAL if DK_KUMSAL.geom_type == "Polygon" else max(DK_KUMSAL.geoms, key=lambda g: g.area)
+ozellik.append({"type": "Feature", "properties": {
+    "katman": "kumsal", "id": "kumsal_dondurmaci", "tur": "liman",
+    "onPusula": round(DK_C.on_pusula, 1), "sagPusula": round(DK_C.sag_pusula, 1),
+    "not": "Liman kumsalı: araba yolu ile deniz arası; yol ve arsa yok, yalnız Dondurmacı Kızlar, Liman İdare Binası "
+           "ve liman deposu. " + _dk_not},
+    "geometry": {"type": "Polygon", "coordinates": [[ll(*c) for c in _kum.exterior.coords]]}})
 with open(CIKTI, "w", encoding="utf-8") as f:
     json.dump({"type": "FeatureCollection",
                "not": "Kompakt ada yol ağı, taslak (Kemal onaylamadı). gen/kompakt_yollar.py üretir.",
