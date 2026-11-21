@@ -20,6 +20,8 @@ Kurallar:
 Ölçü değerleri Kemal onaylamadı: hepsi DENEME.
 
 Çalıştırma: python gen/kompakt_parseller.py   (önce zemin ve yollar üretilmiş olmalı)
+            Yol ağı değişirse sonra python gen/kompakt_mahalle_yerlesim.py (yerleşim mahalle
+            sınırını aşıyorsa sınırı kaydırır) ve bu dosya bir kez daha.
 Denetim   : python gen/kompakt_parseller_denetim.py
 """
 import json, math, os, sys, warnings
@@ -47,12 +49,12 @@ CIKTI = os.path.join(KOK, "public", "harita", "duzada-parseller.geojson")
 # Kademeye göre parsel: cephe (yol boyunca, m), derinlik (yoldan içeri, m). Tür satırı.
 OLCU = {   # DENEME
     "bitisik": {"ana": (8.0, 16.0), "ara": (7.5, 15.0), "sokak": (7.0, 14.0), "gecit": (6.0, 12.0)},
-    # Kemal 21 Kasım: daha seyrek (DENEME)
-    "avlulu": {"ara": (21.0, 30.0), "sokak": (18.0, 26.0), "gecit": (15.0, 20.0)},
+    # Kemal 21 Kasım: daha da seyrek (DENEME)
+    "avlulu": {"ara": (24.0, 34.0), "sokak": (21.0, 30.0), "gecit": (18.0, 24.0)},
     "buyuk": {"ana": (24.0, 32.0)},
 }
 CEPHE_OYNAMA = {"bitisik": 0.20, "avlulu": 0.15, "buyuk": 0.10}   # DENEME: cephe ± bu oranda değişir (sıra ev çeşitliliği)
-ARA_PAY = {"bitisik": 0.0, "avlulu": 3.0, "buyuk": 2.0}           # DENEME: komşu parseller arası (m); bitişikte ortak duvar; avlulu 3 m (Kemal 21 Kasım: daha seyrek)
+ARA_PAY = {"bitisik": 0.0, "avlulu": 5.0, "buyuk": 2.0}           # DENEME: komşu parseller arası (m); bitişikte ortak duvar; avlulu 5 m (Kemal 21 Kasım: daha da seyrek)
 KALDIRIM = 1.0          # DENEME: yol kenarı ile parsel önü arası (m)
 KOSE_PAY = 2.0          # DENEME: kavşakta öbür yolun kenarından en az bu kadar geri (m)
 DERINLIK_EN_AZ = 0.6    # DENEME: köşede sığmazsa derinlik bu orana kadar kısalır

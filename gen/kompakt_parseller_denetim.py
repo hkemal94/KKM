@@ -89,6 +89,12 @@ def main():
         f"{sum(1 for p in pr if p['yol'] not in yollar)} bilinmeyen yol")
     yaz("büyük parsel yalnız ana yolda", all(p["yolKademe"] == "ana" for p in pr if p["tur"] == "buyuk"),
         sum(1 for p in pr if p["tur"] == "buyuk" and p["yolKademe"] != "ana"))
+    yer_mahalle = {f["properties"]["id"]: f["properties"]["mahalle"] for f in geo if f["properties"]["katman"] == "yerlesim"}
+    dagilim = {}
+    for p in pr:
+        dagilim.setdefault(p["yerlesim"], Counter())[p["mahalle"]] += 1
+    bolunen = {k: dict(v) for k, v in dagilim.items() if set(v) != {yer_mahalle.get(k)}}
+    yaz("her yerleşimin parselleri tek mahallede (kendi mahallesinde; Kemal 21 Kasım)", not bolunen, bolunen or "")
     yaz("mahalle ve yerleşim bilinen", all(p["mahalle"] in mahalle and p["yerlesim"] in yerlesim_id for p in pr), "")
 
     # 2. kimlik
@@ -99,6 +105,9 @@ def main():
     kalip = all(_kimlik_uyar(p) for p in pr)
     yaz("kimlikler tekil", len(set(ids)) == len(ids), f"{len(ids) - len(set(ids))} tekrar")
     yaz("kimlik yol + yan + metreden", kalip, "prs_<yol>_<sol|sag>_<metre>")
+
+    yanlis_m = sum(1 for g, p in zip(P, pr) if not mahalle[p["mahalle"]].contains(g.centroid))
+    yaz("parselin mahalle alanı sınır dosyasıyla uyuşuyor", yanlis_m == 0, f"{yanlis_m} parsel")
 
     # 3. geometri
     gecersiz = sum(1 for g in P if not g.is_valid or g.area <= 0 or len(g.exterior.coords) != 5)
