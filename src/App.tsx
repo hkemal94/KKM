@@ -677,7 +677,9 @@ export default function App() {
     switch (hedef) {
       // 2 Kasım (yol haritası 6. adım): Atölye ikiye ayrıldı: Harita ve Kurucu · Görünümler
       case 'harita': case 'kurucu': case 'atolye': setAtolyeIstek({ sekme: 'harita', n }); setActiveTab('harita'); break;
-      case 'gorunumler': case 'bagagi': setAtolyeIstek({ sekme: 'ag', n }); setActiveTab('gorunumler'); break;
+      // 20 Kasım (Kemal): Görünümler soy ağacıyla açılır; eski "bağ ağı" adresi yine bağ ağına gider
+      case 'gorunumler': setAtolyeIstek({ sekme: 'soy', n }); setActiveTab('gorunumler'); break;
+      case 'bagagi': setAtolyeIstek({ sekme: 'ag', n }); setActiveTab('gorunumler'); break;
       case 'zaman': setAtolyeIstek({ sekme: 'zaman', n }); setActiveTab('gorunumler'); break;
       case 'soyagaci': setAtolyeIstek({ sekme: 'soy', n, ...(ayrinti ? { aile: ayrinti } : {}) }); setActiveTab('gorunumler'); break;
       case 'viki': case 'kunye': case 'duzada': setDuzadaIstek({ sekme: 'wiki', n }); setActiveTab('duzada'); break;
@@ -921,7 +923,7 @@ export default function App() {
       { id: 'duzada', ad: 'Viki', alt: 'Düzada vikisi ve Evren Raporu', simge: Compass, nokta: bildirimVar('kanon') },
       { id: 'kitap', ad: 'Kitap', alt: 'kitap projeleri ve bölümler', simge: PenTool },
       { id: 'harita', ad: 'Harita ve Kurucu', alt: '2D kur, 3D bak', simge: Hammer },
-      { id: 'gorunumler', ad: 'Görünümler', alt: 'bağ ağı, zaman çizgisi, soy ağacı', simge: Share2 }
+      { id: 'gorunumler', ad: 'Görünümler', alt: 'soy ağacı, zaman çizgisi, bağ ağı', simge: Share2 }
     ] },
     { grup: 'Ürünler', simge: Package, satirlar: [
       { id: 'oyun', ad: 'Oyunlar', simge: Gamepad2 },
@@ -1235,7 +1237,7 @@ export default function App() {
             {activeTab === 'gorunumler' && (
               <Atolye
                 baslik="Görünümler"
-                sekmeler={['ag', 'zaman', 'soy']}
+                sekmeler={['soy', 'zaman', 'ag']}
                 items={items}
                 onAddItem={handleAddItem}
                 onUpdateItem={handleUpdateItem}

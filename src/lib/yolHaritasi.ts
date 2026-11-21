@@ -441,6 +441,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Merkez Kahvehanesi haritada: Merkez Meydanı\'nın kuzeydoğu üçgeninde, kavşağın köşesinde (aday B); kendi modeliyle, önü ve çınarı meydana bakar; adı, etiketi ve viki maddesi bağlı', not: 'Üreteçte yeni yapı (bina_kahvehane), en son konur: öteki 7722 öğe aynen. Oturum 13 × 11 m, meydan üçgeninin ~80 m²\'si altında kalır; Müstakil Ev\'e ~3 m. Kayda bir şey yazılmaz.' },
   { id: 'oyun-oyna-dugmesi', paket: 'K', kimde: 'claude', nereden: '19 Kasım · Kemal', bitti: true,
     ad: 'Oyun sayfalarında "Oyna" düğmesi: sayfanın üstünde ve "Depoda aç"ın yanında; oyun yeni sekmede açılır', not: 'Adres oyunun deposundan türetilir (bilinen beş oyunda sabit tablo, lib/depoBelgesi.ts → oyunAdresi). Depo alanı boş oyunda düğme görünmez. Kayda bir şey yazılmaz.' },
+  { id: 'gorunumler-acilis', paket: 'K', kimde: 'claude', nereden: '20 Kasım · Kemal', bitti: true,
+    ad: 'Görünümler sayfası Soy ağacı sekmesiyle açılır; sekmelerin sırası Soy ağacı, Zaman çizgisi, Bağ ağı', not: 'Yalnız ekranda; kayda bir şey yazılmaz. Eski "bağ ağı" bağlantıları yine Bağ ağı sekmesini açar.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
