@@ -5,6 +5,11 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
+## 20 Kasım: Görünümler soy ağacıyla açılır
+
+Kemal: Görünümler sayfası Soy ağacı sekmesiyle açılsın. Sekme sırası Soy ağacı, Zaman çizgisi, Bağ ağı.
+Yalnız ekranda; kayıtlarda bir şey değişmez.
+
 ## 20 Kasım: kişi künyesinde Doğum yılı
 
 Kemal: kişi künyesine ayrı bir "Doğum yılı" alanı (Yaşam yerinde kalır). Soy ağacı kutusu önce Doğum yılı'nı

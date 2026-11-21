@@ -25,9 +25,10 @@ import { KATMANLAR, haritaIsaretleri, katmanOku, katmanYaz, type KatmanAyari, ty
  */
 const RAY_BOLUMLERI: RayBolumu[] = [
   { id: 'harita', label: 'Harita ve Kurucu' },
-  { id: 'ag', label: 'Bağ ağı' },
+  // 20 Kasım (Kemal): Görünümler soy ağacıyla açılır; sıra soy, zaman, bağ
+  { id: 'soy', label: 'Soy ağacı' },
   { id: 'zaman', label: 'Zaman çizgisi' },
-  { id: 'soy', label: 'Soy ağacı' }
+  { id: 'ag', label: 'Bağ ağı' }
 ];
 export type AtolyeSekmesi = 'harita' | 'ag' | 'zaman' | 'soy';
 
