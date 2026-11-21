@@ -217,7 +217,7 @@ kimlik kalktı. `firestore.rules`'ta her alana yalnız sahibi girer.
 **Tek kayıtlık ayarlar** (30 Eylül): `site_ayar` (sitenin taslağı ve
 yayındaki hâli), `gece_hazirlik` (gece önerilerinin defteri), `kkm_ayar`
 (Durum hedefleri, yol haritasında bitenler, Kemal'in ekrandan eklediği
-işler, vikinin alan şablonu `vikiSablonu`, bağ ağının yerleşimi `bagAgiYerlesim`, zaman çizgisinin dönemleri `donemler` ve önerilmeyecek dönem adayları `reddedilenDonemler`). Temizlik bunlara dokunmaz.
+işler, vikinin alan şablonu `vikiSablonu`, bağ ağının eski elle yerleşimi `bagAgiYerlesim` (20 Kasım'dan beri okunmaz, yazılmaz), zaman çizgisinin dönemleri `donemler` ve önerilmeyecek dönem adayları `reddedilenDonemler`). Temizlik bunlara dokunmaz.
 **Yol haritası açık işlerin tek yeridir** (7 Ekim): plan `src/lib/yolHaritasi.ts`'te
 (paket H/W/M/K, gece, kimde). Her PR kendi paketini `bitti: true` yapar;
 Kemal birleştirince ekranda "bitti" olur. Kemal'in eklediği işler `kkm_ayar`'da.
