@@ -29,6 +29,16 @@ export function cakismaMi(e: unknown): boolean {
   return d === 409 || d === 422;
 }
 
+/**
+ * 409 iletisindeki güncel sürüm: "… is at <güncel sha> but expected <eski sha>". GitHub'ın okuma ucu
+ * yazmadan hemen sonra birkaç saniye eski sürümü verebiliyor (21 Kasım, Kemal: makbuz yine 409 ile
+ * düştü); yeniden okuma eski sha'yı getirirse yazma bu güncel sha ile denenir. Yoksa null.
+ */
+export function hataninGuncelShasi(e: unknown): string | null {
+  const m = /is at ([0-9a-f]{40})/i.exec((e as { message?: unknown } | null)?.message as string ?? '');
+  return m ? m[1].toLowerCase() : null;
+}
+
 /** "kkm/uygulananlar/15-11-2026-101500.json", 2 → "kkm/uygulananlar/15-11-2026-101500-2.json" */
 export function ekliYol(yol: string, n: number): string {
   if (n < 2) return yol;
@@ -37,7 +47,11 @@ export function ekliYol(yol: string, n: number): string {
   return nokta > bolu + 1 ? `${yol.slice(0, nokta)}-${n}${yol.slice(nokta)}` : `${yol}-${n}`;
 }
 
-export interface Secenek { deneme?: number; beklemeMs?: number; bekle?: (ms: number) => Promise<void> }
+export interface Secenek {
+  deneme?: number; beklemeMs?: number; bekle?: (ms: number) => Promise<void>;
+  /** Çakışma olunca (yeniden denemeden önce) hatayla çağrılır: güncel sha'yı hatadan almak için */
+  cakisinca?: (e: unknown) => void;
+}
 
 /**
  * Var olan (ya da henüz olmayan) bir dosyanın yerine yazar: her denemede önce
@@ -55,17 +69,23 @@ export async function guncelHaleYaz<H, S>(oku: () => Promise<H>, yaz: (hal: H) =
       return await yaz(hal);
     } catch (e) {
       if (!cakismaMi(e) || deneme >= enCok) throw e;
+      s.cakisinca?.(e);
       await uyu(ms * (deneme + 1));
     }
   }
 }
 
+/** Yazmadan önce bakılan: o adda dosya var mı; varsa bizim yazdığımızla aynı mı (önceki deneme yazmış olabilir) */
+export type VarMi<S> = (yol: string) => Promise<null | { ayni: boolean; sonuc: S }>;
+
 /**
  * Yeni dosya açar (makbuz gibi; sha gerekmez). 409 gelirse dal bu arada
  * ilerlemiştir: aynı adla yeniden dener. 422 gelirse o adda dosya vardır:
  * adın sonuna -2, -3 … ekler. Başka hata olduğu gibi fırlar.
+ * 21 Kasım: `varMi` verilirse her denemeden önce o ad okunur: önceki deneme aynı içeriği yazmışsa
+ * (cevap gelmeden 409 düştüyse) yeniden yazılmaz, o dosya döner; başka içerik varsa sıradaki ada geçer.
  */
-export async function yeniDosyaYaz<S>(yol: string, yaz: (yol: string) => Promise<S>, s: Secenek & { adDeneme?: number } = {}): Promise<S> {
+export async function yeniDosyaYaz<S>(yol: string, yaz: (yol: string) => Promise<S>, s: Secenek & { adDeneme?: number; varMi?: VarMi<S> } = {}): Promise<S> {
   const enCok = s.deneme ?? CAKISMA_DENEME;
   const ms = s.beklemeMs ?? CAKISMA_BEKLE;
   const uyu = s.bekle ?? bekle;
@@ -73,6 +93,11 @@ export async function yeniDosyaYaz<S>(yol: string, yaz: (yol: string) => Promise
   let n = 1;
   for (let deneme = 0; ; ) {
     try {
+      if (s.varMi) {
+        const v = await s.varMi(ekliYol(yol, n));
+        if (v?.ayni) return v.sonuc;
+        if (v && n < adSiniri) { n++; continue; }
+      }
       return await yaz(ekliYol(yol, n));
     } catch (e) {
       const d = durumu(e);

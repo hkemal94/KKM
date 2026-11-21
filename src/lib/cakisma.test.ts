@@ -1,7 +1,7 @@
 // Ajansa yazarken çakışma yardımcısının denemesi: `npm test`
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cakismaMi, ekliYol, guncelHaleYaz, yeniDosyaYaz } from './cakisma';
+import { cakismaMi, ekliYol, guncelHaleYaz, hataninGuncelShasi, yeniDosyaYaz } from './cakisma';
 
 const hata = (durum: number) => Object.assign(new Error(`GitHub ${durum}`), { durum });
 const hemen = { bekle: async () => {} };
@@ -63,4 +63,37 @@ test('guncelHaleYaz: çakışınca güncel hâli yeniden okur, üstüne ekler', 
     hemen,
   );
   assert.deepEqual(yazilan, ['a', 'b', 'yeni']);
+});
+
+test('hataninGuncelShasi: 409 iletisindeki güncel sürüm', () => {
+  const a = 'a'.repeat(40), b = 'b'.repeat(40);
+  assert.equal(hataninGuncelShasi(new Error(`GitHub 409: kkm/x.json is at ${a} but expected ${b}`)), a);
+  assert.equal(hataninGuncelShasi(new Error('GitHub 409')), null);
+});
+
+test('guncelHaleYaz: çakışınca cakisinca hatayla çağrılır', async () => {
+  const gelen: unknown[] = [];
+  let n = 0;
+  const r = await guncelHaleYaz(async () => n, async () => { if (n++ === 0) throw hata(409); return 'tamam'; }, { ...hemen, cakisinca: e => gelen.push(e) });
+  assert.equal(r, 'tamam');
+  assert.equal(gelen.length, 1);
+});
+
+test('yeniDosyaYaz: önceki deneme aynı içeriği yazmışsa yeniden yazmaz', async () => {
+  let yazma = 0;
+  const depo = new Map<string, string>();
+  const adres = await yeniDosyaYaz('m/a.json', async y => {
+    yazma++;
+    depo.set(y, 'icerik');            // yazıldı ama cevap 409 ile düştü
+    if (yazma === 1) throw hata(409);
+    return `ok:${y}`;
+  }, { ...hemen, varMi: async y => (depo.has(y) ? { ayni: depo.get(y) === 'icerik', sonuc: `var:${y}` } : null) });
+  assert.equal(adres, 'var:m/a.json');
+  assert.equal(yazma, 1);
+});
+
+test('yeniDosyaYaz: o adda başka içerik varsa sıradaki ada yazar', async () => {
+  const adres = await yeniDosyaYaz('m/a.json', async y => `ok:${y}`,
+    { ...hemen, varMi: async y => (y === 'm/a.json' ? { ayni: false, sonuc: 'baska' } : null) });
+  assert.equal(adres, 'ok:m/a-2.json');
 });

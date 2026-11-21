@@ -67,13 +67,24 @@ export function useAjansKararlari({ items, anahtar, tur, onUpdateItem, onDeleteI
     } finally { setCalisiyor(null); }
   };
 
-  return { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, donemSayisi, kurucu, calisiyor, sonuc, uygula };
+  // 21 Kasım: makbuz yazılamadıysa (ajansın deposu tam o sırada değişti) Kemal tek düğmeyle yeniden dener;
+  // kararlar yeniden uygulanmaz, yalnız makbuz yazılır
+  const [makbuzDeneniyor, setMakbuzDeneniyor] = useState(false);
+  const makbuzuYenidenYaz = async () => {
+    if (!sonuc) return;
+    setMakbuzDeneniyor(true);
+    try { setSonuc({ u: sonuc.u, makbuz: await makbuzYaz(anahtar, sonuc.u) }); }
+    catch (e) { setSonuc({ u: sonuc.u, makbuzHata: e instanceof Error ? e.message : String(e) }); }
+    finally { setMakbuzDeneniyor(false); }
+  };
+
+  return { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, donemSayisi, kurucu, calisiyor, sonuc, uygula, makbuzuYenidenYaz, makbuzDeneniyor };
 }
 
 export const AjansKararlariKarti: React.FC<Props> = (props) => {
   const { anahtar } = props;
   const [acik, setAcik] = useState(false);
-  const { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, donemSayisi, kurucu, calisiyor, sonuc, uygula } = useAjansKararlari(props);
+  const { dosya, islemler, silSayisi, yazSayisi, kitapSayisi, oyunSayisi, kurucuSayisi, donemSayisi, kurucu, calisiyor, sonuc, uygula, makbuzuYenidenYaz, makbuzDeneniyor } = useAjansKararlari(props);
 
   if (!anahtar) return null;
 
@@ -99,7 +110,18 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
             Ajans bunu sabah ya da akşam raporunda listeler.
           </p>
           {sonuc.makbuz && <a href={sonuc.makbuz} target="_blank" rel="noreferrer" className={DUGME_BOS}><ExternalLink className="w-3.5 h-3.5" /> Makbuz</a>}
-          {sonuc.makbuzHata && <p className={`text-[13px] ${YAZI}`}>Makbuz yazılamadı ({sonuc.makbuzHata}); ajansa "uyguladım" diye haber ver.</p>}
+          {sonuc.makbuzHata && (
+            <div className="space-y-1.5">
+              <p className={`text-[13px] ${YAZI}`}>
+                Kararlar işlendi, yalnız makbuz yazılamadı: {/409|422/.test(sonuc.makbuzHata)
+                  ? 'ajansın deposu tam bu sırada değişti, birkaç kez denendi.'
+                  : `GitHub yazmayı kabul etmedi (${sonuc.makbuzHata}).`} Biraz bekleyip "Makbuzu yeniden yaz"a bas; olmazsa ajansa "uyguladım" diye haber ver.
+              </p>
+              <button type="button" className={DUGME_BOS} disabled={makbuzDeneniyor} onClick={makbuzuYenidenYaz}>
+                {makbuzDeneniyor ? 'Yazılıyor…' : 'Makbuzu yeniden yaz'}
+              </button>
+            </div>
+          )}
         </div>
       ) : dosya && typeof dosya === 'object' && 'islemler' in dosya && (
         islemler.length ? (
