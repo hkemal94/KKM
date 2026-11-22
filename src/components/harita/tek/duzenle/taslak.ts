@@ -2,8 +2,8 @@
  * Tek harita 7. adım (22 Kasım, Kemal: "hepsi tek seferde"): yönetim ekranının taslağı.
  *
  * Taslak yalnız DEĞİŞİKLİKLERİ tutar (bütün harita değil): taşınan / döndürülen /
- * silinen yapılar, yeni yapılar, düzenlenen / silinen / yeni yollar, boyanan kareler ve
- * konan hazır gruplar. Kimlikler veri dosyalarındaki kimliklerdir
+ * silinen yapılar, yeni yapılar, düzenlenen / silinen / yeni yollar, boyanan kareler,
+ * konan hazır gruplar ve (8. adım) zeminin değişen hücreleri. Kimlikler veri dosyalarındaki kimliklerdir
  * (`public/harita/duzada-yapilar.geojson`, `duzada-yollar.geojson`, `duzada-kareler.json`).
  *
  * Koordinatlar [boylam, enlem] (7 basamak); yollar düz sayı dizisi
@@ -12,6 +12,8 @@
  *
  * Bu dosya saf iştir: ağ yok, kayıt yok.
  */
+
+import { zeminCoz, type ZeminTaslagi } from './zemin';
 
 export const TASLAK_SURUMU = 1;
 
@@ -94,6 +96,8 @@ export interface TekTaslak {
   yeniYollar: Record<string, YeniYol>;
   kareler: Record<string, BoyaTuru>;
   gruplar: Record<string, GrupYeri>;
+  /** Zemin aracı (8. adım): değişen hücreler, sıkıştırılmış parçalar (`zemin.ts`) */
+  zemin?: ZeminTaslagi;
 }
 
 export const bosTaslak = (): TekTaslak => ({ surum: TASLAK_SURUMU, yapilar: {}, yeniYapilar: {}, yollar: {}, yeniYollar: {}, kareler: {}, gruplar: {} });
@@ -108,7 +112,9 @@ export function taslakSayilari(t: TekTaslak) {
     yol: Object.keys(t.yollar).length,
     yeniYol: Object.values(t.yeniYollar).filter(y => !y.grup).length,
     kare: Object.keys(t.kareler).length,
-    grup: Object.keys(t.gruplar).length
+    grup: Object.keys(t.gruplar).length,
+    /** Zemin: fırça vuruşu sayısı (hücre sayısı `t.zemin.hucre`) */
+    zemin: t.zemin?.vurus ?? 0
   };
 }
 export const toplamDegisiklik = (t: TekTaslak) => Object.values(taslakSayilari(t)).reduce((a, b) => a + b, 0);
@@ -185,6 +191,8 @@ export function taslakCoz(ham: unknown): TekTaslak {
       arsalar: Array.isArray(g.arsalar) ? g.arsalar.filter((a): a is string => typeof a === 'string') : []
     };
   }
+  const zm = zeminCoz(d.zemin);
+  if (zm) t.zemin = zm;
   return t;
 }
 

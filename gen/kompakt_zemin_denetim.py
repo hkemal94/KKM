@@ -3,6 +3,10 @@
 Yalnız okur, hiçbir dosyaya yazmaz. Her madde "temiz" ya da "SORUN" yazar;
 sorun varsa çıkış kodu 1 olur.
 
+Elle zemin (tek harita 8. adım, KKM Düzenle → Zemin; gen/tek-harita-elle.json → zeminOnceki): Kemal'in
+fırçayla değiştirdiği yerde yamaç, çukur, diken, kıyı sıçraması ve kıyı yüksekliği üretecin kuralı değil, yumuşak
+kuraldır (Kemal, 22 Kasım): orada aşım SORUN değil, [bilgi] olarak yazılır. Zirve rakımları her yerde kesin.
+
   python gen/kompakt_zemin_denetim.py
 """
 import gzip, heapq, json, math, os, struct, sys
@@ -30,6 +34,19 @@ def oku(yol=IZGARA):
     veri = np.frombuffer(ham[8 + n:], dtype="<i2")
     assert veri.size == b["en"] * b["boy"], "veri boyu başlıkla uyuşmuyor"
     return b, veri.reshape(b["boy"], b["en"])
+
+
+def elle_maskesi(b):
+    """KKM Düzenle → Zemin'in dokunduğu hücreler (yoksa hepsi False)"""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import kompakt_taslak_uygula as U
+        if not os.path.exists(U.ELLE):
+            return np.zeros((b["boy"], b["en"]), bool)
+        zo = (json.load(open(U.ELLE, encoding="utf-8")).get("zeminOnceki") or {}).get("p")
+        return U.parcalari_ac(zo, b["boy"], b["en"]) != U.DEGISMEDI
+    except Exception:  # noqa: BLE001
+        return np.zeros((b["boy"], b["en"]), bool)
 
 
 def main():
@@ -84,9 +101,18 @@ def main():
     kenar = np.r_[Z[0], Z[-1], Z[:, 0], Z[:, -1]]
     yaz("Izgaranın kenarı açık deniz", bool((kenar < 0).all()), f"en yüksek kenar {kenar.max():.1f} m")
 
+    elle = elle_maskesi(b)
+    if elle.any():
+        print(f"Elle zemin (KKM Düzenle → Zemin): {int(elle.sum())} hücre; orada aşım yalnız bilgi")
+
+    def bilgi_elle(ad, deger):
+        print(f"  [bilgi] {ad} (elle zeminde): {deger}")
+
     gy_, gx_ = np.gradient(Z, h)
     egim = np.degrees(np.arctan(np.hypot(gx_, gy_)))
-    dis = kara & ~imp
+    if elle.any() and (kara & elle).any():
+        bilgi_elle("En dik yamaç", f"{egim[kara & elle].max():.1f}°")
+    dis = kara & ~imp & ~elle
     yaz("En dik yamaç (kara, Imperial dışı)", egim[dis].max() <= EGIM_SINIRI,
         f"{egim[dis].max():.1f}° (sınır {EGIM_SINIRI:.0f}°); 30°'yi geçen kara "
         f"{(egim[dis] > 30).mean() * 100:.2f} %")
@@ -118,6 +144,9 @@ def main():
                         F[a, c] = z
                     heapq.heappush(yig, (F[a, c], a, c))
     derin = F - Z
+    if elle.any() and ((derin > 0.15) & elle).any():
+        bilgi_elle("Kapalı çukur", f"en derini {derin[elle].max():.2f} m")
+        derin = np.where(ndimage.binary_dilation(elle, iterations=2), 0, derin)
     cuk, say = ndimage.label(derin > 0.15)
     yaz("Kara içinde kapalı çukur (>15 cm)", say == 0,
         f"{say} çukur, en derini {derin.max():.2f} m")
@@ -128,7 +157,7 @@ def main():
     for dj, di in ((0, 1), (1, 0)):
         a, c = kara[:B - dj, :E - di], kara[dj:, di:]
         za, zc = Z[:B - dj, :E - di], Z[dj:, di:]
-        m = a != c
+        m = (a != c) & ~(elle[:B - dj, :E - di] | elle[dj:, di:])
         fark = np.abs(za - zc)
         sn = tur_sinir[:B - dj, :E - di]
         im_ = imp[:B - dj, :E - di]
@@ -140,7 +169,7 @@ def main():
     yaz("Kıyıda ani sıçrama (kara–deniz komşu)", asan == 0,
         f"kum {enb['kum']:.1f} m (sınır {KIYI_SICRAMA['kum']:.0f}), kayalık {enb['kayalik']:.1f} m "
         f"(sınır {KIYI_SICRAMA['kayalik']:.0f}), Imperial {enb['imperial']:.1f} m (sınır {KIYI_SICRAMA['imperial']:.0f})")
-    kiyi_bant = kara & (ndimage.distance_transform_edt(kara) * h <= 30)
+    kiyi_bant = kara & (ndimage.distance_transform_edt(kara) * h <= 30) & ~elle
     yaz("Kıyının 30 m içinde en yüksek nokta", Z[kiyi_bant & ~imp].max() <= 30,
         f"{Z[kiyi_bant & ~imp].max():.1f} m (Imperial dışı)")
 
@@ -148,6 +177,7 @@ def main():
     ayak[1, 1] = False
     komsu_en_yuksek = ndimage.maximum_filter(Z, footprint=ayak, mode="nearest")
     diken = Z - komsu_en_yuksek
+    diken[elle] = 0
     yaz("Sivri diken (8 komşudan da yüksek tek hücre)", diken[kara].max() <= DIKEN,
         f"en çok {max(0.0, diken[kara].max()):.2f} m (sınır {DIKEN:.0f} m)")
 

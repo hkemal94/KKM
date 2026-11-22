@@ -9,7 +9,12 @@ Bakılanlar:
   - yalnız KKM'nin modelleri (public/modeller/ altında)
   - grupların kırpması kuralın içinde (hazir-gruplar.json → kirpma; üreteç kırpılmış hâli kurabiliyor)
   - elle öğeler çıkınca dosyalar üreteçlerin çıktısıyla aynı yapı ve yollar (elle_cikar geri döner)
-Bilgi (engellemez; Kemal, 22 Kasım "yumuşak kural"): yol eğimi, üst üste binme, yola taşma, kıyı şeridi.
+  - zemin (8. adım): taslağın her hücresi zemin dosyasında (yol yatağının yeniden açıldığı hücreler hariç, sayılır);
+    kıyı korumalı parçalarda kıyı çizgisi ve kumsal değişmedi; zemin dosyası kararlı; zemin geri alınınca ilk hâli
+    (zeminOnceki) yerinde; kıyı değiştiyse sınır dosyasındaki ada zeminle uyuşuyor
+Bilgi (engellemez; Kemal, 22 Kasım "yumuşak kural"): yol eğimi, üst üste binme, yola taşma, kıyı şeridi; zeminde
+yol eğimi aşan yollar, kıyı çizgisi değişen hücre.
+Zemin değiştiyse ayrıca: python gen/kompakt_zemin_denetim.py ve python gen/kompakt_yollar_denetim.py.
 
 Çalıştırma: python gen/kompakt_taslak_denetim.py
 """
@@ -53,10 +58,14 @@ def main():
     yaz("yol noktaları çift sayı (boylam, enlem)", not tek, tek or "hepsi")
 
     # kararlı
-    y2, l2, _, _ = U.uygula(None, yaz=False)
+    y2, l2, _, r2 = U.uygula(None, yaz=False)
     a = json.dumps(y2, ensure_ascii=False, separators=(",", ":")) == json.dumps(yapilar, ensure_ascii=False, separators=(",", ":"))
     b = json.dumps(l2, ensure_ascii=False, separators=(",", ":")) == json.dumps(yollar, ensure_ascii=False, separators=(",", ":"))
-    yaz("kararlı (yeniden uygulayınca dosyalar aynı)", a and b, "aynı" if a and b else f"yapılar {'aynı' if a else 'farklı'}, yollar {'aynı' if b else 'farklı'}")
+    import gzip
+    c = gzip.decompress(r2["zeminIcerik"]) == gzip.decompress(open(U.IZGARA, "rb").read())
+    d = json.dumps(r2["sinirlar"], ensure_ascii=False, separators=(",", ":")) == open(U.SINIRLAR, encoding="utf-8").read()
+    yaz("kararlı (yeniden uygulayınca dosyalar aynı)", a and b and c and d,
+        "aynı" if a and b and c and d else f"yapılar {'aynı' if a else 'farklı'}, yollar {'aynı' if b else 'farklı'}, zemin {'aynı' if c else 'farklı'}, sınırlar {'aynı' if d else 'farklı'}")
 
     YF = {f["properties"].get("id"): f for f in yapilar["features"]}
     LF = {f["properties"].get("id"): f for f in yollar["features"]}
@@ -135,6 +144,9 @@ def main():
     kalan = sum(1 for f in c1["features"] + c2["features"] if f["properties"].get("elle"))
     yaz("elle öğeler çıkınca üreteçlerin çıktısı kalır", kalan == 0, f"{len(c1['features'])} yapı / öğe, {len(c2['features'])} yol / alan")
 
+    # ------------------------------------------------------------ zemin (8. adım)
+    zemin_bilgi = zemin_denetimi(t, bir, yaz, bilgi)
+
     # ------------------------------------------------------------ bilgi: yumuşak kurallar
     from shapely.geometry import LineString, Point, Polygon
     from shapely.strtree import STRtree
@@ -184,9 +196,105 @@ def main():
     bilgi("yola taşan elle yapı", yolda or "yok")
     bilgi(f"kıyı şeridinde ({KIYI_SERIDI_M:.0f} m) elle yapı", kiyi or "yok")
     bilgi("eğim sınırını aşan elle yol", egim or "yok")
+    if zemin_bilgi is not None:
+        egim_z = []
+        for p, g in yol_g:
+            if p.get("elle"):
+                continue
+            sinir = U.KADEME.get(p.get("kademe"), {}).get("egim")
+            if sinir is None or not any(zemin_bilgi(*q) for q in g.coords):
+                continue
+            L = g.length
+            ornek = [(s_, max(0.0, Z.rakim(*g.interpolate(s_).coords[0]))) for s_ in [i * 5.0 for i in range(int(L // 5) + 1)] + [L]]
+            en = 0.0
+            for i in range(len(ornek)):
+                for j in range(i + 1, len(ornek)):
+                    if ornek[j][0] - ornek[i][0] >= 20:
+                        en = max(en, abs(ornek[j][1] - ornek[i][1]) / (ornek[j][0] - ornek[i][0]))
+                        break
+            if en > sinir + 0.005:
+                egim_z.append(f"{p.get('ad') or p['id']} %{en * 100:.0f} (sınır %{sinir * 100:.0f})")
+        bilgi("zemini değişen yerde eğim sınırını aşan yol", egim_z or "yok")
 
     print("Sonuç:", "hepsi temiz" if sorun == 0 else f"{sorun} sorun")
     return sorun
+
+
+def zemin_denetimi(t, bir, yaz, bilgi):
+    """Zemin taslağının denetimi. Zemin yoksa None; varsa sahne noktasının değişen bölgede olup olmadığını söyleyen işlev"""
+    import numpy as np
+    from scipy import ndimage
+    from shapely.geometry import shape
+    from shapely.strtree import STRtree
+    from shapely.geometry import Point
+    zt = t.get("zemin")
+    if not zt:
+        yaz("zemin taslağı yok, zemin dosyasında elle zemin yok", "zeminOnceki" not in bir, "yok" if "zeminOnceki" not in bir else "zeminOnceki kalmış")
+        return None
+    bas, h = U.zemin_oku()
+    boy, en = bas["boy"], bas["en"]
+    H = np.array(h, dtype=np.int16).reshape(boy, en)
+    D = U.parcalari_ac(zt["p"], boy, en)
+    Dm = D != U.DEGISMEDI
+    O = U.parcalari_ac(bir.get("zeminOnceki", {}).get("p"), boy, en)
+    Om = O != U.DEGISMEDI
+    yaz("zemin: başlıkta elle zemin işareti", bool(bas.get("elleZemin")), bas.get("elleZemin", "yok"))
+    yaz("zemin: taslağın her hücresinin ilk hâli saklı (geri alınabilir)", bool((Om | ~Dm).all()), f"{int(Dm.sum())} hücre, {int(Om.sum())} saklı")
+    farkli = Dm & (H != D)
+    # taslaktan ayrılan hücre yalnız yol yatağında (yolun şeridi, 7,5 m ve 6 m omzu) olabilir
+    from shapely.geometry import LineString as _L
+    m_ = lambda q: ((q[0] - bas["lng0"]) * bas["mPerLng"], (q[1] - bas["lat0"]) * bas["mPerLat"])
+    seritler = [_L([m_(q) for q in f["geometry"]["coordinates"]]).buffer(float(f["properties"].get("genislik", 4)) / 2 + 13.5 + 1)
+                for f in json.load(open(U.YOLLAR, encoding="utf-8"))["features"]
+                if f["properties"].get("katman") == "yol" and f["geometry"]["type"] == "LineString"]
+    st = STRtree(seritler)
+    fj, fi = np.nonzero(farkli)
+    disarida = 0
+    for j, i in zip(fj, fi):
+        pt = Point(bas["x0"] + i * bas["hucre"], bas["y0"] + j * bas["hucre"])
+        if not any(seritler[k].contains(pt) for k in st.query(pt)):
+            disarida += 1
+    yaz("zemin: taslağın hücreleri dosyada (yalnız yol yatağında ayrılır)", disarida == 0,
+        f"{int(Dm.sum()) - int(farkli.sum())} / {int(Dm.sum())} aynı; {int(farkli.sum())} hücrede yol yatağı yeniden açıldı; yatak dışında farklı {disarida}")
+    ilk = H.copy()
+    ilk[Om] = O[Om]
+    korumali = ~U.kiyi_parca_maskesi(zt, boy, en)
+    kiyi = ((H > 0) != (ilk > 0))
+    yaz("zemin: kıyı korumalı parçalarda kıyı çizgisi değişmedi", not (kiyi & korumali).any(), f"{int((kiyi & korumali).sum())} hücre")
+    # kumsal: ilk sınır dosyasındaki kum kıyılarının 40 m içi, alçak hücreler
+    geo = json.load(open(U.SINIRLAR, encoding="utf-8"))
+    kum_cizgi = bir.get("sinirOnceki", {}).get("ogeler") or geo["features"]
+    m = lambda q: ((q[0] - bas["lng0"]) * bas["mPerLng"], (q[1] - bas["lat0"]) * bas["mPerLat"])
+    from shapely.geometry import LineString
+    cizgiler = [LineString([m(q) for q in f["geometry"]["coordinates"]]) for f in kum_cizgi
+                if f["properties"].get("katman") == "kiyi" and f["properties"].get("tur") == "kum"]
+    agac = STRtree(cizgiler)
+    degisen = (H != ilk) & korumali
+    jj, ii = np.nonzero(degisen)
+    kumda = 0
+    for j, i in zip(jj, ii):
+        x, y = bas["x0"] + i * bas["hucre"], bas["y0"] + j * bas["hucre"]
+        if -1.5 < ilk[j, i] * bas["birim"] < 7.5 and agac.query(Point(x, y).buffer(40)).size:
+            if any(cizgiler[k].distance(Point(x, y)) < 40 for k in agac.query(Point(x, y).buffer(40))):
+                kumda += 1
+    yaz("zemin: kıyı korumalı parçalarda kumsal değişmedi", kumda == 0, f"{kumda} hücre")
+    # ada çokgeni zeminle uyuşuyor (kıyı değiştiyse)
+    from matplotlib.path import Path
+    ada = next(f for f in geo["features"] if f["properties"]["katman"] == "ada")
+    halka = np.array([m(q) for q in ada["geometry"]["coordinates"][0]])
+    bj, bi = np.nonzero(ndimage.binary_dilation(kiyi | Dm, iterations=10))
+    xy = np.column_stack([bas["x0"] + bi * bas["hucre"], bas["y0"] + bj * bas["hucre"]])
+    icerde = Path(halka).contains_points(xy)
+    uymaz = int((icerde != (H[bj, bi] > 0)).sum())
+    yaz("zemin: sınır dosyasındaki ada zeminle uyuşuyor (değişen bölgede)", uymaz == 0, f"{uymaz} hücre")
+    bilgi("zemin", f"{int(Dm.sum())} hücre, {zt.get('vurus', 0)} vuruş; kıyı çizgisi {int(kiyi.sum())} hücrede değişti")
+    bolge = ndimage.binary_dilation(Dm, iterations=2)
+
+    def icinde(x, y):
+        # x doğu, y güney (sahne z): U.Zemin.sahne ile aynı
+        i, j = round((x - bas["x0"]) / bas["hucre"]), round((-y - bas["y0"]) / bas["hucre"])
+        return 0 <= i < en and 0 <= j < boy and bool(bolge[j, i])
+    return icinde
 
 
 if __name__ == "__main__":

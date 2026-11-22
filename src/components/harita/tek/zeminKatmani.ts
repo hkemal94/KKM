@@ -49,11 +49,19 @@ function duraktan(duraklar: Array<[number, THREE.Color]>, v: number, c: THREE.Co
  * Veri değişmez; yapı ve yol yerleşimi asıl rakımı kullanır.
  */
 function kiyiYumusat(z: Zemin): Float32Array {
+  const cikti = new Float32Array(z.h);
+  kiyiBolgesi(z, cikti, 0, 0, z.b.en - 1, z.b.boy - 1);
+  return cikti;
+}
+
+/** Kutudaki hücrelerin çizim rakımı (`kiyiYumusat`'ın bir bölgesi; 8. adım: zemin aracı) */
+function kiyiBolgesi(z: Zemin, cikti: Float32Array, i0: number, j0: number, i1: number, j1: number) {
   const { b, h } = z;
-  const cikti = new Float32Array(h);
   const R = 2;
-  for (let j = R; j < b.boy - R; j++) for (let i = R; i < b.en - R; i++) {
+  for (let j = Math.max(0, j0); j <= Math.min(b.boy - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(b.en - 1, i1); i++) {
     const k = j * b.en + i;
+    cikti[k] = h[k];
+    if (j < R || i < R || j >= b.boy - R || i >= b.en - R) continue;
     if (h[k] >= 4 || h[k] < -6) continue;
     let deniz = false, kara = false, top = 0, agirlik = 0;
     for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++) {
@@ -64,7 +72,6 @@ function kiyiYumusat(z: Zemin): Float32Array {
     }
     if (deniz && kara) cikti[k] = top / agirlik;
   }
-  return cikti;
 }
 
 type KareKaydi = { ci: number; cj: number; cx: number; cz: number; cy: number; derin: boolean; adim: number; mesh?: THREE.Mesh };
@@ -78,16 +85,43 @@ export class ZeminKatmani {
   /** Çizimde kullanılan rakım: kıyı çizgisi yumuşatılmış (`kiyiYumusat`) */
   private h: Float32Array;
   ucgen = 0;
+  /** Dışarıdan renk karışımı (bölge yeniden boyanınca da uygulanır) */
+  private karistir: ((k: number, renk: Uint8Array) => void) | null = null;
 
   constructor(private z: Zemin) {
-    const { b, kum } = z;
+    const { b } = z;
     const h = kiyiYumusat(z);
     this.h = h;
     this.malzeme = new THREE.MeshLambertMaterial({ vertexColors: true });
     // Hücre renkleri bir kez (bayt olarak; 1,5 milyon hücre)
     this.renk = new Uint8Array(b.en * b.boy * 3);
+    this.renkleriKur(0, 0, b.en - 1, b.boy - 1);
+    for (let cj = 0; cj * KARE < b.boy - 1; cj++) for (let ci = 0; ci * KARE < b.en - 1; ci++) {
+      const k: KareKaydi = { ci, cj, cx: 0, cz: 0, cy: 0, derin: false, adim: 0 };
+      this.kareOlc(k);
+      this.kareler.push(k);
+    }
+  }
+
+  /** Karenin ortası, ortalama yüksekliği ve derin denizde mi */
+  private kareOlc(k: KareKaydi) {
+    const { b } = this.z;
+    const h = this.h;
+    const { ci, cj } = k;
+    let enYuksek = -Infinity, top = 0, say = 0;
+    for (let j = cj * KARE; j <= Math.min(b.boy - 1, (cj + 1) * KARE); j += 4) for (let i = ci * KARE; i <= Math.min(b.en - 1, (ci + 1) * KARE); i += 4) {
+      const v = h[j * b.en + i]; enYuksek = Math.max(enYuksek, v); top += Math.max(0, v); say++;
+    }
+    k.cx = b.x0 + (ci + 0.5) * KARE * b.hucre; k.cz = -(b.y0 + (cj + 0.5) * KARE * b.hucre);
+    k.cy = top / Math.max(1, say); k.derin = enYuksek < DERIN;
+  }
+
+  /** Kutudaki hücrelerin rengi (rakım, eğim, kıyı, kumsal; sonra dışarıdan karışım) */
+  private renkleriKur(i0: number, j0: number, i1: number, j1: number) {
+    const { b, kum } = this.z;
+    const h = this.h;
     const c = new THREE.Color();
-    for (let j = 0; j < b.boy; j++) for (let i = 0; i < b.en; i++) {
+    for (let j = Math.max(0, j0); j <= Math.min(b.boy - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(b.en - 1, i1); i++) {
       const k = j * b.en + i;
       const v = h[k];
       if (v <= 0) {
@@ -95,9 +129,9 @@ export class ZeminKatmani {
       } else {
         duraktan(KARA_RENK, v, c);
         // Eğim: dik yamaç taşlığa döner
-        const i0 = Math.max(0, i - 1), i1 = Math.min(b.en - 1, i + 1), j0 = Math.max(0, j - 1), j1 = Math.min(b.boy - 1, j + 1);
-        const gx = (h[j * b.en + i1] - h[j * b.en + i0]) / ((i1 - i0) * b.hucre);
-        const gy = (h[j1 * b.en + i] - h[j0 * b.en + i]) / ((j1 - j0) * b.hucre);
+        const a0 = Math.max(0, i - 1), a1 = Math.min(b.en - 1, i + 1), c0 = Math.max(0, j - 1), c1 = Math.min(b.boy - 1, j + 1);
+        const gx = (h[j * b.en + a1] - h[j * b.en + a0]) / ((a1 - a0) * b.hucre);
+        const gy = (h[c1 * b.en + i] - h[c0 * b.en + i]) / ((c1 - c0) * b.hucre);
         const egim = Math.hypot(gx, gy);
         c.lerp(TAS, THREE.MathUtils.smoothstep(egim, 0.35, 0.8) * 0.75);
         // Kıyıda ince geçiş
@@ -106,14 +140,30 @@ export class ZeminKatmani {
         if (kum[k]) c.lerp(KUM, kum[k] / 255);
       }
       this.renk[k * 3] = c.r * 255; this.renk[k * 3 + 1] = c.g * 255; this.renk[k * 3 + 2] = c.b * 255;
+      if (this.karistir) this.karistir(k, this.renk);
     }
-    for (let cj = 0; cj * KARE < b.boy - 1; cj++) for (let ci = 0; ci * KARE < b.en - 1; ci++) {
-      let enYuksek = -Infinity, top = 0, say = 0;
-      for (let j = cj * KARE; j <= Math.min(b.boy - 1, (cj + 1) * KARE); j += 4) for (let i = ci * KARE; i <= Math.min(b.en - 1, (ci + 1) * KARE); i += 4) {
-        const v = h[j * b.en + i]; enYuksek = Math.max(enYuksek, v); top += Math.max(0, v); say++;
+  }
+
+  /**
+   * Zemin aracı (8. adım): `z.h` kutuda değişti. Çizim rakımı, renk ve o bölgenin kareleri
+   * yeniden kurulur (bir sonraki `guncelle`de).
+   */
+  bolgeYenile(i0: number, j0: number, i1: number, j1: number) {
+    kiyiBolgesi(this.z, this.h, i0 - 2, j0 - 2, i1 + 2, j1 + 2);
+    this.renkleriKur(i0 - 3, j0 - 3, i1 + 3, j1 + 3);
+    // Kenar normalleri ve kaba karelerin ortalaması 8 hücreye kadar komşuya bakar
+    const P = 11;
+    const ci0 = Math.floor((i0 - P) / KARE), ci1 = Math.floor((i1 + P) / KARE), cj0 = Math.floor((j0 - P) / KARE), cj1 = Math.floor((j1 + P) / KARE);
+    for (const k of this.kareler) {
+      if (k.ci < ci0 || k.ci > ci1 || k.cj < cj0 || k.cj > cj1) continue;
+      for (const adim of [1, 2, 4, 8]) {
+        const a = `${k.ci},${k.cj},${adim}`;
+        const g = this.onbellek.get(a);
+        if (g) { g.dispose(); this.onbellek.delete(a); }
       }
-      const cx = b.x0 + (ci + 0.5) * KARE * b.hucre, cz = -(b.y0 + (cj + 0.5) * KARE * b.hucre);
-      this.kareler.push({ ci, cj, cx, cz, cy: top / Math.max(1, say), derin: enYuksek < DERIN, adim: 0 });
+      k.adim = 0;
+      this.kareOlc(k);
+      if (k.derin && k.mesh) { this.grup.remove(k.mesh); k.mesh = undefined; }
     }
   }
 
@@ -222,6 +272,7 @@ export class ZeminKatmani {
 
   /** Hücre renklerine dışarıdan karışım (ağaç katı: arazi türü, 22 Kasım); kurulmuş kareler yeniden kurulur */
   renkKaristir(karistir: (k: number, renk: Uint8Array) => void) {
+    this.karistir = karistir;
     const adet = this.renk.length / 3;
     for (let k = 0; k < adet; k++) karistir(k, this.renk);
     for (const g of this.onbellek.values()) g.dispose();

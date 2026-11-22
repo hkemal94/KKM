@@ -30,6 +30,11 @@ export interface SahneApi {
   kameraUzakligi(): number;
   /** Katmanları birleşik veriyle yeniden kurar; null: yalnız veri dosyaları */
   goster(b: Birlesik | null): void;
+  /**
+   * Zemin aracı (8. adım): `z.h` bu hücre kutusunda değişti; zeminin çizimi yenilenir, ağaçlar
+   * yeniden oturur. Yol ve yapılar `goster` ile.
+   */
+  zeminYenile(i0: number, j0: number, i1: number, j1: number): void;
   /** Kamerayı bu noktaya yumuşakça götürür */
   uc(x: number, z: number): void;
   isaretci: Isaretci | null;

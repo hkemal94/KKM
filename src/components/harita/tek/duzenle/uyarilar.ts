@@ -9,7 +9,7 @@ import { KADEME, type Kademe, type TekTaslak } from './taslak';
  * duzada-kareler.json → kiyiSeridiM ile aynı).
  */
 
-export interface Uyari { id: string; ogeAdi: string; metin: string; x: number; z: number; tur: 'egim' | 'binme' | 'yol' | 'kiyi' | 'deniz' | 'grup' }
+export interface Uyari { id: string; ogeAdi: string; metin: string; x: number; z: number; tur: 'egim' | 'binme' | 'yol' | 'kiyi' | 'deniz' | 'grup' | 'yamac' }
 
 export const KIYI_SERIDI_M = 25;
 const LIMAN = new Set(['iskele', 'mendirek']);
@@ -100,6 +100,48 @@ export function uyarilariBul(z: Zemin, t: TekTaslak, g: Birlesik, grupSigmadi: R
     if (!gy || n <= 0) continue;
     const [x, sz] = sahneye(z.b, gy.o);
     out.push({ id, ogeAdi: 'Hazır grup', metin: `${n} karesi dolu yere ya da denize düşüyor (en çok kırpmadan sonra)`, x, z: sz, tur: 'grup' });
+  }
+  return out;
+}
+
+/**
+ * Zemin aracı (8. adım): zemini değişen yerdeki yollar ve yapılar. Yumuşak kural: engellemez.
+ * `z0`: dosyanın zemini (karşılaştırma için); yalnız zemin yüzünden kötüleşen yazılır.
+ */
+export function zeminUyarilari(z: Zemin, z0: Zemin, degisen: Uint8Array, g: Birlesik, t: TekTaslak, adi?: (y: Yapi) => string): Uyari[] {
+  const out: Uyari[] = [];
+  const yakin = (x: number, sz: number, r = 1) => {
+    const ci = Math.round((x - z.b.x0) / z.b.hucre), cj = Math.round((-sz - z.b.y0) / z.b.hucre);
+    for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) {
+      const i = ci + di, j = cj + dj;
+      if (i >= 0 && j >= 0 && i < z.b.en && j < z.b.boy && degisen[j * z.b.en + i]) return true;
+    }
+    return false;
+  };
+  for (const f of g.yollar.features) {
+    const p = f.properties;
+    if (f.geometry.type !== 'LineString' || p.katman !== 'yol') continue;
+    const id = String(p.id ?? '');
+    if (t.yeniYollar[id] || t.yollar[id]?.n) continue;
+    const sinir = KADEME[(p.kademe as Kademe) ?? 'sokak']?.egim;
+    if (sinir === null || sinir === undefined) continue;
+    const c = (f.geometry.coordinates as number[][]).map(q => sahneye(z.b, q));
+    if (!c.some(([x, sz]) => yakin(x, sz))) continue;
+    const e = enBuyukEgim(z, c), e0 = enBuyukEgim(z0, c);
+    if (e > sinir + 0.005 && e > e0 + 0.005) {
+      const o = c.find(([x, sz]) => yakin(x, sz)) ?? c[0];
+      out.push({ id, ogeAdi: String(p.ad || '') || KADEME[(p.kademe as Kademe) ?? 'sokak'].ad, metin: `zemin değişti: eğimi %${Math.round(e * 100)} (sınır %${Math.round(sinir * 100)})`, x: o[0], z: o[1], tur: 'egim' });
+    }
+  }
+  const ad = (y: Yapi) => adi?.(y) || y.ad || (y.tur === 'ozel' ? 'Özel yapı' : 'Yapı');
+  for (const y of g.yapilar) {
+    if (LIMAN.has(y.tur) || t.yapilar[y.id] || t.yeniYapilar[y.id]) continue;
+    if (!yakin(y.merkez[0], y.merkez[1], Math.ceil(Math.max(y.en, y.boy) / 2 / z.b.hucre) + 1)) continue;
+    const kotlar = (zz: Zemin) => [y.merkez, ...y.taban].map(([x, sz]) => rakim(zz, x, sz));
+    const k1 = kotlar(z), k0 = kotlar(z0);
+    if (k1[0] <= 0.5 && k0[0] > 0.5) { out.push({ id: y.id, ogeAdi: ad(y), metin: 'zemin değişti: denizde kaldı', x: y.merkez[0], z: y.merkez[1], tur: 'deniz' }); continue; }
+    const f1 = Math.max(...k1) - Math.min(...k1), f0 = Math.max(...k0) - Math.min(...k0);
+    if (f1 > Math.max(4, f0 + 2)) out.push({ id: y.id, ogeAdi: ad(y), metin: `zemin değişti: tabanı yamaçta (${Math.round(f1)} m kot farkı)`, x: y.merkez[0], z: y.merkez[1], tur: 'yamac' });
   }
   return out;
 }

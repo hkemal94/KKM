@@ -223,6 +223,8 @@ export class AgacKatmani {
     for (const s of sira) {
       const i = this.aday[s];
       const t = tur[i];
+      // Zemin aracıyla denize kalan ağaç çizilmez (8. adım; kalıcısı ajansın ağaç üretecinde)
+      if (rakim(this.z, b.x0 + x[i] * b.birim, -(b.y0 + y[i] * b.birim)) <= 0.2) continue;
       if (modelAcik && uz[s] < M2 && this.modelli < a.modelEnCok) {
         const m = this.modeller.get(t);
         if (!m) this.modelIndir(t);

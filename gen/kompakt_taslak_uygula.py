@@ -4,10 +4,11 @@ Kemal KKM → Harita → Düzenle'de değişiklik yapar, "Haritaya işle"ye basa
 `kkm/tek-harita-taslak.json` olarak gider. Kems bu betikle haritaya işler ve KKM'ye öneri PR'ı açar:
 
     python gen/kompakt_taslak_uygula.py <ajans>/kkm/tek-harita-taslak.json
-    python gen/kompakt_agaclar.py              # ağaçlar yeni yapı ve yollara göre
-    python gen/kompakt_taslak_denetim.py       # denetim
+    python gen/kompakt_agaclar.py              # ağaçlar yeni yapı, yol ve zemine göre
+    python gen/kompakt_taslak_denetim.py       # denetim (zemin değiştiyse kompakt_zemin_denetim ve
+                                               # kompakt_yollar_denetim de çalıştırılır)
 
-Taslak yalnız değişiklikleri taşır (taşınan / silinen / yeni yapı, yol, boyalı kare, hazır grup).
+Taslak yalnız değişiklikleri taşır (taşınan / silinen / yeni yapı, yol, boyalı kare, hazır grup, zemin).
 Değişiklikler birikir: `gen/tek-harita-elle.json` (elle düzen). Betik her çalışmada önceki elle
 öğeleri dosyalardan çıkarıp (eski hâllerini geri koyup) birikmiş düzeni baştan uygular: iki kez
 çalışınca aynı sonuç. Taslak dosyası verilmezse yalnız birikmiş düzen yeniden uygulanır (bir üreteç
@@ -23,11 +24,22 @@ ve duvarlar buradan, bina, yol, ağaç, donatı taslaktaki hâliyle (Kemal tek t
 kurala uyduğunu üretecin kendisi denetler (gen/hazir_gruplar.py → kirpilmis kuramıyorsa grup atlanır). Grubun kapladığı yer "grupAlani", altında kalan arsalar "avluKalkan" alanı olur:
 tek harita oradaki kendiliğinden ağaçları (arsada yalnız avlu ağaçlarını) çizmez.
 
+Zemin (8. adım, Kemal 20 ve 22 Kasım): taslağın `zemin`i değişen hücrelerin mutlak rakımıdır (64 × 64 hücrelik
+parçalar, deflate-raw + base64; KKM duzenle/zemin.ts). Betik önce dosyadaki eski elle zemini geri alır
+(`zeminOnceki`: dokunulan hücrelerin ilk değerleri, birikmiş dosyada), sonra birikmiş zemini koyar ve o bölgedeki
+yolların yatağını yeniden açar (`yatak_ac`: yolun o kesimi 10 m'de bir noktaya bölünür, şekli aynı; noktalar yol
+boyunca yumuşatılmış yeni zemine, şerit ve omzu bu profile; yolların ilk hâli `yolOnceki`). Kıyı çizgisi değiştiyse sınır dosyasında ada, kıyı çizgileri ve mahalleler de güncellenir (eski
+hâlleri `sinirOnceki`). Zemin değişince arsalar ve kareler (kompakt_parseller.py), yapılar (kompakt_yapilar.py) yeni
+zeminle yeniden üretilir, sonra elle düzen yeniden uygulanır (ZINCIR_YOK=1 ile atlanır); ağaçlar ardından
+kompakt_agaclar.py ile. Elle zeminde yamaç, çukur ve yol eğimi aşımı denetimlerde yalnız bilgidir (yumuşak kural).
+
 Yumuşak kurallar (yol eğimi, üst üste binme, kıyı şeridi) engellemez; denetim bilgi olarak yazar.
 Kurallar: viki bağlı ya da evinde oturan olan yapı silinmez (atlanır, denetim yazar); ad Kemal'in
 (taslaktaki ad olduğu gibi, boşsa boş); yalnız KKM'nin modelleri. Ölçüler DENEME.
 """
-import copy, gzip, json, math, os, struct, sys
+import base64, copy, gzip, json, math, os, struct, subprocess, sys, zlib
+
+import numpy as np
 
 BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
@@ -35,6 +47,8 @@ HARITA = os.path.join(KOK, "public", "harita")
 ELLE = os.environ.get("ELLE_DOSYASI") or os.path.join(BURASI, "tek-harita-elle.json")
 YAPILAR = os.path.join(HARITA, "duzada-yapilar.geojson")
 YOLLAR = os.path.join(HARITA, "duzada-yollar.geojson")
+IZGARA = os.path.join(HARITA, "duzada-zemin.bin")
+SINIRLAR = os.path.join(HARITA, "duzada-sinirlar.geojson")
 
 KADEME = {   # gen/kompakt_yollar.py ile aynı (KKM: tek/duzenle/taslak.ts → KADEMELER)
     "ana": {"genislik": 8.0, "egim": 0.10, "yuzey": "asfalt", "kurucu": "ana"},
@@ -52,7 +66,7 @@ KARE = 8.0
 
 # ------------------------------------------------------------------ zemin
 def zemin_oku():
-    b = gzip.decompress(open(os.path.join(HARITA, "duzada-zemin.bin"), "rb").read())
+    b = gzip.decompress(open(IZGARA, "rb").read())
     assert b[:4] == b"DZZ1"
     n = struct.unpack("<I", b[4:8])[0]
     bas = json.loads(b[8:8 + n])
@@ -60,9 +74,22 @@ def zemin_oku():
     return bas, h
 
 
+def zemin_baytlari(bas, H):
+    """Zemin dosyasının içeriği (gzip; kompakt_yollar.py ile aynı biçim)"""
+    import io
+    _b = json.dumps(bas, ensure_ascii=False).encode("utf-8")
+    t = io.BytesIO()
+    with gzip.GzipFile(filename=os.path.basename(IZGARA), fileobj=t, mode="wb", compresslevel=9, mtime=0) as f:
+        f.write(b"DZZ1" + struct.pack("<I", len(_b)) + _b + H.astype("<i2").tobytes())
+    return t.getvalue()
+
+
 class Zemin:
-    def __init__(self):
-        self.b, self.h = zemin_oku()
+    def __init__(self, bas=None, H=None):
+        if bas is None:
+            self.b, self.h = zemin_oku()
+        else:
+            self.b, self.h = bas, H.ravel().tolist()
 
     def sahne(self, p):
         """[boylam, enlem] → sahne x (doğu), z (güney), metre (KKM tekVeri.sahneye)"""
@@ -106,6 +133,276 @@ def bos_taslak():
     return {"surum": 1, "yapilar": {}, "yeniYapilar": {}, "yollar": {}, "yeniYollar": {}, "kareler": {}, "gruplar": {}}
 
 
+# ------------------------------------------------------------------ zemin taslağı (8. adım)
+PARCA = 64           # KKM duzenle/zemin.ts → PARCA
+DEGISMEDI = -32768   # değişmeyen hücre
+YATAK_BOLGE = 6      # hücre; değişen hücrelerin çevresinde yol yatağının yeniden açıldığı pay
+
+
+def parca_coz(s):
+    return np.frombuffer(zlib.decompress(base64.b64decode(s), -15), dtype="<i2").reshape(PARCA, PARCA).copy()
+
+
+def parca_kodla(a):
+    c = zlib.compressobj(9, zlib.DEFLATED, -15)
+    return base64.b64encode(c.compress(a.astype("<i2").tobytes()) + c.flush()).decode("ascii")
+
+
+def parcalari_ac(p, boy, en):
+    """{"i_j": base64} → bütün ızgara (değişmeyen DEGISMEDI)"""
+    A = np.full((boy, en), DEGISMEDI, dtype=np.int16)
+    for a, s in (p or {}).items():
+        ti, tj = map(int, a.split("_"))
+        d = parca_coz(s)
+        j1, i1 = min(boy, (tj + 1) * PARCA), min(en, (ti + 1) * PARCA)
+        blok = d[:j1 - tj * PARCA, :i1 - ti * PARCA]
+        hedef = A[tj * PARCA:j1, ti * PARCA:i1]
+        hedef[blok != DEGISMEDI] = blok[blok != DEGISMEDI]
+    return A
+
+
+def parcalara_bol(A):
+    """bütün ızgara → {"i_j": base64}, yalnız dolu parçalar"""
+    boy, en = A.shape
+    out = {}
+    for tj in range(math.ceil(boy / PARCA)):
+        for ti in range(math.ceil(en / PARCA)):
+            blok = A[tj * PARCA:(tj + 1) * PARCA, ti * PARCA:(ti + 1) * PARCA]
+            if not (blok != DEGISMEDI).any():
+                continue
+            d = np.full((PARCA, PARCA), DEGISMEDI, dtype=np.int16)
+            d[:blok.shape[0], :blok.shape[1]] = blok
+            out[f"{ti}_{tj}"] = parca_kodla(d)
+    return out
+
+
+def zemin_birlestir(eski, yeni, boy, en):
+    """Birikmiş zemin taslağının üstüne yenisi: hücre hücre yenisi geçerli; kıyı parçaları birleşir"""
+    if not yeni:
+        return eski
+    if not eski:
+        return copy.deepcopy(yeni)
+    A = parcalari_ac(eski.get("p"), boy, en)
+    Y = parcalari_ac(yeni.get("p"), boy, en)
+    A[Y != DEGISMEDI] = Y[Y != DEGISMEDI]
+    p = parcalara_bol(A)
+    return {"parca": PARCA, "p": p, "kiyi": sorted(set(eski.get("kiyi", [])) | set(yeni.get("kiyi", [])) & set(p)),
+            "hucre": int((A != DEGISMEDI).sum()), "vurus": int(eski.get("vurus", 0)) + int(yeni.get("vurus", 0))}
+
+
+def kiyi_parca_maskesi(zt, boy, en):
+    """Kıyının değişebildiği parçaların hücreleri"""
+    M = np.zeros((boy, en), bool)
+    for a in (zt or {}).get("kiyi", []):
+        ti, tj = map(int, a.split("_"))
+        M[tj * PARCA:(tj + 1) * PARCA, ti * PARCA:(ti + 1) * PARCA] = True
+    return M
+
+
+def zemin_uygula(t, bir, yollar_temel, rapor):
+    """Birikmiş zemini dosyanın (geri alınmış) ilk hâline koyar, yol yatağını açar.
+    Döner: (başlık, yeni ızgara int16, ilk ızgara int16, değişen maske); yolların köşeleri yerinde değişir"""
+    from scipy import ndimage
+    bas, h = zemin_oku()
+    boy, en = bas["boy"], bas["en"]
+    H = np.array(h, dtype=np.int16).reshape(boy, en)
+    zo = bir.get("zeminOnceki") or {}
+    O = parcalari_ac(zo.get("p"), boy, en)
+    Om = O != DEGISMEDI
+    H[Om] = O[Om]                                   # eski elle zemin geri alınır
+    zt = t.get("zemin")
+    D = parcalari_ac((zt or {}).get("p"), boy, en)
+    Dm = D != DEGISMEDI
+    bas = {k: v for k, v in bas.items() if k != "elleZemin"}
+    if not Dm.any():
+        if Om.any():
+            bir.pop("zeminOnceki", None)
+        yatak_ac(bas, H, H.copy(), Dm, yollar_temel, bir, rapor)
+        return bas, H, H.copy(), Dm
+    bolge = ndimage.binary_dilation(Dm, structure=np.ones((3, 3), bool), iterations=YATAK_BOLGE)
+    yeni = bolge & ~Om
+    O[yeni] = H[yeni]
+    Om |= yeni
+    bir["zeminOnceki"] = {"parca": PARCA, "not": "Zemin aracının dokunduğu hücrelerin ilk rakımı (×10); geri almak için", "p": parcalara_bol(O)}
+    H_ilk = H.copy()
+    H[Dm] = D[Dm]
+    yatak_ac(bas, H, H_ilk, Dm, yollar_temel, bir, rapor)
+    bas["elleZemin"] = "gen/kompakt_taslak_uygula.py (KKM Düzenle → Zemin)"
+    return bas, H, H_ilk, Dm
+
+
+def yatak_ac(bas, H, H_ilk, Dm, yollar, bir, rapor):
+    """Zemini değişen yerden geçen yolların yatağı. Yolun o kesimi 10 m'de bir noktaya bölünür (şekli aynı),
+    noktaların kotu yol boyunca yumuşatılmış yeni zemin; değişmeyen yerde yol eski kotunda kalır (ağırlık yol
+    boyunca yumuşakça geçer). Şerit ve 7,5 m'si bu profile, sonraki 6 m omuz yumuşakça zemine bağlanır.
+    H yerinde değişir (int16); yolların köşeleri yerinde değişir. Dokunulan yolların ilk köşeleri `yolOnceki`."""
+    from scipy import ndimage
+    from scipy.spatial import cKDTree
+    hc, birim = bas["hucre"], bas["birim"]
+    boy, en = H.shape
+    Zf = H.astype(float) * birim
+    yakin = ndimage.binary_dilation(Dm, structure=np.ones((3, 3), bool), iterations=2) if Dm.any() else Dm
+    bolge = ndimage.binary_dilation(Dm, structure=np.ones((3, 3), bool), iterations=YATAK_BOLGE) if Dm.any() else Dm
+    once = bir.get("yolOnceki") or {}
+    for f in yollar["features"]:
+        p = f["properties"]
+        if p.get("katman") == "yol" and p.get("id") in once and not p.get("elle"):
+            f["geometry"]["coordinates"] = copy.deepcopy(once[p["id"]])
+    if not Dm.any():
+        bir.pop("yolOnceki", None)
+        rapor["yatak"] = 0
+        return
+
+    def metre(q):
+        return ((q[0] - bas["lng0"]) * bas["mPerLng"], (q[1] - bas["lat0"]) * bas["mPerLat"])
+
+    def ll(x, y):
+        return [round(bas["lng0"] + x / bas["mPerLng"], 6), round(bas["lat0"] + y / bas["mPerLat"], 6)]
+
+    def ornek(A, x, y):
+        fi, fj = (x - bas["x0"]) / hc, (y - bas["y0"]) / hc
+        i = np.clip(np.floor(fi).astype(int), 0, en - 2)
+        j = np.clip(np.floor(fj).astype(int), 0, boy - 2)
+        u, w = np.clip(fi - i, 0, 1), np.clip(fj - j, 0, 1)
+        return (A[j, i] * (1 - u) + A[j, i + 1] * u) * (1 - w) + (A[j + 1, i] * (1 - u) + A[j + 1, i + 1] * u) * w
+
+    def hucrede(M, x, y):
+        i = np.clip(np.round((x - bas["x0"]) / hc).astype(int), 0, en - 1)
+        j = np.clip(np.round((y - bas["y0"]) / hc).astype(int), 0, boy - 1)
+        return M[j, i]
+
+    bj, bi = np.nonzero(bolge)
+    bx, by = bas["x0"] + bi * hc, bas["y0"] + bj * hc
+    yeni_once = {}
+    for f in yollar["features"]:
+        p = f["properties"]
+        if p.get("katman") != "yol" or f["geometry"]["type"] != "LineString" or p.get("elle"):
+            continue
+        ilk = f["geometry"]["coordinates"]
+        c = np.array([metre(q) for q in ilk])
+        if len(c) < 2:
+            continue
+        zc = np.array([q[2] if len(q) > 2 else 0.0 for q in ilk], float)
+        sc = np.r_[0, np.cumsum(np.hypot(*np.diff(c, axis=0).T))]
+        # 2 m'de bir örnek
+        sd = np.unique(np.r_[np.arange(0, sc[-1], 2.0), sc])
+        xd, yd = np.interp(sd, sc, c[:, 0]), np.interp(sd, sc, c[:, 1])
+        icerde = hucrede(yakin, xd, yd)
+        if not icerde.any():
+            continue
+        wd = np.maximum(icerde.astype(float), ndimage.gaussian_filter1d(icerde.astype(float), 6, mode="nearest") * 1.5).clip(0, 1)
+        wd[wd < 0.01] = 0
+        yeni_d = ndimage.gaussian_filter1d(ornek(Zf, xd, yd), 4, mode="nearest")
+        # köşeler: dokunulan kesim 10 m'de bir bölünür
+        sv = [sc[0]]
+        for k in range(1, len(sc)):
+            ic = (sd > sc[k - 1]) & (sd <= sc[k])
+            if wd[ic].max(initial=0) > 0:
+                n = max(1, math.ceil((sc[k] - sc[k - 1]) / 10.0))
+                sv.extend(sc[k - 1] + (sc[k] - sc[k - 1]) * np.arange(1, n) / n)
+            sv.append(sc[k])
+        sv = np.array(sv)
+        wv = np.interp(sv, sd, wd)
+        zv = wv * np.interp(sv, sd, yeni_d) + (1 - wv) * np.interp(sv, sc, zc)
+        prof = np.interp(sd, sv, zv)
+        yari = float(p.get("genislik", 4)) / 2
+        agac = cKDTree(np.column_stack([xd, yd]))
+        d, ix = agac.query(np.column_stack([bx, by]), distance_upper_bound=yari + 13.5)
+        tamam = np.isfinite(d)
+        if tamam.any():
+            d_, ix_ = d[tamam], ix[tamam]
+            jj, ii = bj[tamam], bi[tamam]
+            t = np.clip((d_ - yari - 7.5) / 6.0, 0, 1)
+            g = np.where(Zf[jj, ii] > 0, wd[ix_] * (1 - t), 0)
+            Zf[jj, ii] = Zf[jj, ii] + g * (prof[ix_] - Zf[jj, ii])
+        yeni = []
+        kose = {round(float(v), 6): n for n, v in enumerate(sc)}
+        for v, w_, z_ in zip(sv, wv, zv):
+            n = kose.get(round(float(v), 6))
+            q = list(ilk[n][:2]) if n is not None else ll(np.interp(v, sc, c[:, 0]), np.interp(v, sc, c[:, 1]))
+            zz = round(max(0.0, float(z_)), 1) if w_ > 0 else (ilk[n][2] if n is not None and len(ilk[n]) > 2 else round(float(z_), 1))
+            yeni.append(q + [zz])
+        yeni_once[p["id"]] = copy.deepcopy(ilk)
+        f["geometry"]["coordinates"] = yeni
+    H[:] = np.round(Zf / birim).astype(np.int16)
+    bir["yolOnceki"] = yeni_once
+    rapor["yatak"] = len(yeni_once)
+
+
+def sinir_uygula(bas, H, H_ilk, bir, rapor):
+    """Kıyı çizgisi değiştiyse sınır dosyası: ada, kıyı çizgileri, mahalleler (ilk hâlleri `sinirOnceki`)"""
+    import shapely
+    from shapely.geometry import MultiPolygon, Point, Polygon, box, shape, mapping
+    from shapely.ops import nearest_points, unary_union
+    from scipy import ndimage
+    geo = json.load(open(SINIRLAR, encoding="utf-8"))
+    KATMAN = ("ada", "kiyi", "mahalle")
+    onceki = bir.get("sinirOnceki")
+    if onceki:
+        ogeler = iter(onceki["ogeler"])
+        geo["features"] = [copy.deepcopy(next(ogeler)) if f["properties"].get("katman") in KATMAN else f for f in geo["features"]]
+    kiyi = (H > 0) != (H_ilk > 0)
+    if not kiyi.any():
+        bir.pop("sinirOnceki", None)
+        rapor["kiyi"] = 0
+        return geo
+    if not onceki:
+        bir["sinirOnceki"] = {"not": "Zemin aracıyla kıyı değişmeden önceki ada, kıyı ve mahalle öğeleri (sırayla)",
+                              "ogeler": [copy.deepcopy(f) for f in geo["features"] if f["properties"].get("katman") in KATMAN]}
+    hc = bas["hucre"]
+    m = lambda q: ((q[0] - bas["lng0"]) * bas["mPerLng"], (q[1] - bas["lat0"]) * bas["mPerLat"])
+    ll = lambda x, y: [round(bas["lng0"] + x / bas["mPerLng"], 6), round(bas["lat0"] + y / bas["mPerLat"], 6)]
+    gm = lambda g: shapely.transform(g, lambda a: np.column_stack([(a[:, 0] - bas["lng0"]) * bas["mPerLng"], (a[:, 1] - bas["lat0"]) * bas["mPerLat"]]))
+    gl = lambda g: shapely.transform(g, lambda a: np.column_stack([bas["lng0"] + a[:, 0] / bas["mPerLng"], bas["lat0"] + a[:, 1] / bas["mPerLat"]]))
+    jj, ii = np.nonzero(ndimage.binary_dilation(kiyi, iterations=8))
+    x0, x1 = bas["x0"] + ii.min() * hc - hc / 2, bas["x0"] + ii.max() * hc + hc / 2
+    y0, y1 = bas["y0"] + jj.min() * hc - hc / 2, bas["y0"] + jj.max() * hc + hc / 2
+    kutu = box(x0, y0, x1, y1)
+    # kutudaki kara: hücre kareleri (merkez karadaysa kare adanın içinde), 2,5 m sadeleştirme
+    kj, ki = np.nonzero(H > 0)
+    sec = (bas["x0"] + ki * hc >= x0) & (bas["x0"] + ki * hc <= x1) & (bas["y0"] + kj * hc >= y0) & (bas["y0"] + kj * hc <= y1)
+    kareler = [box(bas["x0"] + i * hc - hc / 2, bas["y0"] + j * hc - hc / 2, bas["x0"] + i * hc + hc / 2, bas["y0"] + j * hc + hc / 2)
+               for i, j in zip(ki[sec], kj[sec])]
+    kara_kutu = unary_union(kareler).intersection(kutu).simplify(2.5)
+    ada_f = next(f for f in geo["features"] if f["properties"]["katman"] == "ada")
+    ada_eski = gm(shape(ada_f["geometry"]))
+    ada = unary_union([ada_eski.difference(kutu), kara_kutu]).buffer(0)
+    if ada.geom_type == "MultiPolygon":
+        ada = max(ada.geoms, key=lambda g: g.area)
+    ada = Polygon(ada.exterior)
+    ada_f["geometry"] = mapping(gl(ada))
+    eklenen, giden = ada.difference(ada_eski), ada_eski.difference(ada)
+    # mahalleler: yeni kara en yakın mahalleye, giden kara hepsinden düşer
+    mah = [f for f in geo["features"] if f["properties"]["katman"] == "mahalle"]
+    mg = [gm(shape(f["geometry"])) for f in mah]
+    parcalar = list(eklenen.geoms) if hasattr(eklenen, "geoms") else ([eklenen] if not eklenen.is_empty else [])
+    for pr in parcalar:
+        if pr.area < 0.5:
+            continue
+        k = min(range(len(mg)), key=lambda n: mg[n].distance(pr.representative_point()))
+        mg[k] = unary_union([mg[k], pr]).buffer(0)
+    for n, f in enumerate(mah):
+        g = mg[n].difference(giden).buffer(0) if not giden.is_empty else mg[n]
+        g = MultiPolygon([g]) if g.geom_type == "Polygon" else MultiPolygon([x for x in g.geoms if x.geom_type == "Polygon"])
+        f["geometry"] = mapping(gl(g))
+    # kıyı çizgileri: kutudaki köşeler yeni kıyıya oturur
+    sinir = ada.exterior
+    for f in geo["features"]:
+        if f["properties"]["katman"] != "kiyi":
+            continue
+        yeni = []
+        for q in f["geometry"]["coordinates"]:
+            x, y = m(q)
+            if x0 <= x <= x1 and y0 <= y <= y1:
+                pn = nearest_points(sinir, Point(x, y))[0]
+                yeni.append(ll(pn.x, pn.y))
+            else:
+                yeni.append(q)
+        f["geometry"]["coordinates"] = yeni
+    rapor["kiyi"] = int(kiyi.sum())
+    return geo
+
+
 def elle_cikar(fc, ad, birikmis=None):
     """Dosyadaki elle öğeleri çıkarır, eski hâllerini geri koyar: üretecin çıktısı (ad: yapilar | yollar)"""
     b = birikmis or birikmis_oku()
@@ -137,6 +434,11 @@ def elle_cikar(fc, ad, birikmis=None):
 def taslak_birlestir(eski, yeni):
     """Yeni taslak birikmişin üstüne: her öğede yenisi geçerli"""
     t = copy.deepcopy(eski)
+    if yeni.get("zemin") or t.get("zemin"):
+        b, _ = zemin_oku()
+        t["zemin"] = zemin_birlestir(t.get("zemin"), yeni.get("zemin"), b["boy"], b["en"])
+        if not t["zemin"]:
+            t.pop("zemin")
     for k in ("yapilar", "yeniYapilar", "yollar", "yeniYollar", "kareler", "gruplar"):
         t.setdefault(k, {})
         for kim, v in (yeni.get(k) or {}).items():
@@ -148,10 +450,10 @@ def taslak_birlestir(eski, yeni):
 
 
 # ------------------------------------------------------------------ uygulama
-def _mahalleler(Z):
+def _mahalleler(Z, sinirlar=None):
     import shapely
     from shapely.geometry import shape, Point
-    sf = json.load(open(os.path.join(HARITA, "duzada-sinirlar.geojson"), encoding="utf-8"))["features"]
+    sf = (sinirlar or json.load(open(SINIRLAR, encoding="utf-8")))["features"]
     b = Z.b
     cevir = lambda a: [[(x - b["lng0"]) * b["mPerLng"], -(y - b["lat0"]) * b["mPerLat"]] for x, y in a]
     m = [(f["properties"]["id"], shapely.transform(shape(f["geometry"]), cevir))
@@ -176,8 +478,6 @@ def _yon_pusula(on):
 
 
 def uygula(taslak_ham=None, yaz=True):
-    Z = Zemin()
-    mahalle = _mahalleler(Z)
     bir = birikmis_oku()
     if taslak_ham is not None:
         yeni = taslak_ham.get("taslak", taslak_ham)
@@ -189,6 +489,13 @@ def uygula(taslak_ham=None, yaz=True):
     onceki = {"yapilar": dict(bir["onceki"].get("yapilar", {})), "yollar": dict(bir["onceki"].get("yollar", {}))}
     silinen = {"yapilar": dict(bir["silinen"].get("yapilar", {})), "yollar": dict(bir["silinen"].get("yollar", {}))}
     rapor = {"atlanan": [], "grup": []}
+
+    # 0. Zemin (8. adım): eski elle zemin geri, birikmiş zemin, yol yatağı, kıyı değiştiyse sınırlar
+    zbas, ZH, ZH_ilk, Dm = zemin_uygula(t, bir, yollar, rapor)
+    sinirlar = sinir_uygula(zbas, ZH, ZH_ilk, bir, rapor)
+    rapor["zemin"] = int(Dm.sum())
+    Z = Zemin(zbas, ZH)
+    mahalle = _mahalleler(Z, sinirlar)
 
     def ilk_hal(ad, f):
         kim = f["properties"]["id"]
@@ -389,10 +696,20 @@ def uygula(taslak_ham=None, yaz=True):
         fc["elleDuzen"] = ozet
         fc["features"] = feats
     bir["onceki"], bir["silinen"] = onceki, silinen
+    zemin_icerik = zemin_baytlari(zbas, ZH)
+    rapor["zeminIcerik"] = zemin_icerik
+    rapor["sinirlar"] = sinirlar
     if yaz:
         for yol, fc in ((YAPILAR, yapilar), (YOLLAR, yollar)):
             with open(yol, "w", encoding="utf-8") as f:
                 json.dump(fc, f, ensure_ascii=False, separators=(",", ":"))
+        if gzip.decompress(zemin_icerik) != gzip.decompress(open(IZGARA, "rb").read()):
+            with open(IZGARA, "wb") as f:
+                f.write(zemin_icerik)
+        sinir_metni = json.dumps(sinirlar, ensure_ascii=False, separators=(",", ":"))
+        if sinir_metni != open(SINIRLAR, encoding="utf-8").read():
+            with open(SINIRLAR, "w", encoding="utf-8") as f:
+                f.write(sinir_metni)
         with open(ELLE, "w", encoding="utf-8") as f:
             json.dump(bir, f, ensure_ascii=False, indent=1)
             f.write("\n")
@@ -463,7 +780,17 @@ def main():
     ham = None
     if len(sys.argv) > 1:
         ham = json.load(open(sys.argv[1], encoding="utf-8"))
+    zemin_once = open(IZGARA, "rb").read()
     yapilar, yollar, bir, rapor = uygula(ham)
+    if rapor.get("zemin") or b"elleZemin" in gzip.decompress(zemin_once)[:4096]:
+        print(f"Zemin: {rapor.get('zemin', 0)} hücre taslaktan, {rapor.get('yatak', 0)} yolun yatağı yeniden açıldı, "
+              f"kıyı {rapor.get('kiyi', 0)} hücrede değişti")
+    if gzip.decompress(open(IZGARA, "rb").read()) != gzip.decompress(zemin_once) and os.environ.get("ZINCIR_YOK") != "1":
+        # zemin değişti: arsalar, kareler ve yapılar yeni zeminle; sonra elle düzen yeniden
+        for betik in ("kompakt_parseller.py", "kompakt_yapilar.py"):
+            print(f"  zincir: python gen/{betik}")
+            subprocess.run([sys.executable, os.path.join(BURASI, betik)], check=True, stdout=subprocess.DEVNULL)
+        yapilar, yollar, bir, rapor = uygula(None)
     s = yapilar["elleDuzen"]["sayilar"]
     print(f"Elle düzen uygulandı → {os.path.relpath(YAPILAR, KOK)}, {os.path.relpath(YOLLAR, KOK)} "
           f"({s['yapi']} yapı / öğe, {s['yol']} yol, {s['alan']} alan); birikmiş: {os.path.relpath(ELLE, KOK)}")
