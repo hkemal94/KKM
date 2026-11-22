@@ -53,13 +53,23 @@ service cloud.firestore {
     // Harita düzeni (H1) — dünyaya ait, kullanıcıya değil. Tek belge:
     // duzada/haritaDuzeni. Google'a bağlı olmak şart (22 Ekim).
     match /duzada/{docId} {
-      allow read: if isSignedIn() && docId == 'haritaDuzeni';
+      allow read: if isSignedIn() && (docId == 'haritaDuzeni' || docId == 'tekHaritaTaslak');
       allow create, update: if isSignedIn() && docId == 'haritaDuzeni'
         && incoming().keys().hasAll(['surum', 'guncelleme', 'hatlar', 'yollar'])
         && incoming().surum is number
         && incoming().guncelleme is number
         && incoming().hatlar is map
         && incoming().yollar is map;
+      // Tek harita yönetim ekranının taslağı (7. adım, 22 Kasım): yalnız
+      // değişiklikler, JSON yazı olarak; sayaç açık kalmış eski sekmeyi durdurur.
+      allow create, update: if isSignedIn() && docId == 'tekHaritaTaslak'
+        && incoming().keys().hasAll(['surum', 'guncelleme', 'sayac', 'veri'])
+        && incoming().keys().hasOnly(['surum', 'guncelleme', 'sayac', 'veri'])
+        && incoming().surum is number
+        && incoming().guncelleme is number
+        && incoming().sayac is int
+        && incoming().veri is string
+        && incoming().veri.size() <= 400000;
       allow delete: if false;
     }
 

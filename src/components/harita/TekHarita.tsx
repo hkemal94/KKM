@@ -1,13 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { BookOpen, Feather, History, Image as GorselSimgesi, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, X } from 'lucide-react';
+import { BookOpen, Feather, History, Image as GorselSimgesi, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, Pencil, X } from 'lucide-react';
 import type { Item } from '../../types';
 import { ESLEME, kisaGiris } from '../../lib/yasayanHarita';
 import { maddeGorseli } from '../../lib/maddeGorseli';
 import { GorselImg } from '../GorselImg';
 import { GOK } from './haritaStili';
-import { geoOku, indirme, kumIsaretle, rakim, yapilariOku, zeminOku, type Yapi, type Zemin } from './tek/tekVeri';
+import { geoOku, indirme, kumIsaretle, rakim, yapilariOku, zeminOku, type Koleksiyon, type Nokta, type Yapi, type Zemin } from './tek/tekVeri';
 import { ZeminKatmani } from './tek/zeminKatmani';
 import { YolKatmani } from './tek/yolKatmani';
 import { YapiKatmani } from './tek/yapiKatmani';
@@ -15,6 +15,14 @@ import { SinirKatmani, type Etiket } from './tek/sinirKatmani';
 import { uzakModelleriOku } from './tek/uzakModeller';
 import { LimanModelleri } from './tek/limanModelleri';
 import { AgacKatmani, agaclariOku } from './tek/agacKatmani';
+import { TaslakKatmani } from './tek/duzenle/taslakKatmani';
+import { birlestir, GIZLI_HUCRE, verininKucukleri, type Birlesik, type Kucuk } from './tek/duzenle/birlesik';
+import { bosTaslak } from './tek/duzenle/taslak';
+import type { Isaretci, SahneApi } from './tek/duzenle/sahneApi';
+import type { TaslakDeposu } from './tek/duzenle/taslakDeposu';
+
+// Düzenle modu (7. adım) yalnız açılınca iner
+const DuzenleModu = lazy(() => import('./tek/duzenle/DuzenleModu'));
 
 /**
  * Tek harita (6. adım, 21 Kasım; Kemal'in 20 Kasım kararları): eski 3B, yeni 3B
@@ -30,8 +38,13 @@ import { AgacKatmani, agaclariOku } from './tek/agacKatmani';
  * - 6b (22 Kasım): uzak yapılar modelin az üçgenli kopyasıyla, üst üste binen adlardan
  *   önemsizi gizli, kumsal ve kıyı kenarı yumuşak, iskele ve mendirek modelleriyle.
  *
- * Yalnız okuma: Firestore'a, harita kaydına, Kurucu taslağına hiçbir şey yazılmaz;
- * Kurucu kayıtları da okunmaz. Viki maddeleri yalnız kart için okunur.
+ * - 7. adım (22 Kasım): "Düzenle" modu (Cities Skylines gibi; `tek/duzenle/`): bina koy, taşı,
+ *   döndür, sil; yol çiz ve düzenle (yol kartı); hazır grup koy; kare boya; geri al / ileri al;
+ *   Drive'a yedek; "Haritaya işle". Düzenle açıkken taslak haritanın üstünde çizilir.
+ *
+ * Görünüm kısmı yalnız okur: harita kaydına ve Kurucu taslağına hiçbir şey yazılmaz;
+ * Kurucu kayıtları da okunmaz. Viki maddeleri yalnız kart için okunur. Düzenle modunun
+ * taslağı ayrı bir belgede (`duzada/tekHaritaTaslak`), yalnız Kemal düzenledikçe yazılır.
  */
 
 type Props = {
@@ -40,6 +53,10 @@ type Props = {
   onMaddeAc?: (id: string) => void;
   /** Eski haritalara geçiş (11. adıma kadar duruyorlar) */
   onEskiHarita?: () => void;
+  /** Düzenle modunun taslak deposu (deneme sayfası bellekte tutar; yoksa KKM kaydı) */
+  taslakDeposu?: TaslakDeposu;
+  /** Düzenle modu açık başlasın (deneme sayfası) */
+  duzenleIlk?: boolean;
 };
 
 type Olcum = { yuklemeMs: number; mb: number; ucgen: number; modelli: number; fps: number };
@@ -50,7 +67,7 @@ const EGIM_3B = THREE.MathUtils.degToRad(52);
 /** Telefon mu (dokunmatik ve dar ekran): hafif mod buna göre açılır */
 const telefonMu = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900;
 
-export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEskiHarita }) => {
+export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEskiHarita, taslakDeposu, duzenleIlk }) => {
   const kap = useRef<HTMLDivElement>(null);
   const etiketKabi = useRef<HTMLDivElement>(null);
   const [hata, setHata] = useState('');
@@ -65,6 +82,11 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
   const [olcum, setOlcum] = useState<Olcum>({ yuklemeMs: 0, mb: 0, ucgen: 0, modelli: 0, fps: 0 });
   const [etiketler, setEtiketler] = useState<Etiket[]>([]);
   const [yapilar, setYapilar] = useState<Map<string, Yapi>>(new Map());
+  // Düzenle modu (7. adım): sahne hazır olunca arayüz dolar
+  const [duzenle, setDuzenle] = useState(!!duzenleIlk);
+  const [api, setApi] = useState<SahneApi | null>(null);
+  const duzenleRef = useRef(duzenle);
+  duzenleRef.current = duzenle;
 
   // Sahneye dışarıdan erişim (düğmeler): kurulunca dolar
   const sahneRef = useRef<{ tepeden: (a: boolean) => void; hafif: (a: boolean) => void; adaya: () => void; yapiyaUc: (y: Yapi) => void } | null>(null);
@@ -137,6 +159,10 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     let agac: AgacKatmani | null = null;
     let zemin: ZeminKatmani | null = null, yol: YolKatmani | null = null, yapi: YapiKatmani | null = null, sinir: SinirKatmani | null = null;
     let liman: LimanModelleri | null = null;
+    let elle: TaslakKatmani | null = null;
+    let uzakVeri: Awaited<ReturnType<typeof uzakModelleriOku>> = null;
+    let temel: { yapilar: Yapi[]; yollar: Koleksiyon; yapiVerisi: Koleksiyon; sinirlar: Koleksiyon; kucukler: Kucuk[] } | null = null;
+    let gizliAgac: Birlesik['gizli'] | null = null;
     let etiketListesi: Etiket[] = [];
     let zv: Zemin | null = null;
     const sinirAlt = new THREE.Vector3(), sinirUst = new THREE.Vector3();
@@ -228,11 +254,37 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     const isin = new THREE.Raycaster();
     const ekran = new THREE.Vector2();
     let basis: { x: number; y: number; t: number; id: number } | null = null;
-    const basildi = (e: PointerEvent) => { ucus = null; basis = e.isPrimary ? { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId } : null; };
+    // Düzenle modu dokunmayı aldıysa (sürükleme, boyama): kamera o sürede dönmez
+    let yakalayan: Isaretci | null = null;
+    const isaretci = () => (duzenleRef.current ? apiNesnesi.isaretci : null);
+    const basildi = (e: PointerEvent) => {
+      ucus = null;
+      basis = e.isPrimary ? { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId } : null;
+      const is_ = isaretci();
+      if (is_?.basildi && e.isPrimary && e.button === 0 && is_.basildi(e, zemineIsin(e.clientX, e.clientY))) {
+        yakalayan = is_;
+        kontrol.enabled = false;
+        try { renderer.domElement.setPointerCapture(e.pointerId); } catch { /* yok */ }
+      }
+    };
+    const tasindi = (e: PointerEvent) => {
+      if (yakalayan) { yakalayan.tasindi?.(e, zemineIsin(e.clientX, e.clientY)); return; }
+      const is_ = isaretci();
+      if (is_?.uzerinde && e.buttons === 0) is_.uzerinde(e, zemineIsin(e.clientX, e.clientY));
+    };
+    const ciftTiklandi = (e: MouseEvent) => { const is_ = isaretci(); is_?.ciftTiklandi?.(e, zemineIsin(e.clientX, e.clientY)); };
     const birakildi = (e: PointerEvent) => {
       const b = basis; basis = null;
+      if (yakalayan) {
+        const y = yakalayan; yakalayan = null;
+        kontrol.enabled = true;
+        y.birakildi?.(e, zemineIsin(e.clientX, e.clientY));
+        return;
+      }
       if (!b || b.id !== e.pointerId || e.button > 0 || !yapi) return;
       if (Math.hypot(e.clientX - b.x, e.clientY - b.y) > 6 || performance.now() - b.t > 600) return;
+      const is_ = isaretci();
+      if (is_) { is_.tiklandi?.(e, zemineIsin(e.clientX, e.clientY)); return; }
       const k = renderer.domElement.getBoundingClientRect();
       ekran.set(((e.clientX - k.left) / k.width) * 2 - 1, -((e.clientY - k.top) / k.height) * 2 + 1);
       isin.setFromCamera(ekran, kamera);
@@ -244,6 +296,71 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     };
     renderer.domElement.addEventListener('pointerdown', basildi);
     renderer.domElement.addEventListener('pointerup', birakildi);
+    renderer.domElement.addEventListener('pointermove', tasindi);
+    renderer.domElement.addEventListener('dblclick', ciftTiklandi);
+
+    // Ekrandaki noktanın zemindeki yeri: ışın zemine (denizde su yüzüne) adım adım yürür
+    const zemineIsin = (cx: number, cy: number): Nokta | null => {
+      if (!zv) return null;
+      const k = renderer.domElement.getBoundingClientRect();
+      ekran.set(((cx - k.left) / k.width) * 2 - 1, -((cy - k.top) / k.height) * 2 + 1);
+      isin.setFromCamera(ekran, kamera);
+      const o = isin.ray.origin, d = isin.ray.direction;
+      const fark = (t: number) => o.y + d.y * t - Math.max(0, rakim(zv!, o.x + d.x * t, o.z + d.z * t));
+      const adim = Math.max(0.5, kamera.position.distanceTo(kontrol.target) / 400);
+      let t = 0;
+      for (let s = 0; s < 6000 && t < 70000; s++) {
+        const t2 = t + adim * (1 + s * 0.004);
+        if (fark(t2) <= 0) {
+          let a = t, b = t2;
+          for (let n = 0; n < 14; n++) { const m = (a + b) / 2; if (fark(m) > 0) a = m; else b = m; }
+          return [o.x + d.x * b, o.z + d.z * b];
+        }
+        t = t2;
+      }
+      return null;
+    };
+    const ekranaNokta = (x: number, y: number, z: number): [number, number] | null => {
+      const p = new THREE.Vector3(x, y, z).project(kamera);
+      if (p.z > 1) return null;
+      return [((p.x + 1) / 2) * kab.clientWidth, ((1 - p.y) / 2) * kab.clientHeight];
+    };
+
+    // Katmanlar birleşik veriyle (verinin "elle" öğeleri + Düzenle'nin taslağı) yeniden kurulur
+    const katmanlariKur = (b: Birlesik) => {
+      if (!zv || !temel) return;
+      if (yol) { sahne.remove(yol.grup); yol.dispose(); }
+      yol = new YolKatmani(zv, b.yollar);
+      if (yapi) { sahne.remove(yapi.grup); yapi.dispose(false); }
+      yapi = new YapiKatmani(b.yapilar, uzakVeri, () => { /* model indi */ });
+      if (sinir) { sahne.remove(sinir.grup); sinir.dispose(); }
+      sinir = new SinirKatmani(zv, temel.sinirlar, b.yapilar);
+      sahne.add(yol.grup, yapi.grup, sinir.grup);
+      olculer.length = 0;
+      etiketListesi = sinir.etiketler;
+      setEtiketler(sinir.etiketler);
+      setYapilar(new Map(b.yapilar.map(y => [y.id, y])));
+      elle?.alanlar(b.alanlar); elle?.kucukler(b.kucukler); elle?.duvarlar(b.duvarlar);
+      gizliAgac = b.gizli;
+      if (agac) agac.gizli = { hucre: GIZLI_HUCRE, ...b.gizli };
+      guncelle();
+    };
+    let temelBirlesik: Birlesik | null = null;
+    const apiNesnesi: SahneApi = {
+      z: null as unknown as Zemin,
+      temel: { yapilar: [], yollar: { type: 'FeatureCollection', features: [] }, yapiVerisi: { type: 'FeatureCollection', features: [] } },
+      sahne,
+      zemineIsin,
+      ekrana: ekranaNokta,
+      kameraUzakligi: () => kamera.position.distanceTo(kontrol.target),
+      goster: b => { const x = b ?? temelBirlesik; if (x) katmanlariKur(x); },
+      uc: (x, z) => {
+        const t1 = new THREE.Vector3(x, zv ? Math.max(0, rakim(zv, x, z)) : 0, z);
+        const fark = kamera.position.clone().sub(kontrol.target);
+        ucus = { bas: performance.now(), t0: kontrol.target.clone(), t1, p0: kamera.position.clone(), p1: t1.clone().add(fark.setLength(THREE.MathUtils.clamp(fark.length(), 120, 420))) };
+      },
+      isaretci: null
+    };
 
     // Veri: hepsi birlikte iner
     // Uzak kopyalar inmezse yapılar eskisi gibi kutu çizilir
@@ -253,17 +370,19 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         if (kapandi) return;
         kumIsaretle(z, sinirlar);
         zv = z;
+        uzakVeri = uzak;
         zemin = new ZeminKatmani(z);
-        yol = new YolKatmani(z, yollar);
         const liste = yapilariOku(z, yapiVerisi);
-        yapi = new YapiKatmani(liste, uzak, () => { /* model indi: sahne bir sonraki karede çizer */ });
-        sinir = new SinirKatmani(z, sinirlar, liste);
+        temel = { yapilar: liste, yollar, yapiVerisi, sinirlar, kucukler: verininKucukleri(z, yapiVerisi) };
         // İskele ve mendirek modelleri (veride varsa)
         liman = new LimanModelleri(z.b, [yapiVerisi], uzak, () => { /* model indi */ });
-        sahne.add(zemin.grup, yol.grup, yapi.grup, sinir.grup, liman.grup);
-        etiketListesi = sinir.etiketler;
-        setEtiketler(sinir.etiketler);
-        setYapilar(new Map(liste.map(y => [y.id, y])));
+        // Verideki "elle" öğeler (ajansın işlediği taslaklar: alanlar, ağaç ve donatılar) ayrı katmanda
+        elle = new TaslakKatmani(z, () => { /* model indi */ });
+        sahne.add(zemin.grup, liman.grup, elle.grup);
+        temelBirlesik = birlestir(z, temel, bosTaslak(), {});
+        katmanlariKur(temelBirlesik);
+        Object.assign(apiNesnesi, { z, temel: { yapilar: liste, yollar, yapiVerisi } });
+        setApi(apiNesnesi);
         setMahalleAdlari(new Map(sinirlar.features.filter(f => f.properties.katman === 'mahalle').map(f => [String(f.properties.id), String(f.properties.ad ?? '')])));
 
         // Kara sınırı: ada ızgarada rakımı 0'dan büyük hücreler
@@ -281,6 +400,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         agaclariOku(durdur.signal).then(v => {
           if (kapandi || !zemin) return;
           agac = new AgacKatmani(z, v, () => { /* model indi */ });
+          if (gizliAgac) agac.gizli = { hucre: GIZLI_HUCRE, ...gizliAgac };
           agac.zemineBoya(zemin);
           sahne.add(agac.grup);
           guncelle();
@@ -382,7 +502,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         if (import.meta.env.DEV) (window as unknown as { __tekHarita?: unknown }).__tekHarita = {
           hazir: !!zemin, iniyor: (yapi?.iniyor ?? true) || !!liman?.iniyor, ucgen, fps, modelli: yapi?.modelli ?? 0,
           zeminUcgen: zemin?.ucgen ?? 0, agac: agac ? { ucgen: agac.ucgen, modelli: agac.modelli, obekli: agac.obekli } : null, yolUcgen: yol?.ucgen ?? 0, indirme: { ...indirme, dosyalar: { ...indirme.dosyalar } },
-          bak, adaya, tepeden: tepedenAyarla,
+          bak, adaya, tepeden: tepedenAyarla, zemine: zemineIsin,
           // Denemede dokunma yeri için: zeminden `yukari` m yukarıdaki noktanın ekrandaki yeri (piksel)
           ekrana: (x: number, yukari: number, z: number) => { const p = new THREE.Vector3(x, (zv ? rakim(zv, x, z) : 0) + yukari, z).project(kamera); return [((p.x + 1) / 2) * kab.clientWidth, ((1 - p.y) / 2) * kab.clientHeight]; }
         };
@@ -407,9 +527,12 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       boyut.disconnect();
       renderer.domElement.removeEventListener('pointerdown', basildi);
       renderer.domElement.removeEventListener('pointerup', birakildi);
+      renderer.domElement.removeEventListener('pointermove', tasindi);
+      renderer.domElement.removeEventListener('dblclick', ciftTiklandi);
       renderer.setAnimationLoop(null);
       kontrol.dispose();
-      agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose();
+      setApi(null);
+      agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose(); elle?.dispose();
       denizYuzu.geometry.dispose(); denizDibi.geometry.dispose();
       sahne.clear();
       renderer.dispose();
@@ -470,7 +593,11 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
           {tamEkran ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           <span className="hidden sm:inline">{tamEkran ? 'Küçült' : 'Tam ekran'}</span>
         </button>
-        {onEskiHarita && (
+        <button type="button" onClick={() => { setSecili(null); setDuzenle(d => !d); }} className={duzenle ? dolu : bos} aria-pressed={duzenle} disabled={!api}
+          title={duzenle ? 'Düzenle modundan çık (taslak kayıtlı kalır)' : 'Haritayı düzenle: bina, yol, hazır grup, kare boyama'}>
+          <Pencil className="w-3.5 h-3.5" /> {duzenle ? 'Düzenlemeyi bitir' : 'Düzenle'}
+        </button>
+        {onEskiHarita && !duzenle && (
           <button type="button" onClick={onEskiHarita} className={bos} title="Eski haritalar (11. adıma kadar duruyor)">
             <History className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Eski haritalar</span><span className="sm:hidden">Eski</span>
           </button>
@@ -486,7 +613,12 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         </div>
       )}
 
-      {kart ? (
+      {duzenle && api && (
+        <Suspense fallback={<div className="absolute right-3 top-16 px-2.5 py-1.5 rounded-lg bg-[#FAF8F5]/90 border border-[#CFC5B4] text-[11px] text-[#0E1C4F]">Düzenle açılıyor…</div>}>
+          <DuzenleModu api={api} items={items} depo={taslakDeposu} onKapat={() => setDuzenle(false)} />
+        </Suspense>
+      )}
+      {duzenle ? null : kart ? (
         <div role="dialog" aria-label={kart.ad}
           className="absolute left-3 bottom-3 w-[min(19rem,calc(100%-1.5rem))] p-2.5 rounded-xl bg-[#FAF8F5]/95 dark:bg-[#13204A]/95 border border-[#CFC5B4] dark:border-[#2C3C72] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] text-[#0E1C4F] dark:text-[#F3EFE8]">
           {/* Telefonda görsel kapalı başlar (küçük kart); masaüstünde hep görünür */}

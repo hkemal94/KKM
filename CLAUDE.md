@@ -80,6 +80,10 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   `kurucuSayac`'ını bir artırır (`sonrakiKurucuSayaci`, `duzenTipi.ts`); yoksa açık kalmış Kurucu
   sekmesi yeni hâlin üstüne yazar. Kurucu açılıştaki sayaçtan yenisini görünce yazmaz.
   `adaKusagi`: yoksa 2 (bugünkü ada), 3 kompakt ada. Harita yedeği: Durum → Eksikler → Harita yedeği.
+- **Tek harita taslağı** (22 Kasım, 7. adım): Düzenle modunun taslağı ayrı belgede, `duzada/tekHaritaTaslak`
+  (`{ surum, guncelleme, sayac, veri }`; `veri` yalnız değişikliklerin JSON yazısı, en çok 400 bin harf). Yalnız Kemal
+  düzenledikçe, 20 sn biriktirilip yazılır; `sayac` Kurucu'nunki gibi eski sekmeyi durdurur. Harita kaydına dokunmaz.
+  Haritaya geçişi ajans yapar (`gen/kompakt_taslak_uygula.py`, PR).
 - **Veri göçleri tek seferliktir ve düğmeyle çalışır.** Kalıp:
   `src/lib/` altında yazılacak kayıtları üreten saf bir fonksiyon + Durum → Eksikler
   sekmesinde (`src/components/Eksikler.tsx`) yalnızca iş varken

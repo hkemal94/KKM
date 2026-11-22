@@ -18,6 +18,7 @@ from shapely import prepared
 BURASI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BURASI)
 import kompakt_zemin_denetim as zd  # noqa: E402
+from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -57,7 +58,7 @@ def main():
         return ((np.asarray(x) - b["lng0"]) * b["mPerLng"], (np.asarray(y) - b["lat0"]) * b["mPerLat"])
 
     geo = json.load(open(zd.SINIR, encoding="utf-8"))["features"]
-    yd = json.load(open(YOLLAR, encoding="utf-8"))["features"]
+    yd = elle_cikar(json.load(open(YOLLAR, encoding="utf-8")), "yollar")["features"]
     pd = json.load(open(PARSEL, encoding="utf-8"))
     kd = json.load(open(KARE, encoding="utf-8"))
     O = kd["olculer"]

@@ -283,13 +283,14 @@ export class YapiKatmani {
   /** Model inişi sürüyor mu (ölçüm için) */
   get iniyor() { return this.inenler.size > 0 || this.bekleyen !== 0; }
 
-  dispose() {
+  /** `uzakDa`: uzak kopyalar da bırakılsın mı (Düzenle modu katmanı yeniden kurarken kopyaları paylaşır) */
+  dispose(uzakDa = true) {
     this.kapandi = true;
     if (this.bekleyen) clearTimeout(this.bekleyen);
     for (const o of this.ornekler) o.dispose();
     for (const u of this.uzakSeviyeler) if (u) for (const k of u.karolar.values()) k.mesh.geometry.dispose();
     this.uzakMalzeme.dispose();
-    if (this.uzak) uzakModelleriBirak(this.uzak);
+    if (this.uzak && uzakDa) uzakModelleriBirak(this.uzak);
     this.govde.dispose(); this.cati.dispose();
     this.govde.geometry.dispose(); this.cati.geometry.dispose(); (this.govde.material as THREE.Material).dispose(); (this.cati.material as THREE.Material).dispose();
   }

@@ -1,11 +1,42 @@
 # Durum
 
-**Son güncelleme: 22 Kasım 2026 (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita ağaçları; Kemal: "daha sık"); önceki: 22 Kasım 2026 (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); önceki: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 22 Kasım: tek harita 7. adım: yönetim ekranı (Düzenle modu)
+
+Kemal (22 Kasım: "hepsi tek seferde"; Cities Skylines gibi). Tek haritada "Düzenle" düğmesi (`src/components/harita/tek/duzenle/`):
+
+- **Bina:** KKM'nin modelleri katalogundan koy (önü en yakın yola döner, R ile 15°), seçip sürükleyerek taşı, döndür
+  (15°, 90°), sil, "eski yerine". Viki maddesine bağlı ya da evinde oturan olan yapı silinmez (taşınır); viki bağlı yol da silinmez.
+- **Yol:** kademe seçip çiz (ana, ara, sokak, geçit, toprak, patika, merdiven; uç yakın yola oturur), seçince yol kartı
+  (ad, kademe, yüzey; ad boş kalabilir, ad Kemal'in), noktaları sürükle, çift tıkla nokta ekle, nokta sil, böl, sil.
+- **Hazır grup:** katalogdan çeşit; yolun yanına, boş karelere ya da kıyıya. Sığmazsa kenar kareleri kırpılır (21 Kasım kuralı:
+  0. sıra, meydan, pazar, özel yapı, rıhtım kırpılmaz; sınır çeşidin `kirpma`'sı). Kırpılan kenarda yarım kalan arsa ve evi
+  atılır: ekranda ne görünüyorsa o işlenir (üretecin kendi kırpması o kenarı yeniden bölüp birkaç ev daha koyar; ajans betiği
+  bunu yalnız bilgi olarak yazar). Her öğe ayrı seçilir (grup etiketiyle), "Bütün grubu sil". Grup konunca altındaki arsaların
+  avlu ağaçları, kapladığı yerdeki kendiliğinden ağaçlar çizilmez.
+- **Kare boyama:** boş kareler (duzada-kareler.json) park, bahçe, meydancık, ağaç ya da boş; sürükleyerek de boyanır.
+- **Geri al / ileri al** (Ctrl+Z, Ctrl+Y; 100 adım). **Drive'a yedek:** Harita yedeği'nin yolu, harita kaydı + taslak.
+- **Yumuşak kural:** yol eğimi (kademe sınırı), üst üste binme, yola taşma, kıyı şeridi (25 m), denizde: engellemez, uyarı olur.
+- **Telefon:** bakma, bina taşı / döndür / sil, kare boyama, yol kartı. Yol çizme, bina ve grup koyma, "Haritaya işle" bilgisayarda.
+- **Kayıt:** taslak yalnız değişiklikleri tutar (taşınan, silinen, yeni yapı ve yol, boyalı kare, grup); Kemal düzenledikçe 20 sn
+  biriktirilip Firestore `duzada/tekHaritaTaslak`'a yazılır (harita kaydından ayrı belge; JSON yazı, iç içe dizi yok, en çok
+  400 bin harf; sayaçla açık kalmış eski sekme üstüne yazamaz). Önce bu tarayıcıya da yazılır. Örnekte (bir yol, bir grup,
+  12 kare, Stadyum Bağlantısı'nın 266 noktası) 16,8 KB. **Kural yayımlanana kadar** taslak yalnız bu tarayıcıda durur
+  (`firestore.rules`'taki yeni satır; Kemal Firebase'de yayımlar). Sayfa açılınca hiçbir şey yazılmaz.
+- **Haritaya işle:** taslak ajansa `kkm/tek-harita-taslak.json` olarak gider (GitHub anahtarıyla, "Haritayı ajansa gönder" yolu).
+  Ajans `python gen/kompakt_taslak_uygula.py <dosya>` → `python gen/kompakt_agaclar.py` → `python gen/kompakt_taslak_denetim.py`
+  ile işler, KKM'ye PR açar. Değişiklikler `gen/tek-harita-elle.json`'da birikir; dosyalarda `elle: yeni | tasindi | duzenlendi`.
+  Öbür üreteçler ve denetimleri elle öğeleri `elle_cikar` ile ayıklar (ağaç üreteci hariç: ağaçlar elle yapı ve yollardan kaçar).
+  Bir üreteç yeniden çalışınca `python gen/kompakt_taslak_uygula.py` (dosyasız) birikmiş düzeni yeniden uygular.
+- Örnek taslakla denendi (Stadyum'da bir toprak yol, bir köy meydanı grubu kırpılmış, 12 boyalı kare, Stadyum Bağlantısı'nda
+  taşınan bir nokta): bütün denetimler temiz. Örnek PR'a girmedi. Telefonda ve gerçek Firestore / GitHub yazmasıyla denenmedi.
+  Önizlemeler `docs/gorseller/tek-harita-7/`.
 
 ## 22 Kasım: tek harita: Liman eski haritadaki sokaklarıyla
 

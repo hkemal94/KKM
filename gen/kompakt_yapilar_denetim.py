@@ -22,6 +22,7 @@ BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
 sys.path.insert(0, BURASI)
 import kompakt_yapilar as Y  # noqa: E402
+from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 
 def main():
@@ -32,7 +33,7 @@ def main():
         sorun += 0 if temiz else 1
         print(f"  [{'temiz' if temiz else 'SORUN'}] {ad}: {deger}")
 
-    dosya = json.load(open(Y.CIKTI, encoding="utf-8"))
+    dosya = elle_cikar(json.load(open(Y.CIKTI, encoding="utf-8")), "yapilar")   # elle öğeler: gen/kompakt_taslak_denetim.py
     F = [f for f in dosya["features"] if f["properties"]["katman"] == "yapi"]
     DZ = [f for f in dosya["features"] if f["properties"]["katman"] in ("iskele", "mendirek")]
     G = [Y.gm(f["geometry"]) for f in F]

@@ -44,6 +44,7 @@ KOK = os.path.dirname(BURASI)
 sys.path.insert(0, BURASI)
 from kompakt_zemin_denetim import oku  # noqa: E402
 import kompakt_liman as LM  # noqa: E402
+from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)   # shapely.ops.transform (öbür üreteçlerle aynı)
 
@@ -199,7 +200,7 @@ def pusula(v):
 
 # ------------------------------------------------------------------ veri
 SF = json.load(open(SINIR, encoding="utf-8"))["features"]
-YF = json.load(open(YOLLAR, encoding="utf-8"))["features"]
+YF = elle_cikar(json.load(open(YOLLAR, encoding="utf-8")), "yollar")["features"]   # Düzenle'nin elle yolları girdi değil
 PF = json.load(open(PARSEL, encoding="utf-8"))["features"]
 ESKI_J = json.load(open(ESKI, encoding="utf-8"))
 KAT = json.load(open(KATALOG, encoding="utf-8"))
