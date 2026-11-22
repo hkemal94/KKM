@@ -19,6 +19,10 @@ Kurallar:
   - Kıyı köyü (Kemal, 20 Kasım akşam) bugünkü haritadaki köyün sokak hatlarıyla aynı: Kurucu'nun kalıcı
     hâlindeki dokuz yol ve birahanenin yeri adanın küçültmesiyle (0,70) taşınır; zemin değişmez (teras yok).
     Sahil Yolu köyün önünde eski hattının küçültülmüşünden geçer; hattın geri kalanı aynen kalır.
+  - Liman kasabası (Kemal, 22 Kasım) eski haritadaki sokaklarıyla aynı: Kurucu'nun son hâlindeki 177 sokak ve 4 meydancık
+    oran 0,70 ile taşınır, odak Dondurmacı Kızlar (gen/kompakt_liman.py); köy dokusu üretilmez. Sahil Yolu kasabanın
+    içinden eski hattının taşınmışından geçer; iki yanda ilk hatta eğim sınırlı arama. Sahil Yolu'nun Liman dışındaki
+    noktaları ana daldakiyle aynı kalır (gen/kompakt-sahil-ana.json): öbür köylerin arsaları yeniden dizilmez.
   - Stat, Merkez Meydanı, The Imperial sahanlığı ve kıyı köyündeki birahane yeri yola kapalı.
   - Dere üstünde kısa köprü; köprüde zemin oyulmaz.
 
@@ -141,8 +145,12 @@ SAHIL_PARCALAR = {}     # Sahil Yolu kesimleri: kıyı köyü kesimi değişince
 def cizgi_maske(hatlar, kalinlik=1):
     out = np.zeros(Z.shape, bool)
     for h_ in [q for h0 in hatlar for q in SAHIL_PARCALAR.get(id(h0), [h0])]:
+        # (çizgi, baş, son): eski bir kesimin yalnız [baş, son] aralığı, eskisiyle aynı örnek noktalarıyla
+        h_, _lo, _hi = h_ if isinstance(h_, tuple) else (h_, -1.0, math.inf)
         L = h_.length
         for t in np.arange(0, L + 2, 2.0):
+            if t < _lo or t > _hi:
+                continue
             p = h_.interpolate(min(t, L))
             i, j = int(round((p.x - X0) / H)), int(round((p.y - Y0) / H))
             if 0 <= i < EN and 0 <= j < BOY:
@@ -503,6 +511,89 @@ print(f"  kıyı köyü kesimi yeniden: {LineString(_yk).length:.0f} m (eski hat
       f"basit: {SAHIL.is_simple}")
 # köyün yeri artık taşınan sokakların ortası (bağlantılar buna göre)
 YERLESIM[KK_ID]["xy"] = (_kc.x, _kc.y)
+
+# ------------------------------------------------------------------ Liman kasabası (Kemal, 22 Kasım)
+# Liman'ın sokakları eski haritadaki hâliyle aynı (gen/kompakt_liman.py: Kemal'in Kurucu'daki son hâli, oran 0,70,
+# odak Dondurmacı Kızlar). Sokaklar köy dokusu üretilmeden olduğu gibi taşınır; eski meydancıklar da. Sahil Yolu
+# kasabanın içinden eski hattının taşınmışından geçer (eskisinde de kasabanın ortasından geçiyordu); iki yanda
+# ilk hatta eğim sınırlı arama, hattın geri kalanı aynen kalır.
+import kompakt_liman as LM  # noqa: E402
+
+LM_ID = "yerlesim_liman"
+_lm_sokak, _lm_meydan, _lm_sahil = LM.eski_liman()
+LM_HAT = {k: LineString([LM.tasi(*c) for c in hat]) for k, (ad, hat) in _lm_sokak.items()}
+LM_AD = {k: ad for k, (ad, hat) in _lm_sokak.items()}
+LM_MEYDAN = [Polygon([LM.tasi(*c) for c in p]) for p in _lm_meydan]
+LM_ALAN = unary_union(list(LM_HAT.values())).convex_hull
+_es = LineString([LM.tasi(*c) for c in _lm_sahil]).intersection(LM_ALAN.buffer(LM.SAHIL_PAY))
+LM_CEKIRDEK = max(getattr(_es, "geoms", [_es]), key=lambda g: g.length)
+if SAHIL.project(Point(LM_CEKIRDEK.coords[0])) > SAHIL.project(Point(LM_CEKIRDEK.coords[-1])):
+    LM_CEKIRDEK = LineString(list(LM_CEKIRDEK.coords)[::-1])
+# sokak uçları değdikleri yolun üstüne oturur (eskisinde birkaç metrelik açıklıklar)
+for _k in LM_HAT:
+    _c = list(LM_HAT[_k].coords)
+    for _ui in (0, -1):
+        _P = Point(_c[_ui])
+        _ad = [g for k2, g in LM_HAT.items() if k2 != _k] + [LM_CEKIRDEK]
+        _g = min(_ad, key=lambda g: g.distance(_P))
+        if 0.0 < _g.distance(_P) < 4.0:
+            _q = _g.interpolate(_g.project(_P))
+            _c[_ui] = (_q.x, _q.y)
+    LM_HAT[_k] = LineString(_c)
+_lc = unary_union(list(LM_HAT.values())).centroid
+print(f"Liman: eski haritadaki {len(LM_HAT)} sokak ve {len(LM_MEYDAN)} meydancık oran {LM.ORAN:.2f} ile taşındı, "
+      f"kasabanın ortası kıyıya {kiyi.distance(_lc):.0f} m; Sahil Yolu'nun eski hattı kasabada {LM_CEKIRDEK.length:.0f} m")
+
+# Sahil Yolu'nun Liman kesimi: eski hattın taşınmışı ve iki yanda ilk hatta eğim sınırlı arama
+_ca, _cb = SAHIL.project(Point(LM_CEKIRDEK.coords[0])), SAHIL.project(Point(LM_CEKIRDEK.coords[-1]))
+_sk0 = SAHIL.project(Point(YERLESIM[LM_ID]["xy"]))
+_sa = 2.0 * round(min(_sk0 - 550.0, _ca - 300.0) / 2.0)
+_sb = 2.0 * round(max(_sk0 + 550.0, _cb + 300.0) / 2.0)
+if _sa < 0 or _sb > SAHIL.length:
+    sys.exit("HATA: Liman kesimi Sahil Yolu'nun başlangıcına denk geldi")
+_pa, _pb = SAHIL.interpolate(_sa), SAHIL.interpolate(_sb)
+_lyasak = YASAK_TEMEL | maske(LM_ALAN, 8)
+_c0, _c1 = LM_CEKIRDEK.coords[0], LM_CEKIRDEK.coords[-1]
+_y1 = yol_ara((_pa.x, _pa.y), disk(_c0, 8), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_lyasak & ~disk(_c0, 20))
+_y2 = yol_ara(_c1, disk((_pb.x, _pb.y), 12), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_lyasak & ~disk(_c1, 20))
+if _y1 is None or _y2 is None:
+    sys.exit("HATA: Sahil Yolu'nun Liman kesimi bulunamadı")
+# kasabanın 20 m dışına kadar eski hat birebir; ötesindeki uzantı bağlantıyla birlikte yumuşatılır (kavşakta kırık kalmasın)
+_tam = LM_CEKIRDEK.intersection(LM_ALAN.buffer(20.0))
+_tam = max(getattr(_tam, "geoms", [_tam]), key=lambda g: g.length)
+_t0 = min(LM_CEKIRDEK.project(Point(_tam.coords[0])), LM_CEKIRDEK.project(Point(_tam.coords[-1])))
+_t1 = max(LM_CEKIRDEK.project(Point(_tam.coords[0])), LM_CEKIRDEK.project(Point(_tam.coords[-1])))
+_e0, _e1 = substring(LM_CEKIRDEK, 0, _t0), substring(LM_CEKIRDEK, _t1, LM_CEKIRDEK.length)
+_tam = substring(LM_CEKIRDEK, _t0, _t1)
+_y1 = yumusat(list(_y1[:-1]) + list(_e0.coords), tur=3, sade=10.0)
+_y2 = yumusat(list(_e1.coords) + list(_y2[1:-1]) + [(_pb.x, _pb.y)], tur=3, sade=10.0)
+_yk = [tuple(c) for c in _y1[:-1]] + list(_tam.coords) + [tuple(c) for c in _y2[1:]]
+SAHIL_ONCEKI, LM_KESIM = SAHIL, (_sa, _sb)     # Liman kesiminden önceki hat (ana daldaki) ve değişen aralık
+_eski_par = SAHIL_PARCALAR.pop(id(SAHIL))
+_eski_orn = SAHIL_ORNEK.pop(id(SAHIL))
+SAHIL_ONCEKI_ORNEK = _eski_orn
+_yeni_par, _t = [], 0.0
+for _q in _eski_par:          # kıyı köyü kesimi dışındaki parçalardan Liman aralığı çıkar
+    _a, _b = _t, _t + _q.length
+    if _b <= _sa or _a >= _sb:
+        _yeni_par.append(_q)
+    else:
+        if _sa > _a:
+            _yeni_par.append((_q, -1.0, _sa - _a))
+        if _a <= _sa:
+            _yeni_par.append(LineString(_yk))
+        if _sb < _b:
+            _yeni_par.append((_q, _sb - _a, math.inf))
+    _t = _b
+_p1, _p3 = substring(SAHIL, 0, _sa), substring(SAHIL, _sb, SAHIL.length)
+SAHIL = LineString(list(_p1.coords)[:-1] + _yk + list(_p3.coords)[1:])
+_Lk = LineString(_yk).length
+LIMAN_KESIM_BOY = _Lk
+SAHIL_PARCALAR[id(SAHIL)] = _yeni_par
+SAHIL_ORNEK[id(SAHIL)] = np.r_[_eski_orn[_eski_orn < _sa], _sa + np.linspace(0, _Lk, max(2, int(math.ceil(_Lk / 2.0)) + 1)),
+                               _eski_orn[_eski_orn > _sb] - _sb + _sa + _Lk]
+print(f"  Liman kesimi yeniden: {_Lk:.0f} m (eski hattın taşınmışı {LM_CEKIRDEK.length:.0f} m), basit: {SAHIL.is_simple}")
+YERLESIM[LM_ID]["xy"] = (_lc.x, _lc.y)
 ekle(SAHIL, "ana", "Sahil Yolu", genislik=9.0)
 
 # ================================================================== 2. köy dokuları (Ege köyü)
@@ -811,7 +902,8 @@ koy_dokusu("yerlesim_merkez", 80.0, merkez=MEYDAN_XY, cikis=disari_cikislar(MEYD
 STAT_CEVRE = STAT.buffer(10, join_style=2)
 _sc = cevre_kenarlari(STAT_CEVRE)
 koy_dokusu("yerlesim_stadyum", 80.0, cikis=disari_cikislar(STAT, _sc), cevre=_sc)
-for _yid, _ara in (("yerlesim_liman", 85.0), ("yerlesim_iskele", 80.0), ("yerlesim_ciftlik", 90.0)):
+# Liman köy dokusuyla üretilmez: eski haritadaki sokakları taşınır (aşağıda, Kemal 22 Kasım)
+for _yid, _ara in (("yerlesim_iskele", 80.0), ("yerlesim_ciftlik", 90.0)):
     koy_dokusu(_yid, _ara)
 
 # ------------------------------------------------------------------ kıyı köyü (Taraftar Birahanesi)
@@ -845,6 +937,18 @@ for _k, _kd in KK_ESKI:
     print(f"  {_k}: {_kd}, eski {_ESKI_UZ[_k]:.0f} m → {KK_HAT[_k].length:.0f} m, en dik %{100 * en_buyuk_egim(KK_HAT[_k]):.1f}")
 print(f"  Sahil Yolu'nun köy önü (eski hattın küçültülmüşü): {CEKIRDEK.length:.0f} m, en dik %{100 * en_buyuk_egim(CEKIRDEK):.1f}")
 
+# ------------------------------------------------------------------ Liman kasabası (Kemal, 22 Kasım)
+# Eski haritadaki sokaklar ve meydancıklar, taşınmış hâliyle (yukarıda LM_HAT). Hepsi köy sokağı; adı olan
+# (Liman Kordonu, geçici ad) adıyla gelir. Kavşaktan taşan kısa uçlar da kalır (eskisinde de öyleydi).
+for _k, _g in LM_HAT.items():
+    kaynak_ekle(_g, LM_ID, "sokak", "liman", ad=LM_AD[_k])
+for _g in LM_MEYDAN:
+    MEYDANCIK.append(dict(koy=LM_ID, geom=_g))
+_lm_dik = sorted(((en_buyuk_egim(g), k) for k, g in LM_HAT.items()), reverse=True)
+print(f"  Liman: {len(LM_HAT)} sokak, en dik %{100 * _lm_dik[0][0]:.1f} ({_lm_dik[0][1]}), "
+      f"%15'i aşan {sum(1 for e, _ in _lm_dik if e > EGIM['sokak'])}; Sahil Yolu'nun kasabadaki eski hattı en dik "
+      f"%{100 * en_buyuk_egim(LM_CEKIRDEK):.1f}")
+
 # ------------------------------------------------------------------ adlı caddeler
 def adlandir(yid, ad, kiyiya=False):
     ad_adaylar = [k for k in KOY_HAT if k["koy"] == yid and k["aile"] == "kos" and k["geom"].length > 200
@@ -862,7 +966,9 @@ def adlandir(yid, ad, kiyiya=False):
 
 
 adlandir("yerlesim_iskele", "Kemsköy Caddesi")
-LIMAN_CADDESI = adlandir("yerlesim_liman", "Liman Caddesi", kiyiya=True)
+# Liman Caddesi ve Liman Bağlantısı Kemal'in Kurucu'daki son hâlinde gizliydi; Liman eski sokaklarıyla gelince
+# ad bir sokağa konmaz (Kemal 22 Kasım; karar Kemal'in)
+LIMAN_CADDESI = None
 
 
 # ------------------------------------------------------------------ düğümleme
@@ -913,7 +1019,7 @@ SABIT = [y["geom"] for y in YOLLAR]
 SOKAK_KENAR = dugumle(KOY_HAT, SABIT)
 for _ in range(8):       # kavşaktan taşan kısa uçlar (40 m altı) silinir
     bu = bos_uclar(SOKAK_KENAR, SABIT)
-    kalan = [k for k, b_ in zip(SOKAK_KENAR, bu) if k.get("ad") or k["aile"] == "halka"
+    kalan = [k for k, b_ in zip(SOKAK_KENAR, bu) if k.get("ad") or k["aile"] in ("halka", "liman")
              or not (any(b_) and k["geom"].length < 40.0) and not all(b_)]
     if len(kalan) == len(SOKAK_KENAR):
         break
@@ -929,9 +1035,15 @@ if LIMAN_CADDESI is not None:
     else:
         print("  UYARI: Liman Bağlantısı için uygun parça yok")
 # yer yer daralan sokaklar: köy sokağı parçalarının bir kısmı 4 m
-_rng = np.random.default_rng(11)
+# Liman'ın eski sokakları kendi sayı akışıyla; öbür köyler ana daldaki akışla: ana dalda (#266) Merkez ve Stadyum'dan
+# sonra üretilmiş Liman sokaklarının çektiği 85 sayı atlanır, İskele, Çiftlik ve kıyı köyünün daralan sokakları aynı kalır.
+_rng, _lm_rng = np.random.default_rng(11), np.random.default_rng(22)
+_atla = 85
 for k in SOKAK_KENAR:
-    if k["kademe"] == "sokak" and not k.get("ad") and _rng.random() < 0.3:
+    if _atla and k["koy"] not in ("yerlesim_merkez", "yerlesim_stadyum", LM_ID):
+        _rng.random(_atla)
+        _atla = 0
+    if k["kademe"] == "sokak" and not k.get("ad") and (_lm_rng if k["koy"] == LM_ID else _rng).random() < 0.3:
         k["genislik"] = 4.0
 print(f"  köy sokağı parçası: {len(SOKAK_KENAR)}, meydancık: {len(MEYDANCIK)}")
 
@@ -1124,7 +1236,7 @@ YOLLAR = [y for y, k_ in zip(YOLLAR, kok) if k_ == ana_kok]
 # Boşta kalan kısa sokak ucu (40 m altı) silinir; daha uzun boşta uç çıkmaz sokak olarak kalır
 for _tur in range(6):
     bu = bos_uclar(YOLLAR, [])
-    kalan = [y for y, b_ in zip(YOLLAR, bu) if y["ad"] or y["tur"] not in ("ara", "sokak", "gecit")
+    kalan = [y for y, b_ in zip(YOLLAR, bu) if y["ad"] or y["tur"] not in ("ara", "sokak", "gecit") or y["grup"] == LM_ID
              or not (any(b_) and y["geom"].length < 40.0)]
     if len(kalan) == len(YOLLAR):
         break
@@ -1194,12 +1306,17 @@ for i_, y in enumerate(YOLLAR):
     s = s[np.r_[True, np.diff(s) > 0.05]]
     y["s"], y["p"] = s, np.array([g.interpolate(t).coords[0] for t in s])
     y["tut"] = np.isin(s, ek) if ek else np.zeros(len(s), bool)
+    if id(g) in SAHIL_ORNEK and y["ad"] == "Sahil Yolu":
+        # ana daldaki hat (Liman kesiminden önceki) ana daldaki örnek noktalarıyla: kesim dışında profil ondan
+        go_ = SAHIL_ONCEKI
+        eko = [go_.project(Point(c)) for j_, c in UCLAR if j_ != i_ and go_.distance(Point(c)) < 0.3]
+        so_ = np.unique(np.r_[np.clip(SAHIL_ONCEKI_ORNEK, 0, go_.length), eko])
+        so_ = so_[np.r_[True, np.diff(so_) > 0.05]]
+        y["s_eski"], y["p_eski"] = so_, np.array([go_.interpolate(t).coords[0] for t in so_])
 
-for y in YOLLAR:
-    s, p = y["s"], y["p"]
+def _profil(y, s, p):
+    """Yolun boy kesiti (yol yatağının profili), köprü kesimleri ve zemin kotu: (zp, kop, zg)."""
     n = len(s)
-    if y["tur"] in ("patika", "merdiven") or y["yuzey"] == "basamak":
-        continue
     ds = np.diff(s)
     lim = EGIM[y["tur"]] * (0.85 if y["tur"] in ("ana", "ara") else 0.93)
     zg = ornek(Z, p[:, 0], p[:, 1])
@@ -1240,6 +1357,41 @@ for y in YOLLAR:
         uz_ = np.abs(s[en_yakin] - s)
         zp = zp + (zg - zp)[en_yakin] * (1 - smooth(uz_ / 60.0))
         zp = sinirla(zp, ds, lim)
+    return zp, kop, zg
+
+
+for y in YOLLAR:
+    s, p = y["s"], y["p"]
+    n = len(s)
+    if y["tur"] in ("patika", "merdiven") or y["yuzey"] == "basamak":
+        continue
+    ds = np.diff(s)
+    zp, kop, zg = _profil(y, s, p)
+    if "s_eski" in y:
+        # Sahil Yolu: Liman kesiminin dışında profil, nokta ve köprü ana daldaki hattınki (aynı örnek noktaları,
+        # aynı zemin); kesimin içinde yeni hat, uçlarda 60 m'de eskisine bağlanır
+        so, po = y["s_eski"], y["p_eski"]
+        zo, ko, go = _profil(y, so, po)
+        _sa, _sb = LM_KESIM
+        _dk = (_sa + LIMAN_KESIM_BOY) - _sb
+        sol, sag = s < _sa - 1e-3, s > _sa + LIMAN_KESIM_BOY + 1e-3     # kesimin iki ucu kesimin içinde sayılır
+        io = np.where(sol, np.searchsorted(so, s - 1e-6), np.searchsorted(so, s - _dk - 1e-6)).clip(0, len(so) - 1)
+        dis = (sol | sag) & (np.abs(np.where(sol, s, s - _dk) - so[io]) < 1e-3)
+        zb0, zb1 = zo[io[sol][-1]], zo[io[sag][0]]
+        zn0, zn1 = zp[np.nonzero(sol)[0][-1]], zp[np.nonzero(sag)[0][0]]
+        ic = ~(sol | sag)
+        d0, d1 = s - _sa, _sa + LIMAN_KESIM_BOY - s
+        zp = np.where(ic, zp + (zb0 - zn0) * np.clip(1 - d0 / 60.0, 0, 1) + (zb1 - zn1) * np.clip(1 - d1 / 60.0, 0, 1), zp)
+        zp = np.where(dis, zo[io], zp)
+        _lim = EGIM[y["tur"]] * 0.85
+        zp = sinirla_sabit(zp, np.diff(s), _lim, dis)     # kesimin içi eğim sınırına çekilir, dışı sabit
+        kop = np.where(dis, ko[io], kop)
+        zg = np.where(dis, go[io], zg)
+        p = np.where(dis[:, None], po[io], p)
+        y["p"] = p
+        if (~dis & (sol | sag)).any():
+            print(f"  UYARI: Sahil Yolu'nun {int((~dis & (sol | sag)).sum())} örnek noktası ana daldakiyle eşleşmedi "
+                  f"(s: {', '.join(f'{v:.1f}' for v in s[~dis & (sol | sag)][:5])}; hat {s[-1]:.1f})")
     y["zp"], y["kop0"] = zp, kop
     # zemini şerit içinde profile getir: çekirdek tam, kenar yumuşak; kenarın genişliği
     # yapılan kazı / dolgu kadar artar (şev 1'e 2,5'tan dik olmaz)
@@ -1395,6 +1547,25 @@ def sade3(p, z, kop, tut, tol=0.15):
 for y in YOLLAR:
     y["ix"] = sade3(y["p"], y["z"], y["kopru"], y["tut"])
     y["g_out"] = LineString(y["p"][y["ix"]])
+# Sahil Yolu: Liman kesiminin dışındaki noktalar ana daldakiyle aynı (gen/kompakt-sahil-ana.json); yalnız Liman kesimi
+# yeni. Böylece öbür köylerin arsaları yeniden dizilmez (Kemal, 22 Kasım). Kesimin iki ucunda 30 m pay.
+SAHIL_ANA = json.load(open(os.path.join(BURASI, "kompakt-sahil-ana.json"), encoding="utf-8"))["koordinatlar"]
+_say = next(y for y in YOLLAR if y["ad"] == "Sahil Yolu")
+_so = [SAHIL_ONCEKI.project(Point(m(c[:2]))) for c in SAHIL_ANA]
+_so[0], _so[-1] = 0.0, SAHIL_ONCEKI.length          # kapalı halka: baş ve son aynı noktada
+_pay, (_sa, _sb) = 30.0, LM_KESIM
+_sol = [c for c, t in zip(SAHIL_ANA, _so) if t < _sa - _pay]
+_sag = [c for c, t in zip(SAHIL_ANA, _so) if t > _sb + _pay]
+if len(_sol) + len(_sag) >= len(SAHIL_ANA) or not _sol or not _sag:
+    sys.exit("HATA: Sahil Yolu'nun ana daldaki noktaları Liman kesimine göre bölünemedi")
+_d = _say["geom"].length - SAHIL_ONCEKI.length                  # Liman kesiminin boyu ne kadar değişti
+_w0 = max(t for t in _so if t < _sa - _pay)
+_w1 = min(t for t in _so if t > _sb + _pay) + _d
+_orta = [i_ for i_ in _say["ix"] if _w0 + 0.5 < _say["s"][i_] < _w1 - 0.5]
+_say["cikti"] = (_sol + [ll(*_say["p"][i_]) + [round(float(_say["z"][i_]), 1)] for i_ in _orta] + _sag)
+_say["g_out"] = LineString([m(c[:2]) for c in _say["cikti"]])
+print(f"  Sahil Yolu: Liman dışında ana daldaki {len(_sol) + len(_sag)} nokta aynen, Liman kesiminde {len(_orta)} yeni nokta "
+      f"(ana dalda {len(SAHIL_ANA) - len(_sol) - len(_sag)})")
 # son bağlılık denetimi, yazılacak hâliyle: ana ağa değmeyen parça yazılmaz
 _ag = STRtree([y["g_out"] for y in YOLLAR])
 _ata = list(range(len(YOLLAR)))
@@ -1452,7 +1623,7 @@ for y, b_ in zip(YOLLAR, _bu):
     kimlik = k_
     kullanilan_id.add(kimlik)
     ix = y["ix"]
-    koord = [ll(*y["p"][i_]) + [round(float(y["z"][i_]), 1)] for i_ in ix]
+    koord = y.get("cikti") or [ll(*y["p"][i_]) + [round(float(y["z"][i_]), 1)] for i_ in ix]
     kapali = np.hypot(*np.subtract(y["geom"].coords[0], y["geom"].coords[-1])) < 0.5
     cik = [bool(c) for c in y["cikmaz"]]
     if not kapali:

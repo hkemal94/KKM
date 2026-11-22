@@ -43,6 +43,7 @@ BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
 sys.path.insert(0, BURASI)
 from kompakt_zemin_denetim import oku  # noqa: E402
+import kompakt_liman as LM  # noqa: E402
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)   # shapely.ops.transform (öbür üreteçlerle aynı)
 
@@ -73,6 +74,7 @@ SIRA_EV_EN_DAR = 6.0     # DENEME: bitişik parsel bundan darsa yanındakiyle te
 ON_PAY = {"bitisik": 0.0, "avlulu": 1.5, "buyuk": 2.0}     # DENEME: parsel önünden geri çekilme (m)
 YAN_PAY = {"avlulu": 1.0}                                   # DENEME: avlulu evin yan sınırdan payı (m)
 ARKA_PAY = {"bitisik": 2.0, "avlulu": 4.0, "buyuk": 4.0}    # DENEME: evin arkasında kalan en az avlu (m)
+LIMAN_SIG_ARKA = 2.0     # DENEME: Liman'ın sığ (16 m) arsasında evin arkasında kalan en az avlu (m)
 EV_ALAN_ORANI = {"avlulu": 0.50, "buyuk": 0.55}            # DENEME: ev tabanı parselin en çok bu kadarı (gerisi avlu)
 KIYI_ORANI = 0.15        # DENEME: kıyıya yakın avlulu parselde yazlık oranı
 KIYI_YAKIN_M = 200.0     # DENEME: "kıyıya yakın" sınırı (m)
@@ -352,11 +354,19 @@ for k, v in YERLESIM.items():
     MAH_YERLESIM.setdefault(v["mahalle"], []).append(k)
 
 
-LIMAN_KAYMASI = {}    # kıyıdaki öbek (Liman'ın liman kıyısı): birlikte kıyıya kayar
+LIMAN_KAYMASI = {}    # kıyıdaki öbek (Liman dışındaki kıyı yapıları): birlikte kıyıya kayar
+
+
+def eski_limanda(e):
+    """Liman kasabasındaki viki yapısı (Fener burunda, kendi kuralıyla): sokaklarla birlikte taşınır (Kemal, 22 Kasım)."""
+    return e["mahalle"] == "yer_liman" and e["id"] != "bina_fener" and e.get("eskiKonum") is not None
 
 
 def hedef(e):
-    """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması)."""
+    """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması).
+    Liman kasabasındakiler sokaklarla aynı taşımayla (gen/kompakt_liman.py: oran 0,70, odak Dondurmacı Kızlar)."""
+    if eski_limanda(e):
+        return LM.tasi(*e["eskiKonum"]), "yerlesim_liman"
     p = m(e["eskiKonum"])
     k = kucult(*p)
     adaylar = MAH_YERLESIM.get(e["mahalle"], [])
@@ -378,7 +388,7 @@ def liman_obekleri():
     LIMAN_KAYMASI.clear()
     obek = {}
     for e in ESKI_J["yapilar"]:
-        if e["ozelYer"] or e["bag"] != "viki" or e["eskiKiyiM"] > KIYI_BAGLI_M:
+        if e["ozelYer"] or e["bag"] != "viki" or e["eskiKiyiM"] > KIYI_BAGLI_M or eski_limanda(e):
             continue
         T, ys = hedef(e)
         obek.setdefault(ys, []).append((e, T))
@@ -457,7 +467,7 @@ def yerlestir_viki(e):
     en_iyi = None
     for c, on, t, yid in yol_kenari_adaylari(T, en, boy, meydana):
         puan = math.dist(c, T)
-        if liman and e["id"] not in LIMAN_KAYMASI:
+        if liman and e["id"] not in LIMAN_KAYMASI and not eski_limanda(e):
             puan += 3.0 * max(0.0, KIYI.distance(Point(c)) - max(boy, B["olcek"] * e["eskiKiyiM"]))
         if en_iyi and puan >= en_iyi[0]:
             continue
@@ -505,8 +515,6 @@ def ayrilan_yer(e, g):
     return g, on, yakin[0]["id"]
 
 
-# ------------------------------------------------------------------ Dondurmacı Kızlar iskelenin önünde (22 Kasım)
-ESKI_ISKELE_KIYI = (25.7886544, 39.625132)   # eski haritada Liman İskelesi'nin kıyıya değdiği yer (src/data/duzadaGeo.ts,
                                              # bina_liman_iskele); Kurucu'da dükkân bu kökün 37 m gerisinde, 14 m yanında
 DK_KUMSAL = 23.6        # oyun belgesi 0.10 (~25 m kumsal; oyun kodunda dükkânın önü ile su arası 23,6 m); sığmazsa kısalır (DENEME)
 DK_KUMSAL_EN_AZ = 8.0   # DENEME: dükkânın önü ile su arası en az
@@ -522,11 +530,9 @@ DK_ISKELE = {}          # iskele ve mendirek (uret() yazar)
 
 
 def dk_iskele_kok():
-    """Eski iskele kökünün kompakt adadaki yeri (öbür liman yapılarıyla aynı taşıma) ve oradaki kıyı noktası, deniz yönü."""
-    k = kucult(*m(ESKI_ISKELE_KIYI))
-    d = KAYMA["yerlesim_liman"]
-    g = LIMAN_KAYMASI.get("bina_liman_kafe", (0.0, 0.0))
-    T = Point(k[0] + d[0] + g[0], k[1] + d[1] + g[1])
+    """İskelenin kökü ve oradaki kıyı noktası, deniz yönü. Kök #266'da eski iskele kökünün taşınmış yeriydi; Liman
+    eski sokaklarıyla gelince (22 Kasım) dükkân ve iskele yerinde kalır: kök #266'daki yerinde (gen/kompakt_liman.py)."""
+    T = Point(m(LM.ISKELE_KOK))
     s = KIYI.project(T)
     S = KIYI.interpolate(s)
     a, b = KIYI.interpolate(s - 40.0), KIYI.interpolate(s + 40.0)
@@ -644,6 +650,7 @@ def viki_yapilari():
                 continue
             _, taban, on, yid = sonuc
             yontem = ("Fener Burnu'nda, kıyıya eskisinin 0,70'i uzaklıkta" if e["id"] == "bina_fener" else
+                      "eski Liman'daki yeri (sokaklarla aynı taşıma, oran 0,70)" if eski_limanda(e) else
                       "oranla karşılığı" + (", meydana bakar" if meydana else "")
                       + (", kıyıda (liman öbeği birlikte kıyıya kaydı)" if e["id"] in LIMAN_KAYMASI else ", kıyıda" if liman else ""))
         ozel["yol"] = yid
@@ -709,6 +716,8 @@ def kemal_secti():
                 dosya = sabit_sec(kimlik, DUKKANLI)
                 me, mb, _ = olcu(dosya)
                 taban, on = parsel_evi(prs, [prs], me, mb)
+                if taban is None:                    # arsa sığ (Liman'da 2 kare derin arsa): arsaya sığacak kadar daralır
+                    taban, on = arsaya_oturt(prs, me, mb)
             else:
                 me, mb = olcu_ if olcu_ else olcu(dosya)[:2]
                 taban, on = arsaya_oturt(prs, me, mb)
@@ -763,6 +772,8 @@ def parsel_evi(prs, grup, en, boy):
     D = min(p["derinlikM"] for p in grup)
     alan = unary_union([ARSA_ALAN.get(p["id"], p["g"]) for p in grup])
     on = ON_PAY[tur]
+    # Liman'ın 2 kare derin (16 m) arsalarında arka avlu daha dar (gen/kompakt_parseller.py → LIMAN_SIG)
+    arka = LIMAN_SIG_ARKA if prs["yerlesim"] == "yerlesim_liman" and D <= 16.5 else ARKA_PAY[tur]
     if tur == "bitisik":
         # ortak duvar: cephe boyunca tam; eğri yolda parselin kendi biçimini izler
         t1 = on + min(boy, D - on - ARKA_PAY[tur])
@@ -782,12 +793,12 @@ def parsel_evi(prs, grup, en, boy):
     if tur == "avlulu" and L <= DAR_CEPHE:
         # dar avlulu arsa (1 kare cephe): dar ev, cepheye sığacak kadar daralır; arkada avlu
         en = L - 2 * DAR_YAN_PAY
-        boy = min(boy, D - on - ARKA_PAY[tur])
+        boy = min(boy, D - on - arka)
         if boy < 6.0:
             return None, None
         taban = ev_tabani(a, u, n, DAR_YAN_PAY, DAR_YAN_PAY + en, on, on + boy)
         return (taban, -n) if alan.buffer(0.05).contains(taban) else (None, None)
-    if boy > D - on - ARKA_PAY[tur] or en * boy > EV_ALAN_ORANI[tur] * prs["alanM2"]:
+    if boy > D - on - arka or en * boy > EV_ALAN_ORANI[tur] * prs["alanM2"]:
         return None, None
     yan = YAN_PAY.get(tur, 1.0)
     if en > L - 2 * yan:
@@ -801,7 +812,7 @@ def parsel_evi(prs, grup, en, boy):
         denemeler = sorted(np.arange(yan, L - yan - en + 1e-6, 1.0), key=lambda s: abs(s - orta))
     ic = alan.buffer(0.05)
     for geri in (on, on + 1.0, on + 2.0):
-        if boy > D - geri - ARKA_PAY[tur]:
+        if boy > D - geri - arka:
             break
         for s0 in denemeler:
             taban = ev_tabani(a, u, n, s0, s0 + en, geri, geri + boy)
@@ -856,9 +867,15 @@ def parsel_evleri():
                 i += 1; g.append(sira[i])
             gruplar.append(g); i += 1
         onceki = None
+        onceki_mah = None
         for g in gruplar:
             prs = g[0]
             tur = prs["tur"]
+            # Liman yeniden üretildi (22 Kasım): Liman'dan öbür mahalleye geçen sırada komşu model sayılmaz; öbür
+            # köylerin evleri Liman'daki evden etkilenmesin
+            if onceki_mah == "yer_liman" and prs["mahalle"] != "yer_liman":
+                onceki = None
+            onceki_mah = prs["mahalle"]
             if any(p["id"] in TUKENEN for p in g):
                 SAYAC["viki"] += len(g)
                 onceki = None

@@ -1,11 +1,29 @@
 # Durum
 
-**Son güncelleme: 22 Kasım 2026 (tek harita 6b: görünüş düzeltmeleri); önceki: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 22 Kasım 2026 (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita ağaçları; Kemal: "daha sık"); önceki: 22 Kasım 2026 (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); önceki: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 22 Kasım: tek harita: Liman eski haritadaki sokaklarıyla
+
+Kemal: "Liman kısmını gerçekten beğenmedim. Bir önceki Liman'ın sokak çizimleri çok hoştu ve balık yeri bu kadar
+yakın değildi." Liman'ın sokakları eski haritadaki hâliyle (Kurucu'daki son hâli: 177 sokak, 4 meydancık) tek
+haritaya taşındı (`gen/kompakt_liman.py`); Sahil Yolu kasabanın ortasından eskisi gibi geçer. Önizlemeden sonra
+Kemal'in üç cevabı:
+1. Liman adanın geri kalanı gibi **0,70**'e küçülür. Odak Dondurmacı Kızlar (dükkân, iskele, mendirek #266'daki
+   yerinde); kasaba, sokaklar dükkânın içinden geçmeyecek kadar kayar: 18 m kara yönüne, 6 m kıyı boyunca (DENEME).
+   Sokaklar kıyıya en az 41 m, kasaba Liman mahallesinde.
+2. Evler seyrek kalır. 0,70'te sokak araları ~35 m; yalnız Liman'da 2 kare derin (16 m) avlulu arsa da denenir,
+   bu arsalarda evin arkasında 2 m avlu kalır (DENEME).
+3. "Liman Caddesi" adsız kalır (Liman Bağlantısı da; ikisi Kurucu'da gizliydi). Liman Kordonu (geçici ad) eskisi gibi.
+
+Dükkâna uzaklık (eski / eskinin 0,70'i / #266 / yeni): Balık Hali 104 / 73 / 101 / 71 m, Balık Lokantası
+64 / 45 / 25 / 41 m, Liman İdare 160 / 112 / 118 / 106 m. Öbür köyler değişmedi: Sahil Yolu'nun Liman dışındaki
+noktaları ana daldakiyle aynı (`gen/kompakt-sahil-ana.json`), arsa üreteci orada ana daldaki köşeleri kullanır.
+Değişen yalnız Liman, Liman–Merkez bağlantı yolu ve çevresindeki ağaçlar. Önizlemeler `docs/gorseller/liman-eski-sokaklar/`.
 
 ## 22 Kasım: tek harita 6b: görünüş düzeltmeleri
 

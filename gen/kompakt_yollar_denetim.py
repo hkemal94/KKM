@@ -292,6 +292,36 @@ def main():
             q_ = sy.interpolate(sy.project(bq))
             yaz("Kıyı köyü Sahil Yolu'nun deniz yanında", kiyi.distance(korunan["birahane-yeri"]) < kiyi.distance(q_),
                 f"birahane yeri kıyıya {kiyi.distance(korunan['birahane-yeri']):.0f} m, Sahil Yolu {kiyi.distance(q_):.0f} m")
+    # 11) Liman kasabası: eski haritadaki sokaklar, gen/kompakt_liman.py'nin taşımasıyla (Kemal, 22 Kasım)
+    import kompakt_liman as LM
+    lm_sokak, _, _ = LM.eski_liman()
+    sap, kayip = [], []
+    for k_, (ad_, hat_) in lm_sokak.items():
+        g_ = LineString([LM.tasi(*c) for c in hat_])
+        uc = 5.0 if g_.length > 12 else 0.0
+        ds = [agu.distance(g_.interpolate(t)) for t in np.arange(uc, g_.length - uc + 0.01, 4.0)]
+        if ds and max(ds) > 4.0:      # eskisinde değdiği yola 4 m'den yakın biten uç o yolun üstüne oturtulur
+            kayip.append(k_)
+        sap.append(max(ds) if ds else 0.0)
+    yaz("Liman sokakları eski haritadakiyle aynı hat (oran 0,70, odak Dondurmacı Kızlar)", not kayip,
+        f"{len(lm_sokak)} sokak, {len(lm_sokak) - len(kayip)} tanesi taşınmış eski hattan en çok "
+        f"{max(s_ for s_, k_ in zip(sap, lm_sokak) if k_ not in kayip):.2f} m sapmayla (uçlar değdikleri yola oturtulur); "
+        f"hattından kayan: {', '.join(kayip) or '-'}")
+    lm_u = unary_union([LineString([LM.tasi(*c) for c in hat_]) for _, hat_ in lm_sokak.values()])
+    yaz("Liman sokakları kıyıya 20 m'den yaklaşmaz", kiyi.distance(lm_u) >= 20.0, f"en yakın {kiyi.distance(lm_u):.0f} m")
+    # Sahil Yolu'nun Liman dışındaki noktaları ana daldakiyle aynı (gen/kompakt-sahil-ana.json)
+    sa_ = json.load(open(os.path.join(BURASI, "kompakt-sahil-ana.json"), encoding="utf-8"))["koordinatlar"]
+    sy_ = next((f["geometry"]["coordinates"] for f in yollar if f["properties"].get("ad") == "Sahil Yolu"), [])
+    nl = 0
+    while nl < min(len(sa_), len(sy_)) and sa_[nl] == sy_[nl]:
+        nl += 1
+    nr = 0
+    while nr < min(len(sa_), len(sy_)) - nl and sa_[-1 - nr] == sy_[-1 - nr]:
+        nr += 1
+    disari = [mt(*c[:2]) for c in sa_[nl:len(sa_) - nr]]
+    uzak = max((Point(q).distance(lm_u) for q in disari), default=0.0)
+    yaz("Sahil Yolu Liman dışında ana daldakiyle aynı nokta nokta", uzak <= 1200.0,
+        f"{nl + nr} / {len(sa_)} nokta aynı; değişenlerin Liman sokaklarına en uzağı {uzak:.0f} m")
     print("Zemin denetimi (yol yatağıyla):")
     sorun += zd.main()
     print("Sonuç:", "hepsi temiz" if sorun == 0 else f"{sorun} sorun")
