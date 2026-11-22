@@ -12,6 +12,7 @@ import { AutoLinkedText, LinkIndexEntry } from './autoLink';
 import { WikiRooms } from './WikiRooms';
 import { WikiPeople } from './WikiPeople';
 import { WikiHarita, haritaKarsiligiVar } from './WikiHarita';
+import { MahalleHaritasi } from './MahalleHaritasi';
 import { KunyeDegeri } from './KunyeDegeri';
 import { BAG_GRUPLARI, adiCoz, bagParcalari, kunyeBaglari, semaAlanlari, takmaAdlar, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
 import { maddeGorselleri } from '../../lib/maddeGorseli';
@@ -605,6 +606,9 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
               </section>
             ))
           )}
+
+          {/* --- Mahalle haritası (tek harita 9. adım): yalnız mahalle maddesinde --- */}
+          <MahalleHaritasi item={item} />
 
           <WikiPeople
             people={relatedPeople}

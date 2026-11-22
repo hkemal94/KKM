@@ -1,0 +1,1195 @@
+{
+ "yer_ciftlik": {
+  "ad": "Çiftlik Mahallesi",
+  "yerlesim": "yerlesim_ciftlik",
+  "A": {
+   "dosya": "yer_ciftlik-A.png",
+   "en": 1600,
+   "boy": 2046,
+   "bayt": 678782,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Küçükçetmi Sürek Kulübü",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Yağ Fabrikası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çiftlik Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Çetmi Sırtı",
+     "rakim": 290,
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "baslik",
+     "metin": "Çiftlik Mahallesi"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ana yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ara yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Sokak"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Geçit"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Patika, toprak yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Yapı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Vikide maddesi olan yapı (adı yazılı)"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Zeytinlik"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Maki"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Tarla"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Çam ormanı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Bağ"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Kumsal"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Eş yükselti: 20 m, kalın 100 m"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Mahalle sınırı"
+    },
+    {
+     "tur": "kunye",
+     "metin": "Düzada · tek harita, 22 Kasım 2026"
+    }
+   ]
+  },
+  "B": {
+   "dosya": "yer_ciftlik-B.png",
+   "en": 1600,
+   "boy": 2046,
+   "bayt": 1026111,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Küçükçetmi Sürek Kulübü",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Yağ Fabrikası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çiftlik Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Çetmi Sırtı",
+     "rakim": 290,
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    }
+   ]
+  },
+  "sigmayan": []
+ },
+ "yer_iskele": {
+  "ad": "İskele Mahallesi",
+  "yerlesim": "yerlesim_iskele",
+  "A": {
+   "dosya": "yer_iskele-A.png",
+   "en": 1600,
+   "boy": 1967,
+   "bayt": 582141,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kemsköy Caddesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "İskele Mescidi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Rum Mezarlığı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Eski Kilise",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Sade Meyhane",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yapi",
+     "metin": "The Imperial Kemsköy",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Güney Burnu",
+     "rakim": 96,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Otel Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Merdiveni",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Liman Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "baslik",
+     "metin": "İskele Mahallesi"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ana yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ara yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Sokak"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Geçit"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Patika, toprak yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Yapı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Vikide maddesi olan yapı (adı yazılı)"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Zeytinlik"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Maki"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Tarla"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Çam ormanı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Çıplak kayalık"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Kumsal"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Eş yükselti: 20 m, kalın 100 m"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Mahalle sınırı"
+    },
+    {
+     "tur": "kunye",
+     "metin": "Düzada · tek harita, 22 Kasım 2026"
+    }
+   ]
+  },
+  "B": {
+   "dosya": "yer_iskele-B.png",
+   "en": 1600,
+   "boy": 1967,
+   "bayt": 882518,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kemsköy Caddesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "İskele Mescidi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Rum Mezarlığı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Eski Kilise",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Sade Meyhane",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yapi",
+     "metin": "The Imperial Kemsköy",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Güney Burnu",
+     "rakim": 96,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Otel Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Merdiveni",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Liman Mahallesi",
+     "yer": "ana"
+    }
+   ]
+  },
+  "sigmayan": []
+ },
+ "yer_liman": {
+  "ad": "Liman Mahallesi",
+  "yerlesim": "yerlesim_liman",
+  "A": {
+   "dosya": "yer_liman-A.png",
+   "en": 1600,
+   "boy": 1750,
+   "bayt": 449854,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Liman Kordonu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Liman İdare Binası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Dondurmacı Kızlar",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Liman Balık Lokantası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Liman Balık Hali",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Efendi Kuruyemiş",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kuzey Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Deniz Feneri",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Fener Burnu",
+     "rakim": 118,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Fener Patikası",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "İskele Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Stadyum Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "baslik",
+     "metin": "Liman Mahallesi"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ana yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ara yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Sokak"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Geçit"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Patika, toprak yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Yapı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Vikide maddesi olan yapı (adı yazılı)"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Zeytinlik"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Maki"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Tarla"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Çam ormanı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Kumsal"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Eş yükselti: 20 m, kalın 100 m"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Mahalle sınırı"
+    },
+    {
+     "tur": "kunye",
+     "metin": "Düzada · tek harita, 22 Kasım 2026"
+    }
+   ]
+  },
+  "B": {
+   "dosya": "yer_liman-B.png",
+   "en": 1600,
+   "boy": 1750,
+   "bayt": 713228,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Liman Kordonu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Liman İdare Binası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Dondurmacı Kızlar",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Liman Balık Lokantası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Liman Balık Hali",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Efendi Kuruyemiş",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kuzey Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Deniz Feneri",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Fener Burnu",
+     "rakim": 118,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Fener Patikası",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "İskele Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Stadyum Mahallesi",
+     "yer": "ana"
+    }
+   ]
+  },
+  "sigmayan": []
+ },
+ "yer_merkez": {
+  "ad": "Merkez Mahallesi",
+  "yerlesim": "yerlesim_merkez",
+  "A": {
+   "dosya": "yer_merkez-A.png",
+   "en": 1600,
+   "boy": 2587,
+   "bayt": 899484,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çetmi Sırtı Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Postanesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada İlkokulu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Belediye Binası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Kahvehanesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Eczanesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada Jandarma Karakolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Pazarı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada Merkez Camii",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada Sağlık Ocağı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çetmi Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Dağ Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Ada Tepesi",
+     "rakim": 742,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kuzey Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "İskele Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Stadyum Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Çiftlik Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "baslik",
+     "metin": "Merkez Mahallesi"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ana yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ara yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Sokak"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Geçit"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Patika, toprak yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Yapı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Vikide maddesi olan yapı (adı yazılı)"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Zeytinlik"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Maki"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Tarla"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Çam ormanı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Çıplak kayalık"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Eş yükselti: 20 m, kalın 100 m"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Mahalle sınırı"
+    },
+    {
+     "tur": "kunye",
+     "metin": "Düzada · tek harita, 22 Kasım 2026"
+    }
+   ]
+  },
+  "B": {
+   "dosya": "yer_merkez-B.png",
+   "en": 1600,
+   "boy": 2587,
+   "bayt": 1481016,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çetmi Sırtı Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Postanesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada İlkokulu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Belediye Binası",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Kahvehanesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Eczanesi",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada Jandarma Karakolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Merkez Pazarı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada Merkez Camii",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Düzada Sağlık Ocağı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Güney Sırt Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çetmi Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Dağ Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Ada Tepesi",
+     "rakim": 742,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kuzey Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "İskele Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Stadyum Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Çiftlik Mahallesi",
+     "yer": "ana"
+    }
+   ]
+  },
+  "sigmayan": []
+ },
+ "yer_stadyum": {
+  "ad": "Stadyum Mahallesi",
+  "yerlesim": "yerlesim_stadyum",
+  "A": {
+   "dosya": "yer_stadyum-A.png",
+   "en": 1600,
+   "boy": 1900,
+   "bayt": 424553,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Stadyum Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Dirlik Spor Kulübü",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Dirlik Stadı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Stadyum Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çetmi Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Taraftar Birahanesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Kuzey Sırtı",
+     "rakim": 440,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kuzey Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Liman Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Çiftlik Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "baslik",
+     "metin": "Stadyum Mahallesi"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ana yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Ara yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Sokak"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Geçit"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Patika, toprak yol"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Yapı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Vikide maddesi olan yapı (adı yazılı)"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Zeytinlik"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Maki"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Tarla"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Çam ormanı"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Kumsal"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Eş yükselti: 20 m, kalın 100 m"
+    },
+    {
+     "tur": "lejant",
+     "metin": "Mahalle sınırı"
+    },
+    {
+     "tur": "kunye",
+     "metin": "Düzada · tek harita, 22 Kasım 2026"
+    }
+   ]
+  },
+  "B": {
+   "dosya": "yer_stadyum-B.png",
+   "en": 1600,
+   "boy": 1900,
+   "bayt": 721357,
+   "yazilar": [
+    {
+     "tur": "yol",
+     "metin": "Stadyum Bağlantısı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Dirlik Spor Kulübü",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Dirlik Stadı",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Stadyum Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Çetmi Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yapi",
+     "metin": "Taraftar Birahanesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "zirve",
+     "metin": "Kuzey Sırtı",
+     "rakim": 440,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Merkez Bağlantısı",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Kuzey Sırtı Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Merkez Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Liman Mahallesi",
+     "yer": "ana"
+    },
+    {
+     "tur": "mahalle",
+     "metin": "Çiftlik Mahallesi",
+     "yer": "ana"
+    }
+   ]
+  },
+  "sigmayan": []
+ }
+}
