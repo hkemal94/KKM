@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check, Box } from 'lucide-react';
+import { Maximize2, Minimize2, Car, Moon, Snowflake, Layers, Check, Box, Map as HaritaIkonu } from 'lucide-react';
 import { DUGME_BOS } from './anasayfa/stil';
 import { isaretle } from '../lib/olcumler';
 import type { HaritaBakisi } from './harita/DuzadaHarita';
@@ -45,6 +45,8 @@ const DuzadaHarita = lazy(() =>
 );
 // 3B deneme (8 Kasım): Blender arazi parçaları, three.js; yalnız düğmeye basınca iner
 const UcBoyutDeneme = lazy(() => import('./harita/UcBoyutDeneme'));
+// Tek harita (21 Kasım, 6. adım): kompakt ada, statik dosyalardan; eski haritalar 11. adıma kadar yanında
+const TekHarita = lazy(() => import('./harita/TekHarita'));
 // Kurucu (şehir kurucu): harita verisini kullanır, sayfa açılınca yüklenir
 const Kurucu = lazy(() =>
   import('./kurucu/Kurucu').then(m => ({ default: m.Kurucu }))
@@ -119,6 +121,9 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
   const ucBoyutuKapat = useCallback(() => setUcBoyutDeneme(false), []);
   // 12 Kasım (Kemal): harita açılınca yeni 3B harita gelir; eski harita Kurucu için düğmede
   const [eskiHarita, setEskiHarita] = useState(false);
+  // 21 Kasım (tek harita 6. adım): harita açılınca tek harita; eski iki harita "Eski haritalar"dan
+  const [tekHarita, setTekHarita] = useState(true);
+  const eskiHaritalaraGec = useCallback(() => setTekHarita(false), []);
   const eskiHaritayaGec = useCallback(() => setEskiHarita(true), []);
   const tamEkran3B = useCallback(() => setUcBoyutDeneme(true), []);
   // Yaşayan harita (18 Kasım): 3B kartı Kurucu'daki yapı → madde bağlarını da okur (yalnız okuma)
@@ -187,11 +192,16 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
     <div className="space-y-6">
       <SayfaBasi baslik={baslik}>
         {/* 4 Kasım (Kemal): Kurucu düzeni ajansa; yalnız basınca */}
-        {sekme === 'harita' && haritaDuzeni.ilkYukleme ? <HaritaAjansaDugmesi duzen={haritaDuzeni.duzen} items={items} /> : null}
+        {sekme === 'harita' && !tekHarita && haritaDuzeni.ilkYukleme ? <HaritaAjansaDugmesi duzen={haritaDuzeni.duzen} items={items} /> : null}
         {/* 12 Kasım (Kemal): eski haritadayken yeni 3B haritaya dönüş */}
-        {sekme === 'harita' && eskiHarita && (
-          <button type="button" onClick={() => setEskiHarita(false)} className={DUGME_BOS} title="Blender'da üretilen yeni 3B haritaya dön">
-            <Box className="w-3.5 h-3.5" /> Yeni 3B harita
+        {sekme === 'harita' && !tekHarita && eskiHarita && (
+          <button type="button" onClick={() => setEskiHarita(false)} className={DUGME_BOS} title="Blender'da üretilen eski 3B haritaya dön">
+            <Box className="w-3.5 h-3.5" /> Eski 3B harita
+          </button>
+        )}
+        {sekme === 'harita' && !tekHarita && (
+          <button type="button" onClick={() => { setTekHarita(true); setEskiHarita(false); }} className={DUGME_BOS} title="Kompakt adanın tek haritasına dön">
+            <HaritaIkonu className="w-3.5 h-3.5" /> Tek harita
           </button>
         )}
       </SayfaBasi>
@@ -225,13 +235,19 @@ export default function Atolye({ items, onAddItem, onUpdateItem, onDeleteItem, i
         kontrol edebileceğim bir şey." 2D: çalışma ekranı (araçlar altta).
         3D: aynı ada eğik bakışla, yapılar kat sayısıyla yükselir.
       */}
-      {sekme === 'harita' && !eskiHarita && !ucBoyutDeneme && (
+      {sekme === 'harita' && tekHarita && (
+        <Suspense fallback={<div className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] flex items-center justify-center rounded-2xl bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">Tek harita yükleniyor…</div>}>
+          <TekHarita items={items} onMaddeAc={onMaddeAc} onEskiHarita={eskiHaritalaraGec}
+            className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] sm:min-h-[520px] rounded-2xl overflow-hidden border border-[#CFC5B4] dark:border-[#2C3C72]" />
+        </Suspense>
+      )}
+      {sekme === 'harita' && !tekHarita && !eskiHarita && !ucBoyutDeneme && (
         <Suspense fallback={<div className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] flex items-center justify-center rounded-2xl bg-[#D8E6EC] font-mono text-xs text-[#0E1C4F]">3B harita yükleniyor…</div>}>
           <UcBoyutDeneme gomulu onKapat={eskiHaritayaGec} onTamEkran={tamEkran3B} items={items} baglar={kurucuBaglari} onMaddeAc={onMaddeAc}
             className="h-[calc(100dvh-14.5rem)] sm:h-[calc(100vh-11rem)] min-h-[460px] sm:min-h-[520px] rounded-2xl overflow-hidden border border-[#CFC5B4] dark:border-[#2C3C72]" />
         </Suspense>
       )}
-      {sekme === 'harita' && eskiHarita && (haritaDuzeni.ilkYukleme ? (
+      {sekme === 'harita' && !tekHarita && eskiHarita && (haritaDuzeni.ilkYukleme ? (
         <div ref={haritaKabi} className={tamEkran ? 'fixed inset-0 z-[80] bg-[#1C4E8C]' : ''}>
           <Suspense fallback={<div className="h-[80vh] flex items-center justify-center rounded-2xl bg-[#1C4E8C] font-mono text-xs text-[#F3EFE8]">Harita yükleniyor…</div>}>
             {haritaUc ? (
