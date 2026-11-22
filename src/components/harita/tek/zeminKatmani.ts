@@ -8,8 +8,9 @@ import type { Zemin } from './tekVeri';
  * kenarlarda aşağı inen etek var. Derin denizdeki kareler çizilmez (alttaki
  * deniz düzlemi yeter).
  *
- * Renk: deniz derinliğe göre, kumsal kum rengi, kara rakım ve eğime göre
- * (dik yamaç taşlık). Eğim gölgesini ışık yapar (yüz yönü ızgaradan).
+ * Renk: deniz derinliğe göre, kumsal kum rengi (kenarı yumuşak), kara rakım ve
+ * eğime göre (dik yamaç taşlık). Kaba karelerde köşe rengi çevresinin ortalaması
+ * (6b: kumsal kenarı tırtıklı görünmesin). Eğim gölgesini ışık yapar.
  */
 
 const KARE = 128;
@@ -40,6 +41,32 @@ function duraktan(duraklar: Array<[number, THREE.Color]>, v: number, c: THREE.Co
   return c.copy(duraklar[duraklar.length - 1][1]);
 }
 
+/**
+ * Kıyı çizgisi (6b, 22 Kasım; Kemal: kumsal kenarı tırtıklı): verideki kıyı 10 m'lik
+ * hücrelerde basamaklı (kumsal ~3 m'den denize tek hücrede iner), çizimde testere dişi
+ * görünüyordu. Yalnız çizim için, yalnız kıyı şeridinde (2 hücre içinde hem deniz hem
+ * kara olan, 4 m'den alçak hücreler) rakım çevresinin ağırlıklı ortalaması olur.
+ * Veri değişmez; yapı ve yol yerleşimi asıl rakımı kullanır.
+ */
+function kiyiYumusat(z: Zemin): Float32Array {
+  const { b, h } = z;
+  const cikti = new Float32Array(h);
+  const R = 2;
+  for (let j = R; j < b.boy - R; j++) for (let i = R; i < b.en - R; i++) {
+    const k = j * b.en + i;
+    if (h[k] >= 4 || h[k] < -6) continue;
+    let deniz = false, kara = false, top = 0, agirlik = 0;
+    for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++) {
+      const v = h[k + dj * b.en + di];
+      if (v > 0) kara = true; else deniz = true;
+      const w = (R + 1 - Math.abs(di)) * (R + 1 - Math.abs(dj));
+      top += v * w; agirlik += w;
+    }
+    if (deniz && kara) cikti[k] = top / agirlik;
+  }
+  return cikti;
+}
+
 type KareKaydi = { ci: number; cj: number; cx: number; cz: number; cy: number; derin: boolean; adim: number; mesh?: THREE.Mesh };
 
 export class ZeminKatmani {
@@ -48,10 +75,14 @@ export class ZeminKatmani {
   private kareler: KareKaydi[] = [];
   private onbellek = new Map<string, THREE.BufferGeometry>();
   private malzeme: THREE.MeshLambertMaterial;
+  /** Çizimde kullanılan rakım: kıyı çizgisi yumuşatılmış (`kiyiYumusat`) */
+  private h: Float32Array;
   ucgen = 0;
 
   constructor(private z: Zemin) {
-    const { b, h, kum } = z;
+    const { b, kum } = z;
+    const h = kiyiYumusat(z);
+    this.h = h;
     this.malzeme = new THREE.MeshLambertMaterial({ vertexColors: true });
     // Hücre renkleri bir kez (bayt olarak; 1,5 milyon hücre)
     this.renk = new Uint8Array(b.en * b.boy * 3);
@@ -61,8 +92,6 @@ export class ZeminKatmani {
       const v = h[k];
       if (v <= 0) {
         c.copy(SIG).lerp(DIP, Math.min(1, -v / 30));
-      } else if (kum[k]) {
-        c.copy(KUM);
       } else {
         duraktan(KARA_RENK, v, c);
         // Eğim: dik yamaç taşlığa döner
@@ -73,6 +102,8 @@ export class ZeminKatmani {
         c.lerp(TAS, THREE.MathUtils.smoothstep(egim, 0.35, 0.8) * 0.75);
         // Kıyıda ince geçiş
         if (v < 2) c.lerp(KUM, (2 - v) / 2 * 0.35);
+        // Kumsal: ağırlığıyla (kenarı yumuşak)
+        if (kum[k]) c.lerp(KUM, kum[k] / 255);
       }
       this.renk[k * 3] = c.r * 255; this.renk[k * 3 + 1] = c.g * 255; this.renk[k * 3 + 2] = c.b * 255;
     }
@@ -91,7 +122,8 @@ export class ZeminKatmani {
     const anahtar = `${k.ci},${k.cj},${adim}`;
     const var_ = this.onbellek.get(anahtar);
     if (var_) return var_;
-    const { b, h } = this.z;
+    const { b } = this.z;
+    const h = this.h;
     const i0 = k.ci * KARE, j0 = k.cj * KARE;
     const iSon = Math.min(b.en - 1, i0 + KARE), jSon = Math.min(b.boy - 1, j0 + KARE);
     const is: number[] = [], js: number[] = [];
@@ -114,14 +146,32 @@ export class ZeminKatmani {
       // Yüz yönü: x doğu, z güney (kuzey eğimi gy, z'de ters)
       nor.set(-gx, 1, gy).normalize();
       n[v * 3] = nor.x; n[v * 3 + 1] = nor.y; n[v * 3 + 2] = nor.z;
-      r[v * 3] = this.renk[k2 * 3] / 255; r[v * 3 + 1] = this.renk[k2 * 3 + 1] / 255; r[v * 3 + 2] = this.renk[k2 * 3 + 2] / 255;
+      if (adim === 1) {
+        r[v * 3] = this.renk[k2 * 3] / 255; r[v * 3 + 1] = this.renk[k2 * 3 + 1] / 255; r[v * 3 + 2] = this.renk[k2 * 3 + 2] / 255;
+      } else {
+        // Kaba karede renk çevresinin ortalaması: kumsal ve kıyı kenarı tırtıklı görünmesin (6b).
+        // Kıyıda (çevrede hem deniz hem kara varsa) yükseklik de ortalama
+        const y = adim >> 1, s = Math.max(1, adim >> 2);
+        let tr = 0, tg = 0, tb = 0, th = 0, say = 0, deniz = false, kara = false;
+        for (let dj = -y; dj <= y; dj += s) for (let di = -y; di <= y; di += s) {
+          const a = Math.min(b.en - 1, Math.max(0, i + di)), c = Math.min(b.boy - 1, Math.max(0, j + dj));
+          const k4 = c * b.en + a, k3 = k4 * 3;
+          tr += this.renk[k3]; tg += this.renk[k3 + 1]; tb += this.renk[k3 + 2]; th += h[k4]; say++;
+          if (h[k4] <= 0) deniz = true; else kara = true;
+        }
+        r[v * 3] = tr / say / 255; r[v * 3 + 1] = tg / say / 255; r[v * 3 + 2] = tb / say / 255;
+        if (deniz && kara && h[k2] < 4) p[v * 3 + 1] = th / say - asagi;
+      }
     };
     for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) yaz(y * nx + x, is[x], js[y], 0);
     const indeks: number[] = [];
     for (let y = 0; y < ny - 1; y++) for (let x = 0; x < nx - 1; x++) {
       const a = y * nx + x, bb = a + 1, c = a + nx, d = c + 1;
-      // z = −kuzey: üstten bakınca saat yönünün tersi
-      indeks.push(a, bb, c, bb, d, c);
+      // z = −kuzey: üstten bakınca saat yönünün tersi. Kare, yükseklikleri birbirine
+      // yakın iki köşeden bölünür (6b): kıyı ve kumsal çizgisi testere dişi olmasın
+      const ad = Math.abs(p[a * 3 + 1] - p[d * 3 + 1]), bc = Math.abs(p[bb * 3 + 1] - p[c * 3 + 1]);
+      if (ad < bc) indeks.push(a, bb, d, a, d, c);
+      else indeks.push(a, bb, c, bb, d, c);
     }
     // Etek: kenar noktaları 6 m × aralık aşağı
     const asagi = 6 * adim;
