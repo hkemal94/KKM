@@ -51,7 +51,11 @@ export const MADDE_MODELLERI: Record<string, string> = {
   mekan_1791406291758_f8hzx: 'binalar/merkez-postanesi.glb', // Merkez Postanesi
   // 19 Kasım, Kemal: iki maddeye özel model (ajans). Yaşayan haritada karakol `bina_apt1`, kahvehane `bina_kahvehane`
   mekan_1791406291488_7jtvw: 'binalar/duzada-jandarma-karakolu.glb', // Düzada Jandarma Karakolu
-  mekan_1791406291022_hotli: 'binalar/merkez-kahvehanesi.glb' // Merkez Kahvehanesi
+  mekan_1791406291022_hotli: 'binalar/merkez-kahvehanesi.glb', // Merkez Kahvehanesi
+  // 22 Kasım, Kemal: tek haritadaki üç yeni model vikide de (haritada `bina_surek`, `yapi_iskele_mescidi`, `yapi_rum_mezarligi`)
+  marka_1782600611254_j7gg5: 'binalar/kucukcetmi-surek-kulubu.glb', // Küçükçetmi Sürek Kulübü
+  madde_1794596168679_jaq4c: 'binalar/iskele-mescidi.glb', // İskele Mescidi
+  mekan_1791406292869_vkdn7: 'binalar/rum-mezarligi.glb' // Rum Mezarlığı
 };
 
 const BILINEN = new Set([IMPERIAL_VIKI_MODELI, ...BINA_MODELLERI.flatMap(m => [m.dosya, ...(m.renkler?.map(r => r.dosya) ?? [])])]);
