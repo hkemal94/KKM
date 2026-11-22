@@ -16,7 +16,18 @@ export const YOL_RENGI: Record<string, string> = {
   toprak: '#C9AE84',
   patika: '#BFA27A',
   merdiven: '#CFC5B4',
-  meydan: '#E8DFCD'
+  meydan: '#E8DFCD',
+  kumsal: '#E9DBB4'
+};
+/**
+ * Liman yapıları (21 Kasım, Dondurmacı Kızlar çevresi): yol dosyasında `iskele`
+ * (ahşap T iskele), `mendirek` (taş) ve `kumsal` (liman kumsalı) öğeleri. Veride
+ * yoksa hiçbir şey çizilmez. İskele ve mendirek denizden yükselen düz blok
+ * (üst kotu DENEME); modelleri (deniz/ahsap-iskele-*, deniz/mendirek-duz) sonraki iş.
+ */
+const LIMAN_BLOGU: Record<string, { renk: string; ust: number; alt: number }> = {
+  iskele: { renk: '#A2754C', ust: 1.4, alt: -1.5 },
+  mendirek: { renk: '#A9A296', ust: 2.2, alt: -3 }
 };
 /** Kademe sırası: üstteki alttakinin üstüne çizilir (kavşakta ana yol görünsün) */
 const SIRA = ['patika', 'toprak', 'merdiven', 'gecit', 'sokak', 'ara', 'ana'];
@@ -44,6 +55,16 @@ export class YolKatmani {
       } else if (f.geometry.type === 'Polygon' && (pr.katman === 'korunan' || pr.katman === 'meydancik')) {
         if (pr.katman === 'korunan' && pr.tur !== 'meydan') continue;
         yuzeyEkle(al('meydan'), z, f.geometry.coordinates as number[][][]);
+      } else if (f.geometry.type === 'Polygon' && pr.katman === 'kumsal') {
+        yuzeyEkle(al('kumsal'), z, f.geometry.coordinates as number[][][], 0.1);
+      } else if (f.geometry.type === 'Polygon' && typeof pr.katman === 'string' && LIMAN_BLOGU[pr.katman]) {
+        const b = LIMAN_BLOGU[pr.katman];
+        const g = blokGeometrisi(z, f.geometry.coordinates as number[][][], b.ust, b.alt);
+        if (!g) continue;
+        const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: b.renk, flatShading: true }));
+        m.castShadow = m.receiveShadow = true;
+        this.grup.add(m);
+        this.ucgen += g.getAttribute('position').count / 3;
       }
     }
     for (const [kademe, { p, i }] of parcalar) {
@@ -54,7 +75,7 @@ export class YolKatmani {
       g.setAttribute('normal', new THREE.BufferAttribute(n, 3));
       g.setIndex(i);
       g.computeBoundingSphere();
-      const sira = kademe === 'meydan' ? 0 : SIRA.indexOf(kademe) + 1;
+      const sira = kademe === 'meydan' || kademe === 'kumsal' ? 0 : SIRA.indexOf(kademe) + 1;
       const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({
         color: YOL_RENGI[kademe] ?? YOL_RENGI.sokak,
         // Zemin kaba çizildiğinde yol altında kalmasın
@@ -99,7 +120,7 @@ function seritEkle(hedef: { p: number[]; i: number[] }, c: ReadonlyArray<readonl
 }
 
 /** Meydan yüzeyi: çokgen üçgenlenir, her köşe zemine oturur */
-function yuzeyEkle(hedef: { p: number[]; i: number[] }, z: Zemin, halkalar: number[][][]) {
+function yuzeyEkle(hedef: { p: number[]; i: number[] }, z: Zemin, halkalar: number[][][], enAlt = -Infinity) {
   const dis = halkalar[0].map(q => sahneye(z.b, q));
   if (dis.length > 1 && dis[0][0] === dis[dis.length - 1][0] && dis[0][1] === dis[dis.length - 1][1]) dis.pop();
   const delikler = halkalar.slice(1).map(h => { const d = h.map(q => sahneye(z.b, q)); d.pop(); return d; });
@@ -107,11 +128,39 @@ function yuzeyEkle(hedef: { p: number[]; i: number[] }, z: Zemin, halkalar: numb
   const ucgenler = THREE.ShapeUtils.triangulateShape(v2(dis), delikler.map(v2));
   const hepsi = [...dis, ...delikler.flat()];
   const bas = hedef.p.length / 3;
-  for (const [x, sz] of hepsi) hedef.p.push(x, rakim(z, x, sz) + YUKSELME, sz);
+  for (const [x, sz] of hepsi) hedef.p.push(x, Math.max(enAlt, rakim(z, x, sz)) + YUKSELME, sz);
   for (const [a, b, c] of ucgenler) {
     // Yukarı baksın
     const [ax, az] = hepsi[a], [bx, bz] = hepsi[b], [cx, cz] = hepsi[c];
     const yukariMi = (bx - ax) * (cz - az) - (bz - az) * (cx - ax) < 0;
     if (yukariMi) hedef.i.push(bas + a, bas + b, bas + c); else hedef.i.push(bas + a, bas + c, bas + b);
   }
+}
+
+/** Düz üstlü blok (iskele, mendirek): üst yüz üçgenlenir, kenarlar `alt`a iner */
+function blokGeometrisi(z: Zemin, halkalar: number[][][], ust: number, alt: number): THREE.BufferGeometry | null {
+  const dis = halkalar[0].map(q => sahneye(z.b, q));
+  if (dis.length > 1 && dis[0][0] === dis[dis.length - 1][0] && dis[0][1] === dis[dis.length - 1][1]) dis.pop();
+  if (dis.length < 3) return null;
+  const ucgenler = THREE.ShapeUtils.triangulateShape(dis.map(([x, sz]) => new THREE.Vector2(x, sz)), []);
+  const p: number[] = [];
+  const nokta = (q: [number, number], y: number) => p.push(q[0], y, q[1]);
+  for (const [a, b, c] of ucgenler) {
+    const [ax, az] = dis[a], [bx, bz] = dis[b], [cx, cz] = dis[c];
+    const yukariMi = (bx - ax) * (cz - az) - (bz - az) * (cx - ax) < 0;
+    for (const k of yukariMi ? [a, b, c] : [a, c, b]) nokta(dis[k], ust);
+  }
+  // Kenarlar: iki yüzlü çizilir (halkanın yönü bilinmese de görünsün)
+  for (let n = 0; n < dis.length; n++) {
+    const a = dis[n], b = dis[(n + 1) % dis.length];
+    nokta(a, ust); nokta(a, alt); nokta(b, ust);
+    nokta(b, ust); nokta(a, alt); nokta(b, alt);
+    nokta(a, ust); nokta(b, ust); nokta(a, alt);
+    nokta(b, ust); nokta(b, alt); nokta(a, alt);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  g.computeVertexNormals();
+  g.computeBoundingSphere();
+  return g;
 }

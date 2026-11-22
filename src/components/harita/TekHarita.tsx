@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { BookOpen, Feather, History, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, X } from 'lucide-react';
+import { BookOpen, Feather, History, Image as GorselSimgesi, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, X } from 'lucide-react';
 import type { Item } from '../../types';
 import { ESLEME, kisaGiris } from '../../lib/yasayanHarita';
 import { maddeGorseli } from '../../lib/maddeGorseli';
@@ -61,7 +61,10 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
   const [yapilar, setYapilar] = useState<Map<string, Yapi>>(new Map());
 
   // Sahneye dışarıdan erişim (düğmeler): kurulunca dolar
-  const sahneRef = useRef<{ tepeden: (a: boolean) => void; hafif: (a: boolean) => void; adaya: () => void } | null>(null);
+  const sahneRef = useRef<{ tepeden: (a: boolean) => void; hafif: (a: boolean) => void; adaya: () => void; yapiyaUc: (y: Yapi) => void } | null>(null);
+  // Telefonda kartın görseli dokununca açılır (21 Kasım, Kemal)
+  const [gorselAcik, setGorselAcik] = useState(false);
+  const [mahalleAdlari, setMahalleAdlari] = useState<Map<string, string>>(new Map());
   const hafifRef = useRef(hafif);
 
   const kart = useMemo(() => {
@@ -69,8 +72,16 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     if (!y) return null;
     const madde = y.vikiId ? items?.find(i => i.id === y.vikiId && !i.archived) : undefined;
     const ikinci = (ESLEME[y.id]?.ikinci ?? []).map(id => items?.find(i => i.id === id)).filter((i): i is Item => !!i && i.id !== madde?.id);
-    return { ad: madde?.title ?? y.ad ?? '', madde, ikinci, giris: madde ? kisaGiris(madde) : '' };
-  }, [secili, yapilar, items]);
+    // Mahalle ve tür satırı (21 Kasım, Kemal): mahalle haritadan, tür vikiden
+    const altSatir = [mahalleAdlari.get(y.mahalle), madde?.type].filter(Boolean).join(' · ');
+    return { ad: madde?.title ?? y.ad ?? '', madde, ikinci, giris: madde ? kisaGiris(madde) : '', altSatir };
+  }, [secili, yapilar, items, mahalleAdlari]);
+  // Kart açılınca kamera yapıya yumuşakça yaklaşır (21 Kasım, Kemal)
+  useEffect(() => {
+    setGorselAcik(false);
+    const y = secili ? yapilar.get(secili) : undefined;
+    if (y) sahneRef.current?.yapiyaUc(y);
+  }, [secili, yapilar]);
   const kartGorseli = useMemo(() => (kart?.madde ? maddeGorseli(kart.madde, items ?? []) : undefined), [kart, items]);
 
   useEffect(() => {
@@ -182,6 +193,14 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     // Tepeden bakış: eğim kilitlenir, tek parmak kaydırır
     let tepedenMi = false;
     let gecis: { bas: number; e0: number; e1: number } | null = null;
+    // Yapıya uçuş: hedef ve kamera birlikte kayar, bakış yönü korunur
+    let ucus: { bas: number; t0: THREE.Vector3; t1: THREE.Vector3; p0: THREE.Vector3; p1: THREE.Vector3 } | null = null;
+    const yapiyaUc = (y: Yapi) => {
+      const t1 = new THREE.Vector3(y.merkez[0], Math.max(0, y.kot), y.merkez[1]);
+      const fark = kamera.position.clone().sub(kontrol.target);
+      const u = THREE.MathUtils.clamp(fark.length(), 160, Math.max(160, Math.min(fark.length(), 320)));
+      ucus = { bas: performance.now(), t0: kontrol.target.clone(), t1, p0: kamera.position.clone(), p1: t1.clone().add(fark.setLength(u)) };
+    };
     const tepedenAyarla = (acik: boolean) => {
       tepedenMi = acik;
       const sph = new THREE.Spherical().setFromVector3(kamera.position.clone().sub(kontrol.target));
@@ -197,7 +216,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     const isin = new THREE.Raycaster();
     const ekran = new THREE.Vector2();
     let basis: { x: number; y: number; t: number; id: number } | null = null;
-    const basildi = (e: PointerEvent) => { basis = e.isPrimary ? { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId } : null; };
+    const basildi = (e: PointerEvent) => { ucus = null; basis = e.isPrimary ? { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId } : null; };
     const birakildi = (e: PointerEvent) => {
       const b = basis; basis = null;
       if (!b || b.id !== e.pointerId || e.button > 0 || !yapi) return;
@@ -226,6 +245,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         etiketListesi = sinir.etiketler;
         setEtiketler(sinir.etiketler);
         setYapilar(new Map(liste.map(y => [y.id, y])));
+        setMahalleAdlari(new Map(sinirlar.features.filter(f => f.properties.katman === 'mahalle').map(f => [String(f.properties.id), String(f.properties.ad ?? '')])));
 
         // Kara sınırı: ada ızgarada rakımı 0'dan büyük hücreler
         const { b, h } = z;
@@ -249,7 +269,8 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     sahneRef.current = {
       tepeden: tepedenAyarla,
       hafif: (a: boolean) => { hafifRef.current = a; renderer.setPixelRatio(pikselOrani()); golgeAyari(); guncelle(); },
-      adaya
+      adaya,
+      yapiyaUc
     };
 
     // Adların ekrandaki yeri her karede (yalnız birkaç düzine)
@@ -274,6 +295,13 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
 
     let kare = 0, son = performance.now();
     renderer.setAnimationLoop(() => {
+      if (ucus) {
+        const t = Math.min(1, (performance.now() - ucus.bas) / 900);
+        const k = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+        kontrol.target.lerpVectors(ucus.t0, ucus.t1, k);
+        kamera.position.lerpVectors(ucus.p0, ucus.p1, k);
+        if (t >= 1) { ucus = null; guncelle(); }
+      }
       if (gecis) {
         const t = Math.min(1, (performance.now() - gecis.bas) / 600);
         const e = gecis.e0 + (gecis.e1 - gecis.e0) * (1 - (1 - t) ** 3);
@@ -403,7 +431,8 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       {kart ? (
         <div role="dialog" aria-label={kart.ad}
           className="absolute left-3 bottom-3 w-[min(19rem,calc(100%-1.5rem))] p-2.5 rounded-xl bg-[#FAF8F5]/95 dark:bg-[#13204A]/95 border border-[#CFC5B4] dark:border-[#2C3C72] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] text-[#0E1C4F] dark:text-[#F3EFE8]">
-          <div className="relative">
+          {/* Telefonda görsel kapalı başlar (küçük kart); masaüstünde hep görünür */}
+          <div className={gorselAcik ? 'relative' : 'relative hidden sm:block'}>
             {kartGorseli ? (
               <GorselImg src={kartGorseli} alt={kart.ad} className={`w-full aspect-[16/9] ${kart.madde && ['kulüp', 'marka'].includes(kart.madde.type) ? 'object-contain p-2' : 'object-cover'} rounded-lg bg-[#F3EFE8] dark:bg-[#17345A]`} />
             ) : (
@@ -416,14 +445,29 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="mt-2 text-[14px] font-semibold leading-snug">{kart.ad}</div>
-          {kart.giris && <p className="mt-0.5 text-[12px] leading-[1.45] text-[#6A5E4C] dark:text-[#A6B0C9] line-clamp-3">{kart.giris}</p>}
+          <div className={`${gorselAcik ? 'mt-2' : 'sm:mt-2'} flex items-start gap-2`}>
+            <div className="min-w-0 flex-1 text-[14px] font-semibold leading-snug">{kart.ad}</div>
+            {!gorselAcik && (
+              <button type="button" onClick={() => setSecili(null)} aria-label="Kartı kapat" title="Kapat"
+                className="sm:hidden -mr-1 -mt-1 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          {kart.altSatir && <div className="text-[11px] font-medium text-[#8A7C66] dark:text-[#A6B0C9]">{kart.altSatir}</div>}
+          {kart.giris && <p className="mt-0.5 text-[12px] leading-[1.45] text-[#6A5E4C] dark:text-[#A6B0C9] line-clamp-2 sm:line-clamp-3">{kart.giris}</p>}
           {kart.madde && onMaddeAc && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               <button type="button" onClick={() => onMaddeAc(kart.madde!.id)}
                 className="inline-flex items-center gap-1.5 min-h-9 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#0E1C4F] dark:bg-[#2C3C72] text-white cursor-pointer">
                 <BookOpen className="w-3.5 h-3.5" /> Vikide aç
               </button>
+              {!gorselAcik && kartGorseli && (
+                <button type="button" onClick={() => setGorselAcik(true)}
+                  className="sm:hidden inline-flex items-center gap-1.5 min-h-9 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer">
+                  <GorselSimgesi className="w-3.5 h-3.5" /> Görsel
+                </button>
+              )}
               {kart.ikinci.map(m => (
                 <button key={m.id} type="button" onClick={() => onMaddeAc(m.id)} title={`${m.title}: vikide aç`}
                   className="inline-flex items-center min-h-9 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer hover:border-[#F26B6F]">

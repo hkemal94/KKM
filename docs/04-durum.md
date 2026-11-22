@@ -1,11 +1,11 @@
 # Durum
 
-**Son güncelleme: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de, önizleme); önceki: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); önceki: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
-## 21 Kasım gece: tek harita 6. adım: tek harita KKM'de (önizleme)
+## 21–22 Kasım gece: tek harita 6. adım: tek harita KKM'de
 
 Evren → Harita ve Kurucu açılınca kompakt adanın **tek haritası** gelir (`src/components/harita/TekHarita.tsx`,
 katmanlar `src/components/harita/tek/`). Eski 3B harita ve 2B "kur" (Kurucu) **silinmedi**: haritadaki "Eski haritalar"
@@ -18,7 +18,15 @@ düğmesiyle açılır, sayfa başındaki "Tek harita" düğmesiyle dönülür; 
 - Yapılar: bakılan yerin çevresinde KKM'nin modelleri (sıra evde `modelEn`), uzakta kırma çatılı kutu; üçgen bütçesi var.
 - "Tepeden": üstten bakış (anlık mahalle haritası). "Hafif mod": daha kaba zemin, dar model çevresi, gölge yok; seçim bu
   tarayıcıda hatırlanır (telefonda ilk açılışta açık).
-- Viki bağlı yapıya ya da adına dokununca kart (ad, kısa giriş, görsel, "Vikide aç"); kart `yasayanHarita.ts`'teki kısa girişi kullanır.
+- Viki bağlı yapıya ya da adına dokununca kart (ad, mahalle ve tür satırı, kısa giriş, görsel, "Vikide aç"); kısa giriş
+  `yasayanHarita.ts`'ten. Kart açılınca kamera yapıya yumuşakça yaklaşır. Telefonda kart görselsiz ve küçük; görsel "Görsel"
+  düğmesiyle açılır, masaüstünde kartta durur.
+- Liman yapıları: yol dosyasında `iskele`, `mendirek`, `kumsal` öğeleri varsa çizilir (iskele ahşap, mendirek taş blok; kumsal
+  kum yüzey). Veride yoksa bir şey çizilmez. Modelleri (deniz/ahsap-iskele-*, deniz/mendirek-duz) sonraki iş.
+- **Kemal'in dört cevabı (21 Kasım):** 1) eski haritalar "Eski haritalar" düğmesinde kalır; 2) hafif mod telefonda ilk
+  açılışta açık, seçim hatırlanır; 3) kartta mahalle ve tür satırı, kameranın yaklaşması, telefonda görselsiz küçük kart;
+  4) kutular bu PR'da kalır; hafif model sürümleri, kumsal kenarının tırtığı ve üst üste binen adlar sonraki PR'da.
+- Önizlemeler `docs/gorseller/tek-harita-6/`.
 - `modelKatmani.ts`'teki model hazırlama `modelHazirla.ts`'e taşındı (eski harita aynı kodu kullanır, davranış aynı).
 
 ## 21 Kasım gece: tek harita 5. adım: hazır gruplar
