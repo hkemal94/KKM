@@ -5,13 +5,14 @@ Yapılar ve dayanakları (yalnız künye `docs/03-duzada-kunyesi.md` ve viki; ad
 
 - Küçükçetmi Sürek Kulübü (`bina_surek`, Çiftlik, 54 x 26 m): künye "çiftlik evi kulüp evi", "Çiftlik'in
   iç tarafında, tepeye yakın", "Kangal yetiştiriciliği", "buluşma yeri". Viki: "Ali Eskibey ... çiftlikte,
-  kulüp evinin yanındaki ayrı bir evde yaşar". Model: iki katlı taş çiftlik evi (kulüp evi), yanında tek
-  katlı ayrı ev, Kangal barınağı ve çitli koşu yeri, kuru taş avlu duvarı, ahşap avlu kapısı, zeytinler,
-  ağaç altında masa. Tabela, arma, Kangal amblemi konmadı.
+  kulüp evinin yanındaki ayrı bir evde yaşar". Kemal (22 Kasım): yapı U biçiminde ("öyle bir hayalim var").
+  Model: arkada iki katlı taş kulüp evi ve önünde masalı taş seki, solda Kangal barınağı ve ahır kanadı,
+  sağda ayrı ev kanadı; üçü avluyu üç yandan sarar, açık yan avlu kapısına ve yola bakar. Barınağın
+  dışında çitli koşu yeri, çevrede kuru taş avlu duvarı, zeytinler. Tabela, arma, Kangal amblemi konmadı.
 - İskele Mescidi (`yapi_iskele_mescidi`, İskele, 7 x 12 m): viki "eski balıkçı evlerinin arasındaki küçük
-  bir mescit", 1923 sonrası, Diyanet. Künye ve vikinin metninde minare yok: model minaresiz, badanalı,
-  kırma kiremit çatılı küçük mescit; önünde taş döşeli avlucuk, yanda abdest çeşmesi.
-  `--minareli` ile vikideki çizimdeki gibi küçük tek şerefeli minareli sürümü de üretilir (Kemal seçer).
+  bir mescit", 1923 sonrası, Diyanet. Kemal (22 Kasım): minareli (vikideki çizim gibi küçük, tek şerefeli).
+  Model: badanalı, kırma kiremit çatılı küçük mescit, ön köşede minare, önünde taş döşeli avlucuk, yanda
+  abdest çeşmesi. `--minaresiz` ile ilk taslağın minaresiz sürümü de üretilir.
 - Rum Mezarlığı (`yapi_rum_mezarligi`, İskele, 20 x 24 m): künye "Eski Kilise'nin yanında eski bir Rum
   mezarlığı", "belediye bakar ama kapalı", 1923'te cemaat gitti. Model: alçak kuru taş duvar, kapalı demir
   kapı, yazısız sade mezar taşları (yatık taş ve baş taşı), iki servi, yaşlı bir zeytin, kuru ot.
@@ -26,7 +27,7 @@ en yüksek noktalarında taş kaideye oturur. Model yalnız kendi yerine göre y
 Model ön = Blender -Y (glTF +Z), en Blender X boyunca, boy Y boyunca; taban kutusu tam en x boy.
 Stil: KKM bina dili (low-poly, düz renk, mat; ajansın `blender_binalar.py` yardımcılarının kopyası).
 
-Kullanım:  python3 gen/blender_uc_yapi.py <çıktı klasörü> [surek|mescit|mezarlik ...] [--minareli]
+Kullanım:  python3 gen/blender_uc_yapi.py <çıktı klasörü> [surek|mescit|mezarlik ...] [--minaresiz]
 Kayda yazmaz; yalnız .glb dosyası yazar. Ham dosya; KKM'ye meshopt ile sıkıştırılıp girer.
 """
 import gzip
@@ -41,7 +42,7 @@ import bpy  # noqa
 
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ARG = [a for a in sys.argv[1:] if not a.endswith(".py")]
-MINARELI = "--minareli" in ARG
+MINARESIZ = "--minaresiz" in ARG
 ARG = [a for a in ARG if not a.startswith("--")]
 KLASOR = ARG[0] if ARG else "."
 SECILEN = set(ARG[1:])
@@ -119,6 +120,7 @@ def yer_bandi(h, x0, y0, x1, y1, n=5):
 MAT = {}
 PARCA = {}
 OFSET = [0.0, 0.0, 0.0]
+DONUS = [0]   # 0, 90 ya da -90 derece: yerel çizim (önü -Y) önce döner, sonra OFSET'e taşınır
 
 
 def rgb(hx):
@@ -143,14 +145,20 @@ def ekle(verts, faces, renk):
     v, f = PARCA.setdefault(renk, ([], []))
     n = len(v)
     ox, oy, oz = OFSET
+    if DONUS[0] == 90:
+        verts = [(-b, a, c) for (a, b, c) in verts]
+    elif DONUS[0] == -90:
+        verts = [(b, -a, c) for (a, b, c) in verts]
     v.extend((a + ox, b + oy, c + oz) for (a, b, c) in verts)
     f.extend(tuple(i + n for i in fc) for fc in faces)
 
 
-def kutu(x0, y0, z0, x1, y1, z1, renk):
+def kutu(x0, y0, z0, x1, y1, z1, renk, atla=()):
+    """Kutu; atla: çizilmeyecek yüzler (0 alt, 1 üst, 2 y0, 3 x1, 4 y1, 5 x0), duvara yapışık taşta görünmeyenler"""
     x0, x1 = sorted((x0, x1)); y0, y1 = sorted((y0, y1)); z0, z1 = sorted((z0, z1))
     v = [(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0), (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)]
-    ekle(v, [(0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)], renk)
+    f = [(0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)]
+    ekle(v, [y for i, y in enumerate(f) if i not in atla], renk)
 
 
 def silindir(x, y, z0, z1, r, renk, n=8):
@@ -192,6 +200,7 @@ def temizle():
     MAT.clear()
     PARCA.clear()
     OFSET[:] = [0.0, 0.0, 0.0]
+    DONUS[0] = 0
 
 
 def disari(ad):
@@ -222,9 +231,13 @@ class Cephe:
     def p(self, u, z, d):
         return (self.o[0] + u * self.u[0] + d * self.n[0], self.o[1] + u * self.u[1] + d * self.n[1], self.z0 + z)
 
-    def kutu(self, u0, u1, z0, z1, d0, d1, renk):
+    def kutu(self, u0, u1, z0, z1, d0, d1, renk, yapisik=False):
+        """yapisik: duvara yapışık taş; duvar tarafındaki ve alttaki yüz çizilmez"""
         a, b = self.p(u0, z0, d0), self.p(u1, z1, d1)
-        kutu(a[0], a[1], a[2], b[0], b[1], b[2], renk)
+        atla = ()
+        if yapisik:
+            atla = (0, {(0, -1): 4, (0, 1): 2, (-1, 0): 3, (1, 0): 5}[tuple(self.n)])
+        kutu(a[0], a[1], a[2], b[0], b[1], b[2], renk, atla)
 
     def bos_mu(self, u0, u1, z0, z1, pay=0.12):
         return all(u1 < b[0] - pay or u0 > b[1] + pay or z1 < b[2] - pay or z0 > b[3] + pay for b in self.bosluk)
@@ -249,17 +262,17 @@ def tas_orgu(c, yuk, r, z_bas=0.0, yogun=1.0):
             w = r.uniform(0.5, 1.0)
             a, b = max(u, 0.02), min(u + w, c.en - 0.02)
             if b - a > 0.12 and c.bos_mu(a, b, z, z + h, 0.04) and r.random() < yogun:
-                c.kutu(a, b, z, min(z + h, yuk - 0.02), 0.0, r.uniform(0.025, 0.06), r.choice(TASLAR))
+                c.kutu(a, b, z, min(z + h, yuk - 0.02), 0.0, r.uniform(0.025, 0.06), r.choice(TASLAR), yapisik=True)
             u += w + 0.04
         z += h + 0.04
 
 
 def kose_taslari(c, yuk, r, z_bas=0.0):
     z, i = z_bas, 0
-    while z + 0.3 < yuk:
-        for (u0, u1) in ([(0, 0.55), (c.en - 0.35, c.en)] if i % 2 == 0 else [(0, 0.35), (c.en - 0.55, c.en)]):
-            c.kutu(u0, u1, z, z + 0.3, 0.0, 0.075, r.choice(["tas2", "tas3"]))
-        z += 0.33
+    while z + 0.4 < yuk:
+        for (u0, u1) in ([(0, 0.6), (c.en - 0.38, c.en)] if i % 2 == 0 else [(0, 0.38), (c.en - 0.6, c.en)]):
+            c.kutu(u0, u1, z, z + 0.4, 0.0, 0.075, r.choice(["tas2", "tas3"]), yapisik=True)
+        z += 0.44
         i += 1
 
 
@@ -310,13 +323,13 @@ def pencere(c, u, z, r, en=1.0, boy=1.4, kepenk="acik", sove="tas", kemer=False,
             zz = z + 0.12
             while zz < z + boy - 0.1:
                 c.kutu(lo + 0.05, hi - 0.05, zz, zz + 0.04, 0.1, 0.125, renk)
-                zz += 0.2
+                zz += 0.35
     elif kepenk == "kapali":
         c.kutu(u - en / 2, u + en / 2, z, z + boy, 0.09, 0.13, renk)
         zz = z + 0.12
         while zz < z + boy - 0.1:
             c.kutu(u - en / 2 + 0.05, u + en / 2 - 0.05, zz, zz + 0.04, 0.13, 0.155, renk)
-            zz += 0.2
+            zz += 0.35
 
 
 def kapi(c, u, r, en=1.1, boy=2.25, renk="ahsap", cift=True, kemer=True, basamak=True, z=0.0):
@@ -452,7 +465,7 @@ def kuru_tas_duvar(h, noktalar, r, yuk=1.0, kal=0.55, bos=()):
             # yüzde ve üstte tek tek taşlar
             s = 0.0
             while s < t1 - t0 - 0.1:
-                w = r.uniform(0.55, 0.95)
+                w = r.uniform(0.7, 1.2)
                 e = min(s + w, t1 - t0)
                 xa, ya = x0 + ux * s, y0 + uy * s
                 xb, yb = x0 + ux * e, y0 + uy * e
@@ -474,7 +487,7 @@ def kaide(x0, y0, x1, y1, z_alt, z_ust, r):
          "sol": Cephe(x0, y1, 0, -1, -1, 0, y1 - y0, z_alt), "sag": Cephe(x1, y0, 0, 1, 1, 0, y1 - y0, z_alt)}
     if z_ust - z_alt > 1.0:
         for c in C.values():
-            tas_orgu(c, z_ust - z_alt, r, z_bas=0.25, yogun=0.45)
+            tas_orgu(c, z_ust - z_alt, r, z_bas=0.25, yogun=0.35)
 
 
 def tas_ev(en, boy, kat, r, kapi_u=None, cift_kapi=True, baca_x=None, yogun=0.75, kirma=False, pencereler=None):
@@ -482,7 +495,8 @@ def tas_ev(en, boy, kat, r, kapi_u=None, cift_kapi=True, baca_x=None, yogun=0.75
     yuk = kat * KAT
     kutu(0.02, 0.02, 0, en - 0.02, boy - 0.02, yuk, "harc")
     C = dort_cephe(en, boy)
-    kapi(C["on"], kapi_u if kapi_u is not None else en / 2, r, cift=cift_kapi)
+    if kapi_u is not False:
+        kapi(C["on"], kapi_u if kapi_u is not None else en / 2, r, cift=cift_kapi)
     for s_, liste in (pencereler or {}).items():
         for (u, k, kp) in liste:
             pencere(C[s_], u, k * KAT + 0.9, r, kepenk=kp)
@@ -502,20 +516,54 @@ def tas_ev(en, boy, kat, r, kapi_u=None, cift_kapi=True, baca_x=None, yogun=0.75
 
 # ---------------- yapılar ----------------
 
+def ahir_parcasi(L, D, r, acik=False, arka_kapi=False, yuk=3.0):
+    """Ahır / Kangal barınağı kanadının bir parçası (yerel çizim, önü -Y avluya).
+    acik: önü direkli sundurma, içinde bölmeler ve yatak yerleri; değilse taş duvar, ahır kapıları."""
+    C = dort_cephe(L, D)
+    if acik:
+        kutu(0, D - 0.5, 0, L, D, yuk, "tas2")
+        for xx in (0.0, L - 0.5):
+            kutu(xx, 0.4, 0, xx + 0.5, D, yuk, "tas2")
+        for k in range(4):
+            xx = 0.5 + k * (L - 1.0) / 3
+            kutu(xx - 0.1, 0.1, 0, xx + 0.1, 0.3, yuk, "ahsap_koyu")
+        kutu(0, 0.05, yuk - 0.35, L, 0.35, yuk, "ahsap")
+        for k in range(1, 3):
+            xx = k * L / 3
+            kutu(xx - 0.05, 1.0, 0, xx + 0.05, D - 0.5, 1.0, "ahsap")
+        for k in range(3):
+            xx = 0.7 + k * L / 3
+            kutu(xx, 2.6, 0, xx + 1.2, D - 0.8, 0.18, "cicek2")   # samanlı yatak yeri
+        kutu(0, 0, -0.05, L, D, 0.04, "tas_koyu")
+    else:
+        kutu(0.02, 0.02, 0, L - 0.02, D - 0.02, yuk, "harc")
+        kapi(C["on"], L / 2, r, en=2.0, boy=2.3, renk="ahsap", cift=True, kemer=False, basamak=False)
+        pencere(C["on"], L / 2 - 2.3, 1.6, r, en=0.6, boy=0.5, kepenk="yok")
+        if arka_kapi:
+            kapi(C["arka"], L / 2, r, en=1.4, boy=2.1, renk="ahsap", cift=True, kemer=False, basamak=False)
+        for c in C.values():
+            tas_orgu(c, yuk, r, yogun=0.35)
+            kose_taslari(c, yuk, r)
+    hh = cati(L, D, yuk, r, tip="besik")
+    alin(L, D, yuk, hh - SACAK * math.tan(EGIM), r)
+
+
 def surek_kulubu():
-    """Küçükçetmi Sürek Kulübü: çiftlik evi = kulüp evi, yanında ayrı ev, Kangal barınağı, kuru taş avlu."""
+    """Küçükçetmi Sürek Kulübü, U biçiminde (Kemal, 22 Kasım: "öyle bir hayalim var"): arkada iki katlı
+    kulüp evi (çiftlik evi), solda Kangal barınağı ve ahır kanadı, sağda ayrı ev kanadı; üçü bir avluyu
+    üç yandan sarar, açık yan avlu kapısına ve yola bakar. Yamaçta kanatlar kademe kademe iner, arkaları
+    yamaca gömülür. Barınağın dışında çitli koşu yeri; çevrede kuru taş avlu duvarı."""
     r = random.Random(2211)
     temizle()
     h = yer("bina_surek")
     E, Bo = h.en / 2, h.boy / 2   # 27 x 13
     # avlu toprağı (taban kutusunu da belirler: tam en x boy)
     yer_ortusu(h, -E, -Bo, E, Bo, 2.0, "toprak", ust=0.12)
-    # avlu duvarı: kapı önde, ortada
+    # avlu duvarı: kapı önde, ortada (U'nun açık yanının karşısında)
     d = 0.35
     kose = [(-E + d, -Bo + d), (E - d, -Bo + d), (E - d, Bo - d), (-E + d, Bo - d), (-E + d, -Bo + d)]
     kapi_x = (-2.0, 2.0)
     kuru_tas_duvar(h, kose, r, yuk=1.05, bos=[(kapi_x[0], -Bo, kapi_x[1], -Bo + 1.0)])
-    # kapı ayakları ve ahşap çift kanat
     zk = h(0, -Bo + d)
     for x in kapi_x:
         kutu(x - 0.4, -Bo + d - 0.4, zk - 0.4, x + 0.4, -Bo + d + 0.4, zk + 1.7, "tas2")
@@ -527,32 +575,38 @@ def surek_kulubu():
             xx += 0.2
         for zz in (0.35, 1.15):
             kutu(a, -Bo + d - 0.1, zk + zz, b, -Bo + d - 0.05, zk + zz + 0.12, "ahsap_koyu")
-    # kapıdan eve taş yol (yere uyan basamaklar)
+    # kapıdan avlunun içinden sekinin basamağına taş yol
     y = -Bo + 1.0
-    while y < 0.6:
+    while y < 0.4:
         zz = h(0, y)
         for x in (-0.9, 0.0, 0.9):
             kutu(x - 0.42 + r.uniform(-0.05, 0.05), y, zz - 0.2, x + 0.42, y + 0.55, zz + 0.22, r.choice(TASLAR))
         y += 0.62
 
-    # kulüp evi (çiftlik evi): iki katlı taş, arka ortada; yamaçta taş kaideye oturur
-    en, boy = 15.0, 8.0
-    x0, y0 = -8.5, 1.5
-    lo, hi = yer_bandi(h, x0 - 1.5, y0 - 2.4, x0 + en + 1.5, y0 + boy + 1.0)
-    z = (lo + hi) / 2 + 0.6   # arkası yamaca gömülü (yamaç evi), önü taş sekide
-    kaide(x0 - 1.5, y0 - 2.4, x0 + en + 1.5, y0 + boy + 1.0, lo - 0.4, z, r)   # önünde taş seki
-    for i in range(int((z - h(0, y0 - 3.4)) / 0.3) + 1):   # sekiye basamak
-        zz = z - i * 0.3
-        kutu(x0 + en / 2 - 1.3, y0 - 2.4 - (i + 1) * 0.34, lo - 0.4, x0 + en / 2 + 1.3, y0 - 2.4 - i * 0.34, zz, "tas_koyu")
-    OFSET[:] = [x0, y0, z]
-    p = {"on": [(1.8, 0, "acik"), (4.6, 0, "acik"), (10.4, 0, "acik"), (13.2, 0, "acik"),
-                (1.8, 1, "acik"), (4.6, 1, "kapali"), (7.5, 1, "acik"), (10.4, 1, "acik"), (13.2, 1, "acik")],
-         "arka": [(3.0, 1, "acik"), (7.5, 1, "acik"), (12.0, 1, "kapali")],
-         "sol": [(4.0, 0, "acik"), (4.0, 1, "acik")], "sag": [(4.0, 0, "kapali"), (4.0, 1, "acik")]}
-    yuk = tas_ev(en, boy, 2, r, kapi_u=en / 2, baca_x=3.2, yogun=0.55, pencereler=p)
-    baca(en - 3.2, boy / 2 + 0.8, yuk, yuk + 4.2)
-    # sekide ağaç altında masa ve sandalyeler (buluşma yeri)
-    for (mx, my) in ((3.0, -1.3), (12.0, -1.3)):
+    UX, UY0, UY1, KD = 12.0, -9.0, 12.0, 7.0   # U: iç avlu x ±12, ön uç y -9, arka y 12, kanat derinliği 7
+    BOLUM = [(-9.0, -2.0), (-2.0, 4.0), (4.0, 12.0)]   # yan kanatların kademeleri (önden arkaya)
+
+    def parca_yeri(x0, y0, x1, y1, pay=0.5):
+        lo, hi = yer_bandi(h, x0, y0, x1, y1)
+        z = (lo + hi) / 2 + pay
+        DONUS[0] = 0
+        OFSET[:] = [0.0, 0.0, 0.0]
+        kaide(x0, y0, x1, y1, lo - 0.4, z, r)
+        return lo, z
+
+    # arka kanat: kulüp evi (iki katlı taş çiftlik evi), önünde taş seki
+    en, boy = 2 * UX, UY1 - 4.0
+    lo, z = parca_yeri(-UX, 1.6, UX, UY1, 0.6)
+    for i in range(int((z - h(0, 0.4)) / 0.3) + 1):   # sekiden avluya basamak
+        kutu(-1.3, 1.6 - (i + 1) * 0.34, lo - 0.4, 1.3, 1.6 - i * 0.34, z - i * 0.3, "tas_koyu")
+    OFSET[:] = [-UX, 4.0, z]
+    p = {"on": [(2.0, 0, "acik"), (5.0, 0, "acik"), (8.5, 0, "kapali"), (15.5, 0, "acik"), (19.0, 0, "acik"), (22.0, 0, "acik"),
+                (2.0, 1, "acik"), (5.0, 1, "kapali"), (8.5, 1, "acik"), (12.0, 1, "acik"), (15.5, 1, "acik"), (19.0, 1, "kapali"),
+                (22.0, 1, "acik")],
+         "arka": [(4.0, 1, "acik"), (9.0, 1, "kapali"), (15.0, 1, "acik"), (20.0, 1, "acik")]}
+    yuk = tas_ev(en, boy, 2, r, kapi_u=en / 2, baca_x=4.0, yogun=0.4, pencereler=p)
+    baca(en - 4.0, boy / 2 + 0.8, yuk, yuk + 4.2)
+    for (mx, my) in ((5.0, -1.2), (19.0, -1.2)):   # sekide masalar (buluşma yeri)
         kutu(mx - 0.9, my - 0.45, 0.72, mx + 0.9, my + 0.45, 0.78, "ahsap")
         for dx in (-0.75, 0.75):
             kutu(mx + dx - 0.06, my - 0.4, 0, mx + dx + 0.06, my + 0.4, 0.72, "ahsap_koyu")
@@ -560,70 +614,50 @@ def surek_kulubu():
             for sy in (-0.75, 0.75):
                 kutu(mx + sx - 0.2, my + sy - 0.2, 0, mx + sx + 0.2, my + sy + 0.2, 0.45, "ahsap_koyu")
                 kutu(mx + sx - 0.2, my + sy + (0.17 if sy > 0 else -0.21), 0.45, mx + sx + 0.2, my + sy + (0.21 if sy > 0 else -0.17), 0.95, "ahsap_koyu")
-    for px in (0.6, 6.2, 8.8, 14.4):
+    for px in (1.0, 10.2, 13.8, 23.0):
         kutu(px - 0.2, -2.2, 0, px + 0.2, -1.8, 0.4, "saksi")
         kutu(px - 0.3, -2.3, 0.4, px + 0.3, -1.7, 0.9, r.choice(["asma", "zeytin"]))
-    # cepheye tırmanan asma
-    for _ in range(26):
-        u, zz = r.uniform(8.6, 10.0), r.uniform(0.8, 5.5)
+    for _ in range(26):   # cepheye tırmanan asma
+        u, zz = r.uniform(13.2, 14.4), r.uniform(0.8, 5.5)
         w = r.uniform(0.15, 0.32)
-        if not (9.6 < u + w and u - w < 11.2 and zz < 2.4):
+        if not (zz < 3.0 and u - w < 13.4):
             kutu(u - w, -0.2, zz - w, u + w, 0.0, zz + w, r.choice(["asma", "asma2"]))
+
+    # sol kanat: Kangal barınağı (önde açık sundurma) ve ahır; arkası koşu yerine kapılı
+    for i, (ya, yb) in enumerate(BOLUM):
+        lo, z = parca_yeri(-UX - KD, ya, -UX, yb, 0.35)
+        DONUS[0] = 90
+        OFSET[:] = [-UX, ya, z]
+        ahir_parcasi(yb - ya, KD, r, acik=(i == 0), arka_kapi=(i == 1))
+    # sağ kanat: ayrı ev (vikide "kulüp evinin yanındaki ayrı ev"), tek katlı, avluya bakar
+    for i, (ya, yb) in enumerate(BOLUM):
+        lo, z = parca_yeri(UX, ya, UX + KD, yb, 0.4)
+        DONUS[0] = -90
+        OFSET[:] = [UX, yb, z]
+        L = yb - ya
+        pen = {"sag": [(KD / 2, 0, "acik")]} if i == 0 else {}
+        pen.setdefault("on", [])
+        if i < 2:
+            pen["on"] += [(1.4, 0, "acik"), (L - 1.4, 0, "kapali")]
+        pen["arka"] = [(L / 2, 0, "acik")]
+        tas_ev(L, KD, 1, r, kapi_u=(L / 2 if i == 0 else False), cift_kapi=False, baca_x=(L - 1.5 if i == 1 else None),
+               yogun=0.35, pencereler=pen)
+        if i == 0:
+            for k in range(3):
+                kutu(L / 2 + 1.0 + k * 0.5, -0.8, 0, L / 2 + 1.3 + k * 0.5, -0.5, 0.35, "saksi")
+                kutu(L / 2 + 0.9 + k * 0.5, -0.9, 0.35, L / 2 + 1.4 + k * 0.5, -0.4, 0.75, r.choice(["asma", "zeytin"]))
+                kutu(L / 2 + 1.08 + k * 0.5, -0.7, 0.75, L / 2 + 1.22 + k * 0.5, -0.6, 0.85, r.choice(["cicek", "cicek2"]))
+    DONUS[0] = 0
     OFSET[:] = [0.0, 0.0, 0.0]
 
-    # ayrı ev (vikide: kulüp evinin yanındaki ayrı ev): tek katlı taş
-    en2, boy2 = 7.0, 6.0
-    x0, y0 = 12.0, -2.5
-    lo, hi = yer_bandi(h, x0 - 0.6, y0 - 1.2, x0 + en2 + 0.6, y0 + boy2 + 0.6)
-    z = (lo + hi) / 2 + 0.5
-    kaide(x0 - 0.6, y0 - 1.2, x0 + en2 + 0.6, y0 + boy2 + 0.6, lo - 0.4, z, r)
-    for i in range(int((z - lo) / 0.3) + 1):
-        kutu(x0 + 2.2, y0 - 1.2 - (i + 1) * 0.32, lo - 0.4, x0 + 3.8, y0 - 1.2 - i * 0.32, z - i * 0.3, "tas_koyu")
-    OFSET[:] = [x0, y0, z]
-    tas_ev(en2, boy2, 1, r, kapi_u=3.0, cift_kapi=False, baca_x=en2 - 1.5, yogun=0.55,
-           pencereler={"on": [(1.2, 0, "acik"), (5.4, 0, "kapali")], "sag": [(2.0, 0, "acik")],
-                       "sol": [(4.0, 0, "acik")]})
-    for i in range(3):
-        kutu(4.3 + i * 0.5, -0.8, 0, 4.6 + i * 0.5, -0.5, 0.35, "saksi")
-        kutu(4.2 + i * 0.5, -0.9, 0.35, 4.7 + i * 0.5, -0.4, 0.75, r.choice(["asma", "zeytin"]))
-        kutu(4.38 + i * 0.5, -0.7, 0.75, 4.52 + i * 0.5, -0.6, 0.85, r.choice(["cicek", "cicek2"]))
-    OFSET[:] = [0.0, 0.0, 0.0]
-
-    # Kangal barınağı: arkası taş, önü açık ahşap sundurma; önünde çitli koşu yeri
-    x0, x1, y0, y1 = -24.5, -13.5, 2.5, 6.0
-    lo, hi = yer_bandi(h, x0, y0, x1, y1)
-    z = hi + 0.15
-    kaide(x0, y0, x1, y1, lo - 0.4, z, r)
-    kutu(x0, y1 - 0.45, z, x1, y1, z + 2.3, "tas2")                    # arka taş duvar
-    for xx in (x0, x1 - 0.45):
-        kutu(xx, y0, z, xx + 0.45, y1, z + 2.3, "tas2")                 # yan duvarlar
-    for k in range(5):
-        xx = x0 + 0.4 + k * (x1 - x0 - 0.8) / 4
-        kutu(xx - 0.09, y0 + 0.1, z, xx + 0.09, y0 + 0.28, z + 1.9, "ahsap_koyu")
-    # bölmeler
-    for k in range(1, 4):
-        xx = x0 + k * (x1 - x0) / 4
-        kutu(xx - 0.05, y0 + 0.3, z, xx + 0.05, y1 - 0.45, z + 1.0, "ahsap")
-    kesik((x0 - 0.3, y0 - 0.6, x1 + 0.3, y0 - 0.5), (x0 - 0.3, y1 + 0.1, x1 + 0.3, y1 + 0.2), z + 1.95, z + 2.6, "kiremit2")
-    xx = x0 - 0.3
-    while xx < x1 + 0.3:
-        kutu(xx, y0 - 0.62, z + 1.95, xx + 0.22, y1 + 0.2, z + 2.64, "kiremit1")
-        xx += 0.5
-    for k in range(4):   # samanlı yatak yerleri
-        xx = x0 + 0.6 + k * (x1 - x0) / 4
-        kutu(xx, y0 + 1.6, z, xx + 1.4, y1 - 0.8, z + 0.18, "cicek2")
-    # koşu yeri: ahşap direk ve iki sıra kuşak
-    cx0, cx1, cy0, cy1 = -25.0, -13.0, -9.0, y0
-    direk = []
-    for t in range(0, 13):
-        direk.append((cx0 + (cx1 - cx0) * t / 12, cy0))
-    for t in range(1, 7):
-        direk.append((cx0, cy0 + (cy1 - cy0) * t / 6))
-        direk.append((cx1, cy0 + (cy1 - cy0) * t / 6))
+    # koşu yeri: barınak kanadının dışında, ahşap direk ve iki sıra kuşak
+    cx0, cx1, cy0, cy1 = -26.4, -UX - KD - 0.6, -10.5, 9.0
+    direk = [(cx0 + (cx1 - cx0) * t / 4, cy0) for t in range(5)] + [(cx0 + (cx1 - cx0) * t / 4, cy1) for t in range(5)]
+    direk += [(cx1, cy0 + (cy1 - cy0) * t / 10) for t in range(1, 10)]
     for (px, py) in direk:
         zz = h(px, py)
         kutu(px - 0.07, py - 0.07, zz - 0.3, px + 0.07, py + 0.07, zz + 1.35, "ahsap_koyu")
-    for (ax, ay, bx, by) in ((cx0, cy0, cx1, cy0), (cx0, cy0, cx0, cy1), (cx1, cy0, cx1, cy1)):
+    for (ax, ay, bx, by) in ((cx0, cy0, cx1, cy0), (cx0, cy1, cx1, cy1), (cx1, cy0, cx1, cy1)):
         L = math.hypot(bx - ax, by - ay)
         n = max(1, round(L / 2.0))
         for k in range(n):
@@ -632,30 +666,25 @@ def surek_kulubu():
             zz = (h(xa, ya) + h(xb, yb)) / 2
             for kz in (0.55, 1.15):
                 kutu(min(xa, xb) - 0.03, min(ya, yb) - 0.03, zz + kz, max(xa, xb) + 0.03, max(ya, yb) + 0.03, zz + kz + 0.09, "ahsap")
-    # koşu yerinde su yalağı
-    zz = h(-15.0, -6.0)
-    kutu(-16.2, -6.4, zz - 0.2, -14.2, -5.6, zz + 0.45, "tas2")
-    kutu(-16.0, -6.25, zz + 0.3, -14.4, -5.75, zz + 0.46, "kepenk")
+    zz = h(-23.5, -6.0)
+    kutu(-24.5, -6.4, zz - 0.2, -22.5, -5.6, zz + 0.45, "tas2")   # su yalağı
+    kutu(-24.3, -6.25, zz + 0.3, -22.7, -5.75, zz + 0.46, "kepenk")
 
-    # zeytinler ve çalılar (avlu)
-    for (x, y, o) in ((-9.0, -6.5, 1.0), (7.5, -7.0, 1.1), (21.5, -9.0, 0.9), (-3.5, 10.6, 0.8), (23.0, 9.0, 1.0)):
+    # avluda zeytin; U'nun dışında zeytinler ve çalılar
+    for (x, y, o) in ((-6.5, -5.0, 1.0), (7.0, -6.0, 0.9), (23.0, -8.5, 1.0), (23.5, 3.0, 0.9), (-23.0, 11.0, 0.7), (16.0, -11.0, 0.7)):
         zeytin_agaci(x, y, h(x, y), r, o)
-    for _ in range(18):
+    for _ in range(14):
         x, y = r.uniform(-E + 1.5, E - 1.5), r.uniform(-Bo + 1.5, Bo - 1.5)
-        if -26 < x < -12.5 and -9.5 < y < 6.5:
-            continue
-        if -10.5 < x < 8.5 and -1.5 < y < 10.5:
-            continue
-        if 11 < x < 20 and -4.5 < y < 4.5:
-            continue
-        if -1.5 < x < 1.5 and y < 1:
+        if -26.6 < x < UX + KD + 0.5 and y > -10.6:
             continue
         calilik(x, y, h(x, y), r, r.uniform(0.35, 0.6))
+    for (x, y) in ((-9.5, -1.0), (9.5, -2.0), (-3.5, -8.0), (4.0, -8.3)):
+        calilik(x, y, h(x, y), r, 0.4)
     disari("kucukcetmi-surek-kulubu")
 
 
-def iskele_mescidi(minareli=False):
-    """İskele Mescidi: badanalı küçük mescit, kırma kiremit çatı, kemerli kafesli pencereler, önde taş avlucuk."""
+def iskele_mescidi(minareli=True):
+    """İskele Mescidi: badanalı küçük mescit, kırma kiremit çatı, kemerli kafesli pencereler, önde taş avlucuk, minare."""
     r = random.Random(1923)
     temizle()
     h = yer("yapi_iskele_mescidi")
@@ -724,7 +753,7 @@ def iskele_mescidi(minareli=False):
         koni(mx, my, 9.25, 11.6, 0.62, "sac", 10)
         silindir(mx, my, 11.6, 12.0, 0.035, "demir", 6)
     OFSET[:] = [0.0, 0.0, 0.0]
-    disari("iskele-mescidi-minareli" if minareli else "iskele-mescidi")
+    disari("iskele-mescidi" if minareli else "iskele-mescidi-minaresiz")
 
 
 def rum_mezarligi():
@@ -794,8 +823,8 @@ def rum_mezarligi():
 
 if __name__ == "__main__":
     surek_kulubu()
-    iskele_mescidi(False)
-    if MINARELI:
-        iskele_mescidi(True)
+    iskele_mescidi(True)
+    if MINARESIZ:
+        iskele_mescidi(False)
     rum_mezarligi()
     print("tamam")
