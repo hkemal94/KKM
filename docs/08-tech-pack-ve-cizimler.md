@@ -78,3 +78,12 @@ dalında. Telif ajansın; Kemal'in stil onayını bekliyor.
 - Galeri → Canva aynası (`src/data/canvaAynasi.ts`): şablon ve örnek.
 - Merch → Pano: Basics 1 ürün kartlarında tech pack bağlantısı (12 ürün; veri `src/data/teknikFoyler.ts`).
 - Bu belge: `docs/08-tech-pack-ve-cizimler.md` (proje kopyası: claude/08-tech-pack-ve-cizimler.md).
+
+## 3B modellerin kaynağı (dışarıdan gelenler)
+
+KKM'nin 3B modelleri (`public/modeller/`) ajansın kendi yapımı. Dışarıdan gelen her model
+buraya yazılır: dosya, kaynak, lisans.
+
+| Dosya | Kaynak | Lisans | Nerede |
+|---|---|---|---|
+| `binalar/dondurmaci-kizlar.glb` | Dondurmacı Kızlar oyunu (`hkemal94/dondurmacikizlar`, `src/sahne/Dukkan.tsx`): dükkânın dış kabuğu oyunun kodunda kutularla kurulmuş; deneme dükkânının biçimi (20 x 13 m), başlangıç görünüşü (krem duvar, mor çerçeve, mor-sarı tente, düz dam). Oyun tarayıcıda açılıp dış kabuk (duvarlar, camlar, tente, dam) glb'ye aktarıldı; iç eşya, tabela yazısı, logo, doku, oyun ayarı alınmadı. 22 Kasım 2026, Kemal'in onayıyla | Kemal'in kendi oyunu; dış paket değil (kabuk oyunun kodunda kutularla kurulu; oyunun `docs/lisanslar.md`'sindeki hazır paketlerin hiçbiri kabukta yok), lisans gerekmez | Tek harita, Dondurmacı Kızlar yapısı (`src/components/harita/tek/modelEsleme.ts`) |
