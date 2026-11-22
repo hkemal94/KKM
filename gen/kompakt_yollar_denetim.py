@@ -292,6 +292,21 @@ def main():
             q_ = sy.interpolate(sy.project(bq))
             yaz("Kıyı köyü Sahil Yolu'nun deniz yanında", kiyi.distance(korunan["birahane-yeri"]) < kiyi.distance(q_),
                 f"birahane yeri kıyıya {kiyi.distance(korunan['birahane-yeri']):.0f} m, Sahil Yolu {kiyi.distance(q_):.0f} m")
+    # 11) Liman kasabası: eski haritadaki sokaklar, gen/kompakt_liman.py'nin taşımasıyla (Kemal, 22 Kasım)
+    import kompakt_liman as LM
+    lm_sokak, _, _ = LM.eski_liman()
+    sap, kayip = [], []
+    for k_, (ad_, hat_) in lm_sokak.items():
+        g_ = LineString([LM.tasi(*c) for c in hat_])
+        uc = 5.0 if g_.length > 12 else 0.0
+        ds = [agu.distance(g_.interpolate(t)) for t in np.arange(uc, g_.length - uc + 0.01, 4.0)]
+        if ds and max(ds) > 4.0:      # eskisinde değdiği yola 4 m'den yakın biten uç o yolun üstüne oturtulur
+            kayip.append(k_)
+        sap.append(max(ds) if ds else 0.0)
+    yaz("Liman sokakları eski haritadakiyle aynı hat (oran 1,0, odak Dondurmacı Kızlar)", not kayip,
+        f"{len(lm_sokak)} sokak, {len(lm_sokak) - len(kayip)} tanesi taşınmış eski hattan en çok "
+        f"{max(s_ for s_, k_ in zip(sap, lm_sokak) if k_ not in kayip):.2f} m sapmayla (uçlar değdikleri yola oturtulur); "
+        f"hattından kayan: {', '.join(kayip) or '-'}")
     print("Zemin denetimi (yol yatağıyla):")
     sorun += zd.main()
     print("Sonuç:", "hepsi temiz" if sorun == 0 else f"{sorun} sorun")

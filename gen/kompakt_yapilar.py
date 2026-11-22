@@ -43,6 +43,7 @@ BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
 sys.path.insert(0, BURASI)
 from kompakt_zemin_denetim import oku  # noqa: E402
+import kompakt_liman as LM  # noqa: E402
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)   # shapely.ops.transform (öbür üreteçlerle aynı)
 
@@ -352,11 +353,19 @@ for k, v in YERLESIM.items():
     MAH_YERLESIM.setdefault(v["mahalle"], []).append(k)
 
 
-LIMAN_KAYMASI = {}    # kıyıdaki öbek (Liman'ın liman kıyısı): birlikte kıyıya kayar
+LIMAN_KAYMASI = {}    # kıyıdaki öbek (Liman dışındaki kıyı yapıları): birlikte kıyıya kayar
+
+
+def eski_limanda(e):
+    """Liman kasabasındaki viki yapısı (Fener burunda, kendi kuralıyla): sokaklarla birlikte taşınır (Kemal, 22 Kasım)."""
+    return e["mahalle"] == "yer_liman" and e["id"] != "bina_fener" and e.get("eskiKonum") is not None
 
 
 def hedef(e):
-    """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması)."""
+    """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması).
+    Liman kasabasındakiler sokaklarla aynı taşımayla (gen/kompakt_liman.py: oran 1,0, odak Dondurmacı Kızlar)."""
+    if eski_limanda(e):
+        return LM.tasi(*e["eskiKonum"]), "yerlesim_liman"
     p = m(e["eskiKonum"])
     k = kucult(*p)
     adaylar = MAH_YERLESIM.get(e["mahalle"], [])
@@ -378,7 +387,7 @@ def liman_obekleri():
     LIMAN_KAYMASI.clear()
     obek = {}
     for e in ESKI_J["yapilar"]:
-        if e["ozelYer"] or e["bag"] != "viki" or e["eskiKiyiM"] > KIYI_BAGLI_M:
+        if e["ozelYer"] or e["bag"] != "viki" or e["eskiKiyiM"] > KIYI_BAGLI_M or eski_limanda(e):
             continue
         T, ys = hedef(e)
         obek.setdefault(ys, []).append((e, T))
@@ -457,7 +466,7 @@ def yerlestir_viki(e):
     en_iyi = None
     for c, on, t, yid in yol_kenari_adaylari(T, en, boy, meydana):
         puan = math.dist(c, T)
-        if liman and e["id"] not in LIMAN_KAYMASI:
+        if liman and e["id"] not in LIMAN_KAYMASI and not eski_limanda(e):
             puan += 3.0 * max(0.0, KIYI.distance(Point(c)) - max(boy, B["olcek"] * e["eskiKiyiM"]))
         if en_iyi and puan >= en_iyi[0]:
             continue
@@ -505,8 +514,6 @@ def ayrilan_yer(e, g):
     return g, on, yakin[0]["id"]
 
 
-# ------------------------------------------------------------------ Dondurmacı Kızlar iskelenin önünde (22 Kasım)
-ESKI_ISKELE_KIYI = (25.7886544, 39.625132)   # eski haritada Liman İskelesi'nin kıyıya değdiği yer (src/data/duzadaGeo.ts,
                                              # bina_liman_iskele); Kurucu'da dükkân bu kökün 37 m gerisinde, 14 m yanında
 DK_KUMSAL = 23.6        # oyun belgesi 0.10 (~25 m kumsal; oyun kodunda dükkânın önü ile su arası 23,6 m); sığmazsa kısalır (DENEME)
 DK_KUMSAL_EN_AZ = 8.0   # DENEME: dükkânın önü ile su arası en az
@@ -522,11 +529,9 @@ DK_ISKELE = {}          # iskele ve mendirek (uret() yazar)
 
 
 def dk_iskele_kok():
-    """Eski iskele kökünün kompakt adadaki yeri (öbür liman yapılarıyla aynı taşıma) ve oradaki kıyı noktası, deniz yönü."""
-    k = kucult(*m(ESKI_ISKELE_KIYI))
-    d = KAYMA["yerlesim_liman"]
-    g = LIMAN_KAYMASI.get("bina_liman_kafe", (0.0, 0.0))
-    T = Point(k[0] + d[0] + g[0], k[1] + d[1] + g[1])
+    """İskelenin kökü ve oradaki kıyı noktası, deniz yönü. Kök #266'da eski iskele kökünün taşınmış yeriydi; Liman
+    eski sokaklarıyla gelince (22 Kasım) dükkân ve iskele yerinde kalır: kök #266'daki yerinde (gen/kompakt_liman.py)."""
+    T = Point(m(LM.ISKELE_KOK))
     s = KIYI.project(T)
     S = KIYI.interpolate(s)
     a, b = KIYI.interpolate(s - 40.0), KIYI.interpolate(s + 40.0)
@@ -644,6 +649,7 @@ def viki_yapilari():
                 continue
             _, taban, on, yid = sonuc
             yontem = ("Fener Burnu'nda, kıyıya eskisinin 0,70'i uzaklıkta" if e["id"] == "bina_fener" else
+                      "eski Liman'daki yeri (sokaklarla aynı taşıma, oran 1,0)" if eski_limanda(e) else
                       "oranla karşılığı" + (", meydana bakar" if meydana else "")
                       + (", kıyıda (liman öbeği birlikte kıyıya kaydı)" if e["id"] in LIMAN_KAYMASI else ", kıyıda" if liman else ""))
         ozel["yol"] = yid

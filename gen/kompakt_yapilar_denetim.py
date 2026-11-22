@@ -121,6 +121,21 @@ def main():
     dk = next((g for g, p in zip(G, P) if p["id"] == "bina_liman_kafe"), None)
     if isk is not None and dk is not None:
         yaz("Dondurmacı Kızlar iskelenin dibinde (en çok 10 m)", dk.distance(isk) <= 10.0, f"{dk.distance(isk):.1f} m")
+    # Liman eski sokaklarıyla (22 Kasım): dükkân #266'daki yerinde; balık yerleri ona eski uzaklıklarına yakın
+    if dk is not None:
+        dkm = Y.m(Y.LM.DK_YENI)
+        yaz("Dondurmacı Kızlar #266'daki yerinde (en çok 1 m)", dk.centroid.distance(Point(dkm)) <= 1.0,
+            f"{dk.centroid.distance(Point(dkm)):.2f} m")
+        eski_dk = Point(Y.m(Y.LM.CAPA_ESKI))
+        for kim in ("ek_balik_hali", "ek_balik_lokantasi", "bina_liman_ofis"):
+            e = next((e for e in Y.ESKI_J["yapilar"] if e["id"] == kim), None)
+            g = next((g for g, p in zip(G, P) if p["id"] == kim), None)
+            if e is None or g is None:
+                yaz(f"{kim} Dondurmacı Kızlar'a eski uzaklığında", False, "yok")
+                continue
+            eski_u, yeni_u = Point(Y.m(e["eskiKonum"])).distance(eski_dk), g.centroid.distance(dk.centroid)
+            yaz(f"{e['ad']} Dondurmacı Kızlar'a eski uzaklığında (en çok %20 fark)", abs(yeni_u - eski_u) <= 0.2 * eski_u,
+                f"eski {eski_u:.0f} m, yeni {yeni_u:.0f} m")
 
     # kararlı
     a = json.dumps(Y.uret(), ensure_ascii=False, separators=(",", ":"))
