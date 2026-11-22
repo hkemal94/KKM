@@ -6,15 +6,14 @@ son hâli (src/data/kurucuGomulu.ts: gizlenenler çıkar, yolDuzeni'yle değişe
 girer) eski üretilmiş haritanın (src/data/duzadaGeo.ts) Liman sokaklarıyla birlikte kompakt adaya taşınır.
 Biçim, sıra ve bağlanış aynı; yeni sokak yok.
 
-Oran: 1,0 (birebir; Liman için en iyi oturan). Kompakt kıyı eski kıyının 0,70'idir, ama Liman koyunun
-çevresinde eski kıyı birebir ölçekte de kompakt kıyıya oturuyor (sokakların kıyıya uzaklığı eskisinden en çok
-birkaç on metre farklı, hiçbiri kıyıya 15 m'den yaklaşmıyor); birebirde Balık Hali ve Balık Lokantası
-Dondurmacı Kızlar'a eski uzaklıklarında kalır, mahallenin içine de sığar. Döndürme yok (aynı yön).
+Oran: 0,70 (Kemal, 22 Kasım: "adanın geri kalanı gibi"; kıyı köyündeki gibi). Döndürme yok (aynı yön).
 
-Odak: Dondurmacı Kızlar. Dükkân #266'daki yerinde kalır (Kemal'in B kararı: Liman İskelesi'nin dibinde, önü
-denize). Eski haritada dükkân Kemal'in çizdiği kıyı sokağının üstündeydi; şimdi önü denize döndüğü için sokak
-dükkânın arkasından geçsin diye kasaba dükkâna göre 21 m kara yönüne, 7 m kıyı boyunca kayar (en küçük kayma
-içinde Balık Hali, Balık Lokantası ve Liman İdare Binası'nın dükkâna uzaklığı eskisine en yakın olan). DENEME.
+Odak: Dondurmacı Kızlar. Dükkân, iskele ve mendirek #266'daki yerinde kalır (Kemal'in B kararı: Liman
+İskelesi'nin dibinde, önü denize). Eski haritada dükkân Kemal'in çizdiği kıyı sokağının üstündeydi; önü denize
+döndüğü için kasaba, sokaklar dükkânın içinden geçmeyecek kadar kayar (Kemal, 22 Kasım): dükkâna göre 18 m kara
+yönüne (en küçük kayma; sokak dükkândan 1,5 m açıkta), kıyı boyunca 6 m (bu kayma içinde Balık Hali, Balık
+Lokantası ve Liman İdare'nin dükkâna uzaklığı eskisinin 0,70'ine en yakın). Sokaklar kıyıya 20 m'den yaklaşmaz,
+kasaba Liman mahallesine sığar. DENEME.
 
 Üreteçler bunu okur: gen/kompakt_yollar.py (sokaklar, meydancıklar, Sahil Yolu'nun kasabadaki kesimi),
 gen/kompakt_yapilar.py (Liman'daki viki yapılarının hedefi, iskelenin kökü).
@@ -24,11 +23,11 @@ import json, os
 BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
 
-ORAN = 1.0
+ORAN = 0.70
 CAPA_ESKI = (25.7890969, 39.6250236)    # Dondurmacı Kızlar eski haritada (gen/kompakt-yapilar-eski.json eskiKonum)
 DK_YENI = (25.8209328, 39.6158244)      # Dondurmacı Kızlar tek haritada (#266, iskelenin dibinde; değişmez)
 ISKELE_KOK = (25.8206085, 39.6159392)   # #266'daki iskelenin kıyıdaki kökü (dükkânın önünden 23,6 m kumsal + 7 m)
-CAPA_YENI = (25.8211213, 39.6156883)    # kasabanın taşınmış odağı: dükkândan 21 m kara yönüne, 7 m kıyı boyunca (DENEME)
+CAPA_YENI = (25.8210943, 39.6157078)    # kasabanın taşınmış odağı: dükkândan 18 m kara yönüne, 6 m kıyı boyunca (DENEME)
 # Kemal'in Kurucu'da Liman'a çizdiği sokaklar (kurucuGomulu.ts yeniYollar)
 KURUCU_LIMAN = ["kurucu_yol_mv6i7pld", "kurucu_yol_mv6i5qes", "kurucu_yol_mv6i8i4z", "kurucu_yol_muqzij9s",
                 "kurucu_yol_mv6iacua", "kurucu_yol_mv6i83iq", "kurucu_yol_mv6i87xk"]

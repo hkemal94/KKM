@@ -59,6 +59,9 @@ ARSA = {   # DENEME
     "avlulu": [(3, 4), (3, 3), (2, 4), (2, 3), (1, 4), (1, 3)],
     "buyuk": [(4, 4), (3, 4), (3, 3)],                     # 32 x 32 m ya da 24 x 32 m
 }
+# Liman eski sokaklarıyla (Kemal, 22 Kasım; 0,70 ile küçülünce sokak araları ~35 m): yolun iki yanından gelen kareler
+# ortada buluşur, 3 kare derin arsa sığmaz. Yalnız Liman'da 2 kare derin (16 m) avlulu arsa da denenir. DENEME.
+LIMAN_SIG = {"avlulu": [(3, 2), (2, 2)]}
 BUYUK_UC_ORANI = 0.5    # DENEME: büyük arsaların bu kadarı 3 kare cepheyle başlar (çeşitlilik; kararlı)
 ARA_KARE = {"bitisik": 0, "avlulu": 1, "buyuk": 0}   # DENEME: aynı sırada arsadan sonra boş kalan kare; avlulu en az 1 (≈ 8 m)
 KALDIRIM = 1.0          # DENEME: yol kenarı ile ilk sıra karenin önü arası (m)
@@ -220,6 +223,47 @@ def sade_indis(p, tol):
     return np.flatnonzero(tut)
 
 
+# Sahil Yolu (Kemal, 22 Kasım: Liman eski sokaklarıyla gelince öbür köylerin arsaları yeniden dizilmesin): yolun Liman
+# dışındaki noktaları ana daldakiyle aynıdır (gen/kompakt-sahil-ana.json, gen/kompakt_yollar.py); orada kesimler ana
+# daldaki sadeleştirmenin köşeleriyle, ana daldaki sırasıyla ve yol başından ana daldaki uzaklıkla kurulur. Yalnız
+# değişen Liman kesimi kendi içinde sadeleşir.
+SAHIL_ANA = json.load(open(os.path.join(BURASI, "kompakt-sahil-ana.json"), encoding="utf-8"))
+for y in YOLLISTE:
+    if y["id"] != SAHIL_ANA["id"]:
+        continue
+    _c = np.asarray(SAHIL_ANA["koordinatlar"], float)
+    _ax, _ay = mt(_c[:, 0], _c[:, 1])
+    pa = np.column_stack([_ax, _ay])
+    pn = np.asarray(y["g"].coords)
+    nL = 0
+    while nL < min(len(pa), len(pn)) and (pa[nL] == pn[nL]).all():
+        nL += 1
+    nR = 0
+    while nR < min(len(pa), len(pn)) - nL and (pa[-1 - nR] == pn[-1 - nR]).all():
+        nR += 1
+    if nL == len(pa) == len(pn):
+        break                                  # Sahil Yolu ana daldakiyle aynı
+    ka = list(sade_indis(pa, SADELESTIRME))
+    kaydir = len(pn) - len(pa)
+    sol = [i for i in ka if i < nL]
+    sag = [i for i in ka if i >= len(pa) - nR]
+    a_, b_ = sol[-1], sag[0] + kaydir
+    orta = [a_ + i for i in sade_indis(pn[a_:b_ + 1], SADELESTIRME)]
+    y["koseler"] = sorted(set(sol + orta + [i + kaydir for i in sag]))
+    no, sira = [], []
+    for k_, (i0, i1) in enumerate(zip(y["koseler"][:-1], y["koseler"][1:])):
+        if i1 <= a_:
+            no.append(ka.index(i0)); sira.append(float(ka.index(i0)))
+        elif i0 >= b_:
+            no.append(ka.index(i0 - kaydir)); sira.append(float(ka.index(i0 - kaydir)))
+        else:
+            no.append(100000 + k_); sira.append(ka.index(a_) + (k_ + 1) / 1000.0)
+    y["kesimNo"], y["kesimSira"], y["anaKesim"] = no, sira, {k_ for k_, n_ in enumerate(no) if n_ < 100000}
+    y["anaCizgi"] = LineString(pa)
+    print(f"Sahil Yolu: Liman dışında {len(y['anaKesim'])} kesim ana daldakiyle aynı, Liman kesiminde "
+          f"{len(no) - len(y['anaKesim'])} kesim yeni")
+
+
 def kademe_tur(y, nokta):
     """Sütunun türü (sütun önünün ortasına göre)."""
     if BITISIK_P.contains(nokta) and y["kademe"] in TUR_KADEME["bitisik"]:
@@ -246,7 +290,7 @@ for y in sirali:
     if YER_BIRLESIK.distance(y["g"]) > 1.0:
         continue
     pts = np.asarray(y["g"].coords)
-    ind = sade_indis(pts, SADELESTIRME)
+    ind = y["koseler"] if "koseler" in y else sade_indis(pts, SADELESTIRME)
     o = y["genislik"] / 2 + KALDIRIM
     for kno in range(len(ind) - 1):
         i0, i1 = ind[kno], ind[kno + 1]
@@ -264,7 +308,10 @@ for y in sirali:
             sapma = max(0.0, float(np.max((ara - A) @ nv)))
             bas = (Lk - n_sutun * KARE) / 2
             O = A + u * bas + nv * (o + sapma)
-            SERITLER.append(dict(y=y, taraf=tad, kesim=int(kno), O=O, u=u, n=nv, n_sutun=n_sutun,
+            _no = y["kesimNo"][kno] if "kesimNo" in y else int(kno)
+            SERITLER.append(dict(y=y, taraf=tad, kesim=_no, sira=y["kesimSira"][kno] if "kesimSira" in y else float(kno),
+                                 cizgi=y["anaCizgi"] if kno in y.get("anaKesim", ()) else y["g"],
+                                 O=O, u=u, n=nv, n_sutun=n_sutun,
                                  sutun=[None] * n_sutun))
 
 # sütunlar: her sütun yolun bir noktasında, yerleşim ve tür o noktadan
@@ -279,7 +326,7 @@ for si, sr in enumerate(SERITLER):
         if yid is None:
             red["yerlesim"] += 1
             continue
-        s = g.project(Point(*on))
+        s = sr["cizgi"].project(Point(*on))
         sr["sutun"][j] = dict(metre=int(round(s)), yerlesim=yid, tur=kademe_tur(y, orta), derinlik=0, kare=[])
 
 
@@ -317,7 +364,7 @@ def kovalar(poly):
             yield (kx, ky)
 
 
-sira_listesi = sorted(((oncelik[sr["y"]["id"]], sr["y"]["id"], sr["taraf"], sr["kesim"], si)
+sira_listesi = sorted(((oncelik[sr["y"]["id"]], sr["y"]["id"], sr["taraf"], sr["sira"], si)
                        for si, sr in enumerate(SERITLER)))
 for r in range(DERINLIK_KARE):
     for _, _, _, _, si in sira_listesi:
@@ -370,7 +417,7 @@ def arsa_dene(sr, j, w, d, tur):
     return (poly, kose, e_, kot, yid), None
 
 
-for sr in sorted(SERITLER, key=lambda sr: (oncelik[sr["y"]["id"]], sr["taraf"], sr["kesim"])):
+for sr in sorted(SERITLER, key=lambda sr: (oncelik[sr["y"]["id"]], sr["taraf"], sr["sira"])):
     y = sr["y"]
     tad = sr["taraf"]
     rng = np.random.default_rng(tohum(f"{y['id']}_{tad}_{sr['kesim']}"))
@@ -390,6 +437,8 @@ for sr in sorted(SERITLER, key=lambda sr: (oncelik[sr["y"]["id"]], sr["taraf"], 
         olcu = ARSA[tur]
         if tur == "buyuk" and rng.random() < BUYUK_UC_ORANI:
             olcu = olcu[1:]
+        if st["yerlesim"] == "yerlesim_liman":
+            olcu = olcu + LIMAN_SIG.get(tur, [])
         sonuc, neden = None, "sigmadi"
         for w, d in olcu:
             sonuc, neden = arsa_dene(sr, j, w, d, tur)
@@ -412,7 +461,7 @@ for sr in sorted(SERITLER, key=lambda sr: (oncelik[sr["y"]["id"]], sr["taraf"], 
             kareler += [f"k_{y['id']}_{tad}_{sq['metre']}_{r}" for r in range(d)]
         PARSELLER.append(dict(
             id=aid, tur=tur, yol=y["id"], yolKademe=y["kademe"], taraf=tad,
-            konumM=round(y["g"].project(Point(*kose[0])), 1), cepheYonu=round(cy, 1),
+            konumM=round(sr["cizgi"].project(Point(*kose[0])), 1), cepheYonu=round(cy, 1),
             cepheM=round(w * KARE, 1), derinlikM=round(d * KARE, 1), alanM2=round(poly.area, 1),
             kotM=round(kot, 1), egim=round(100 * e_, 1), mahalle=mahalle_bul(poly.centroid), yerlesim=yid,
             kareler=kareler, poly=poly))
@@ -444,6 +493,7 @@ ALANLAR = {
 OLCULER = {"not": "Hepsi DENEME (Kemal onaylamadı)", "kareM": KARE, "derinlikKare": DERINLIK_KARE,
            "sadelestirmeM": SADELESTIRME,
            "arsaKare": {t: [list(x) for x in v] for t, v in ARSA.items()},
+           "limanArsaKare": {t: [list(x) for x in v] for t, v in LIMAN_SIG.items()},   # yalnız Liman'da ek (sığ) arsa
            # eski denetimle uyum: tür ve kademeye göre en büyük ölçü (m)
            "olcu": {t: {k: {"cepheM": max(w for w, _ in ARSA[t]) * KARE, "derinlikM": max(d for _, d in ARSA[t]) * KARE}
                         for k in TUR_KADEME[t]} for t in ARSA},
@@ -478,7 +528,7 @@ def dd(v):
 arsa_no = {p["id"]: i for i, p in enumerate(sorted(PARSELLER, key=lambda p: p["id"]))}
 seritler = []
 kare_say = 0
-for sr in sorted(SERITLER, key=lambda sr: (sr["y"]["id"], sr["taraf"], sr["kesim"])):
+for sr in sorted(SERITLER, key=lambda sr: (sr["y"]["id"], sr["taraf"], sr["sira"])):
     sut = []
     for j, st in enumerate(sr["sutun"]):
         if st is None or not st["derinlik"]:

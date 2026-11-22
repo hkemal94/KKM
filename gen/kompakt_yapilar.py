@@ -74,6 +74,7 @@ SIRA_EV_EN_DAR = 6.0     # DENEME: bitişik parsel bundan darsa yanındakiyle te
 ON_PAY = {"bitisik": 0.0, "avlulu": 1.5, "buyuk": 2.0}     # DENEME: parsel önünden geri çekilme (m)
 YAN_PAY = {"avlulu": 1.0}                                   # DENEME: avlulu evin yan sınırdan payı (m)
 ARKA_PAY = {"bitisik": 2.0, "avlulu": 4.0, "buyuk": 4.0}    # DENEME: evin arkasında kalan en az avlu (m)
+LIMAN_SIG_ARKA = 2.0     # DENEME: Liman'ın sığ (16 m) arsasında evin arkasında kalan en az avlu (m)
 EV_ALAN_ORANI = {"avlulu": 0.50, "buyuk": 0.55}            # DENEME: ev tabanı parselin en çok bu kadarı (gerisi avlu)
 KIYI_ORANI = 0.15        # DENEME: kıyıya yakın avlulu parselde yazlık oranı
 KIYI_YAKIN_M = 200.0     # DENEME: "kıyıya yakın" sınırı (m)
@@ -363,7 +364,7 @@ def eski_limanda(e):
 
 def hedef(e):
     """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması).
-    Liman kasabasındakiler sokaklarla aynı taşımayla (gen/kompakt_liman.py: oran 1,0, odak Dondurmacı Kızlar)."""
+    Liman kasabasındakiler sokaklarla aynı taşımayla (gen/kompakt_liman.py: oran 0,70, odak Dondurmacı Kızlar)."""
     if eski_limanda(e):
         return LM.tasi(*e["eskiKonum"]), "yerlesim_liman"
     p = m(e["eskiKonum"])
@@ -649,7 +650,7 @@ def viki_yapilari():
                 continue
             _, taban, on, yid = sonuc
             yontem = ("Fener Burnu'nda, kıyıya eskisinin 0,70'i uzaklıkta" if e["id"] == "bina_fener" else
-                      "eski Liman'daki yeri (sokaklarla aynı taşıma, oran 1,0)" if eski_limanda(e) else
+                      "eski Liman'daki yeri (sokaklarla aynı taşıma, oran 0,70)" if eski_limanda(e) else
                       "oranla karşılığı" + (", meydana bakar" if meydana else "")
                       + (", kıyıda (liman öbeği birlikte kıyıya kaydı)" if e["id"] in LIMAN_KAYMASI else ", kıyıda" if liman else ""))
         ozel["yol"] = yid
@@ -715,6 +716,8 @@ def kemal_secti():
                 dosya = sabit_sec(kimlik, DUKKANLI)
                 me, mb, _ = olcu(dosya)
                 taban, on = parsel_evi(prs, [prs], me, mb)
+                if taban is None:                    # arsa sığ (Liman'da 2 kare derin arsa): arsaya sığacak kadar daralır
+                    taban, on = arsaya_oturt(prs, me, mb)
             else:
                 me, mb = olcu_ if olcu_ else olcu(dosya)[:2]
                 taban, on = arsaya_oturt(prs, me, mb)
@@ -769,6 +772,8 @@ def parsel_evi(prs, grup, en, boy):
     D = min(p["derinlikM"] for p in grup)
     alan = unary_union([ARSA_ALAN.get(p["id"], p["g"]) for p in grup])
     on = ON_PAY[tur]
+    # Liman'ın 2 kare derin (16 m) arsalarında arka avlu daha dar (gen/kompakt_parseller.py → LIMAN_SIG)
+    arka = LIMAN_SIG_ARKA if prs["yerlesim"] == "yerlesim_liman" and D <= 16.5 else ARKA_PAY[tur]
     if tur == "bitisik":
         # ortak duvar: cephe boyunca tam; eğri yolda parselin kendi biçimini izler
         t1 = on + min(boy, D - on - ARKA_PAY[tur])
@@ -788,12 +793,12 @@ def parsel_evi(prs, grup, en, boy):
     if tur == "avlulu" and L <= DAR_CEPHE:
         # dar avlulu arsa (1 kare cephe): dar ev, cepheye sığacak kadar daralır; arkada avlu
         en = L - 2 * DAR_YAN_PAY
-        boy = min(boy, D - on - ARKA_PAY[tur])
+        boy = min(boy, D - on - arka)
         if boy < 6.0:
             return None, None
         taban = ev_tabani(a, u, n, DAR_YAN_PAY, DAR_YAN_PAY + en, on, on + boy)
         return (taban, -n) if alan.buffer(0.05).contains(taban) else (None, None)
-    if boy > D - on - ARKA_PAY[tur] or en * boy > EV_ALAN_ORANI[tur] * prs["alanM2"]:
+    if boy > D - on - arka or en * boy > EV_ALAN_ORANI[tur] * prs["alanM2"]:
         return None, None
     yan = YAN_PAY.get(tur, 1.0)
     if en > L - 2 * yan:
@@ -807,7 +812,7 @@ def parsel_evi(prs, grup, en, boy):
         denemeler = sorted(np.arange(yan, L - yan - en + 1e-6, 1.0), key=lambda s: abs(s - orta))
     ic = alan.buffer(0.05)
     for geri in (on, on + 1.0, on + 2.0):
-        if boy > D - geri - ARKA_PAY[tur]:
+        if boy > D - geri - arka:
             break
         for s0 in denemeler:
             taban = ev_tabani(a, u, n, s0, s0 + en, geri, geri + boy)
@@ -862,9 +867,15 @@ def parsel_evleri():
                 i += 1; g.append(sira[i])
             gruplar.append(g); i += 1
         onceki = None
+        onceki_mah = None
         for g in gruplar:
             prs = g[0]
             tur = prs["tur"]
+            # Liman yeniden üretildi (22 Kasım): Liman'dan öbür mahalleye geçen sırada komşu model sayılmaz; öbür
+            # köylerin evleri Liman'daki evden etkilenmesin
+            if onceki_mah == "yer_liman" and prs["mahalle"] != "yer_liman":
+                onceki = None
+            onceki_mah = prs["mahalle"]
             if any(p["id"] in TUKENEN for p in g):
                 SAYAC["viki"] += len(g)
                 onceki = None
