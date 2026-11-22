@@ -21,6 +21,9 @@ Kurallar:
   - Doğal yoğunluk ve öbek: tohumlu gürültü (her çalıştırmada aynı sonuç).
   - Bağ sıra hâlinde: ağaç yok (bağ modeli yok), zeminde sıra çizgisi (dosyada çizgi listesi).
   - Yalnız KKM'nin bitki modelleri (public/modeller/bitkiler/).
+  - Avlu ağaçları ayrı grupta ("avlu"): bir arsaya hazır grup konunca (7. adım) o arsadaki
+    avlu ağaçları çizilmez, grubun ağacı geçerli (Kemal, 22 Kasım).
+  - Sıklık (Kemal, 22 Kasım): "daha sık", ~600 bin ağaç; ağaç arası buna göre (DENEME).
 
 Çıktı: public/harita/duzada-agaclar.bin (gzip). Açılınca:
   4 bayt  "DZA1"
@@ -70,7 +73,7 @@ OLCU = {
     "bolmeDuvarPayiM": 3.0,     # bölmeler arası taş duvar payı (ağaçsız)
     "ciftlikOran": {"zeytinlik": 0.5, "bag": 0.3, "tarla": 0.2},   # gen/duzada.py Çiftlik arazileri
     "digerOran": {"zeytinlik": 0.55, "maki": 0.27, "tarla": 0.18},
-    "aralik": {"cam": 13.0, "zeytinlik": 12.0, "maki": 10.0, "zakkum": 8.0},   # ağaç arası (m); genç zeytinlik 0,8 katı
+    "aralik": {"cam": 10.0, "zeytinlik": 9.2, "maki": 8.2, "zakkum": 7.0},   # ağaç arası (m); genç zeytinlik 0,8 katı
     "zeytinBosluk": 0.12,       # zeytinlikte eksik ağaç oranı
     "bagSiraM": 3.0,            # bağ sıra aralığı
     "obekSigmaM": 70.0,         # öbekleşme gürültüsünün ölçüsü
@@ -636,6 +639,8 @@ def yaz(cizgiler):
         "turler": TURLER, "gruplar": GRUPLAR, "arazi": ARAZI, "araziKm2": alan,
         "karoM": km, "karoX0": X0 - HUC / 2, "karoY0": Y0 - HUC / 2, "karolar": karolar,
         "adet": int(len(a)), "siraAdet": int(len(c)), "sayim": say, "olcu": OLCU,
+        "avlu": ("'avlu' grubundaki ağaçlar evi olan arsanın içinde durur. Bir arsaya hazır grup konunca "
+                 "(7. adım) o arsanın içindeki avlu ağaçları çizilmez; grubun kendi ağacı geçerlidir (Kemal, 22 Kasım)."),
         "duzen": ("arazi: en*boy uint8 (satırlar güneyden kuzeye) · ağaçlar (adet uzunlukta düzlemler): "
                   "x üst, x alt, y üst, y alt bayt (birim m, zemin x0 / y0'dan), tür, ölçek (*0,05), grup · "
                   "bağ sıraları (siraAdet uzunlukta düzlemler): x1, y1, x2, y2 (her biri üst, alt bayt). "

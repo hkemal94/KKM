@@ -25,7 +25,7 @@ BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
 HARITA = os.path.join(KOK, "public", "harita")
 DOSYA = os.path.join(HARITA, "duzada-agaclar.bin")
-SINIR_MB = 1.5
+SINIR_MB = 2.0
 
 
 def oku(yol):
