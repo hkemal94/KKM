@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 22 Kasım 2026 (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 22 Kasım 2026 (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -8,6 +8,35 @@
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 22 Kasım: tek harita 8. adım: zemin aracı
+
+Kemal (20 ve 22 Kasım). Düzenle modunda ayrı **Zemin** sekmesi (`src/components/harita/tek/duzenle/zemin.ts`); aynı taslak,
+aynı "Haritaya işle", aynı geri al / ileri al. Bilgisayarda; telefonda Zemin düğmesi yok.
+
+- **Araçlar:** Yükselt, Alçalt, Düzle (ilk dokunulan noktanın kotuna), Yumuşat, Kıyıyı çek (Kara aç: kıyı dışa; Deniz aç:
+  içe). Yumuşak fırça: boyut (10–250 m) ve güç (%10–100) kaydırıcısı, kenarı yumuşak; `[` `]` boyutu değiştirir. Ölçüler DENEME.
+- **Kıyı korumalı** (açık başlar): fırça deniz hücresine, kumsala ve kıyıya 20 m'den yakın karaya dokunmaz; 20–50 m arasında
+  etkisi azalır; kara denizin altına inmez. Fırçanın altında kıyı ya da kumsal varsa halka turuncu olur, panelde uyarı çıkar.
+  Kıyıyı yalnız "Kıyıyı çek" değiştirir.
+- **Ekranda anında:** zemin yeniden çizilir; o bölgedeki yollar (uzun kesim 10 m'de bir noktaya bölünür, şekli aynı), yapılar,
+  ağaçlar yeni zemine oturur; denize kalan ağaç çizilmez. Kumsal boyası yeni kıyıya işlenince gelir. Düzenle kapanınca harita
+  dosyadaki zeminle çizilir.
+- **Yumuşak kural:** zemin yüzünden eğimi sınırı aşan yol, denizde kalan ya da tabanı yamaçta kalan yapı uyarı olur; engel yok.
+- **Taslakta** (`TekTaslak.zemin`) yalnız değişen hücreler: ızgara 64 × 64 hücrelik parçalar, değişen parça sıkıştırılmış
+  (deflate-raw, base64) 4096 değer; değerler mutlak (rakım × 10). Ölçüm: örnek taslak (Stadyum yamacını düzle + kıyıyı çek,
+  329 hücre) 1,1 KB, zeminin payı 1,0 KB; fırça vuruşlarının listesi aynı iş için 0,9 KB olurdu. Büyük işte hücre başına
+  ~2 harf (1 km² yükseltme ~16 bin harf); 400 bin harf sınırı ~200 bin hücreye (~20 km²) yeter. Hücre farkı seçildi: ekranda
+  ne görüldüyse ajansa o gider, ajans fırçayı yeniden hesaplamaz.
+- **Haritaya işle (ajans):** `python gen/kompakt_taslak_uygula.py <dosya>` zemini uygular (dokunulan hücrelerin ilk rakımı
+  `gen/tek-harita-elle.json` → `zeminOnceki`; her çalışmada önce geri alınır, birikmiş zemin yeniden konur: iki kez çalışınca
+  aynı), değişen yerden geçen yolların yatağını yeniden açar (`yatak_ac`; yolların ilk hâli `yolOnceki`), kıyı değiştiyse sınır
+  dosyasında ada, kıyı çizgileri ve mahalleler güncellenir (`sinirOnceki`). Zemin değiştiyse kendisi `kompakt_parseller.py` ve
+  `kompakt_yapilar.py`'yi çalıştırıp elle düzeni yeniden uygular; sonra `kompakt_agaclar.py` ve denetimler. Elle zeminde yamaç,
+  çukur ve yol eğimi aşımı denetimlerde [bilgi] (yumuşak kural); kıyı korumalı parçalarda kıyı ya da kumsal değişirse SORUN.
+- Örnek taslakla denendi (Stadyum'da ~280 m'deki 27°'lik yamaç düzlendi; kıyı köyünün plajı ~22 m dışa çekildi): yol yatağı
+  9 yolda yeniden açıldı, düzlenen yerde 6 arsa ve 5 ev daha çıktı, bütün denetimler temiz. Örnek PR'a girmedi. Telefonda ve
+  gerçek Firestore / GitHub yazmasıyla denenmedi. Önizlemeler `docs/gorseller/tek-harita-8/`.
 
 ## 22 Kasım: tek harita: üç yapıya yeni model
 

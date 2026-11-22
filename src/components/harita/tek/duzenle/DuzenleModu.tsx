@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box3 } from 'three';
 import {
-  AlertTriangle, Building2, CloudUpload, Grid2x2, LayoutGrid, MousePointer2, Redo2, RotateCcw, RotateCw, Route, Scissors,
+  AlertTriangle, Building2, CloudUpload, Grid2x2, LayoutGrid, Mountain, MousePointer2, Redo2, RotateCcw, RotateCw, Route, Scissors,
   Send, Trash2, Undo2, X
 } from 'lucide-react';
 import type { Item } from '../../../../types';
@@ -21,7 +21,11 @@ import {
 } from './taslak';
 import { TaslakKatmani } from './taslakKatmani';
 import type { TaslakDeposu, YazmaSonucu } from './taslakDeposu';
-import { uyarilariBul, type Uyari } from './uyarilar';
+import { uyarilariBul, zeminUyarilari, type Uyari } from './uyarilar';
+import {
+  FIRCA, FircaVurusu, ZEMIN_ARACLARI, degisenHucreler, degisenYakin, korunanVarMi, kutuBirlestir, parcalariAc, taslagaYaz, zemineUygula,
+  type AcikParcalar, type KiyiYonu, type Kutu, type ZeminAraci, type ZeminTaslagi
+} from './zemin';
 import { cakismaSay, Doluluk, kiyidaYerlestir, seritteYerlestir, yoldaYerlestir, type Yerlestirme } from './yerlestir';
 
 /**
@@ -29,18 +33,19 @@ import { cakismaSay, Doluluk, kiyidaYerlestir, seritteYerlestir, yoldaYerlestir,
  *
  * Araçlar: Seç (bina ve yol: taşı, döndür, sil; yol kartı, nokta taşı, böl), Bina koy (KKM'nin
  * modelleri), Yol çiz (kademe seçilir), Hazır grup (katalogdan; sığmazsa kenar kareleri kırpılır),
- * Kare boya (park, bahçe, meydancık, ağaç, boş). Geri al / ileri al. Drive'a yedek. Haritaya işle.
+ * Kare boya (park, bahçe, meydancık, ağaç, boş), Zemin (8. adım: yükselt, alçalt, düzle, yumuşat, kıyıyı çek;
+ * yumuşak fırça, kıyı korumalı). Geri al / ileri al. Drive'a yedek. Haritaya işle.
  *
  * Yumuşak kural: yol eğimi, üst üste binme, kıyı şeridi engellemez; uyarı olur.
  * Viki maddesine bağlı ya da evinde oturan olan yapı silinmez (taşınabilir).
  *
- * Telefon: bakma, bina taşı / döndür, kare boyama. Yol çizme, bina ve grup koyma bilgisayarda.
+ * Telefon: bakma, bina taşı / döndür, kare boyama. Yol çizme, bina ve grup koyma, zemin bilgisayarda.
  *
  * Kayıt: taslak yalnız değişiklikleri tutar; Kemal düzenledikçe 20 sn biriktirilip yazılır
  * (`taslakDeposu.ts`). Sayfa açılınca kendiliğinden hiçbir şey yazılmaz.
  */
 
-type Arac = 'sec' | 'bina' | 'yol' | 'grup' | 'boya';
+type Arac = 'sec' | 'bina' | 'yol' | 'grup' | 'boya' | 'zemin';
 type Secim = { tur: 'yapi'; id: string } | { tur: 'kucuk'; id: string } | { tur: 'yol'; id: string } | null;
 type KayitDurumu = { durum: 'temiz' } | { durum: 'bekliyor' } | { durum: 'yaziliyor' } | (YazmaSonucu & { zaman: number; bayt: number });
 
@@ -121,6 +126,23 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
   const [isle, setIsle] = useState<'' | 'gidiyor' | { adres: string } | { hata: string }>('');
   const [drive, setDrive] = useState<'' | 'gidiyor' | { adres: string } | { hata: string }>('');
   const [temizleOnayi, setTemizleOnayi] = useState(false);
+  // Zemin aracı (8. adım)
+  const [zeminArac, setZeminArac] = useState<ZeminAraci>('yukselt');
+  const [fircaR, setFircaR] = useState<number>(FIRCA.ilk);
+  const [fircaGuc, setFircaGuc] = useState(0.5);
+  const [korumali, setKorumali] = useState(true);
+  const [kiyiYon, setKiyiYon] = useState<KiyiYonu>('kara');
+  const [zeminNotu, setZeminNotu] = useState('');
+  const [zeminBilgi, setZeminBilgi] = useState('');
+  const [korumaUyarisi, setKorumaUyarisi] = useState(false);
+  const [zeminSurumu, setZeminSurumu] = useState(0);
+  // Dosyanın zemini (Düzenle açılınca bir kopya); ekrandaki zemin `z.h` = bu + taslağın hücreleri
+  const [h0] = useState<Float32Array>(() => z.h.slice());
+  const acikRef = useRef<AcikParcalar>(new Map());
+  const ekrandakiZemin = useRef<ZeminTaslagi | undefined>(undefined);
+  const vurusRef = useRef<FircaVurusu | null>(null);
+  const bekleyenKutu = useRef<Kutu | null>(null);
+  const vurusYolu = useRef<number[]>([]);
 
   const taslakRef = useRef(taslak); taslakRef.current = taslak;
   const sayacRef = useRef(0);
@@ -182,10 +204,43 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
     return { ...t, yeniYapilar: yy, yeniYollar: yl, gruplar: gr };
   }, [taslak, temelIdler]);
 
-  const temel = useMemo(() => ({
-    yapilar: api.temel.yapilar, yollar: api.temel.yollar,
-    kucukler: verininKucukleri(z, api.temel.yapiVerisi)
-  }), [api, z]);
+  // Zemin değişince o bölgedeki yapılar ve yollar yeniden oturur (ekranda; kalıcısı "Haritaya işle"de ajansta)
+  const degisen = useMemo(() => (zeminSurumu ? degisenHucreler(z, acikRef.current) : null), [z, zeminSurumu]);
+  const temel = useMemo(() => {
+    const kucukler = verininKucukleri(z, api.temel.yapiVerisi);
+    if (!degisen) return { yapilar: api.temel.yapilar, yollar: api.temel.yollar, kucukler };
+    const yapilar = api.temel.yapilar.map(y => {
+      const r = Math.ceil(Math.max(y.en, y.boy) / 2 / z.b.hucre) + 1;
+      if (!degisenYakin(z, degisen, y.merkez[0], y.merkez[1], r)) return y;
+      return { ...y, kot: Math.min(rakim(z, y.merkez[0], y.merkez[1]), ...y.taban.map(([x, sz]) => rakim(z, x, sz))) };
+    });
+    const features = api.temel.yollar.features.map(f => {
+      if (f.geometry.type !== 'LineString' || (f.properties.katman !== 'yol' && f.properties.katman !== 'kopru')) return f;
+      // Zemini değişen kesim 10 m'de bir noktaya bölünür (şekli aynı), noktalar yeni zemine oturur
+      // (ajans da aynısını yapar: gen/kompakt_taslak_uygula.py → yatak_ac)
+      const c = f.geometry.coordinates as number[][];
+      let dokundu = false;
+      const yeni: number[][] = [c[0]];
+      for (let n = 1; n < c.length; n++) {
+        const [ax, az] = sahneye(z.b, c[n - 1]), [bx, bz] = sahneye(z.b, c[n]);
+        const L = Math.hypot(bx - ax, bz - az);
+        let degdi = false;
+        for (let s = 0, adim = Math.max(1, Math.ceil(L / 5)); s <= adim && !degdi; s++) degdi = degisenYakin(z, degisen, ax + ((bx - ax) * s) / adim, az + ((bz - az) * s) / adim, 1);
+        if (!degdi) { yeni.push(c[n]); continue; }
+        dokundu = true;
+        const oturt = (q: number[], x: number, sz: number) => [q[0], q[1], Math.max(0, rakim(z, x, sz))];
+        if (yeni.length === 1 || yeni[yeni.length - 1] === c[n - 1]) yeni[yeni.length - 1] = oturt(c[n - 1], ax, az);
+        const k = Math.max(1, Math.ceil(L / 10));
+        for (let s = 1; s < k; s++) {
+          const x = ax + ((bx - ax) * s) / k, sz = az + ((bz - az) * s) / k;
+          yeni.push(oturt(cografyaya(z.b, x, sz), x, sz));
+        }
+        yeni.push(oturt(c[n], bx, bz));
+      }
+      return dokundu ? { ...f, geometry: { ...f.geometry, coordinates: yeni } } : f;
+    });
+    return { yapilar, yollar: { ...api.temel.yollar, features }, kucukler };
+  }, [api, z, degisen]);
   const birlesik: Birlesik = useMemo(() => birlestir(z, temel, gorunenTaslak, { gruplar, kareler }), [z, temel, gorunenTaslak, gruplar, kareler]);
   const doluluk = useMemo(() => new Doluluk(z, birlesik.yapilar, birlesik.yollar), [z, birlesik]);
 
@@ -206,7 +261,10 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
     }
     return out;
   }, [gruplar, gorunenTaslak, birlesik, z]);
-  const uyarilar: Uyari[] = useMemo(() => uyarilariBul(z, gorunenTaslak, birlesik, grupSigmadi, yapiAdi), [z, gorunenTaslak, birlesik, grupSigmadi]);
+  const uyarilar: Uyari[] = useMemo(() => [
+    ...uyarilariBul(z, gorunenTaslak, birlesik, grupSigmadi, yapiAdi),
+    ...(degisen ? zeminUyarilari(z, { ...z, h: h0 }, degisen, birlesik, gorunenTaslak, yapiAdi) : [])
+  ], [z, h0, gorunenTaslak, birlesik, grupSigmadi, degisen]);
 
   // Sahne: katman kurulur; çıkarken harita yalnız veriyle çizilir
   useEffect(() => {
@@ -218,9 +276,29 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
       k.dispose();
       katman.current = null;
       api.isaretci = null;
+      // Zemin dosyadaki hâline döner (Düzenle kapalıyken yalnız veri dosyaları görünür)
+      const kutu = zemineUygula(z, h0, acikRef.current, new Map());
+      acikRef.current = new Map();
+      ekrandakiZemin.current = undefined;
+      if (kutu) api.zeminYenile(kutu.i0, kutu.j0, kutu.i1, kutu.j1);
       api.goster(null);
     };
-  }, [api, z]);
+  }, [api, z, h0]);
+  // Taslağın zemini ekrana (açılışta, geri al / ileri al, taslağı boşaltınca)
+  useEffect(() => {
+    if (!yuklendi) return;
+    const zt = taslak.zemin;
+    if (zt === ekrandakiZemin.current) return;
+    let iptal = false;
+    void parcalariAc(zt).then(yeni => {
+      if (iptal) return;
+      const kutu = zemineUygula(z, h0, acikRef.current, yeni);
+      acikRef.current = yeni;
+      ekrandakiZemin.current = zt;
+      if (kutu) { api.zeminYenile(kutu.i0, kutu.j0, kutu.i1, kutu.j1); setZeminSurumu(v => v + 1); }
+    });
+    return () => { iptal = true; };
+  }, [api, z, h0, taslak.zemin, yuklendi]);
   // Taslak çizimi (art arda değişiklikte tek yeniden kurulum)
   useEffect(() => {
     if (!yuklendi) return;
@@ -469,6 +547,14 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
     api.isaretci = {
       basildi: (e, p) => {
         if (!p) return false;
+        if (arac === 'zemin') {
+          const v = new FircaVurusu(z, { arac: zeminArac, yaricap: fircaR, guc: fircaGuc, korumali, yon: kiyiYon, hedef: rakim(z, p[0], p[1]) });
+          vurusRef.current = v;
+          vurusYolu.current = [...cografyaya(z.b, p[0], p[1])];
+          zeminCiz(v.dokun(p));
+          setZeminNotu(zeminArac === 'duzle' ? `Düzle: ${Math.round(rakim(z, p[0], p[1]) * 10) / 10} m kotuna` : '');
+          return true;
+        }
         if (arac === 'boya') {
           const kr = kareler && kareBul(kareler, p);
           if (!kr) return false;
@@ -493,6 +579,13 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
         return false;
       },
       tasindi: (_e, p) => {
+        const v = vurusRef.current;
+        if (v && p) {
+          const kutu = v.dokun(p);
+          if (kutu) { zeminCiz(kutu); if (import.meta.env.DEV) vurusYolu.current.push(...cografyaya(z.b, p[0], p[1])); }
+          k?.onizleme({ cizgiler: [{ c: halkaYap(p, fircaR, 48), renk: '#0E1C4F' }] });
+          return;
+        }
         const s = surukle.current;
         if (!s || !p) return;
         if (s.tur === 'yapi') {
@@ -510,6 +603,8 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
         }
       },
       birakildi: () => {
+        const v = vurusRef.current;
+        if (v) { vurusRef.current = null; zeminVurusuBitti(v); return; }
         const s = surukle.current;
         surukle.current = null;
         k?.onizleme(null);
@@ -580,10 +675,54 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
         } else if (arac === 'boya' && kareler) {
           const kr = kareBul(kareler, p);
           k.onizleme(kr ? { halkalar: [{ h: kr.koseler, renk: kr.bos ? '#0E1C4F' : '#D9822B', opak: kr.bos ? 0.25 : 0.12 }] } : null);
+        } else if (arac === 'zemin') {
+          // Fırçanın halkası; kıyı korumalıyken altında kıyı ya da kumsal varsa turuncu
+          const korunan = korumali && zeminArac !== 'kiyi' && korunanVarMi(z, p, fircaR);
+          k.onizleme({ cizgiler: [{ c: halkaYap(p, fircaR, 48), renk: korunan ? '#D9822B' : '#0E1C4F' }], halkalar: [{ h: halkaYap(p, Math.max(2, fircaR * 0.08), 16), renk: '#0E1C4F', opak: 0.5 }] });
+          if (korunan !== korumaUyarisi) setKorumaUyarisi(korunan);
+          const bilgi = `Bu nokta ${Math.round(Math.max(0, rakim(z, p[0], p[1])))} m`;
+          if (bilgi !== zeminBilgi) setZeminBilgi(bilgi);
         } else k.onizleme(null);
       }
     };
   });
+
+  // ---- zemin aracı -------------------------------------------------------------------
+  /** Sürüklerken zemin kare başına bir kez yenilenir */
+  const zeminCiz = useCallback((kutu: Kutu | null) => {
+    if (!kutu) return;
+    const ilk = !bekleyenKutu.current;
+    bekleyenKutu.current = kutuBirlestir(bekleyenKutu.current, kutu);
+    if (ilk) requestAnimationFrame(() => {
+      const k = bekleyenKutu.current; bekleyenKutu.current = null;
+      if (k) api.zeminYenile(k.i0, k.j0, k.i1, k.j1);
+    });
+  }, [api]);
+  const zeminVurusuBitti = useCallback((v: FircaVurusu) => {
+    const kutu = v.bitir();
+    if (!kutu) return;
+    api.zeminYenile(kutu.i0, kutu.j0, kutu.i1, kutu.j1);
+    const kiyiParcasi = zeminArac === 'kiyi' || !korumali;
+    if (import.meta.env.DEV) {
+      const w = window as unknown as { __zeminVuruslari?: unknown[] };
+      (w.__zeminVuruslari ??= []).push({ arac: zeminArac, r: fircaR, g: fircaGuc, korumali, yon: kiyiYon, n: vurusYolu.current.map(x => Math.round(x * 1e7) / 1e7) });
+    }
+    const notlar: string[] = [];
+    if (korumali && v.korunanVar && zeminArac !== 'kiyi') notlar.push('Kıyı korumalı: fırça kıyı çizgisine ve kumsala dokunmadı (kıyıyı yalnız "Kıyıyı çek" değiştirir).');
+    if (v.kiyiDegisti) notlar.push(`Kıyı çizgisi ${v.kiyiDegisti} hücrede değişti.`);
+    void taslagaYaz(z, h0, acikRef.current, taslakRef.current.zemin, kutu, kiyiParcasi).then(({ zemin, acik }) => {
+      const yeni = Object.keys(zemin.p).length ? zemin : undefined;
+      acikRef.current = acik;
+      ekrandakiZemin.current = yeni;
+      degistir(t => {
+        if (yeni) return { ...t, zemin: yeni };
+        const { zemin: _z, ...kalan } = t;
+        return kalan;
+      });
+      setZeminSurumu(s => s + 1);
+      setZeminNotu(notlar.join(' '));
+    });
+  }, [api, z, h0, zeminArac, fircaR, fircaGuc, korumali, kiyiYon, degistir]);
 
   const yolBitir = useCallback(() => {
     setCizilen(c => {
@@ -619,6 +758,7 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); ileriAl(); return; }
       if (e.key === 'Escape') { if (cizilen.length) setCizilen([]); else if (bolAcik) setBolAcik(false); else setSecim(null); katman.current?.onizleme(null); }
       if (e.key === 'Enter' && arac === 'yol') yolBitir();
+      if (arac === 'zemin' && (e.key === '[' || e.key === ']')) setFircaR(r => Math.max(FIRCA.enAz, Math.min(FIRCA.enCok, r + (e.key === ']' ? 10 : -10))));
       if (e.key === 'Backspace' && arac === 'yol' && cizilen.length) setCizilen(c => c.slice(0, -1));
       if (e.key.toLowerCase() === 'r') { if (arac === 'bina') setKoyAci(a => a + (e.shiftKey ? -DONUS : DONUS)); else dondur(e.shiftKey ? -DONUS : DONUS); }
       if ((e.key === 'Delete') && secim) {
@@ -665,7 +805,8 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
     { id: 'bina', ad: 'Bina koy', ikon: <Building2 className="w-3.5 h-3.5" />, telefonda: false },
     { id: 'yol', ad: 'Yol çiz', ikon: <Route className="w-3.5 h-3.5" />, telefonda: false },
     { id: 'grup', ad: 'Hazır grup', ikon: <LayoutGrid className="w-3.5 h-3.5" />, telefonda: false },
-    { id: 'boya', ad: 'Kare boya', ikon: <Grid2x2 className="w-3.5 h-3.5" />, telefonda: true }
+    { id: 'boya', ad: 'Kare boya', ikon: <Grid2x2 className="w-3.5 h-3.5" />, telefonda: true },
+    { id: 'zemin', ad: 'Zemin', ikon: <Mountain className="w-3.5 h-3.5" />, telefonda: false }
   ];
   const kayitYazisi = !yuklendi ? 'Taslak okunuyor…'
     : kayit.durum === 'temiz' ? (toplam ? `Taslakta ${toplam} değişiklik` : 'Taslak boş')
@@ -695,7 +836,7 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
           <button key={a.id} type="button" onClick={() => setArac(a.id)} className={arac === a.id ? dolu : bos} aria-pressed={arac === a.id}>{a.ikon} {a.ad}</button>
         ))}
       </div>
-      {telefon && <div className="mt-1 text-[11px] text-[#6A5E4C]">Telefonda: bakma, bina taşı ve döndür, kare boyama. Yol çizme, bina ve grup koyma bilgisayarda.</div>}
+      {telefon && <div className="mt-1 text-[11px] text-[#6A5E4C]">Telefonda: bakma, bina taşı ve döndür, kare boyama. Yol çizme, bina ve grup koyma, zemin bilgisayarda.</div>}
 
       {/* Araç ayrıntısı */}
       {arac === 'sec' && !secim && <p className="mt-2 text-[12px] leading-snug text-[#6A5E4C] dark:text-[#A6B0C9]">Bir yapıya, ağaca ya da yola dokun. Seçili yapıyı sürükleyerek taşırsın; R ile döner.</p>}
@@ -771,6 +912,49 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
         </div>
       )}
 
+      {arac === 'zemin' && !telefon && (
+        <div className="mt-2" data-zemin-paneli>
+          <div className={baslik}>Zemin</div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {ZEMIN_ARACLARI.map(a => (
+              <button key={a.id} type="button" onClick={() => setZeminArac(a.id)} title={a.tarif} data-zemin-araci={a.id}
+                className={`px-2 py-1 rounded-md text-[11px] border cursor-pointer ${zeminArac === a.id ? 'bg-[#0E1C4F] text-white border-transparent' : 'border-[#CFC5B4] hover:border-[#F26B6F]'}`}>{a.ad}</button>
+            ))}
+          </div>
+          {zeminArac === 'kiyi' && (
+            <div className="mt-1 flex gap-1">
+              {([['kara', 'Kara aç (dışa)'], ['deniz', 'Deniz aç (içe)']] as const).map(([id, ad]) => (
+                <button key={id} type="button" onClick={() => setKiyiYon(id)} data-kiyi-yonu={id}
+                  className={`px-2 py-1 rounded-md text-[11px] border cursor-pointer ${kiyiYon === id ? 'bg-[#0E1C4F] text-white border-transparent' : 'border-[#CFC5B4] hover:border-[#F26B6F]'}`}>{ad}</button>
+              ))}
+            </div>
+          )}
+          <label className="mt-1.5 block text-[11px] text-[#6A5E4C]">
+            <span className="flex justify-between"><span>Boyut</span><span className="tabular-nums">{fircaR} m</span></span>
+            <input type="range" min={FIRCA.enAz} max={FIRCA.enCok} step={5} value={fircaR} onChange={e => setFircaR(Number(e.target.value))} className="w-full accent-[#0E1C4F]" data-firca-boyutu />
+          </label>
+          <label className="mt-0.5 block text-[11px] text-[#6A5E4C]">
+            <span className="flex justify-between"><span>Güç</span><span className="tabular-nums">%{Math.round(fircaGuc * 100)}</span></span>
+            <input type="range" min={10} max={100} step={5} value={Math.round(fircaGuc * 100)} onChange={e => setFircaGuc(Number(e.target.value) / 100)} className="w-full accent-[#0E1C4F]" data-firca-gucu />
+          </label>
+          <label className="mt-1 flex items-start gap-1.5 text-[11px] text-[#0E1C4F] dark:text-[#F3EFE8] cursor-pointer">
+            <input type="checkbox" checked={korumali} onChange={e => setKorumali(e.target.checked)} className="mt-0.5 accent-[#0E1C4F]" data-kiyi-korumali />
+            <span><span className="font-semibold">Kıyı korumalı</span>: fırça kıyı çizgisini ve kumsalı değiştirmez (yalnız "Kıyıyı çek" değiştirir).</span>
+          </label>
+          <p className="mt-1.5 text-[11px] text-[#6A5E4C]">
+            {ZEMIN_ARACLARI.find(a => a.id === zeminArac)?.tarif} Kenarı yumuşak. Bas ve sürükle; [ ve ] boyutu değiştirir.
+            {' '}Yollar, yapılar ve ağaçlar yeni zemine oturur; kalıcısı "Haritaya işle"de.
+          </p>
+          {zeminBilgi && <p className="mt-0.5 text-[11px] text-[#8A7C66] tabular-nums">{zeminBilgi}</p>}
+          {korumaUyarisi && korumali && zeminArac !== 'kiyi' && (
+            <p className="mt-1 flex items-start gap-1 text-[11px] font-medium text-[#0E1C4F] dark:text-[#F3EFE8]" data-koruma-uyarisi>
+              <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0 text-[#D9822B]" /> Fırçanın altında kıyı ya da kumsal var: kıyı korumalı açık, oraya dokunmaz; etkisi kıyıya 50 m'den yakında azalır.
+            </p>
+          )}
+          {zeminNotu && <p className="mt-1 text-[11px] font-medium">{zeminNotu}</p>}
+        </div>
+      )}
+
       {/* Seçimin kartı */}
       {arac === 'sec' && (seciliYapi || seciliKucuk) && (
         <div className="mt-2 p-2 rounded-lg border border-[#CFC5B4] bg-white/60 dark:bg-[#17345A]/60">
@@ -836,7 +1020,7 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
           <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto pr-1">
             {uyarilar.map((u, i) => (
               <li key={`${u.id}-${u.tur}-${i}`}>
-                <button type="button" onClick={() => { api.uc(u.x, u.z); setArac('sec'); setSecim(taslak.yeniYollar[u.id] || taslak.yollar[u.id] ? { tur: 'yol', id: u.id } : taslak.gruplar[u.id] ? null : { tur: 'yapi', id: u.id }); }}
+                <button type="button" onClick={() => { api.uc(u.x, u.z); if (arac === 'zemin') return; setArac('sec'); setSecim(u.tur === 'egim' || taslak.yeniYollar[u.id] || taslak.yollar[u.id] ? { tur: 'yol', id: u.id } : taslak.gruplar[u.id] ? null : { tur: 'yapi', id: u.id }); }}
                   className="w-full text-left text-[11px] leading-snug px-1.5 py-1 rounded-md hover:bg-[#F3EFE8] dark:hover:bg-[#17345A] cursor-pointer">
                   <span className="font-semibold">{u.ogeAdi}</span>: {u.metin}
                 </button>
@@ -852,7 +1036,8 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
         <div className="mt-0.5 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">
           {toplam ? [
             sayilar.tasinan && `${sayilar.tasinan} taşınan`, sayilar.silinen && `${sayilar.silinen} silinen`, sayilar.yeniYapi && `${sayilar.yeniYapi} yeni yapı`,
-            sayilar.yol && `${sayilar.yol} değişen yol`, sayilar.yeniYol && `${sayilar.yeniYol} yeni yol`, sayilar.kare && `${sayilar.kare} boyalı kare`, sayilar.grup && `${sayilar.grup} grup`
+            sayilar.yol && `${sayilar.yol} değişen yol`, sayilar.yeniYol && `${sayilar.yeniYol} yeni yol`, sayilar.kare && `${sayilar.kare} boyalı kare`, sayilar.grup && `${sayilar.grup} grup`,
+            sayilar.zemin && `${sayilar.zemin} zemin vuruşu (${(taslak.zemin?.hucre ?? 0).toLocaleString('tr-TR')} hücre)`
           ].filter(Boolean).join(' · ') : 'Henüz değişiklik yok.'}
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1">
@@ -886,10 +1071,11 @@ function suz<T>(r: Record<string, T>, f: (id: string, v: T) => boolean): Record<
   return out;
 }
 
-/** Noktanın çevresinde küçük halka */
-function halkaYap(m: Nokta, r: number): Nokta[] {
+/** Noktanın çevresinde halka (çizgi olarak çizilirse kapalı: ilk nokta sonda da) */
+function halkaYap(m: Nokta, r: number, n = 16): Nokta[] {
   const h: Nokta[] = [];
-  for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2; h.push([m[0] + Math.cos(a) * r, m[1] + Math.sin(a) * r]); }
+  for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2; h.push([m[0] + Math.cos(a) * r, m[1] + Math.sin(a) * r]); }
+  if (n > 16) h.push(h[0]);
   return h;
 }
 

@@ -18,7 +18,8 @@ const ACIKLAMA = {
   yollar: 'Var olan yol (duzada-yollar.geojson kimliği) → { sil: true } ya da { n?, kademe?, ad?, tur? }. ad boşsa adsız (ad Kemal\'in).',
   yeniYollar: 'Yeni yol → { kademe, tur, ad, n, grup?, bolundu? (bölünen yolun kimliği) }.',
   kareler: 'Kare (duzada-kareler.json kimliği) → park | bahce | meydancik | agac | bos.',
-  gruplar: 'Konan hazır grup → { sablon (çeşit kimliği), kirp { sol, sag, arka }, o [boylam, enlem], aci (U yönü, radyan; sahne x doğu, z güney), yan (N = yan · (−U.z, U.x)), yer, dayanak, arsalar }. Öğeleri yeniYapilar / yeniYollar\'da grup etiketiyle.'
+  gruplar: 'Konan hazır grup → { sablon (çeşit kimliği), kirp { sol, sag, arka }, o [boylam, enlem], aci (U yönü, radyan; sahne x doğu, z güney), yan (N = yan · (−U.z, U.x)), yer, dayanak, arsalar }. Öğeleri yeniYapilar / yeniYollar\'da grup etiketiyle.',
+  zemin: "Zemin aracı (8. adım) → { parca: 64, p: { 'i_j': base64 }, kiyi: [...], hucre, vurus }. Izgara (duzada-zemin.bin) 64 × 64 hücrelik parçalara bölünür; i sütun, j satır (güneyden kuzeye). Her parça deflate-raw ile sıkıştırılmış 4096 int16 (küçük uçlu): rakım × 10, değişmeyen hücre −32768. kiyi: kıyı çizgisinin değişebildiği parçalar (Kıyıyı çek ya da kıyı koruması kapalı); öbür parçalarda kıyı ve kumsal değişmemiş olmalı."
 };
 
 export function taslakDosyasi(t: TekTaslak, zaman = new Date()) {

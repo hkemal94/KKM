@@ -82,12 +82,26 @@ def main():
     yaz("Toprak yol payı (uzunluk)", uz.get("toprak", 0) / T <= 0.12,
         f"%{100 * uz.get('toprak', 0) / T:.1f} (patikayla %{100 * (uz.get('toprak', 0) + uz.get('patika', 0)) / T:.1f})")
 
-    # 1) eğim: yol yüzeyinin yüksekliği boyunca, 20 m pencerede
+    # 1) eğim: yol yüzeyinin yüksekliği boyunca, 20 m pencerede. Zemini elle değişen yoldan geçen yol
+    # (KKM Düzenle → Zemin; gen/tek-harita-elle.json → yolOnceki) yumuşak kural: aşımı yalnız bilgi
+    import kompakt_taslak_uygula as _U
+    elle_yol = set((_U.birikmis_oku().get("yolOnceki") or {}).keys()) if os.path.exists(_U.ELLE) else set()
     for tur, lim in EGIM.items():
         en, asan, top = 0.0, 0.0, 0.0
         kim = ""
+        bilgi_elle = []
         for y in G:
             if y["p"]["k"] != tur:
+                continue
+            if y["p"]["id"] in elle_yol:
+                g = LineString(np.column_stack([y["xy"], y["z"]]))
+                s = np.arange(0, y["g"].length + 0.01, 2.0)
+                pts = np.array([g.interpolate(t).coords[0] for t in s])
+                k = int(PENCERE / 2.0)
+                if len(s) > k:
+                    e = float(np.max(np.abs(pts[k:, 2] - pts[:-k, 2]) / (s[k:] - s[:-k])))
+                    if e > lim + 1e-3:
+                        bilgi_elle.append(f"{y['p'].get('ad') or y['p']['id']} %{e * 100:.0f}")
                 continue
             g = LineString(np.column_stack([y["xy"], y["z"]]))
             L = y["g"].length
@@ -105,6 +119,8 @@ def main():
                 kim += f" @ {q[0]:.0f},{q[1]:.0f}"
         yaz(f"Eğim, {tur} (sınır %{lim * 100:.0f})", asan == 0,
             f"en dik %{en * 100:.1f} ({kim}); sınırı aşan {asan:.0f} m")
+        if bilgi_elle:
+            print(f"  [bilgi] Eğim, {tur}, elle zemindeki yol (yumuşak kural): {', '.join(bilgi_elle)}")
     for tur in SERBEST:
         en = 0.0
         for y in G:

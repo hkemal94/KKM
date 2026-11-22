@@ -41,6 +41,7 @@ const DuzenleModu = lazy(() => import('./tek/duzenle/DuzenleModu'));
  * - 7. adım (22 Kasım): "Düzenle" modu (Cities Skylines gibi; `tek/duzenle/`): bina koy, taşı,
  *   döndür, sil; yol çiz ve düzenle (yol kartı); hazır grup koy; kare boya; geri al / ileri al;
  *   Drive'a yedek; "Haritaya işle". Düzenle açıkken taslak haritanın üstünde çizilir.
+ * - 8. adım (22 Kasım): Düzenle → Zemin (yükselt, alçalt, düzle, yumuşat, kıyıyı çek; kıyı korumalı).
  *
  * Görünüm kısmı yalnız okur: harita kaydına ve Kurucu taslağına hiçbir şey yazılmaz;
  * Kurucu kayıtları da okunmaz. Viki maddeleri yalnız kart için okunur. Düzenle modunun
@@ -354,6 +355,12 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       ekrana: ekranaNokta,
       kameraUzakligi: () => kamera.position.distanceTo(kontrol.target),
       goster: b => { const x = b ?? temelBirlesik; if (x) katmanlariKur(x); },
+      zeminYenile: (i0, j0, i1, j1) => {
+        if (!zemin) return;
+        zemin.bolgeYenile(i0, j0, i1, j1);
+        if (bekleme) clearTimeout(bekleme);
+        guncelle();
+      },
       uc: (x, z) => {
         const t1 = new THREE.Vector3(x, zv ? Math.max(0, rakim(zv, x, z)) : 0, z);
         const fark = kamera.position.clone().sub(kontrol.target);
@@ -594,7 +601,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
           <span className="hidden sm:inline">{tamEkran ? 'Küçült' : 'Tam ekran'}</span>
         </button>
         <button type="button" onClick={() => { setSecili(null); setDuzenle(d => !d); }} className={duzenle ? dolu : bos} aria-pressed={duzenle} disabled={!api}
-          title={duzenle ? 'Düzenle modundan çık (taslak kayıtlı kalır)' : 'Haritayı düzenle: bina, yol, hazır grup, kare boyama'}>
+          title={duzenle ? 'Düzenle modundan çık (taslak kayıtlı kalır)' : 'Haritayı düzenle: bina, yol, hazır grup, kare boyama, zemin'}>
           <Pencil className="w-3.5 h-3.5" /> {duzenle ? 'Düzenlemeyi bitir' : 'Düzenle'}
         </button>
         {onEskiHarita && !duzenle && (
