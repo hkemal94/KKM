@@ -2,13 +2,18 @@ import * as THREE from 'three';
 import { modelYukle } from '../../../lib/modelYukle';
 import { hazirla, type HaritaModeli } from '../modelHazirla';
 import type { Yapi } from './tekVeri';
+import { uzakModelleriBirak, type UzakModel } from './uzakModeller';
 
 /**
  * Tek harita yapıları (`duzada-yapilar.geojson`, 1247 yapı). Yalnız KKM'nin
  * kendi modelleri (`public/modeller/`).
  *
- * - Uzaktaki her yapı basit bir kutu (gövde + kiremit çatı katmanı); hepsi iki
- *   çizimde (three'nin çoklu örneği).
+ * - Uzaktaki yapı modelinin az üçgenli kopyasıyla (6b, 22 Kasım; `uzakModeller.ts`):
+ *   çatı biçimi, renkler, pencere sıraları kalır. 600 m'lik her karodaki kopyalar tek
+ *   çizimde (ekran dışındaki karo çizilmez). Bakılan yerden uzak karolar ve çok uzaktan
+ *   bakışta bütün karolar daha da az üçgenli sürümle; hafif modda bu sınır daha yakın.
+ *   Kopyalar gölge düşürmez.
+ * - Modeli olmayan yapı basit bir kutu (gövde + kiremit çatı katmanı).
  * - Bakılan yerin çevresindeki yapılar kendi modeliyle; aynı model bir kez iner,
  *   aynı modeldeki bütün yapılar onu paylaşır. Üçgen bütçesi dolunca kalanı kutu.
  * - Viki bağlı yapılar normal modda uzaktan da modeliyle (yer imi gibi).
@@ -27,8 +32,23 @@ const TABANA_UYAR = new Set(['ev', 'dukkanli', 'ciftlik', 'yazlik', 'depo']);
 
 type Ayar = { yaricap: number; kameraEsigi: number; butce: number };
 const NORMAL: Ayar = { yaricap: 700, kameraEsigi: 3000, butce: 900_000 };
-const HAFIF: Ayar = { yaricap: 320, kameraEsigi: 1500, butce: 300_000 };
+const HAFIF: Ayar = { yaricap: 320, kameraEsigi: 1500, butce: 260_000 };
 const TAHMIN = 12_000;
+/** Bu uzaklıktan (kamera–hedef, m) sonra bütün karolar en az üçgenli sürümle */
+const COK_UZAK = 6000;
+/** Bakılan yere bu kadar (m) yakın karo daha ayrıntılı sürümle (normal, hafif; hafifte hep en az üçgenli) */
+const AYRINTILI_KARO = { normal: 2500, hafif: 0 };
+
+/** Uzak kopyaların karo ölçüsü (m): karo tek çizim, ekran dışındaki karo çizilmez */
+const KARO = 600;
+
+/**
+ * Bir seviyedeki uzak kopyalar: her karodaki bütün yapılar tek parçada (köşe
+ * renkli). Bir yapının köşeleri karoda art arda; modeliyle çizilen yapı karonun
+ * dizininden çıkarılır.
+ */
+type UzakKaro = { mesh: THREE.Mesh; aralik: Map<number, [number, number]>; kose: number; x: number; z: number };
+type UzakSeviye = { grup: THREE.Group; karolar: Map<string, UzakKaro>; yapiKarosu: Map<number, string>; ucgen: number; gizli: Set<number> };
 
 const sinirla = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 
@@ -49,8 +69,13 @@ export class YapiKatmani {
   private son: { x: number; z: number; u: number; hafif: boolean; golge: boolean } | null = null;
   private bekleyen = 0;
   private kapandi = false;
+  /** Uzak kopyası olan yapılar (kutusu hiç çizilmez) */
+  private uzakli = new Set<number>();
+  private uzakSeviyeler: Array<UzakSeviye | null> = [null, null];
+  /** Uzak kopyaların malzemesi: köşe renkli, düz gölgeli (yüz yönü ekranda hesaplanır) */
+  private uzakMalzeme = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
 
-  constructor(private yapilar: Yapi[], private onDegisti: () => void) {
+  constructor(private yapilar: Yapi[], private uzak: Map<string, UzakModel> | null, private onDegisti: () => void) {
     const kutu = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
     const n = yapilar.length;
     this.govde = new THREE.InstancedMesh(kutu, new THREE.MeshLambertMaterial(), n);
@@ -69,7 +94,10 @@ export class YapiKatmani {
       const c = new THREE.Matrix4().makeTranslation(y.merkez[0], y.kot + h, y.merkez[1]).multiply(r)
         .multiply(new THREE.Matrix4().makeScale(y.en * 1.04, catiH, y.boy * 1.04));
       this.kutuMatris.push(m); this.catiMatris.push(c);
-      this.govde.setMatrixAt(i, m); this.cati.setMatrixAt(i, c);
+      const uzakli = !!(y.dosya && uzak?.has(y.dosya));
+      if (uzakli) this.uzakli.add(i);
+      const sifir = new THREE.Matrix4().makeScale(0, 0, 0);
+      this.govde.setMatrixAt(i, uzakli ? sifir : m); this.cati.setMatrixAt(i, uzakli ? sifir : c);
       this.govde.setColorAt(i, renk.set(GOVDE[y.tur] ?? GOVDE.ev));
       if (y.vikiId) {
         const s = new THREE.Mesh(kutu, new THREE.MeshBasicMaterial({ visible: false }));
@@ -81,7 +109,62 @@ export class YapiKatmani {
     });
     this.govde.castShadow = this.cati.castShadow = true;
     this.govde.receiveShadow = true;
+    this.govde.computeBoundingSphere(); this.cati.computeBoundingSphere();
     this.grup.add(this.govde, this.cati, this.secim);
+  }
+
+  /** Bir seviyenin uzak kopyaları (ilk gerektiğinde kurulur) */
+  private uzakSeviye(n: number): UzakSeviye {
+    const var_ = this.uzakSeviyeler[n];
+    if (var_) return var_;
+    const s: UzakSeviye = { grup: new THREE.Group(), karolar: new Map(), yapiKarosu: new Map(), ucgen: 0, gizli: new Set() };
+    // Karolara dağıt, karo başına köşe sayısı
+    const karoYapilari = new Map<string, number[]>();
+    for (const i of this.uzakli) {
+      const y = this.yapilar[i];
+      const a = `${Math.floor(y.merkez[0] / KARO)},${Math.floor(y.merkez[1] / KARO)}`;
+      const l = karoYapilari.get(a) ?? []; l.push(i); karoYapilari.set(a, l);
+      s.yapiKarosu.set(i, a);
+    }
+    const v = new THREE.Vector3();
+    for (const [a, l] of karoYapilari) {
+      let toplam = 0;
+      for (const i of l) for (const p of this.uzak!.get(this.yapilar[i].dosya!)!.seviyeler[n]) toplam += p.geo.getAttribute('position').count;
+      const konum = new Float32Array(toplam * 3), renk = new Uint8Array(toplam * 3);
+      const aralik = new Map<number, [number, number]>();
+      let k = 0;
+      for (const i of l) {
+        const y = this.yapilar[i];
+        const m = this.uzak!.get(y.dosya!)!;
+        const matris = modelMatrisi(y, m);
+        const bas = k;
+        for (const p of m.seviyeler[n]) {
+          const pos = p.geo.getAttribute('position');
+          const c = (p.mat as THREE.MeshLambertMaterial).color;
+          const r = Math.round(c.r * 255), g = Math.round(c.g * 255), b = Math.round(c.b * 255);
+          for (let q = 0; q < pos.count; q++) {
+            v.fromBufferAttribute(pos, q).applyMatrix4(matris);
+            konum[k * 3] = v.x; konum[k * 3 + 1] = v.y; konum[k * 3 + 2] = v.z;
+            renk[k * 3] = r; renk[k * 3 + 1] = g; renk[k * 3 + 2] = b;
+            k++;
+          }
+        }
+        aralik.set(i, [bas, k - bas]);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(konum, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(renk, 3, true));
+      geo.computeBoundingSphere();
+      const mesh = new THREE.Mesh(geo, this.uzakMalzeme);
+      mesh.receiveShadow = true;
+      s.grup.add(mesh);
+      const [kx, kz] = a.split(',').map(Number);
+      s.karolar.set(a, { mesh, aralik, kose: k, x: (kx + 0.5) * KARO, z: (kz + 0.5) * KARO });
+      s.ucgen += k / 3;
+    }
+    this.uzakSeviyeler[n] = s;
+    this.grup.add(s.grup);
+    return s;
   }
 
   /** Bakılan yere göre hangi yapı modeliyle çizilsin */
@@ -140,13 +223,51 @@ export class YapiKatmani {
     // Modeli çizilen yapının kutusu gizlenir
     const sifir = new THREE.Matrix4().makeScale(0, 0, 0);
     let degisti = false;
-    for (const i of this.gizliKutu) if (!gizle.has(i)) { this.govde.setMatrixAt(i, this.kutuMatris[i]); this.cati.setMatrixAt(i, this.catiMatris[i]); degisti = true; }
-    for (const i of gizle) if (!this.gizliKutu.has(i)) { this.govde.setMatrixAt(i, sifir); this.cati.setMatrixAt(i, sifir); degisti = true; }
+    for (const i of this.gizliKutu) if (!gizle.has(i) && !this.uzakli.has(i)) { this.govde.setMatrixAt(i, this.kutuMatris[i]); this.cati.setMatrixAt(i, this.catiMatris[i]); degisti = true; }
+    for (const i of gizle) if (!this.gizliKutu.has(i) && !this.uzakli.has(i)) { this.govde.setMatrixAt(i, sifir); this.cati.setMatrixAt(i, sifir); degisti = true; }
     this.gizliKutu = gizle;
     if (degisti) { this.govde.instanceMatrix.needsUpdate = true; this.cati.instanceMatrix.needsUpdate = true; this.govde.computeBoundingSphere(); this.cati.computeBoundingSphere(); }
     this.govde.castShadow = this.cati.castShadow = golge;
+
+    // Uzak kopyalar: her karo bakılan yere uzaklığına göre bir sürümle (yakın karo
+    // ayrıntılı); modeliyle çizilen yapının kopyası gizlenir
+    let uzakUcgen = 0;
+    if (this.uzakli.size) {
+      const sinir = kameraUzakligi > COK_UZAK ? -1 : hafif ? AYRINTILI_KARO.hafif : AYRINTILI_KARO.normal;
+      const karoSeviyesi = (k: UzakKaro): number => (Math.hypot(k.x - hedef.x, k.z - hedef.z) < sinir ? 0 : 1);
+      // Gereken seviyeler kurulur (karo listesi iki seviyede aynı)
+      const ilk = this.uzakSeviye(1);
+      const gerek = new Set([...ilk.karolar.values()].map(karoSeviyesi));
+      for (let n = 0; n < 2; n++) {
+        const s = gerek.has(n) ? this.uzakSeviye(n) : this.uzakSeviyeler[n];
+        if (!s) continue;
+        this.gizliUzakAyarla(s, gizle);
+        for (const k of s.karolar.values()) {
+          k.mesh.visible = karoSeviyesi(k) === n;
+          if (!k.mesh.visible) continue;
+          for (const [i, [, adet]] of k.aralik) if (!s.gizli.has(i)) uzakUcgen += adet / 3;
+        }
+      }
+    }
     this.modelli = secilen.length;
-    this.ucgen = toplam + (this.yapilar.length - secilen.length) * 24;
+    const kutulu = this.yapilar.length - this.uzakli.size - [...gizle].filter(i => !this.uzakli.has(i)).length;
+    this.ucgen = toplam + kutulu * 24 + uzakUcgen;
+  }
+
+  /** Uzak kopyalarda gizlenecekler (modeliyle çizilenler): değişen karonun dizini yeniden kurulur */
+  private gizliUzakAyarla(s: UzakSeviye, gizle: Set<number>) {
+    const yeni = new Set([...gizle].filter(i => this.uzakli.has(i)));
+    const degisen = new Set<string>();
+    for (const i of s.gizli) if (!yeni.has(i)) degisen.add(s.yapiKarosu.get(i)!);
+    for (const i of yeni) if (!s.gizli.has(i)) degisen.add(s.yapiKarosu.get(i)!);
+    s.gizli = yeni;
+    for (const a of degisen) {
+      const karo = s.karolar.get(a)!;
+      if (![...karo.aralik.keys()].some(i => yeni.has(i))) { karo.mesh.geometry.setIndex(null); continue; }
+      const dizin: number[] = [];
+      for (const [i, [bas, adet]] of karo.aralik) if (!yeni.has(i)) for (let q = bas; q < bas + adet; q++) dizin.push(q);
+      karo.mesh.geometry.setIndex(dizin);
+    }
   }
 
   /** Art arda inen modeller için tek yenileme */
@@ -166,6 +287,9 @@ export class YapiKatmani {
     this.kapandi = true;
     if (this.bekleyen) clearTimeout(this.bekleyen);
     for (const o of this.ornekler) o.dispose();
+    for (const u of this.uzakSeviyeler) if (u) for (const k of u.karolar.values()) k.mesh.geometry.dispose();
+    this.uzakMalzeme.dispose();
+    if (this.uzak) uzakModelleriBirak(this.uzak);
     this.govde.dispose(); this.cati.dispose();
     this.govde.geometry.dispose(); this.cati.geometry.dispose(); (this.govde.material as THREE.Material).dispose(); (this.cati.material as THREE.Material).dispose();
   }
@@ -174,7 +298,7 @@ export class YapiKatmani {
 /** Modelin +X'i ex yönüne (x doğu, z güney); model ön = +Z */
 const donus = (ex: [number, number]) => new THREE.Matrix4().set(ex[0], 0, -ex[1], 0, 0, 1, 0, 0, ex[1], 0, ex[0], 0, 0, 0, 0, 1);
 
-function modelMatrisi(y: Yapi, m: HaritaModeli): THREE.Matrix4 {
+function modelMatrisi(y: Yapi, m: Pick<HaritaModeli, 'cx' | 'cz' | 'w' | 'd'>): THREE.Matrix4 {
   let sx = 1, sy = 1, sz = 1, ax = m.cx, az = m.cz;
   if (y.dosya!.startsWith('deniz/')) {
     // Kalıp modeli (fener): kendi başlangıç noktası tabanın merkezine, kendi ölçüsünde

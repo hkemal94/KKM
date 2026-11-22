@@ -1,9 +1,33 @@
 # Durum
 
-**Son güncelleme: 22 Kasım 2026 (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); önceki: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 22 Kasım 2026 (tek harita 6b: görünüş düzeltmeleri); önceki: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 22 Kasım: tek harita 6b: görünüş düzeltmeleri
+
+Kemal'in 22 Kasım soru turundaki beş kararı (`src/components/harita/tek/`):
+
+- **Uzak evler:** kutu yerine her modelin az üçgenli kopyası (`uzakModeller.ts`). İki sürüm tek dosyada
+  (`public/harita/uzak-modeller.bin`, 142 KB): normal (ev başına ~300–440 üçgen) ve hafif (~130–180; asıl modeller
+  2.700–34.000). Üreten `npx tsx scripts/uzakModelleriUret.mjs`; model değişince yeniden çalıştırılır. Çalışırken
+  sadeleştirme seçilmedi: bütün modellerin telefona inmesi gerekirdi (~7,2 MB). Kopyalar 600 m'lik karolarda tek
+  çizim; bakılan yerden 2,5 km'den uzak karo ve hafif mod en basit sürümle; kopyalar gölge düşürmez.
+- **Adlar:** üst üste binen adlardan önemsizi gizlenir (viki bağlı yapı > mahalle > zirve; aynı önemde bakılan yere
+  yakın olan kalır), yakınlaşınca açılır. Adlar dokunmayı geçirir: altında yapı varsa o yapı açılır, yoksa adın yapısı.
+- **Kumsal kenarı:** kum ağırlıklı ve yumuşak (`kumIsaretle`); kaba karelerde köşe rengi çevresinin ortalaması; verideki
+  basamaklı kıyı yalnız çizimde yumuşatılır (`kiyiYumusat`; yapı ve yol yerleşimi asıl rakımı kullanır).
+- **İskele ve mendirek:** `deniz/ahsap-iskele-duz` ve `deniz/mendirek-duz` modelleriyle (`limanModelleri.ts`), veride
+  (`duzada-yapilar.geojson`) `katman: 'iskele' | 'mendirek'` varsa. #266'nın düz blok çizimi (`denizKatmani.ts`)
+  kaldırıldı; blok ile model üst üste binmez.
+- **Dondurmacı Kızlar:** oyunun dükkân kabuğu (`public/modeller/binalar/dondurmaci-kizlar.glb`, 63 KB; kaynak ve
+  lisans `docs/08-tech-pack-ve-cizimler.md`). Yapıya kodda bağlı (`modelEsleme.ts`), veri dosyası değişmedi. Oyunun
+  verisi (fiyat, süre) gelmedi.
+- Ölçüm (deneme sayfası, ekran kartısız tarayıcı): indirme 2,85 → 2,99 MB; açılış 0,4–0,9 sn (önceki gibi);
+  çizilen üçgen Merkez yakın normal 868 → 951 bin, hafif 378 → 382 bin, telefon (390 px, hafif) 354 → 356 bin,
+  bütün ada 93 → 274 bin. Telefonda denenmedi.
+- Önizlemeler `docs/gorseller/tek-harita-6b/`.
 
 ## 22 Kasım: tek harita: Dondurmacı Kızlar iskelenin önünde
 
