@@ -220,6 +220,15 @@ export class ZeminKatmani {
     this.ucgen = ucgen;
   }
 
+  /** Hücre renklerine dışarıdan karışım (ağaç katı: arazi türü, 22 Kasım); kurulmuş kareler yeniden kurulur */
+  renkKaristir(karistir: (k: number, renk: Uint8Array) => void) {
+    const adet = this.renk.length / 3;
+    for (let k = 0; k < adet; k++) karistir(k, this.renk);
+    for (const g of this.onbellek.values()) g.dispose();
+    this.onbellek.clear();
+    for (const k of this.kareler) k.adim = 0;
+  }
+
   dispose() {
     for (const g of this.onbellek.values()) g.dispose();
     this.onbellek.clear();

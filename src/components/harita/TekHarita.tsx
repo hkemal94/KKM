@@ -14,6 +14,7 @@ import { YapiKatmani } from './tek/yapiKatmani';
 import { SinirKatmani, type Etiket } from './tek/sinirKatmani';
 import { uzakModelleriOku } from './tek/uzakModeller';
 import { LimanModelleri } from './tek/limanModelleri';
+import { AgacKatmani, agaclariOku } from './tek/agacKatmani';
 
 /**
  * Tek harita (6. adım, 21 Kasım; Kemal'in 20 Kasım kararları): eski 3B, yeni 3B
@@ -133,6 +134,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     sahne.add(denizDibi, denizYuzu);
 
     let kapandi = false;
+    let agac: AgacKatmani | null = null;
     let zemin: ZeminKatmani | null = null, yol: YolKatmani | null = null, yapi: YapiKatmani | null = null, sinir: SinirKatmani | null = null;
     let liman: LimanModelleri | null = null;
     let etiketListesi: Etiket[] = [];
@@ -166,6 +168,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       const u = kamera.position.distanceTo(kontrol.target);
       zemin.guncelle(kamera.position, hafifRef.current, golgeAcik());
       yapi.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
+      agac?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik(), zemin.ucgen + (yol?.ucgen ?? 0) + yapi.ucgen);
       liman?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
     };
     const kayma = new THREE.Vector3();
@@ -274,6 +277,14 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         const dy = THREE.MathUtils.degToRad(kamera.fov / 2), dx = Math.atan(Math.tan(dy) * kamera.aspect);
         adaUzakligi = Math.min(kontrol.maxDistance, 1.05 * Math.max((der / 2) / Math.tan(dy) * 0.8, (gen / 2) / Math.tan(dx)));
         adaya();
+        // Ağaçlar ayrı iner; inmezse harita ağaçsız açılır
+        agaclariOku(durdur.signal).then(v => {
+          if (kapandi || !zemin) return;
+          agac = new AgacKatmani(z, v, () => { /* model indi */ });
+          agac.zemineBoya(zemin);
+          sahne.add(agac.grup);
+          guncelle();
+        }).catch(e => { if (!(e instanceof DOMException && e.name === 'AbortError')) console.warn('[tek harita] ağaçlar inmedi', e); });
         setOlcum(o => ({ ...o, yuklemeMs: performance.now() - basla, mb: indirme.bayt / 1e6 }));
         setHazir(true);
       })
@@ -370,7 +381,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         setOlcum(o => ({ ...o, ucgen, fps, modelli: yapi?.modelli ?? 0, mb: indirme.bayt / 1e6 }));
         if (import.meta.env.DEV) (window as unknown as { __tekHarita?: unknown }).__tekHarita = {
           hazir: !!zemin, iniyor: (yapi?.iniyor ?? true) || !!liman?.iniyor, ucgen, fps, modelli: yapi?.modelli ?? 0,
-          zeminUcgen: zemin?.ucgen ?? 0, yolUcgen: yol?.ucgen ?? 0, indirme: { ...indirme, dosyalar: { ...indirme.dosyalar } },
+          zeminUcgen: zemin?.ucgen ?? 0, agac: agac ? { ucgen: agac.ucgen, modelli: agac.modelli, obekli: agac.obekli } : null, yolUcgen: yol?.ucgen ?? 0, indirme: { ...indirme, dosyalar: { ...indirme.dosyalar } },
           bak, adaya, tepeden: tepedenAyarla,
           // Denemede dokunma yeri için: zeminden `yukari` m yukarıdaki noktanın ekrandaki yeri (piksel)
           ekrana: (x: number, yukari: number, z: number) => { const p = new THREE.Vector3(x, (zv ? rakim(zv, x, z) : 0) + yukari, z).project(kamera); return [((p.x + 1) / 2) * kab.clientWidth, ((1 - p.y) / 2) * kab.clientHeight]; }
@@ -398,7 +409,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       renderer.domElement.removeEventListener('pointerup', birakildi);
       renderer.setAnimationLoop(null);
       kontrol.dispose();
-      zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose();
+      agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose();
       denizYuzu.geometry.dispose(); denizDibi.geometry.dispose();
       sahne.clear();
       renderer.dispose();

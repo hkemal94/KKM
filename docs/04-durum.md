@@ -2,6 +2,8 @@
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 6b: görünüş düzeltmeleri); önceki: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
+**Son güncelleme: 22 Kasım 2026 (tek harita ağaçları; Kemal: "daha sık"); önceki: 22 Kasım 2026 (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); önceki: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
@@ -28,6 +30,16 @@ Kemal'in 22 Kasım soru turundaki beş kararı (`src/components/harita/tek/`):
   çizilen üçgen Merkez yakın normal 868 → 951 bin, hafif 378 → 382 bin, telefon (390 px, hafif) 354 → 356 bin,
   bütün ada 93 → 274 bin. Telefonda denenmedi.
 - Önizlemeler `docs/gorseller/tek-harita-6b/`.
+
+## 22 Kasım: tek harita ağaçları
+
+Kemal: "ağaçlar arazi türüne göre otomatik gelsin." Cevapları: daha sık (~600 bin ağaç); çam ormanı Ada Tepesi'nde
+250 m üstü; telefonda yakında model, ortada öbek, uzakta yalnız zemin rengi (hafif modda sahne ~400 bin üçgen); hazır
+grubun ağacı geçerli (arsaya grup konunca o avludaki otomatik ağaçlar kalkar, 7. adım). Veri
+`public/harita/duzada-agaclar.bin` (`gen/kompakt_agaclar.py`, denetim `gen/kompakt_agaclar_denetim.py`), çizim
+`src/components/harita/tek/agacKatmani.ts`. Künyeye sadık: yer adı yok; Merkez mezarlığı haritada olmadığı için orada
+servi yok; köy meydancıkları yol kaplı olduğu için çoğunda çınar yok. Bağ modeli yok, bağ zeminde sıra çizgisi. Ölçüler
+DENEME. Önizlemeler `docs/gorseller/tek-harita-agaclar/`.
 
 ## 22 Kasım: tek harita: Dondurmacı Kızlar iskelenin önünde
 
