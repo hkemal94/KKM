@@ -26,6 +26,7 @@ from shapely import prepared
 BURASI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BURASI)
 import kompakt_zemin_denetim as zd  # noqa: E402
+from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 KOK = os.path.dirname(BURASI)
@@ -146,8 +147,8 @@ class Ada:
         self.Z = ham.astype(float) * self.b["birim"]
         b = self.b
         sf = json.load(open(os.path.join(HARITA, "duzada-sinirlar.geojson"), encoding="utf-8"))["features"]
-        yf = json.load(open(os.path.join(HARITA, "duzada-yollar.geojson"), encoding="utf-8"))["features"]
-        yp = json.load(open(os.path.join(HARITA, "duzada-yapilar.geojson"), encoding="utf-8"))["features"]
+        yf = elle_cikar(json.load(open(os.path.join(HARITA, "duzada-yollar.geojson"), encoding="utf-8")), "yollar")["features"]
+        yp = elle_cikar(json.load(open(os.path.join(HARITA, "duzada-yapilar.geojson"), encoding="utf-8")), "yapilar")["features"]
         pf = json.load(open(os.path.join(HARITA, "duzada-parseller.geojson"), encoding="utf-8"))["features"]
         self.kj = json.load(open(os.path.join(HARITA, "duzada-kareler.json"), encoding="utf-8"))
         self.ada = self.gm(next(f["geometry"] for f in sf if f["properties"]["katman"] == "ada"))

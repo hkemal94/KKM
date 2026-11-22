@@ -38,6 +38,7 @@ BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
 sys.path.insert(0, BURASI)
 from kompakt_zemin_denetim import oku  # noqa: E402
+from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)   # shapely.ops.transform (öbür üreteçlerle aynı)
 
@@ -100,7 +101,7 @@ def zemin(x, y):
 
 
 GEO = json.load(open(SINIR, encoding="utf-8"))["features"]
-YOL = json.load(open(YOLLAR, encoding="utf-8"))["features"]
+YOL = elle_cikar(json.load(open(YOLLAR, encoding="utf-8")), "yollar")["features"]   # Düzenle'nin elle yolları girdi değil
 ADA = transform(mt, shape(next(f["geometry"] for f in GEO if f["properties"]["katman"] == "ada")))
 MAHALLE = {f["properties"]["id"]: transform(mt, shape(f["geometry"])) for f in GEO if f["properties"]["katman"] == "mahalle"}
 YERLESIM = {f["properties"]["id"]: dict(f["properties"], xy=mt(*f["geometry"]["coordinates"][:2]))

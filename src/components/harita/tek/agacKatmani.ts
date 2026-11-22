@@ -118,6 +118,11 @@ export class AgacKatmani {
   // geçici diziler (her güncellemede yeniden kurulmasın)
   private aday = new Uint32Array(0);
   private uzak = new Float32Array(0);
+  /**
+   * Düzenle modu (7. adım): bu hücrelerdeki ağaçlar çizilmez (4 m'lik hücre, `duzenle/birlesik.ts`).
+   * `hepsi`: yeni yapı, yol, boyanan kare, grubun alanı; `avlu`: grup konan arsalar (yalnız avlu ağaçları).
+   */
+  gizli: { hucre: number; hepsi: Set<number>; avlu: Set<number> } | null = null;
 
   constructor(private z: Zemin, private v: AgacVerisi, private onDegisti: () => void) {
     this.obekRenk = v.b.turler.map(t => new THREE.Color(OBEK_RENGI[t.id] ?? '#6E8B4E'));
@@ -189,11 +194,20 @@ export class AgacKatmani {
     const karolar = b.karolar.filter(([i, j]) => i >= ki0 && i <= ki1 && j >= kj0 && j <= kj1);
     const enCok = karolar.reduce((s, k) => s + k[3], 0);
     if (this.aday.length < enCok) { this.aday = new Uint32Array(enCok); this.uzak = new Float32Array(enCok); }
+    const gz = this.gizli && (this.gizli.hepsi.size || this.gizli.avlu.size) ? this.gizli : null;
+    const avluNo = b.gruplar.indexOf('avlu');
+    const grupNo = this.v.grup;
     for (const [, , bas, adet] of karolar) {
       for (let i = bas; i < bas + adet; i++) {
         const dx = b.x0 + x[i] * b.birim - hx, dy = b.y0 + y[i] * b.birim - hk;
         const d2 = dx * dx + dy * dy;
-        if (d2 < R2) { this.aday[n] = i; this.uzak[n] = d2; n++; }
+        if (d2 >= R2) continue;
+        if (gz) {
+          // anahtar duzenle/geometri.ts → hucreAnahtari ile aynı (x doğu, z güney)
+          const k = Math.floor((b.x0 + x[i] * b.birim) / gz.hucre) * 100003 + Math.floor(-(b.y0 + y[i] * b.birim) / gz.hucre);
+          if (gz.hepsi.has(k) || (grupNo[i] === avluNo && gz.avlu.has(k))) continue;
+        }
+        this.aday[n] = i; this.uzak[n] = d2; n++;
       }
     }
     const sira = Array.from(this.aday.subarray(0, n).keys());

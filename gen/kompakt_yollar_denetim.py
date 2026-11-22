@@ -16,6 +16,7 @@ from shapely.strtree import STRtree
 BURASI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BURASI)
 import kompakt_zemin_denetim as zd  # noqa: E402
+from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 KOK = os.path.dirname(BURASI)
 YOLLAR = os.path.join(KOK, "public", "harita", "duzada-yollar.geojson")
@@ -49,7 +50,7 @@ def main():
     imp = {f["properties"]["tur"]: transform(mt, shape(f["geometry"])) for f in geo["features"]
            if f["properties"]["katman"] == "imperial"}
     yer = [f for f in geo["features"] if f["properties"]["katman"] == "yerlesim"]
-    d = json.load(open(YOLLAR, encoding="utf-8"))
+    d = elle_cikar(json.load(open(YOLLAR, encoding="utf-8")), "yollar")   # elle yollar: gen/kompakt_taslak_denetim.py
     yollar = [f for f in d["features"] if f["properties"]["katman"] == "yol"]
     kopru = [f for f in d["features"] if f["properties"]["katman"] == "kopru"]
     korunan = {f["properties"]["tur"]: transform(mt, shape(f["geometry"])) for f in d["features"]
