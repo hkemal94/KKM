@@ -1,9 +1,18 @@
 # Durum
 
-**Son güncelleme: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); önceki: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 22 Kasım 2026 (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); önceki: 21 Kasım 2026 gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 22 Kasım: tek harita: Dondurmacı Kızlar iskelenin önünde
+
+Kemal: "Dondurmacı Kızlar bir iskelenin önünde olmalı." İki seçenekten B'yi seçti: Liman değişmeden kalır;
+eski haritadaki Liman İskelesi'nin yerinde kıyıya dik T iskele, dükkân onun dibinde, önü denize; koyun ağzında
+mendirek (`gen/kompakt_yapilar.py`; `duzada-yapilar.geojson`'da `iskele` ve `mendirek` öğeleri, tek harita çizer).
+Seçenek A (dükkânı ~300 m güneybatıya taşıyan dal `ajans/tek-harita-dondurmaci-cevresi`) kullanılmadı; dal silinmedi,
+silmek Kemal'in onayıyla. Oyunla kalan farklar (koy içe kıvrık, Liman İdare 117 m, yürüyüş ve araba yolu yok) oyun
+tarafında ayrı iş: oyun ileride haritaya uyar. Önizlemeler `docs/gorseller/dondurmaci-iskele/`.
 
 ## 21–22 Kasım gece: tek harita 6. adım: tek harita KKM'de
 

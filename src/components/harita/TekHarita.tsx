@@ -7,6 +7,7 @@ import { ESLEME, kisaGiris } from '../../lib/yasayanHarita';
 import { maddeGorseli } from '../../lib/maddeGorseli';
 import { GorselImg } from '../GorselImg';
 import { GOK } from './haritaStili';
+import { DenizKatmani } from './tek/denizKatmani';
 import { geoOku, indirme, kumIsaretle, rakim, yapilariOku, zeminOku, type Yapi, type Zemin } from './tek/tekVeri';
 import { ZeminKatmani } from './tek/zeminKatmani';
 import { YolKatmani } from './tek/yolKatmani';
@@ -128,7 +129,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     sahne.add(denizDibi, denizYuzu);
 
     let kapandi = false;
-    let zemin: ZeminKatmani | null = null, yol: YolKatmani | null = null, yapi: YapiKatmani | null = null, sinir: SinirKatmani | null = null;
+    let zemin: ZeminKatmani | null = null, yol: YolKatmani | null = null, yapi: YapiKatmani | null = null, sinir: SinirKatmani | null = null, deniz: DenizKatmani | null = null;
     let etiketListesi: Etiket[] = [];
     let zv: Zemin | null = null;
     const sinirAlt = new THREE.Vector3(), sinirUst = new THREE.Vector3();
@@ -241,7 +242,8 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         const liste = yapilariOku(z, yapiVerisi);
         yapi = new YapiKatmani(liste, () => { /* model indi: sahne bir sonraki karede çizer */ });
         sinir = new SinirKatmani(z, sinirlar, liste);
-        sahne.add(zemin.grup, yol.grup, yapi.grup, sinir.grup);
+        deniz = new DenizKatmani(z.b, yapiVerisi);
+        sahne.add(zemin.grup, yol.grup, yapi.grup, sinir.grup, deniz.grup);
         etiketListesi = sinir.etiketler;
         setEtiketler(sinir.etiketler);
         setYapilar(new Map(liste.map(y => [y.id, y])));
@@ -351,7 +353,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       renderer.domElement.removeEventListener('pointerup', birakildi);
       renderer.setAnimationLoop(null);
       kontrol.dispose();
-      zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose();
+      zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); deniz?.dispose();
       denizYuzu.geometry.dispose(); denizDibi.geometry.dispose();
       sahne.clear();
       renderer.dispose();

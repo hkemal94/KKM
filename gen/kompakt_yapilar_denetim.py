@@ -33,10 +33,11 @@ def main():
         print(f"  [{'temiz' if temiz else 'SORUN'}] {ad}: {deger}")
 
     dosya = json.load(open(Y.CIKTI, encoding="utf-8"))
-    F = dosya["features"]
+    F = [f for f in dosya["features"] if f["properties"]["katman"] == "yapi"]
+    DZ = [f for f in dosya["features"] if f["properties"]["katman"] in ("iskele", "mendirek")]
     G = [Y.gm(f["geometry"]) for f in F]
     P = [f["properties"] for f in F]
-    print(f"{len(F)} yapı")
+    print(f"{len(F)} yapı, suyun üstünde {len(DZ)} öğe ({', '.join(f['properties']['id'] for f in DZ) or '-'})")
 
     # üst üste binme
     agac = STRtree(G)
@@ -105,6 +106,21 @@ def main():
     yabanci = sorted({p["dosya"] for p in P if p["dosya"] and (p["dosya"] not in katalog
                       or not os.path.exists(os.path.join(Y.MODELLER, p["dosya"])))})
     yaz("yalnız KKM'nin modelleri", not yabanci, yabanci or f"{len({p['dosya'] for p in P if p['dosya']})} model")
+
+    # iskele ve mendirek (Dondurmacı Kızlar, 22 Kasım): suyun üstünde, yapılara değmez, dükkân iskelenin dibinde
+    agac_y = STRtree(G)
+    for f in DZ:
+        g = Y.gm(f["geometry"])
+        yaz(f"{f['properties']['id']} geçerli çokgen", g.is_valid, "geçerli" if g.is_valid else "geçersiz")
+        g = g.buffer(0)
+        karada = g.intersection(Y.ADA).area / g.area
+        degen = [P[j]["id"] for j in agac_y.query(g) if G[j].intersection(g).area > 0.05]
+        yaz(f"{f['properties']['id']} suyun üstünde (karada en çok %15), yapıya değmez", karada <= 0.15 and not degen,
+            f"karada %{100 * karada:.0f}" + (f", değen: {degen}" if degen else ""))
+    isk = next((Y.gm(f["geometry"]).buffer(0) for f in DZ if f["properties"]["katman"] == "iskele"), None)
+    dk = next((g for g, p in zip(G, P) if p["id"] == "bina_liman_kafe"), None)
+    if isk is not None and dk is not None:
+        yaz("Dondurmacı Kızlar iskelenin dibinde (en çok 10 m)", dk.distance(isk) <= 10.0, f"{dk.distance(isk):.1f} m")
 
     # kararlı
     a = json.dumps(Y.uret(), ensure_ascii=False, separators=(",", ":"))
