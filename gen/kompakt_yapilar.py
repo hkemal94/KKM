@@ -19,6 +19,11 @@ Kurallar:
   - Yalnız KKM'nin kendi modelleri (binaKatalogu.json'daki Kurucu türleri ve özel yapılar). Modeli
     olmayan viki yapısı bugünkü gibi kutu kalır (dosya: null).
   - Ad yok: yalnız vikide adı olan yapı adını taşır; adsız yapıya ad konmaz.
+  - Dondurmacı Kızlar iskelenin önünde (Kemal, 22 Kasım: "Dondurmacı Kızlar bir iskelenin önünde olmalı"; Liman
+    değişmeden kalır): eski haritadaki Liman İskelesi'nin kıyıdaki kökü öbür liman yapıları gibi taşınır; iskele
+    orada kıyıya dik denize uzanır, dükkân onun dibinde, önü denize (ölçüler Dondurmacı Kızlar oyununun belgesi 0.10).
+    Mendirek oyundaki biçimiyle koyun ağzına konur; karaya ya da iskeleye değerse konmaz. İkisi bu dosyada
+    katman "iskele" / "mendirek" öğeleri olarak yazılır (yapı değil, suyun üstünde).
   - Kayda yazmaz; yalnız dosya üretir. 6. adımda 3B harita bunu okur.
 
 Bütün ölçüler ve oranlar Kemal onaylamadı: hepsi DENEME.
@@ -500,6 +505,94 @@ def ayrilan_yer(e, g):
     return g, on, yakin[0]["id"]
 
 
+# ------------------------------------------------------------------ Dondurmacı Kızlar iskelenin önünde (22 Kasım)
+ESKI_ISKELE_KIYI = (25.7886544, 39.625132)   # eski haritada Liman İskelesi'nin kıyıya değdiği yer (src/data/duzadaGeo.ts,
+                                             # bina_liman_iskele); Kurucu'da dükkân bu kökün 37 m gerisinde, 14 m yanında
+DK_KUMSAL = 23.6        # oyun belgesi 0.10 (~25 m kumsal; oyun kodunda dükkânın önü ile su arası 23,6 m); sığmazsa kısalır (DENEME)
+DK_KUMSAL_EN_AZ = 8.0   # DENEME: dükkânın önü ile su arası en az
+DK_TERAS = 6.2          # oyun kodu: iskele dükkânın önündeki terasın ucundan başlar (dükkân önünden 6,2 m)
+DK_ISKELE_BOY = 101.0   # oyun belgesi 0.10: kıyıdan ~100 m (oyun kodu: sudan 101 m)
+DK_ISKELE_EN = 4.0      # oyun kodu
+DK_T = (44.0, 7.0)      # oyun belgesi 0.10: ~45 m T başı (oyun kodu 44 x 7 m)
+DK_MENDIREK = [(239, -95), (227, -142), (209, -176), (183, -206), (149, -233), (101, -248), (39, -248),
+               (-11, -242), (-49, -236), (-85, -223), (-120, -208)]   # oyun kodu; oyunun çerçevesi: dükkân (0, 0),
+                                                                      # su -26, -z deniz, +x denize bakınca sağ
+DK_MENDIREK_EN = 8.0    # oyun kodu
+DK_ISKELE = {}          # iskele ve mendirek (uret() yazar)
+
+
+def dk_iskele_kok():
+    """Eski iskele kökünün kompakt adadaki yeri (öbür liman yapılarıyla aynı taşıma) ve oradaki kıyı noktası, deniz yönü."""
+    k = kucult(*m(ESKI_ISKELE_KIYI))
+    d = KAYMA["yerlesim_liman"]
+    g = LIMAN_KAYMASI.get("bina_liman_kafe", (0.0, 0.0))
+    T = Point(k[0] + d[0] + g[0], k[1] + d[1] + g[1])
+    s = KIYI.project(T)
+    S = KIYI.interpolate(s)
+    a, b = KIYI.interpolate(s - 40.0), KIYI.interpolate(s + 40.0)
+    t = np.array([b.x - a.x, b.y - a.y]); t /= np.hypot(*t)
+    n = np.array([-t[1], t[0]])
+    if ADA.contains(Point(S.x + n[0] * 5, S.y + n[1] * 5)):
+        n = -n
+    return (T.x, T.y), np.array([S.x, S.y]), n
+
+
+def dk_dukkan(e):
+    """Dükkân iskelenin dibinde, önü denize; önü ile su arası DK_KUMSAL, sığmazsa kısalır."""
+    _, S, n = dk_iskele_kok()
+    en, boy = e["olcu"]["en"], e["olcu"]["boy"]
+    u = (n[1], -n[0])
+    for kumsal in np.arange(DK_KUMSAL, DK_KUMSAL_EN_AZ - 0.01, -0.4):
+        c = S - n * (kumsal + boy / 2)
+        taban = dikdortgen(c, u, en, boy)
+        if uygun(taban, e["mahalle"], 0.0):
+            return taban, float(kumsal)
+    return None, None
+
+
+def dk_iskele_ve_mendirek(taban, kumsal):
+    _, S, n = dk_iskele_kok()
+    sag = np.array([n[1], -n[0]])
+    on = S - n * kumsal                                   # dükkânın önü (kıyı hattında)
+    bas, uc = on + n * DK_TERAS, S + n * DK_ISKELE_BOY
+    govde = LineString([tuple(bas), tuple(uc + n * DK_T[1] / 2)])
+    y, ty, td = DK_ISKELE_EN / 2, DK_T[0] / 2, DK_T[1]
+    iskele = Polygon([tuple(bas - sag * y), tuple(uc - sag * y), tuple(uc - sag * ty), tuple(uc - sag * ty + n * td),
+                      tuple(uc + sag * ty + n * td), tuple(uc + sag * ty), tuple(uc + sag * y), tuple(bas + sag * y)])
+    DK_ISKELE["iskele"] = (iskele, govde)
+    O = S - n * 26.0                                      # oyunun başlangıcı: sudan 26 m içeri
+    pts = [tuple(O + sag * x - n * z) for x, z in DK_MENDIREK]
+    # kök: oyunun ilk noktası denizdeyse kıyıya uzatılır; mendirek kıyı boyunca karaya biniyorsa karadaki kısmı kesilir,
+    # kök suya çıktığı yerde kıyıya oturur (2 m karaya girer)
+    hat = LineString(pts)
+    k = 0.0
+    if ADA.contains(Point(pts[0])):
+        deniz_ = hat.difference(ADA)
+        parca = max(getattr(deniz_, "geoms", [deniz_]), key=lambda q: q.length)
+        a0, a1 = np.array(parca.coords[0]), np.array(parca.coords[1])
+        v = (a0 - a1) / np.hypot(*(a0 - a1))
+        hat = LineString([tuple(a0 + v * 2.0)] + list(parca.coords))
+    else:
+        p0, p1 = np.array(pts[0]), np.array(pts[1])
+        v = (p0 - p1) / np.hypot(*(p0 - p1))
+        while not ADA.contains(Point(p0 + v * k)) and k < 300:
+            k += 0.5
+        hat = LineString([tuple(p0 + v * (k + 2.0))] + pts)
+    kok = hat.coords[0]
+    g = hat.buffer(DK_MENDIREK_EN / 2, cap_style=1, join_style=1).simplify(0.05)
+    kara = g.difference(Point(kok).buffer(DK_MENDIREK_EN * 2)).intersection(ADA).area   # kökün kıyıya giren ucu sayılmaz
+    sorun = []
+    if k >= 300:
+        sorun.append("kökü kıyıya ulaşmıyor")
+    if kara > 1.0:
+        sorun.append(f"karaya {kara:.0f} m² giriyor")
+    if g.distance(iskele) < 20:
+        sorun.append("iskeleye 20 m'den yakın")
+    if any(g.intersects(d) for d in DOLU):
+        sorun.append("bir yapıya değiyor")
+    DK_ISKELE["mendirek"] = (g, hat, sorun)
+
+
 KAYITLAR = []        # rapor için: viki bağlı yapının eski ve yeni yeri
 YERLESEMEYEN = []
 
@@ -533,6 +626,17 @@ def viki_yapilari():
             TUKENEN.add(prs["id"])
             ozel["parsel"] = prs["id"]
             yontem = "en yakın parsel"
+        elif e["id"] == "bina_liman_kafe":
+            T, ys = hedef(e)
+            taban, kumsal = dk_dukkan(e)
+            if taban is None:
+                YERLESEMEYEN.append((e, "iskelenin dibinde yer yok"))
+                continue
+            _, S, n = dk_iskele_kok()
+            on = tuple(n)
+            yid = min(YOL, key=lambda pg: pg[1].distance(taban))[0]["id"]
+            yontem = f"eski Liman İskelesi'nin dibinde, önü denize, kumsal {kumsal:.1f} m"
+            dk_iskele_ve_mendirek(taban, kumsal)
         else:
             T, ys, sonuc, meydana, liman = yerlestir_viki(e)
             if sonuc is None:
@@ -803,8 +907,26 @@ def uret():
     global YAPILAR, DOLU, TUKENEN, KAYITLAR, YERLESEMEYEN, SAYAC
     YAPILAR, DOLU, TUKENEN, KAYITLAR, YERLESEMEYEN = [], [], set(), [], []
     SAYAC = {"bos": {}, "sigmadi": {}, "viki": 0}
+    DK_ISKELE.clear()
     viki_yapilari()
     parsel_evleri()
+    deniz = []
+    _not = "Dondurmacı Kızlar oyunuyla uyumlu (oyun belgesi 0.10); taslak, Kemal onaylamadı"
+    if "iskele" in DK_ISKELE:
+        g, hat = DK_ISKELE["iskele"]
+        deniz.append({"type": "Feature", "properties": {
+            "katman": "iskele", "id": "iskele_dondurmaci", "tur": "ahşap", "genislik": DK_ISKELE_EN,
+            "uzunlukM": round(hat.length), "tBasiM": list(DK_T),
+            "modeller": ["deniz/ahsap-iskele-duz.glb", "deniz/ahsap-iskele-t.glb"],
+            "not": "T iskele: eski haritadaki Liman İskelesi'nin yerinde, kıyıya dik; dibinde Dondurmacı Kızlar. " + _not},
+            "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in g.exterior.coords]]}})
+    if "mendirek" in DK_ISKELE and not DK_ISKELE["mendirek"][2]:
+        g, hat, _ = DK_ISKELE["mendirek"]
+        deniz.append({"type": "Feature", "properties": {
+            "katman": "mendirek", "id": "mendirek_liman", "tur": "taş", "genislik": DK_MENDIREK_EN,
+            "uzunlukM": round(hat.length), "hat": [ll(x, y) for x, y in hat.coords], "modeller": ["deniz/mendirek-duz.glb"],
+            "not": "Mendirek: oyundaki biçimiyle koyun ağzında; sağda kıyıdan başlar, solda açık biter. " + _not},
+            "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in g.exterior.coords]]}})
     return {
         "type": "FeatureCollection",
         "not": "Kompakt ada yapıları, taslak (Kemal onaylamadı). gen/kompakt_yapilar.py üretir.",
@@ -832,6 +954,7 @@ def uret():
             "eskiKonum_": "eski haritada yeri olmayan yapıda null (Kemal'in seçtiği aday yer)",
             "tasima": "nasıl taşındı: yöntem, eski yerin kompakt adadaki karşılığı (hedef) ve yapının ona uzaklığı",
             "bak": "önü bu noktaya bakar (meydana bakan yapılar)",
+            "katman": "yapi; iskele ve mendirek: suyun üstündeki liman öğeleri (çokgen; mendirekte hat: orta çizgisi)",
         },
         "olculer": {"not": "Hepsi DENEME (Kemal onaylamadı)", "bosOrani": BOS_ORANI, "siraEvEnDar": SIRA_EV_EN_DAR,
                     "siraEvGovdeCarpani": SIRA_EV_GOVDE,
@@ -839,7 +962,7 @@ def uret():
                     "kiyiYakinM": KIYI_YAKIN_M, "ciftlikOrani": CIFTLIK_ORANI, "depoOrani": DEPO_ORANI,
                     "uzunEvOrani": UZUN_EV_ORANI, "meydanDukkanOrani": MEYDAN_DUKKAN_ORANI, "aramaM": ARAMA_M,
                     "yapiArasi": YAPI_ARASI, "egimViki": EGIM_VIKI, "kiyiEnAz": KIYI_EN_AZ},
-        "features": YAPILAR,
+        "features": YAPILAR + deniz,
     }
 
 
@@ -855,5 +978,7 @@ if __name__ == "__main__":
     print("  boş bırakılan parsel:", SAYAC["bos"], " sığmayan:", SAYAC["sigmadi"], " viki yapısının altında kalan:", SAYAC["viki"])
     for e, p in KAYITLAR:
         print(f"  {e['id']:26s} {(e['ad'] or '(evde oturan)'):26s} {p['tasima']['yontem']:40s} hedeften {p['tasima']['hedeftenM']:6.1f} m  {p['mahalle']}")
+    if "mendirek" in DK_ISKELE:
+        print("  mendirek:", "kondu" if not DK_ISKELE["mendirek"][2] else "KONMADI (" + ", ".join(DK_ISKELE["mendirek"][2]) + ")")
     for e, neden in YERLESEMEYEN:
         print(f"  YERLEŞEMEDİ: {e['id']} ({e['ad']}): {neden}")
