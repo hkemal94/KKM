@@ -81,7 +81,10 @@
     "liman-balik-hali": "binalar/liman-balik-hali.glb",
     "liman-balik-lokantasi": "binalar/liman-balik-lokantasi.glb",
     "duzada-jandarma-karakolu": "binalar/duzada-jandarma-karakolu.glb",
-    "merkez-kahvehanesi": "binalar/merkez-kahvehanesi.glb"
+    "merkez-kahvehanesi": "binalar/merkez-kahvehanesi.glb",
+    "kucukcetmi-surek-kulubu": "binalar/kucukcetmi-surek-kulubu.glb",
+    "iskele-mescidi": "binalar/iskele-mescidi.glb",
+    "rum-mezarligi": "binalar/rum-mezarligi.glb"
   },
   "sokak": {
     "karo_m": 10,
