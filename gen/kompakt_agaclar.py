@@ -61,6 +61,7 @@ OLCU = {
     "yolPayiM": 1.5,            # yol şeridinin yarı genişliğine eklenen boşluk
     "yapiPayiM": 2.0,           # yapı tabanından uzaklık (alan ağaçları)
     "avluEvPayiM": 2.5,         # avlu ağacının evden uzaklığı
+    "avluDuvarPayiM": 2.5,      # avlu ağacının arsa kenarından (bahçe duvarından) uzaklığı (23 Kasım: taç duvara binmesin)
     "kiyiMakiM": 110.0,         # kıyıdan bu kadar içeri maki kuşağı
     "makiEgim": 0.45,           # alçak yamaçta bundan dik → maki
     "tarimEgim": 0.22,          # zeytinlik / bağ / tarla için en çok eğim
@@ -485,7 +486,7 @@ def avlular():
         evler = [YAPI_G[k] for k in yapi_agaci.query(g) if YAPI_G[k].intersection(g).area > 1]
         if not evler or sans("avlu-bos", p["id"]) < ao["bosOran"]:
             continue
-        avlu = g.buffer(-1.0).difference(unary_union(evler).buffer(OLCU["avluEvPayiM"])).difference(YOL_ALAN)
+        avlu = g.buffer(-OLCU["avluDuvarPayiM"]).difference(unary_union(evler).buffer(OLCU["avluEvPayiM"])).difference(YOL_ALAN)
         if avlu.area < ao["enAzM2"]:
             continue
         adet = 1 + (avlu.area > ao["ikiM2"]) + (avlu.area > ao["ucM2"])

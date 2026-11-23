@@ -945,7 +945,7 @@ def uret():
             "uzunlukM": round(hat.length), "hat": [ll(x, y) for x, y in hat.coords], "modeller": ["deniz/mendirek-duz.glb"],
             "not": "Mendirek: oyundaki biçimiyle koyun ağzında; sağda kıyıdan başlar, solda açık biter. " + _not},
             "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in g.exterior.coords]]}})
-    return {
+    return arsa_koseleri({
         "type": "FeatureCollection",
         "not": "Kompakt ada yapıları, taslak (Kemal onaylamadı). gen/kompakt_yapilar.py üretir.",
         "alanlar": {
@@ -965,6 +965,8 @@ def uret():
             "cepheYonu": "önün pusula yönü (kuzey 0, saat yönünde)",
             "kotM": "tabanın ortalama rakımı (m)", "kotFarkiM": "tabandaki en yüksek ile en alçak nokta farkı (m)",
             "parsel": "oturduğu arsa (duzada-parseller.geojson); parseller: birden çok arsayı kaplayan sıra ev",
+            "arsa": "oturduğu arsanın köşeleri [[boylam, enlem], ...] (kapanış noktası yok); tek harita evin bahçesini "
+                    "ve duvarını bununla çizer, arsa dosyasını ayrıca indirmez (23 Kasım, Kemal: ev ve bahçesi birlikte)",
             "kareler": "tabanın kapladığı kareler (duzada-kareler.json kimlikleri)",
             "vikiId": "vikideki maddesi (viki bağlı yapıda)", "ad": "vikideki adı (yalnız viki bağlı yapıda)",
             "bag": "viki: maddesi / madde bağı var; oturan: evde oturanı var (kişiler yalnız kayıtta)",
@@ -981,7 +983,18 @@ def uret():
                     "uzunEvOrani": UZUN_EV_ORANI, "meydanDukkanOrani": MEYDAN_DUKKAN_ORANI, "aramaM": ARAMA_M,
                     "yapiArasi": YAPI_ARASI, "egimViki": EGIM_VIKI, "kiyiEnAz": KIYI_EN_AZ},
         "features": YAPILAR + deniz,
-    }
+    })
+
+
+def arsa_koseleri(fc):
+    """Evin arsasının köşeleri yapıya yazılır (23 Kasım): tek harita bahçeyi bununla çizer"""
+    koseler = {f["properties"]["id"]: f["geometry"]["coordinates"][0][:-1] for f in PF if f["properties"]["katman"] == "parsel"}
+    for f in fc["features"]:
+        p = f["properties"]
+        a = p.get("parsel")
+        if p.get("katman") == "yapi" and a in koseler and not p.get("parseller"):
+            p["arsa"] = [[round(q[0], 7), round(q[1], 7)] for q in koseler[a]]
+    return fc
 
 
 if __name__ == "__main__":

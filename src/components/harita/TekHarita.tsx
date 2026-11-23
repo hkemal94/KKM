@@ -15,6 +15,7 @@ import { SinirKatmani, type Etiket } from './tek/sinirKatmani';
 import { uzakModelleriOku } from './tek/uzakModeller';
 import { LimanModelleri } from './tek/limanModelleri';
 import { AgacKatmani, agaclariOku } from './tek/agacKatmani';
+import { BahceKatmani } from './tek/bahceKatmani';
 import { TaslakKatmani } from './tek/duzenle/taslakKatmani';
 import { birlestir, GIZLI_HUCRE, verininKucukleri, type Birlesik, type Kucuk } from './tek/duzenle/birlesik';
 import { bosTaslak } from './tek/duzenle/taslak';
@@ -42,6 +43,7 @@ const DuzenleModu = lazy(() => import('./tek/duzenle/DuzenleModu'));
  *   döndür, sil; yol çiz ve düzenle (yol kartı); hazır grup koy; kare boya; geri al / ileri al;
  *   Drive'a yedek; "Haritaya işle". Düzenle açıkken taslak haritanın üstünde çizilir.
  * - 8. adım (22 Kasım): Düzenle → Zemin (yükselt, alçalt, düzle, yumuşat, kıyıyı çek; kıyı korumalı).
+ * - Bahçeler (23 Kasım, Kemal): evler arsalarıyla; duvar, avlu, bitki, yakında eşyalar (`tek/bahceKatmani.ts`).
  *
  * Görünüm kısmı yalnız okur: harita kaydına ve Kurucu taslağına hiçbir şey yazılmaz;
  * Kurucu kayıtları da okunmaz. Viki maddeleri yalnız kart için okunur. Düzenle modunun
@@ -160,6 +162,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     let agac: AgacKatmani | null = null;
     let zemin: ZeminKatmani | null = null, yol: YolKatmani | null = null, yapi: YapiKatmani | null = null, sinir: SinirKatmani | null = null;
     let liman: LimanModelleri | null = null;
+    let bahce: BahceKatmani | null = null;
     let elle: TaslakKatmani | null = null;
     let uzakVeri: Awaited<ReturnType<typeof uzakModelleriOku>> = null;
     let temel: { yapilar: Yapi[]; yollar: Koleksiyon; yapiVerisi: Koleksiyon; sinirlar: Koleksiyon; kucukler: Kucuk[] } | null = null;
@@ -195,7 +198,9 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       const u = kamera.position.distanceTo(kontrol.target);
       zemin.guncelle(kamera.position, hafifRef.current, golgeAcik());
       yapi.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
-      agac?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik(), zemin.ucgen + (yol?.ucgen ?? 0) + yapi.ucgen);
+      // Bahçeler ağaçlardan önce: ağaçların payı öbür katların üçgeninden hesaplanır (hafif modda sahne ~400 bin)
+      bahce?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
+      agac?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik(), zemin.ucgen + (yol?.ucgen ?? 0) + yapi.ucgen + (bahce?.ucgen ?? 0));
       liman?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
     };
     const kayma = new THREE.Vector3();
@@ -344,6 +349,10 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       elle?.alanlar(b.alanlar); elle?.kucukler(b.kucukler); elle?.duvarlar(b.duvarlar);
       gizliAgac = b.gizli;
       if (agac) agac.gizli = { hucre: GIZLI_HUCRE, ...b.gizli };
+      // Evlerin bahçeleri (arsa köşeleri yapı dosyasında); hazır grup konan arsada grubunki geçerli
+      if (bahce) { sahne.remove(bahce.grup); bahce.dispose(); }
+      bahce = new BahceKatmani(zv, b.yapilar, b.yollar, b.gizli.avlu, GIZLI_HUCRE, () => { /* model indi */ });
+      sahne.add(bahce.grup);
       guncelle();
     };
     let temelBirlesik: Birlesik | null = null;
@@ -507,7 +516,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         const fps = (kare * 1000) / (simdi - son);
         setOlcum(o => ({ ...o, ucgen, fps, modelli: yapi?.modelli ?? 0, mb: indirme.bayt / 1e6 }));
         if (import.meta.env.DEV) (window as unknown as { __tekHarita?: unknown }).__tekHarita = {
-          hazir: !!zemin, iniyor: (yapi?.iniyor ?? true) || !!liman?.iniyor, ucgen, fps, modelli: yapi?.modelli ?? 0,
+          hazir: !!zemin, iniyor: (yapi?.iniyor ?? true) || !!liman?.iniyor || !!bahce?.iniyor, bahce: bahce ? { ucgen: bahce.ucgen, bahceli: bahce.bahceli, esyali: bahce.esyali } : null, ucgen, fps, modelli: yapi?.modelli ?? 0,
           zeminUcgen: zemin?.ucgen ?? 0, agac: agac ? { ucgen: agac.ucgen, modelli: agac.modelli, obekli: agac.obekli } : null, yolUcgen: yol?.ucgen ?? 0, indirme: { ...indirme, dosyalar: { ...indirme.dosyalar } },
           bak, adaya, tepeden: tepedenAyarla, zemine: zemineIsin,
           // Denemede dokunma yeri için: zeminden `yukari` m yukarıdaki noktanın ekrandaki yeri (piksel)
@@ -539,7 +548,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
       renderer.setAnimationLoop(null);
       kontrol.dispose();
       setApi(null);
-      agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose(); elle?.dispose();
+      agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose(); elle?.dispose(); bahce?.dispose();
       denizYuzu.geometry.dispose(); denizDibi.geometry.dispose();
       sahne.clear();
       renderer.dispose();
