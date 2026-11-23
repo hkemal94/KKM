@@ -39,22 +39,17 @@ IZGARA_DOSYASI = os.path.join(CIKTI_KLASOR, "duzada-zemin.bin")
 SINIR_DOSYASI = os.path.join(CIKTI_KLASOR, "duzada-sinirlar.geojson")
 
 # ---------------------------------------------------------------- bugünkü ada
-# duzada.py'nin kıyı ve zirve tanımını ödünç al (dem.py ile aynı yol): dosyayı
-# yerleşke bölümüne kadar çalıştırıp kesiyoruz. Bina ve yol üretimi çalışmaz.
-_kaynak = open(os.path.join(BURASI, "duzada.py"), encoding="utf-8").read()
-_kes = _kaynak.index("# The Imperial Kemsköy yerleşkesi")
-_kes = _kaynak.rindex("# ---", 0, _kes)
-ESKI = {"__name__": "duzada_kompakt", "__file__": os.path.join(BURASI, "duzada.py")}
-_yedek = sys.stdout
-sys.stdout = io.StringIO()
-exec(compile(_kaynak[:_kes], "duzada.py", "exec"), ESKI)
-sys.stdout = _yedek
+# Eski adanın kıyısı, zirveleri, yükselti formülü ve mahalle çokgenleri: dondurulmuş girdiler (gen/kompakt_eski.py,
+# gen/kompakt-eski-girdiler.json; tek harita 11. adım, 23 Kasım). Eskiden gen/duzada.py yarıya kadar çalıştırılır,
+# src/data/duzadaGeo.ts okunurdu; değerler aynı.
+sys.path.insert(0, BURASI)
+import kompakt_eski as ESKI  # noqa: E402
 
-LAT0, LNG0 = ESKI["LAT0"], ESKI["LNG0"]
-M_PER_LAT, M_PER_LNG = ESKI["M_PER_LAT"], ESKI["M_PER_LNG"]
-ESKI_ADA = ESKI["ada"]
-ZIRVELER = ESKI["ZIRVELER"]
-MAHALLE_ADI = ESKI["MAHALLE_ADI"]
+LAT0, LNG0 = ESKI.LAT0, ESKI.LNG0
+M_PER_LAT, M_PER_LNG = ESKI.M_PER_LAT, ESKI.M_PER_LNG
+ESKI_ADA = ESKI.ADA
+ZIRVELER = ESKI.ZIRVELER
+MAHALLE_ADI = ESKI.MAHALLE_ADI
 
 
 def _metre(p):
@@ -65,22 +60,17 @@ def _ll(x, y):
     return [round(LNG0 + x / M_PER_LNG, 6), round(LAT0 + y / M_PER_LAT, 6)]
 
 
-# Bugünkü mahalle çokgenleri: yayındaki veriden (elle düzenlenmiş sınırlar dahil).
-_ts = open(os.path.join(KOK, "src", "data", "duzadaGeo.ts"), encoding="utf-8").read()
-_bas = _ts.index('JSON.parse("') + len("JSON.parse(")
-_son = _ts.index('");\n', _bas) + 1
-_geo = json.loads(json.loads(_ts[_bas:_son]))
+# Eski haritanın mahalle çokgenleri (elle düzenlenmiş sınırlar dahil; dondurulmuş).
 ESKI_MAHALLE = {}
-for _f in _geo["features"]:
-    if _f["properties"].get("katman") == "mahalle":
-        _g = shape(_f["geometry"])
-        ESKI_MAHALLE[_f["properties"]["id"]] = Polygon(
-            [_metre(p) for p in _g.exterior.coords],
-            [[_metre(p) for p in r.coords] for r in _g.interiors])
+for _f in ESKI.MAHALLELER:
+    _g = shape(_f["geometry"])
+    ESKI_MAHALLE[_f["id"]] = Polygon(
+        [_metre(p) for p in _g.exterior.coords],
+        [[_metre(p) for p in r.coords] for r in _g.interiors])
 
 # ---------------------------------------------------------------- küçültme
 OLCEK = 0.70
-MERKEZ_MEYDANI = ESKI["MERKEZ_MEYDANI"]
+MERKEZ_MEYDANI = ESKI.MERKEZ_MEYDANI
 CIFTLIK_MERKEZI = (6280.0, -2330.0)          # duzada.py → CIFTLIK_MERKEZI
 ODAK = ((MERKEZ_MEYDANI[0] + CIFTLIK_MERKEZI[0]) / 2,
         (MERKEZ_MEYDANI[1] + CIFTLIK_MERKEZI[1]) / 2)
@@ -111,8 +101,7 @@ MAHALLE_KABA = {k: _kucult_geom(v) for k, v in ESKI_MAHALLE.items()}
 # taşınır: kum cebinin küçültülmüş yerine oturtulur, sonra sahanlığın önü kıyıdan
 # en az IMP_ON_PAY metre olsun diye içeri itilir (yamaç yumuşasın, duvar olmasın).
 def _ozellik_m(fid):
-    f = next(f for f in _geo["features"] if f["properties"].get("id") == fid)
-    c = f["geometry"]["coordinates"]
+    c = ESKI.IMPERIAL[fid]["coordinates"]
     while isinstance(c[0][0], list):
         c = c[0]
     return [_metre(q) for q in c]
@@ -175,7 +164,7 @@ print(f"The Imperial   : sahanlık {IMP_KOT} m, kıyıdan {ADA.exterior.distance
 
 # ---------------------------------------------------------------- yerleşimler
 # Kemal (20 Kasım): yerleşimler kompakt adaya göre taşınabilir; köyler sahile yaklaşır.
-# Eski yerler bugünkü verideki ev kümelerinin ortası (gen/duzada.py'nin evleri).
+# Eski yerler eski haritadaki ev kümelerinin ortası (gen/duzada.py'nin evleri; sayılar burada sabit).
 # (id, tanım, mahalle, eski merkez, eski alan ha, kıyıya hedef uzaklık m ya da None = yerinde)
 YERLESIM_ESKI = [
     ("yerlesim_merkez", "Merkez (meydan çevresi)", "yer_merkez", (1422.0, 962.0), 24.7, None),
@@ -299,8 +288,8 @@ _ex = ODAK[0] + (KIYI_NOKTA[:, 0] - ODAK[0]) / OLCEK
 _ey = ODAK[1] + (KIYI_NOKTA[:, 1] - ODAK[1]) / OLCEK
 _merk = np.array(ADA0.centroid.coords[0])
 _ic = KIYI_NOKTA + 400 * (_merk - KIYI_NOKTA) / np.linalg.norm(_merk - KIYI_NOKTA, axis=1)[:, None]
-_arka = np.asarray(ESKI["yukselti"](ODAK[0] + (_ic[:, 0] - ODAK[0]) / OLCEK,
-                                    ODAK[1] + (_ic[:, 1] - ODAK[1]) / OLCEK))
+_arka = np.asarray(ESKI.yukselti(ODAK[0] + (_ic[:, 0] - ODAK[0]) / OLCEK,
+                                  ODAK[1] + (_ic[:, 1] - ODAK[1]) / OLCEK))
 _puan = -_egrilik * 9.0 - (_arka - 45.0) / 25.0
 # Kemal (20 Kasım): kıyının yaklaşık üçte biri kum (koylar ve alçak kıyılar).
 KUM_HEDEF = 0.33

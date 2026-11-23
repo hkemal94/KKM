@@ -8,6 +8,7 @@ import { AdDegisikligiKarti } from './AdDegisikligiKarti';
 import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
 import { HaritaYedegiKarti } from './HaritaYedegiKarti';
+import { OturanGocuKarti } from './OturanGocuKarti';
 import { GaleriDisariKarti } from './GaleriDisariKarti';
 import { SilinmisGaleriKarti, SilinmisGaleriDenetle, GorselIsteyenSatiri, useSilinmisGaleri } from './VikiGorselKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
@@ -93,6 +94,8 @@ export const Eksikler: React.FC<EksiklerProps> = ({
 
       {/* Harita yedeği ve geri yükleme (18 Kasım, kompakt ada A adımı) */}
       {onUpdateItem && <HaritaYedegiKarti items={items} onUpdateItem={onUpdateItem} />}
+      {/* Evde oturanlar tek haritaya (23 Kasım, tek harita 11. adım): yalnız iş varken görünür */}
+      {onUpdateItem && <OturanGocuKarti items={items} onUpdateItem={onUpdateItem} />}
 
       {/* Temizlik (29 Eylül): kullanılmayan kayıtlar silinir, önce yedek */}
       {onDeleteItem && <TemizlikKarti items={items} onDeleteItem={onDeleteItem} />}

@@ -45,6 +45,7 @@ BURASI = os.path.dirname(os.path.abspath(__file__))
 KOK = os.path.dirname(BURASI)
 sys.path.insert(0, BURASI)
 from kompakt_zemin_denetim import oku  # noqa: E402
+import kompakt_eski as EK  # noqa: E402  (eski haritanın dondurulmuş girdileri, tek harita 11. adım)
 
 IZGARA = os.path.join(KOK, "public", "harita", "duzada-zemin.bin")
 SINIR = os.path.join(KOK, "public", "harita", "duzada-sinirlar.geojson")
@@ -111,8 +112,8 @@ KURUCU_TURU = {"ana": "ana", "ara": "ana", "sokak": "sokak", "gecit": "sokak", "
                "patika": "patika", "merdiven": "patika"}
 
 # ------------------------------------------------------------------ korunan alanlar
-# Dirlik Stadı: eski haritadaki düzlüğün (gen/duzlukler.json) küçültülmüş yeri; ölçü aynı.
-_st = json.load(open(os.path.join(BURASI, "duzlukler.json"), encoding="utf-8"))[0]
+# Dirlik Stadı: eski haritadaki düzlüğün (o günkü gen/duzlukler.json; dondurulmuş) küçültülmüş yeri; ölçü aynı.
+_st = EK.STAT_DUZLUGU
 STAT_XY = kucult(_st["x"], _st["y"])
 STAT = affinity.rotate(box(STAT_XY[0] + _st["ileri_min"], STAT_XY[1] - _st["yan_yari"],
                            STAT_XY[0] + _st["ileri_max"], STAT_XY[1] + _st["yan_yari"]),
@@ -415,7 +416,7 @@ if not SAHIL.is_simple:
 print(f"  {len(nok)} durak, {atlanan} atlandı, uzunluk {SAHIL.length / 1000:.1f} km, basit: {SAHIL.is_simple}")
 # ------------------------------------------------------------------ kıyı köyü (Kemal, 20 Kasım akşam)
 # Birahanenin olduğu köy bugünkü haritadaki sokak hatlarıyla aynı: KKM Kurucu'nun kalıcı hâlindeki
-# (src/data/kurucuGomulu.ts) dokuz yolu (dördü köyü Sahil Yolu'ndan Sahil Yolu'na dolanan kuşak, beşi içteki
+# (o günkü src/data/kurucuGomulu.ts; 23 Kasım'dan beri dondurulmuş girdiden, gen/kompakt_eski.py) dokuz yolu (dördü köyü Sahil Yolu'ndan Sahil Yolu'na dolanan kuşak, beşi içteki
 # sokaklar) ve Taraftar Birahanesi'nin binası adanın küçültmesiyle (kucult: 0,70, aynı odak) taşınır. Kompakt
 # kıyı burada eski kıyının küçültülmüşüdür; köyün kıyıya uzaklığı da 0,70 oranında kalır. Biçim, sıra ve
 # bağlanış aynı, yalnız ölçek ve yer değişir. Zemin değişmez (sokaklar eğim sınırının içinde): teras yok,
@@ -424,9 +425,6 @@ print(f"  {len(nok)} durak, {atlanan} atlandı, uzunluk {SAHIL.length / 1000:.1f
 from shapely.ops import nearest_points, substring  # noqa: E402
 
 KK_ID = "yerlesim_stadyum_kiyi"
-_gs = open(os.path.join(KOK, "src", "data", "kurucuGomulu.ts"), encoding="utf-8").read()
-_gi = _gs.index("JSON.parse(", _gs.index("GOMULU_DUZEN")) + len("JSON.parse(")
-KURUCU = json.loads(json.loads(_gs[_gi:_gs.index('");', _gi) + 1]))["kurucuIslenen"]
 # (Kurucu kimliği, kademe): kuşak köyü Sahil Yolu'na bağlar (ara), içtekiler köy sokağı
 KK_ESKI = [("kurucu_yol_muqydtwz", "ara"), ("kurucu_yol_muqyfr79", "ara"), ("kurucu_yol_muqyfdcj", "ara"),
            ("kurucu_yol_muqygcwx", "ara"), ("kurucu_yol_muqyfdcj_1", "sokak"), ("kurucu_yol_muqyfdcj_2", "sokak"),
@@ -449,10 +447,10 @@ def _eskiden(n):
     return [kk_tasi(*m((n[i], n[i + 1]))) for i in range(0, len(n), 2)]
 
 
-KK_HAT = {k: LineString(_eskiden(KURUCU["yeniYollar"][k]["n"])) for k, _ in KK_ESKI}
+KK_HAT = {k: LineString(_eskiden(EK.KIYI_KOYU_YOLLARI[k]["n"])) for k, _ in KK_ESKI}
 _ESKI_UZ = {k: LineString([m((n[i], n[i + 1])) for i in range(0, len(n), 2)]).length
-            for k, n in ((k, KURUCU["yeniYollar"][k]["n"]) for k, _ in KK_ESKI)}
-_es = KURUCU["yolDuzeni"]["yol_sahil"]["0"]
+            for k, n in ((k, EK.KIYI_KOYU_YOLLARI[k]["n"]) for k, _ in KK_ESKI)}
+_es = EK.SAHIL_YOLU
 ESKI_SAHIL_K = LineString(_eskiden(_es))          # bugünkü Sahil Yolu'nun küçültülmüşü
 # köyün iki ucu: kuşağın ilk ve son yolunun Sahil Yolu'ndaki ucu (eskisinde de orada bağlanır)
 _u1 = Point(KK_HAT["kurucu_yol_muqydtwz"].coords[0])
@@ -915,7 +913,7 @@ for _yid, _ara in (("yerlesim_iskele", 80.0), ("yerlesim_ciftlik", 90.0)):
 _ky = KK_ID
 for _k, _kd in KK_ESKI:
     kaynak_ekle(KK_HAT[_k], _ky, _kd, "kiyi")
-_bb = dict(KURUCU["yeniBinalar"][KK_BIRAHANE_ESKI])
+_bb = dict(EK.KIYI_KOYU_BIRAHANE)   # Kurucu'daki KK_BIRAHANE_ESKI
 _bb["en"], _bb["boy"] = 20.0, 27.5     # DENEME: modelin tabanı (cephe x derinlik)
 KK_BIRAHANE_TASINMIS = Point(kk_tasi(*m((_bb["x"], _bb["y"]))))
 _on = KK_HAT["kurucu_yol_muqyfdcj"]

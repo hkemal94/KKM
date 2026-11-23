@@ -5,6 +5,7 @@ import { BookOpen, Feather, History, Image as GorselSimgesi, ImageOff, Map as Ha
 import type { Item } from '../../types';
 import { ESLEME, kisaGiris } from '../../lib/yasayanHarita';
 import { maddeGorseli } from '../../lib/maddeGorseli';
+import { evdeOturanlar } from '../../lib/oturanGocu';
 import { GorselImg } from '../GorselImg';
 import { GOK } from './haritaStili';
 import { geoOku, indirme, kumIsaretle, rakim, yapilariOku, zeminOku, type Koleksiyon, type Nokta, type Yapi, type Zemin } from './tek/tekVeri';
@@ -44,6 +45,8 @@ const DuzenleModu = lazy(() => import('./tek/duzenle/DuzenleModu'));
  *   Drive'a yedek; "Haritaya işle". Düzenle açıkken taslak haritanın üstünde çizilir.
  * - 8. adım (22 Kasım): Düzenle → Zemin (yükselt, alçalt, düzle, yumuşat, kıyıyı çek; kıyı korumalı).
  * - Bahçeler (23 Kasım, Kemal): evler arsalarıyla; duvar, avlu, bitki, yakında eşyalar (`tek/bahceKatmani.ts`).
+ * - Oturanlar (23 Kasım, 11. adım): evinde oturan olan eve dokununca kart açılır; "Oturanlar" kişilerin
+ *   maddesindeki ev bağından okunur (`lib/oturanGocu.ts`, Eksikler'deki tek seferlik taşımayla gelir).
  *
  * Görünüm kısmı yalnız okur: harita kaydına ve Kurucu taslağına hiçbir şey yazılmaz;
  * Kurucu kayıtları da okunmaz. Viki maddeleri yalnız kart için okunur. Düzenle modunun
@@ -60,6 +63,8 @@ type Props = {
   taslakDeposu?: TaslakDeposu;
   /** Düzenle modu açık başlasın (deneme sayfası) */
   duzenleIlk?: boolean;
+  /** Bu yapının kartı açık başlasın (deneme sayfası) */
+  seciliIlk?: string;
 };
 
 type Olcum = { yuklemeMs: number; mb: number; ucgen: number; modelli: number; fps: number };
@@ -70,7 +75,7 @@ const EGIM_3B = THREE.MathUtils.degToRad(52);
 /** Telefon mu (dokunmatik ve dar ekran): hafif mod buna göre açılır */
 const telefonMu = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900;
 
-export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEskiHarita, taslakDeposu, duzenleIlk }) => {
+export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEskiHarita, taslakDeposu, duzenleIlk, seciliIlk }) => {
   const kap = useRef<HTMLDivElement>(null);
   const etiketKabi = useRef<HTMLDivElement>(null);
   const [hata, setHata] = useState('');
@@ -81,7 +86,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     return telefonMu();
   });
   const [tamEkran, setTamEkran] = useState(false);
-  const [secili, setSecili] = useState<string | null>(null);
+  const [secili, setSecili] = useState<string | null>(seciliIlk ?? null);
   const [olcum, setOlcum] = useState<Olcum>({ yuklemeMs: 0, mb: 0, ucgen: 0, modelli: 0, fps: 0 });
   const [etiketler, setEtiketler] = useState<Etiket[]>([]);
   const [yapilar, setYapilar] = useState<Map<string, Yapi>>(new Map());
@@ -105,7 +110,10 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
     const ikinci = (ESLEME[y.id]?.ikinci ?? []).map(id => items?.find(i => i.id === id)).filter((i): i is Item => !!i && i.id !== madde?.id);
     // Mahalle ve tür satırı (21 Kasım, Kemal): mahalle haritadan, tür vikiden
     const altSatir = [mahalleAdlari.get(y.mahalle), madde?.type].filter(Boolean).join(' · ');
-    return { ad: madde?.title ?? y.ad ?? '', madde, ikinci, giris: madde ? kisaGiris(madde) : '', altSatir };
+    // Evde oturanlar (11. adım, 23 Kasım): kişinin maddesindeki ev bağından (lib/oturanGocu.ts)
+    const oturanlar = evdeOturanlar(items, y.id);
+    const ad = madde?.title ?? y.ad ?? (y.tur === 'ev' ? 'Ev' : '');
+    return { ad, madde, ikinci, giris: madde ? kisaGiris(madde) : '', altSatir, oturanlar, ev: !y.vikiId && !!y.oturanli };
   }, [secili, yapilar, items, mahalleAdlari]);
   // Kart açılınca kamera yapıya yumuşakça yaklaşır (21 Kasım, Kemal)
   useEffect(() => {
@@ -638,7 +646,8 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
         <div role="dialog" aria-label={kart.ad}
           className="absolute left-3 bottom-3 w-[min(19rem,calc(100%-1.5rem))] p-2.5 rounded-xl bg-[#FAF8F5]/95 dark:bg-[#13204A]/95 border border-[#CFC5B4] dark:border-[#2C3C72] shadow-[0_8px_24px_-12px_rgba(14,28,79,0.5)] text-[#0E1C4F] dark:text-[#F3EFE8]">
           {/* Telefonda görsel kapalı başlar (küçük kart); masaüstünde hep görünür */}
-          <div className={gorselAcik ? 'relative' : 'relative hidden sm:block'}>
+          {/* Evin kartında görsel alanı yok (ev maddesi olmaz) */}
+          <div className={kart.ev ? 'hidden' : gorselAcik ? 'relative' : 'relative hidden sm:block'}>
             {kartGorseli ? (
               <GorselImg src={kartGorseli} alt={kart.ad} className={`w-full aspect-[16/9] ${kart.madde && ['kulüp', 'marka'].includes(kart.madde.type) ? 'object-contain p-2' : 'object-cover'} rounded-lg bg-[#F3EFE8] dark:bg-[#17345A]`} />
             ) : (
@@ -651,11 +660,11 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className={`${gorselAcik ? 'mt-2' : 'sm:mt-2'} flex items-start gap-2`}>
+          <div className={`${gorselAcik ? 'mt-2' : kart.ev ? '' : 'sm:mt-2'} flex items-start gap-2`}>
             <div className="min-w-0 flex-1 text-[14px] font-semibold leading-snug">{kart.ad}</div>
             {!gorselAcik && (
               <button type="button" onClick={() => setSecili(null)} aria-label="Kartı kapat" title="Kapat"
-                className="sm:hidden -mr-1 -mt-1 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer">
+                className={`${kart.ev ? '' : 'sm:hidden '}-mr-1 -mt-1 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer`}>
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -682,7 +691,19 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
               ))}
             </div>
           )}
-          {!kart.madde && <p className="mt-0.5 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Vikide maddesi bulunamadı.</p>}
+          {kart.oturanlar.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-medium text-[#8A7C66] dark:text-[#A6B0C9]">Oturanlar</span>
+              {kart.oturanlar.map(k => onMaddeAc ? (
+                <button key={k.id} type="button" onClick={() => onMaddeAc(k.id)} title={`${k.title}: vikide aç`}
+                  className="inline-flex items-center min-h-8 px-2.5 py-1 rounded-lg text-[12px] font-semibold border border-[#CFC5B4] dark:border-[#2C3C72] cursor-pointer hover:border-[#F26B6F]">
+                  {k.title}
+                </button>
+              ) : <span key={k.id} className="text-[12px] font-semibold">{k.title}</span>)}
+            </div>
+          )}
+          {!kart.madde && !kart.ev && <p className="mt-0.5 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Vikide maddesi bulunamadı.</p>}
+          {kart.ev && !kart.oturanlar.length && <p className="mt-0.5 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Oturanlar henüz tek haritaya taşınmadı (Durum → Eksikler).</p>}
         </div>
       ) : hazir && (
         <div className="absolute left-3 bottom-3 pointer-events-none px-2.5 py-1.5 rounded-lg bg-[#FAF8F5]/90 dark:bg-[#13204A]/90 border border-[#CFC5B4] dark:border-[#2C3C72] text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">

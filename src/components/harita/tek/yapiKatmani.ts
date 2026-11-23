@@ -54,7 +54,7 @@ const sinirla = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x))
 
 export class YapiKatmani {
   grup = new THREE.Group();
-  /** Dokunma için: viki bağlı yapıların görünmez kutuları (`userData.yapi`) */
+  /** Dokunma için: viki bağlı ve evinde oturan olan yapıların görünmez kutuları (`userData.yapi`) */
   secim = new THREE.Group();
   ucgen = 0;
   modelli = 0;
@@ -99,7 +99,7 @@ export class YapiKatmani {
       const sifir = new THREE.Matrix4().makeScale(0, 0, 0);
       this.govde.setMatrixAt(i, uzakli ? sifir : m); this.cati.setMatrixAt(i, uzakli ? sifir : c);
       this.govde.setColorAt(i, renk.set(GOVDE[y.tur] ?? GOVDE.ev));
-      if (y.vikiId) {
+      if (y.vikiId || y.oturanli) {
         const s = new THREE.Mesh(kutu, new THREE.MeshBasicMaterial({ visible: false }));
         s.applyMatrix4(new THREE.Matrix4().makeTranslation(y.merkez[0], y.kot, y.merkez[1]).multiply(r)
           .multiply(new THREE.Matrix4().makeScale(Math.max(8, y.en), Math.max(6, y.yukseklik), Math.max(8, y.boy))));
