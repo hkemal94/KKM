@@ -34,6 +34,10 @@ zeminle yeniden üretilir, sonra elle düzen yeniden uygulanır (ZINCIR_YOK=1 il
 kompakt_agaclar.py ile. Elle zeminde yamaç, çukur ve yol eğimi aşımı denetimlerde yalnız bilgidir (yumuşak kural).
 
 Yumuşak kurallar (yol eğimi, üst üste binme, kıyı şeridi) engellemez; denetim bilgi olarak yazar.
+İskele (23 Kasım): yeni yapının `tur`u "iskele" ise `katman: iskele` çokgeni olur (tek harita iskele modeliyle döşer);
+KKM'nin Düzenle ekranı iskele koymaz, yalnız ajansın elle yazdığı ekleme taslağında (gen/taslaklar/) bulunur.
+Aynı taslakta yeni yapının isteğe bağlı `hat`ı (düz dizi [boylam0, enlem0, …]) yapının asıl çizgisidir (ör. halka biçimli
+kalıntı duvarı): dosyada `hat` nokta listesi olur; Blender modeli ve mahalle 2B resmi onu kullanır (taban yalnız kutusu).
 Kurallar: viki bağlı ya da evinde oturan olan yapı silinmez (atlanır, denetim yazar); ad Kemal'in
 (taslaktaki ad olduğu gibi, boşsa boş); yalnız KKM'nin modelleri. Ölçüler DENEME.
 """
@@ -509,6 +513,15 @@ def uygula(taslak_ham=None, yaz=True):
         ozel = {"id": kim, "dosya": y["dosya"], "elle": "yeni"}
         if y.get("grup"):
             ozel["grup"] = y["grup"]
+        if y["tur"] == "iskele":
+            # İskele (23 Kasım, ajansın ekleme taslağı): tek harita `katman: iskele` çokgenini KKM'nin iskele
+            # modeliyle döşer (tek/limanModelleri.ts); deniz seviyesinde, kot yok. Düzenle ekranında konmaz.
+            taban = dikdortgen(m, ex, y["en"], y["boy"])
+            p = {"katman": "iskele", "id": kim, "tur": "ahşap", "genislik": round(min(y["en"], y["boy"]), 1),
+                 "uzunlukM": round(max(y["en"], y["boy"])), "modeller": [y["dosya"]], "elle": "yeni"}
+            yapilar["features"].append({"type": "Feature", "properties": p,
+                                        "geometry": {"type": "Polygon", "coordinates": [[Z.cog(*q) for q in taban + [taban[0]]]]}})
+            continue
         if y["tur"] in ("agac", "donati"):
             yapilar["features"].append({"type": "Feature", "properties": {"katman": y["tur"], **ozel, "ex": [round(ex[0], 4), round(ex[1], 4)],
                                         "yukseklik": y.get("yukseklik", 3)}, "geometry": {"type": "Point", "coordinates": y["m"]}})
@@ -525,6 +538,9 @@ def uygula(taslak_ham=None, yaz=True):
             p["modelEn"] = y["modelEn"]
         if y.get("grup"):
             p["grup"] = y["grup"]
+        if y.get("hat"):
+            # yapının asıl çizgisi (ör. halka biçimli kalıntı duvarı): düz dizi [boylam0, enlem0, …] → nokta listesi
+            p["hat"] = [[y["hat"][i], y["hat"][i + 1]] for i in range(0, len(y["hat"]) - 1, 2)]
         yapilar["features"].append({"type": "Feature", "properties": p,
                                     "geometry": {"type": "Polygon", "coordinates": [[Z.cog(*q) for q in taban + [taban[0]]]]}})
 

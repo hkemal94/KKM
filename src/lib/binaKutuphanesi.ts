@@ -91,6 +91,8 @@ const BASLIKLAR: Record<string, string> = {
   'duzada-jandarma-karakolu': 'Düzada Jandarma Karakolu', 'merkez-kahvehanesi': 'Merkez Kahvehanesi',
   // 22 Kasım: tek haritadaki üç yapının modeli (gen/blender_uc_yapi.py); başlıklar vikideki hâliyle
   'kucukcetmi-surek-kulubu': 'Küçükçetmi Sürek Kulübü', 'iskele-mescidi': 'İskele Mescidi', 'rum-mezarligi': 'Rum Mezarlığı',
+  // 23 Kasım: tek harita eklemelerinin modeli (gen/blender_tek_eklemeler.py); künyede adı yok, yalnız türü
+  'yangin-gozetleme-kulesi': 'Yangın gözetleme kulesi', 'antik-sur-kalintisi': 'Antik duvar kalıntısı', 'merkez-mezarligi': 'Mezarlık',
   // künyede adı yok: adsız, yalnız türü (Kemal, 18 Kasım)
   'zeytinyagi-fabrikasi': 'Zeytinyağı fabrikası', 'saglik-ocagi': 'Sağlık ocağı',
   'merkez-postanesi': 'Postane'

@@ -84,7 +84,10 @@
     "merkez-kahvehanesi": "binalar/merkez-kahvehanesi.glb",
     "kucukcetmi-surek-kulubu": "binalar/kucukcetmi-surek-kulubu.glb",
     "iskele-mescidi": "binalar/iskele-mescidi.glb",
-    "rum-mezarligi": "binalar/rum-mezarligi.glb"
+    "rum-mezarligi": "binalar/rum-mezarligi.glb",
+    "yangin-gozetleme-kulesi": "binalar/yangin-gozetleme-kulesi.glb",
+    "antik-sur-kalintisi": "binalar/antik-sur-kalintisi.glb",
+    "merkez-mezarligi": "binalar/merkez-mezarligi.glb"
   },
   "sokak": {
     "karo_m": 10,

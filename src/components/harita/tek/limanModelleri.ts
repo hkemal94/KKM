@@ -21,7 +21,7 @@ import type { UzakModel } from './uzakModeller';
 
 const ISKELE = 'deniz/ahsap-iskele-duz.glb';
 const MENDIREK = 'deniz/mendirek-duz.glb';
-/** Bu uzaklığın içinde (bakılan yer ile liman, m) ve normal modda asıl model */
+/** Bu uzaklığın içinde (bakılan yer ile en yakın iskele ya da mendirek, m) ve normal modda asıl model */
 const YAKIN = 1500;
 const COK_UZAK = 6000;
 
@@ -34,7 +34,8 @@ export class LimanModelleri {
   grup = new THREE.Group();
   ucgen = 0;
   private yerlesimler: Yerlesim[] = [];
-  private merkez = new THREE.Vector3();
+  /** İskele başları ve mendirek noktaları: bakılan yer bunlardan birine yakınsa asıl model (iskeleler ayrı koylarda da olabilir) */
+  private noktalar: Nokta[] = [];
   private modeller = new Map<string, HaritaModeli>();
   private ornekler: THREE.InstancedMesh[] = [];
   private son: { x: number; z: number; u: number; hafif: boolean; golge: boolean } | null = null;
@@ -56,10 +57,8 @@ export class LimanModelleri {
         if (hat.length > 1) this.mendirekler.push({ hat, genislik: Number(p.genislik) || 8 });
       }
     }
-    const noktalar = [...this.iskeleler.map(i => i.bas), ...this.mendirekler.flatMap(m => m.hat)];
-    if (!noktalar.length) return;
-    for (const [x, z] of noktalar) this.merkez.add(new THREE.Vector3(x, 0, z));
-    this.merkez.divideScalar(noktalar.length);
+    this.noktalar = [...this.iskeleler.map(i => i.bas), ...this.mendirekler.flatMap(m => m.hat)];
+    if (!this.noktalar.length) return;
     // Ölçüler önce uzak kopyadan (hemen var); asıl model inince ondan
     for (const d of [ISKELE, MENDIREK]) { const u = uzak?.get(d); if (u) this.olcu.set(d, u); }
     this.yerlestir();
@@ -110,7 +109,7 @@ export class LimanModelleri {
   guncelle(hedef: THREE.Vector3, kameraUzakligi: number, hafif: boolean, golge: boolean) {
     if (this.bos) return;
     this.son = { x: hedef.x, z: hedef.z, u: kameraUzakligi, hafif, golge };
-    const yakin = !hafif && kameraUzakligi < 2600 && Math.hypot(hedef.x - this.merkez.x, hedef.z - this.merkez.z) < YAKIN;
+    const yakin = !hafif && kameraUzakligi < 2600 && this.noktalar.some(([x, z]) => Math.hypot(hedef.x - x, hedef.z - z) < YAKIN);
     const seviye = hafif || kameraUzakligi > COK_UZAK ? 1 : 0;
     // Her dosya için: asıl model (yakında ve inmişse) ya da uzak kopya
     const parcalar = (d: string) => {
