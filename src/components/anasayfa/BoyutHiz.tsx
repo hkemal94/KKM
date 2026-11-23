@@ -2,8 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { KisaListe } from '../kabuk/KisaListe';
 import { RefreshCw } from 'lucide-react';
 import type { Item } from '../../types';
-import { useHaritaDuzeni } from '../../lib/haritaDuzeni';
-import { KAYIT_SINIRI, acilisOlcumu, boyut, indirilenParcalar, kayitBoyutlari, kb, sn } from '../../lib/olcumler';
+import { KAYIT_SINIRI, acilisOlcumu, indirilenParcalar, kayitBoyutlari, kb, sn } from '../../lib/olcumler';
 import { sayaciOku, sayaciSifirla, siraliSayilar } from '../../lib/sayfaSayaci';
 import { DUGME_BOS, ETIKET, IKINCIL, KART, YAZI } from './stil';
 
@@ -30,9 +29,7 @@ const Cubuk: React.FC<{ oran: number; uyari?: boolean }> = ({ oran, uyari }) => 
 );
 
 export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
-  const { duzen } = useHaritaDuzeni();
   const kayit = useMemo(() => kayitBoyutlari(items), [items]);
-  const haritaKaydi = useMemo(() => (duzen ? boyut(duzen) : 0), [duzen]);
   // Parçalar ve açılış o an okunur; "Yenile" ile yeniden
   const [an, setAn] = useState(0);
   const parca = useMemo(() => indirilenParcalar(), [an]);
@@ -113,16 +110,6 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
 
         <div className={ETIKET}>En büyük 10 kayıt</div>
         <ul className="space-y-2">
-          {haritaKaydi > 0 && (
-            <li title={`Harita düzeni: ${kb(haritaKaydi)} · sınırın %${Math.round(haritaKaydi / KAYIT_SINIRI * 100)}'i`}>
-              <div className="flex items-baseline gap-2 text-[12px]">
-                <span className={`flex-1 min-w-0 truncate ${YAZI}`}>Harita düzeni <span className={IKINCIL}>· Kurucu ve harita kaydı</span></span>
-                <span className={`tabular-nums ${YAZI}`}>{kb(haritaKaydi)}</span>
-                <span className={`w-12 text-right tabular-nums ${IKINCIL}`}>%{Math.round(haritaKaydi / KAYIT_SINIRI * 100)}</span>
-              </div>
-              <Cubuk oran={haritaKaydi / KAYIT_SINIRI} uyari={haritaKaydi > KAYIT_SINIRI * 0.7} />
-            </li>
-          )}
           {kayit.enBuyukler.map(k => (
             <li key={k.id} title={`${k.ad}: ${kb(k.bayt)} · sınırın %${Math.round(k.bayt / KAYIT_SINIRI * 100)}'i`}>
               <div className="flex items-baseline gap-2 text-[12px]">
@@ -159,7 +146,7 @@ export const BoyutHiz: React.FC<{ items: Item[] }> = ({ items }) => {
             ))}
           </KisaListe>
         )}
-        <p className={`text-[11px] ${IKINCIL}`}>Bir bölüm yalnız açıldığında indirilir. Haritayı, Kurucu'yu ya da PDF'i açtıktan sonra "Yenile"ye basınca onlar da listeye gelir.</p>
+        <p className={`text-[11px] ${IKINCIL}`}>Bir bölüm yalnız açıldığında indirilir. Haritayı ya da PDF'i açtıktan sonra "Yenile"ye basınca onlar da listeye gelir.</p>
       </section>
 
       {/* Açılış hızı */}

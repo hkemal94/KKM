@@ -115,9 +115,6 @@ export const KURUCU_MODELLERI: Record<string, string[]> = Object.fromEntries(
     .filter(([, l]) => l.length)
 );
 
-/** Modeli olmayan Kurucu türleri */
-export const MODELI_EKSIK_TURLER = Object.entries(KATALOG.kurucu_turleri ?? {}).filter(([, l]) => !l?.length).map(([t]) => t);
-
 /** The Imperial: otel kalıbının ve haritadaki otel grubunun modeli */
 export const IMPERIAL_MODELI = KATALOG.kaliplar?.otel ?? KATALOG.ozel?.['the-imperial-kemskoy'] ?? 'binalar/the-imperial-kemskoy.glb';
 
@@ -173,13 +170,6 @@ export const BINA_MODELLERI: BinaModeli[] = (() => {
 })();
 
 /**
- * Imperial modelinin otel kalıbına göre yeri (Kemal'in ölçüleri, 4 Kasım):
- * kalıbın merkezi modelde z = -12'de; ön köşe kuleleri modelde (±24, 12),
- * kalıpta (±24, 24). İki kule arası 48 m.
- */
-export const IMPERIAL_CAPA = { z: -12, kuleArasi: 48 };
-
-/**
  * Haritadaki (üreteçten gelen) adlı yapılar → model (Kemal, 4 Kasım). Değer bir dosya
  * ya da Kurucu türü (o türün modelleri arasından seçilir). Tabloda olmayan "yapı"
  * türündeki binalar kutu kalır: Merkez Pazarı (pazar binası modeli yok), Liman İdare
@@ -196,9 +186,6 @@ export const HARITA_YAPILARI: Record<string, string> = {
   bina_liman_depo: 'depo'                   // Liman Deposu
 };
 
-/** Haritadaki yapı türü → Kurucu türü (üreteçteki evler ve çiftlik depoları) */
-export const HARITA_TURLERI: Record<string, string> = { ev: 'ev', depo: 'depo' };
-
 /**
  * Hazır bahçe arsalarının taban sınırı (modelin kendi ölçüsü, metre; ön +Z). Haritada
  * arsa modeli yalnız evin kendi arsasına bütünüyle sığıyorsa konur. Ölçüler ajansın
@@ -213,16 +200,6 @@ export const ARSA_OLCULERI: Record<string, { x0: number; x1: number; z0: number;
   'bahce/bahce-arsasi-sebzeli.glb': { x0: -8.0, x1: 19.0, z0: -17.0, z1: 9.1 },
   'bahce/bahce-arsasi-servili.glb': { x0: -5.5, x1: 18.5, z0: -15.4, z1: 12.4 },
   'bahce/bahce-arsasi-zeytinli.glb': { x0: -5.0, x1: 18.0, z0: -15.0, z1: 10.1 }
-};
-
-/** Park etmiş arabalar: binek araçlarının renkli dosyaları (dolmuş, taksi, traktör, iki teker değil) */
-export const ARACLAR: string[] = (KATALOG.araclar ?? []).filter(d => /sedan|hatchback|pikap/.test(d)).flatMap(renkliAc);
-
-/** Liman ve iskele tekneleri (renkli dosyalar) */
-const denizListesi = (ad: RegExp) => Object.values(KATALOG.deniz ?? {})
-  .flatMap(l => (Array.isArray(l) ? l : [l])).filter(d => ad.test(d)).flatMap(renkliAc);
-export const TEKNELER = {
-  balikci: denizListesi(/balikci-teknesi/), girgir: denizListesi(/girgir-teknesi/), sandal: denizListesi(/sandal/)
 };
 
 /** Kurucu türünün okunur adı (galeri etiketi) */
@@ -252,11 +229,6 @@ export const IMPERIAL_GORUNUMLERI: Array<{ dosya: string; baslik: string }> = [
 
 /** Dosyanın tarayıcıdaki adresi */
 export const modelAdresi = (dosya: string) => `${import.meta.env.BASE_URL || '/'}modeller/${dosya}`;
-
-/** Kimlikten sabit seçim: aynı yapı her açılışta aynı modeli alır */
-export function sabitSec<T>(kimlik: string, liste: T[]): T {
-  return liste[Math.floor(sans(kimlik) * liste.length) % liste.length];
-}
 
 /** Kimlikten tekrar üretilebilir 0–1 sayı */
 export function sans(kimlik: string): number {

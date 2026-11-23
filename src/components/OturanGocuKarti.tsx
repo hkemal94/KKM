@@ -8,7 +8,7 @@ import { oturanGocu } from '../lib/oturanGocu';
 /** Eski harita kaydındaki ev → kişi bağları (Kurucu taslağının `oturanlar`'ı); kayıt yoksa boş */
 async function kayittanOku(): Promise<Record<string, string[]>> {
   const d = haritaKaydiniCoz(await buluttakiHaritaKaydi());
-  // Taslak işlenenle aynıysa kayıtta yalnız işlenen durur (lib/evSakinleri.ts → oturanlariOku ile aynı)
+  // Taslak işlenenle aynıysa kayıtta yalnız işlenen durur; önce taslak, yoksa işlenen
   return (d?.kurucu ?? d?.kurucuIslenen)?.oturanlar ?? {};
 }
 

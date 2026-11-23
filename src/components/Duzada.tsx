@@ -6,7 +6,7 @@ import { useHaritaMaddesi } from './duzada/HaritaMaddesi';
 import { SayfaRayi, type RayBolumu } from './SayfaRayi';
 
 /**
- * Düzada'nın iki yüzü — Viki ve Evren Raporu. Harita ve Kurucu 4. gecede
+ * Düzada'nın iki yüzü — Viki ve Evren Raporu. Harita 4. gecede
  * (7 Ekim) Atölye'ye taşındı.
  */
 const RAY_BOLUMLERI: RayBolumu[] = [
@@ -30,7 +30,7 @@ interface DuzadaProps {
   onAddItem: (itemData: Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => Promise<void>;
   /** Menüden doğrudan bir sekmeye gelmek için */
   istek?: { sekme: DuzadaSekmesi; n: number } | null;
-  /** "Haritada gör": Atölye'deki Harita ve Kurucu */
+  /** "Haritada gör": Atölye'deki Harita */
   onAtolye: () => void;
   /** Aile maddesinden "Soy ağacında aç" (6. gece) */
   onSoyAgaci?: (aileId: string) => void;

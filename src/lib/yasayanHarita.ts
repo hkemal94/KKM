@@ -2,18 +2,14 @@ import type { Item } from '../types';
 import { parseKunye } from '../components/wiki/kunyeParser';
 
 /**
- * Yaşayan harita (16 Kasım, Kemal öne aldı; 18 Kasım kararları): 3B haritada bir
+ * Yaşayan harita (16 Kasım, Kemal öne aldı; 18 Kasım kararları): haritada bir
  * yapıya dokununca küçük kart açılır: ad, görsel, vikideki maddenin kısa girişi,
- * "Vikide aç". Yalnız okuma: kayda, harita düzenine, Firestore'a hiçbir şey yazılmaz.
+ * "Vikide aç". Yalnız okuma: kayda, Firestore'a hiçbir şey yazılmaz.
  *
- * 3B parçalarda (duzada-harita deposu) her özel yapının yerinde adı yapının kimliği
- * olan boş bir işaret durur (`extras.kkm_id`, ör. `bina_fener`). Kart, bu kimliği
- * aşağıdaki sırayla bir viki maddesine çevirir:
- *   1. ESLEME: ajansın eşleme listesi (Harita Ajanı, 18 Kasım) ve Kemal'in kararları
- *   2. Kurucu'daki bağ (`kurucu.baglar`; Kemal Kurucu'da bağlarsa kendiliğinden gelir)
- *   3. Maddenin `haritaBinaId` alanı (TAKMA ile: 3B'deki `bina_stad_tribun`, vikide `bina_stad`)
- * Kimlik uyuşmazlıkları burada, okurken eşlenir; kayıtlara yazılmaz (Kemal, 18 Kasım).
- * Rakım kartta gösterilmez (harita ile viki ayrışıyor; karar bekliyor).
+ * ESLEME: yapı kimliği → viki maddesi (ajansın eşleme listesi ve Kemal'in
+ * kararları). Tek harita (`TekHarita.tsx`) ve Düzenle modu okur; kartın kısa
+ * girişi `kisaGiris`. Kimlik uyuşmazlıkları okurken eşlenir; kayıtlara
+ * yazılmaz (Kemal, 18 Kasım). Rakım kartta gösterilmez.
  */
 
 export type KartEslemesi = {
@@ -23,11 +19,11 @@ export type KartEslemesi = {
   ikinci?: string[];
   /** Maddesi olmayan yapının adı (haritadaki / künyedeki adı; uydurulmaz) */
   ad?: string;
-  /** Dokunma yarıçapı (metre); büyük yapılarda geniş */
+  /** Dokunma yarıçapı (metre; eski 3B haritadan kaldı, eşleme listesiyle uyum için) */
   yaricap?: number;
 };
 
-/** 3B'deki yapı kimliği → kart. Kaynak: oneriler/gece-18-11/yasayan-harita-esleme.md (ajans) */
+/** Yapı kimliği → kart. Kaynak: oneriler/gece-18-11/yasayan-harita-esleme.md (ajans) */
 export const ESLEME: Record<string, KartEslemesi> = {
   bina_imperial: { madde: 'kemskoy_hotel', yaricap: 70 },
   bina_fener: { madde: 'viki_mekan_fener' },
@@ -58,26 +54,6 @@ export const ESLEME: Record<string, KartEslemesi> = {
   bina_fener_evi: { ad: 'Fener Evi' }
 };
 
-/** 3B'deki kimlik → vikideki `haritaBinaId` */
-export const TAKMA: Record<string, string> = {
-  bina_stad_tribun: 'bina_stad'
-};
-
-/** Mahalle kimlikleri: haritada `yer_merkez`, vikide `viki_yer_merkez` */
-const vikiKimligi = (id: string, kimlik: Map<string, Item>): string =>
-  kimlik.has(id) || !/^yer_[a-z]+$/.test(id) ? id : (kimlik.has(`viki_${id}`) ? `viki_${id}` : id);
-
-export const VARSAYILAN_YARICAP = 30;
-
-export type YapiKarti = {
-  kimlik: string;
-  ad: string;
-  /** Açılacak viki maddesi (yoksa "Vikide aç" yok) */
-  madde?: Item;
-  ikinci: Item[];
-  giris: string;
-};
-
 /** Rakım parçalarını çıkarır ("· 69 m rakım", "Rakım: 69 m") */
 export const rakimsiz = (s: string): string => s
   .replace(/\s*[·,;-]?\s*\d[\d.,]*\s*m(?:etre)?\s+rakım(?:da|lı)?/giu, '')
@@ -100,50 +76,4 @@ export function kisaGiris(item: Item, enCok = 240): string {
   if (metin.length < 80 && alanlar.length) metin = [metin, alanlar[0]].filter(Boolean).join(' · ');
   if (!metin && alanlar.length) metin = alanlar.slice(0, 2).join(' · ');
   return metin.length > enCok ? `${metin.slice(0, enCok - 1).trimEnd()}…` : metin;
-}
-
-/**
- * Yapı kimliğini karta çeviren fonksiyon (sıra yukarıda). Kayıtlar bir kez
- * dizine alınır, sonuç önbellekte durur: 3B parçalarda yüzlerce ev işareti var.
- */
-export function kartCozucu(items: Item[], baglar: Record<string, string> = {}): (kimlik: string) => YapiKarti | null {
-  const ids = new Map(items.map(i => [i.id, i]));
-  const binaya = new Map<string, Item>();
-  for (const i of items) {
-    const b = i.metadata?.haritaBinaId;
-    if (!i.archived && typeof b === 'string' && b && !binaya.has(b)) binaya.set(b, i);
-  }
-  const bul = (id: string | undefined) => (id ? ids.get(vikiKimligi(id, ids)) : undefined);
-  const onbellek = new Map<string, YapiKarti | null>();
-  return kimlik => {
-    if (onbellek.has(kimlik)) return onbellek.get(kimlik)!;
-    const e = ESLEME[kimlik];
-    let madde = bul(e?.madde) ?? bul(baglar[kimlik]);
-    if (!madde && !e) madde = binaya.get(kimlik) ?? binaya.get(TAKMA[kimlik] ?? kimlik);
-    const ikinci = (e?.ikinci ?? []).map(bul).filter((i): i is Item => !!i && i.id !== madde?.id);
-    const kart: YapiKarti | null = madde ? { kimlik, ad: madde.title, madde, ikinci, giris: kisaGiris(madde) }
-      : e?.ad ? { kimlik, ad: e.ad, ikinci, giris: '' } : null;
-    onbellek.set(kimlik, kart);
-    return kart;
-  };
-}
-
-/** Tek yapının kartı (deneme ve tek seferlik okuma için) */
-export const yapiKarti = (kimlik: string, items: Item[], baglar: Record<string, string> = {}): YapiKarti | null =>
-  kartCozucu(items, baglar)(kimlik);
-
-/** Dokunulan noktaya en yakın kartlı yapı (yatay uzaklık, yarıçap içinde) */
-export function enYakinYapi(
-  nokta: { x: number; z: number },
-  yapilar: Iterable<{ kimlik: string; x: number; z: number }>,
-  kartli: (kimlik: string) => boolean
-): string | null {
-  let en: string | null = null, enUzaklik = Infinity;
-  for (const y of yapilar) {
-    if (!kartli(y.kimlik)) continue;
-    const u = Math.hypot(y.x - nokta.x, y.z - nokta.z);
-    const r = ESLEME[y.kimlik]?.yaricap ?? VARSAYILAN_YARICAP;
-    if (u <= r && u < enUzaklik) { en = y.kimlik; enUzaklik = u; }
-  }
-  return en;
 }

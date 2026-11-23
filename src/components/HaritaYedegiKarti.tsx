@@ -238,7 +238,7 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">Harita yedeği</p>
           <p className="mt-0.5 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]">
-            Haritanın bütün kaydı (Kurucu'daki yapılar, yollar, bağlar, evde oturanlar) ve haritaya bağlı viki alanları
+            Eski haritanın bütün kaydı (Kurucu'da konan yapılar, yollar, bağlar, evde oturanlar) ve haritaya bağlı viki alanları
             (rakım, harita konumu, işaretler) bilgisayarına iner, Drive'ında "{DRIVE_KLASORU}" klasörüne ve buluta yazılır.
             Bulutta en çok {EN_COK_YEDEK} yedek durur. Drive için ilk basışta Google izin sorar (yalnız KKM'nin açtığı dosyalar).
             Geri yüklemeden önce ne değişeceği gösterilir; sen onaylamadan hiçbir şey yazılmaz.

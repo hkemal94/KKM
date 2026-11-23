@@ -1,80 +1,11 @@
 /**
- * Düzada haritasının görsel dili.
+ * Tek haritanın gök renkleri (eski haritaların görsel dilinden yalnız bu
+ * kaldı; 23 Kasım, tek harita 11. adım).
  *
- * Marka briefindeki "antik/vintage kartografi" tarifine göre kuruldu:
- * kâğıt zemin, hipsometrik yükselti tonları, kıyıdan dışa açılan dalga
- * çizgileri, kaplamalı yollar. Palet marka renklerinden türetildi —
- * krem tabandan bej üzerinden zeytin/taş tonlarına çıkar.
- */
-
-/**
- * Gökyüzü. Arazi açıkken eğimli bakışta ufuk görünüyor; mavi bir gök
- * haritayı pencereye çevirirdi. Bunun yerine kâğıdın kendi tonları:
- * ufukta sıcak krem, yukarı çıkıldıkça soluk bir kül.
+ * Açık Ege göğü: ufukta açık pus, yukarı çıkıldıkça mavi.
  */
 export const GOK = {
-  // Fiziki ada (29 Eylül): kâğıt tonları yerine açık Ege göğü
   ust: '#9FC4E4',
   ufuk: '#E6F0F4',
   pus: '#D8E6EC'
 } as const;
-
-export const KARA = {
-  taban: '#f1ece1',
-  /** Yapının altındaki kayalık kütle — arazi kotunu gövdeleştirir */
-  kaide: '#c9bda4',
-  kiyiCizgi: '#6f6047',
-  kiyiHale: 'rgba(111, 96, 71, 0.16)',
-  mahalleSinir: 'rgba(111, 96, 71, 0.45)'
-} as const;
-
-export const YOL = {
-  kaplama: '#8a7757',
-  dolgu: '#f4ecdb'
-} as const;
-
-export const YAPI = {
-  /** Diorama'daki sıcak taş ve kiremit tonlarından */
-  otel: '#c2a184',
-  kule: '#b08f72',
-  fener: '#efe7d8',
-  stadyum: '#5d7d6a',
-  kulup: '#cdb995',   // taş çiftlik evi (2 Ekim gece: yeşil kutu gibi duruyordu)
-  iskele: '#9c8467',
-  genel: '#c2b193',
-  vurgu: '#F26B6F'
-} as const;
-
-/**
- * Mahalle tonları.
- *
- * İdari sınırlar yollara oturuyor ama beş bölgenin ilk bakışta ayrışması
- * için ince bir renk yıkaması gerekiyordu. Tonlar kasıtlı olarak çok
- * soluk: kabartma ve kâğıt dokusu altta okunmaya devam etsin, harita
- * siyasi haritaya dönüşmesin.
- */
-export const MAHALLE_TONU: Record<string, string> = {
-  yer_merkez:  '#8a7757',   // yayla — toprak
-  yer_liman:   '#4a7d6e',   // körfez — çam (soluk)
-  yer_iskele:  '#a8655e',   // koy — kiremitin kırılmış hâli
-  yer_stadyum: '#778f66',   // kuzey sırtı — zeytin
-  yer_ciftlik: '#b3986f'    // doğu ovası — anız
-};
-
-/** Bina olmayan zemin öğeleri: teras, bahçe */
-export const ZEMIN = {
-  teras: '#e6dcc6',
-  terasKenar: 'rgba(111, 96, 71, 0.55)',
-  bahce: '#b9c4a4',
-  bahceKenar: 'rgba(90, 110, 80, 0.45)',
-  // Ege dokusu (2 Ekim): taş avlu, meydan taşı, tarla ve bağ bölmeleri
-  avlu: '#ece3d2',
-  meydan: '#e9dfcb',
-  meydanKenar: 'rgba(138, 119, 87, 0.6)',
-  tarla: '#d8cb98',
-  bag: '#aab873',
-  bolmeKenar: 'rgba(120, 104, 78, 0.5)',
-  // badanalı bahçe duvarı
-  duvar: '#f6f0e3'
-} as const;
-

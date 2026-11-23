@@ -4,7 +4,6 @@ import { bekleyenAdaylar } from './adaylar';
 import { listedekiOneriler } from './onaylar';
 import { bekleyenDugmeler } from './bekleyenIsler';
 import { tarihUyarilari, type TarihUyarisi } from './kanonTarihleri';
-import { useHaritaDuzeni } from './haritaDuzeni';
 import { anahtariOku } from './oyunAyarlari';
 import { gorunum, onayKayitlari } from './onaylar';
 import { kararlariOku as oneriKararlariniOku, onayKaydinaCevir, onerileriOku } from './ajanOnerileri';
@@ -93,8 +92,6 @@ export function kanonUyarililar(items: Item[]): Item[] {
 }
 
 export function useBildirimler(items: Item[]): Bildirim[] {
-  const harita = useHaritaDuzeni();
-  const haritaEski = !!(harita.duzen?.eskiKoordinat && harita.ilkYukleme);
   const ajans = useAjansBekleyen();
   return useMemo(() => {
     if (!items.length) return [];
@@ -110,7 +107,7 @@ export function useBildirimler(items: Item[]): Bildirim[] {
         ayrinti: [ajans.ajanIsi && `${ajans.ajanIsi} ajan işi`, karar && 'ajansın kararları'].filter(Boolean).join(' · ')
       });
     }
-    const dugme = bekleyenDugmeler(items, haritaEski);
+    const dugme = bekleyenDugmeler(items);
     if (dugme.length) liste.push({ tur: 'dugme', sayi: dugme.length, baslik: 'Tek seferlik düğme bekliyor', ayrinti: dugme.join(' · ') });
     const kanon = kanonSatirlari(items);
     if (kanon.length) liste.push({ tur: 'kanon', sayi: kanon.length, baslik: 'Kanon uyarısı', ayrinti: 'Metinde kanonla çelişen tarih', maddeler: kanonUyarililar(items).slice(0, 5), kanon: kanon.slice(0, 6) });
@@ -120,5 +117,5 @@ export function useBildirimler(items: Item[]): Bildirim[] {
       liste.push({ tur: 'yedek', sayi: 1, baslik: 'Aylık yedek', ayrinti: son === null ? 'Henüz yedek alınmadı' : `Son yedek ${son} gün önce` });
     }
     return liste;
-  }, [items, haritaEski, ajans]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items, ajans]); // eslint-disable-line react-hooks/exhaustive-deps
 }

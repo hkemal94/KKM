@@ -4,9 +4,7 @@ import type { Item, UserSettings } from '../types';
 import { driveYedekYukle, YEDEK_KLASORU } from '../lib/googleApi';
 import { driveIzniniYenile, getCachedAccessToken, izinEksikMi, signInWithGoogle } from '../lib/firebase';
 import { gorselYedegi, gorselleriGeriYaz } from '../lib/gorselDeposu';
-import {
-  haritaDuzeniniYedekIcinOku, haritaDuzeniniYedektenYaz
-} from '../lib/haritaDuzeni';
+import { haritaDuzeniniYedektenYaz } from '../lib/haritaDuzeni';
 
 /**
  * Yedekleme (K2).
@@ -44,7 +42,8 @@ interface YedekDosyasi {
   items: Item[];
   /** Galeri görselleri (21 Ekim): { görsel kimliği: data adresi }; kayıtlarda yalnız başvuru durur */
   gorseller?: Record<string, string>;
-  haritaDuzeni: unknown;
+  /** Eski haritanın kaydı: 23 Kasım'a kadarki yedeklerde (tek harita 11. adım); yenisine girmez, eskisi geri yüklenir */
+  haritaDuzeni?: unknown;
 }
 
 function sonYedekZamani(): number | null {
@@ -95,8 +94,7 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
     sayilar: { madde: items.length },
     settings,
     items,
-    gorseller: await gorselYedegi(items),
-    haritaDuzeni: haritaDuzeniniYedekIcinOku()
+    gorseller: await gorselYedegi(items)
   });
 
   /** Drive'daki "KKM yedekleri" klasörüne (yapisal-2, 27) */
@@ -263,7 +261,7 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
 
             <p className="mt-3 text-xs leading-relaxed text-[#6A5E4C]
                           dark:text-[#A6B0C9]">
-              Bütün maddeler, ayarlar ve harita düzeni tek bir dosyaya iner.
+              Bütün maddeler, ayarlar ve galeri görselleri tek bir dosyaya iner.
               Otomatik yedek bu Firebase katmanında sunulmuyor, o yüzden elle
               alınıyor.
             </p>

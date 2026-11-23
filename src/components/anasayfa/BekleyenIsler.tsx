@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Check, Loader2, Play } from 'lucide-react';
 import type { Item } from '../../types';
-import { useHaritaDuzeni, haritaKaydiDurumu } from '../../lib/haritaDuzeni';
 import { silinecekler, eskiAlanlar, silmeOzeti } from '../../lib/temizlik';
 import { mahalleAdDuzeltmeleri } from '../../lib/vikiTemizligi';
 import { boslukDoldurma } from '../../lib/boslukDoldurma';
@@ -35,8 +34,6 @@ const YAZI = 'text-[#0E1C4F] dark:text-[#F3EFE8]';
  * Onay bekleyenler'in ortak listesi aynı işleri kullanır.
  */
 export function useBekleyenIsler({ items, onUpdateItem, onDeleteItem, onAlanSil }: Props) {
-  const harita = useHaritaDuzeni();
-  const durum = useMemo(() => haritaKaydiDurumu(harita.duzen), [harita.duzen]);
   const silinecek = useMemo(() => (onDeleteItem ? silinecekler(items) : []), [items, onDeleteItem]);
   const eskiAlan = useMemo(() => (onAlanSil ? eskiAlanlar(items) : []), [items, onAlanSil]);
   const bosluk = useMemo(() => boslukDoldurma(items), [items]);
@@ -49,21 +46,6 @@ export function useBekleyenIsler({ items, onUpdateItem, onDeleteItem, onAlanSil 
   const [bitenler, setBitenler] = useState<Set<string>>(new Set());
 
   const isler: Is[] = [];
-  if (harita.ilkYukleme && harita.duzen && (durum.sisik || durum.islenmemis)) {
-    isler.push({
-      id: 'harita',
-      ad: durum.islenmemis ? 'Kurucu taslağını haritaya işle' : 'Harita kaydını küçült',
-      aciklama: durum.islenmemis
-        ? 'Kurucu\'da bekleyen değişiklikler haritaya geçer; kayıt da küçülür (şişmiş yollar sadeleşir).'
-        : 'Şişmiş yollar sadeleşir, kayıt birkaç kat küçülür; haritada hiçbir şey değişmez.',
-      calistir: async () => {
-        const d = harita.duzen!;
-        const oldu = await harita.kaydet({ ...d, guncelleme: Date.now(), ...(d.kurucu ? { kurucuIslenen: d.kurucu } : {}) });
-        if (!oldu) throw new Error('sunucuya yazılamadı (bu tarayıcıda duruyor, sonra yine dene)');
-        return durum.islenmemis ? 'Taslak haritaya işlendi.' : 'Harita kaydı küçüldü.';
-      }
-    });
-  }
   if (adDuzeltme.length) {
     isler.push({
       id: 'mahalle-adlari',

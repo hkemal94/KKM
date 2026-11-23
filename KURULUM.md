@@ -1,4 +1,7 @@
 # Düzada Viki — kurulum
+
+> **23 Kasım 2026 notu:** eski haritalar, Kurucu, MapLibre ve eski harita üreteci (`gen/duzada.py`, `gen/dem.py`) silindi (tek harita 11. adım). Bu belgedeki harita bölümleri geçmişin kaydıdır; bugünkü harita için `CLAUDE.md` → Teknik.
+
 ## ÖNEMLİ — geçen yüklemede ne ters gitti
 
 Dosyalar repoya **`duzada-nihai/` klasörünün içine** düştü. Uygulama kök

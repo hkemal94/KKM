@@ -11,7 +11,6 @@ import { bagUygun } from './bagKurallari';
 import { vikiGorseliMi } from './maddeGorseli';
 import { depoAdi } from './depoBelgesi';
 import { GDD_BOLUMLERI, gddBolumleri } from '../components/oyun/OyunSureci';
-import { sonrakiKurucuSayaci, type HaritaDuzeni, type KurucuBelge } from '../components/harita/duzenTipi';
 import { donemKaydi, donemleriOku } from './zamanCizgisi';
 import { donemPlani, type DonemYillari } from './donemKarari';
 
@@ -80,15 +79,8 @@ import { donemPlani, type DonemYillari } from './donemKarari';
  *     yazısı). Adım hiç açılmamışsa ekrandaki "aç" düğmesinin açtığı kayıt açılır.
  *     Adım doluysa ve `eski` verilmemişse (ya da yazı `eski`den başkaysa) üzerine
  *     yazılmaz, çakışma olur. Çakışan karar listede "çakışma" diye görünür.
- *   - 16 Kasım (Kemal: Taraftar Birahanesi plaja taşınsın, yanındaki yanlış bina
- *     silinsin): `kurucuBina` (`islem` 'tasi' ya da 'sil'; `bina` Kurucu'da konan
- *     binanın kimliği, `yeniBinalar` anahtarı, ör. kurucu_bina_…). Taşımada `deger`
- *     yeni x, y (boylam, enlem), aci (radyan), en, boy'dan verilenler; `eski` verilir
- *     ve kayıttaki değer başkaysa çakışma olur. Silmede binanın madde bağı, evde
- *     oturanı ya da ona işaret eden madde (`haritaBinaId`) varsa uygulanmaz; silinen
- *     yalnız o bina. Kurucu'nun açtığı taslağa (`kurucu`, yoksa `kurucuIslenen`)
- *     yazılır, Kurucu'nun kendi kaydı gibi: bütün Kurucu kararları tek yazmada gider.
- *     Haritada görünmesi için sonra "Kurucu taslağını haritaya işle" gerekir.
+ *   - 16 Kasım'daki `kurucuBina` (Kurucu'da konan binayı taşı / sil) 23 Kasım'da kalktı
+ *     (tek harita 11. adım: Kurucu silindi); dosyada kalan böyle bir satır listede görünmez.
  *   - 19 Kasım (Kemal: ajans zaman çizgisine dönem önerebilsin, "evet"): `donem`
  *     (`ad` dönemin adı, `bas` başlangıç yılı, isteğe bağlı `bit` bitiş yılı; yoksa ya
  *     da null ise açık uçlu). Zaman çizgisinin dönemleri `kkm_ayar` → `donemler`'e
@@ -125,7 +117,6 @@ export type KararIslemi =
   | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; eski?: string; neden?: string }
   | { kimlik: string; tur: 'oyunKarti'; oyun: string; alan: OyunKartiAlani; eski?: string; deger: string; baslik: string; neden?: string }
   | { kimlik: string; tur: 'gddBolumu'; oyun: string; bolum: string; eski?: string; metin: string; baslik: string; neden?: string }
-  | { kimlik: string; tur: 'kurucuBina'; islem: 'tasi' | 'sil'; bina: string; eski?: Partial<KurucuBinaDegeri>; deger?: Partial<KurucuBinaDegeri>; baslik: string; neden?: string }
   | { kimlik: string; tur: 'donem'; ad: string; bas: number; bit?: number | null; eski?: DonemYillari; baslik: string; neden?: string };
 
 type KitapBolumuIslemi = Extract<KararIslemi, { tur: 'kitapBolumu' }>;
@@ -265,101 +256,6 @@ export function oyunKarariOnizleme(items: Item[], i: OyunKartiIslemi | GddBolumu
   const yer = `${ad} · Tasarım belgesi · ${p.adim?.ad || i.bolum}`;
   if (p.cakisma) return `Çakışma, uygulanmaz: ${p.cakisma}. ${yer} → ${kisalt(p.metin)}`;
   return `${yer}${p.kayit ? (p.simdi ? ' (yazısı değişir)' : '') : ' (adım açılır)'} → ${kisalt(p.metin)}`;
-}
-
-type KurucuBinaIslemi = Extract<KararIslemi, { tur: 'kurucuBina' }>;
-
-/** `kurucuBina` ile değişebilen değerler: x, y boylam / enlem; aci radyan; en, boy metre */
-export const KURUCU_BINA_ALANLARI = ['x', 'y', 'aci', 'en', 'boy'] as const;
-export type KurucuBinaDegeri = Record<typeof KURUCU_BINA_ALANLARI[number], number>;
-/** Eşit sayılma payı: Kurucu en ve boyu 0,1 m'ye, açıyı 0,001'e yuvarlar; konumda ~10 cm */
-const KURUCU_PAYI: KurucuBinaDegeri = { x: 1e-6, y: 1e-6, aci: 0.0011, en: 0.051, boy: 0.051 };
-
-/** Kurucu'nun ekranda açtığı taslak (Kurucu.tsx: `kurucu`, yoksa haritaya işlenmiş hâl) */
-export const kurucuTaslagi = (d: HaritaDuzeni | null | undefined): KurucuBelge | null => d?.kurucu ?? d?.kurucuIslenen ?? null;
-
-/** Kararların Kurucu'ya yazması için harita kaydı (`useHaritaDuzeni`'nden) */
-export interface KurucuYazici {
-  duzen: HaritaDuzeni | null;
-  /** Kayıt okundu mu; okunmadan hiçbir şey yapılmış ya da yapılabilir sayılmaz */
-  hazir: boolean;
-  kaydet?: (d: HaritaDuzeni) => Promise<boolean>;
-}
-
-/** Verilen değerler: yalnız bilinen alanlar ve sayı olanlar; bozuk alan varsa null */
-function kurucuDegerleri(v: unknown): Partial<KurucuBinaDegeri> | null {
-  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
-  const cikti: Partial<KurucuBinaDegeri> = {};
-  for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
-    if (!(KURUCU_BINA_ALANLARI as readonly string[]).includes(k) || typeof x !== 'number' || !Number.isFinite(x)) return null;
-    cikti[k as keyof KurucuBinaDegeri] = x;
-  }
-  return cikti;
-}
-const kurucuAyni = (simdi: KurucuBinaDegeri, v: Partial<KurucuBinaDegeri>) =>
-  KURUCU_BINA_ALANLARI.every(k => v[k] === undefined || Math.abs(simdi[k] - v[k]!) <= KURUCU_PAYI[k]);
-
-/** Ne olacak (saf iş): bina, bugünkü ve yeni değerler, bağlı madde, çakışma nedeni */
-export function kurucuBinaPlani(items: Item[], harita: { belge: KurucuBelge | null; hazir: boolean } | undefined, i: KurucuBinaIslemi) {
-  const bina = typeof i.bina === 'string' ? i.bina.trim() : '';
-  const kayit = harita?.belge?.yeniBinalar?.[bina];
-  const simdi: KurucuBinaDegeri | null = kayit ? { x: kayit.x, y: kayit.y, aci: kayit.aci, en: kayit.en, boy: kayit.boy } : null;
-  const deger = i.islem === 'tasi' ? kurucuDegerleri(i.deger) : {};
-  const eski = i.eski === undefined ? {} : kurucuDegerleri(i.eski);
-  const maddeId = harita?.belge?.baglar?.[bina];
-  const bagliMadde = maddeId ? items.find(m => m.id === maddeId) ?? null : null;
-  const oturan = harita?.belge?.oturanlar?.[bina]?.length ?? 0;
-  const isaretEden = items.filter(m => !m.archived && m.metadata?.haritaBinaId === bina);
-  const hazir = !!harita?.hazir;
-  const yapildi = hazir && !!bina && (i.islem === 'sil'
-    ? !kayit
-    : !!simdi && !!deger && Object.keys(deger).length > 0 && kurucuAyni(simdi, deger));
-  const madde = (id: string) => items.find(m => m.id === id)?.title || id;
-  const cakisma = i.islem !== 'tasi' && i.islem !== 'sil' ? `"${String(i.islem)}" bilinmeyen iş (tasi ya da sil)`
-    : !bina ? 'bina kimliği boş'
-    : !harita ? 'bu ekrandan Kurucu okunamıyor'
-    : !hazir ? 'harita kaydı henüz okunmadı'
-    : yapildi ? null
-    : !simdi ? `Kurucu'da bu bina yok (${bina})`
-    : i.islem === 'tasi' && (!deger || !Object.keys(deger).length) ? 'yeni değer yok ya da bozuk (x, y, aci, en, boy sayı olmalı)'
-    : i.islem === 'tasi' && ((deger!.en ?? 1) <= 0 || (deger!.boy ?? 1) <= 0) ? 'en ve boy sıfırdan büyük olmalı'
-    : !eski ? 'eski değer bozuk (x, y, aci, en, boy sayı olmalı)'
-    : i.islem === 'tasi' && !kurucuAyni(simdi, eski) ? `bina bu arada değişmiş (kayıtta: ${kurucuDegerYazisi(simdi)})`
-    : i.islem === 'sil' && maddeId ? `binaya madde bağlı (${madde(maddeId)}); önce bağ kalkmalı`
-    : i.islem === 'sil' && oturan ? `binada ${oturan} kişi oturuyor; önce oturanlar kalkmalı`
-    : i.islem === 'sil' && isaretEden.length ? `binayı haritada gösteren madde var (${isaretEden.map(m => m.title).join(', ')})`
-    : null;
-  const yeni: KurucuBinaDegeri | null = simdi && deger ? { ...simdi, ...deger } : null;
-  return { bina, simdi, yeni, bagliMadde, maddeId, yapildi, cakisma };
-}
-
-/** "x 25.917112, y 39.635613, açı 40°, 22 × 15 m" */
-function kurucuDegerYazisi(d: Partial<KurucuBinaDegeri>): string {
-  return [
-    d.x !== undefined ? `x ${d.x.toFixed(6)}` : '', d.y !== undefined ? `y ${d.y.toFixed(6)}` : '',
-    d.aci !== undefined ? `açı ${Math.round((d.aci * 180) / Math.PI)}°` : '',
-    d.en !== undefined || d.boy !== undefined ? `${d.en ?? '?'} × ${d.boy ?? '?'} m` : '',
-  ].filter(Boolean).join(', ');
-}
-
-/** Onay listesindeki satır: "Kurucu: taşı · bina (madde) · eski → yeni"; çakışma varsa başta */
-export function kurucuBinaOnizleme(items: Item[], harita: { belge: KurucuBelge | null; hazir: boolean } | undefined, i: KurucuBinaIslemi): string {
-  const p = kurucuBinaPlani(items, harita, i);
-  const ad = p.bagliMadde ? ` (${p.bagliMadde.title})` : '';
-  const yer = `Kurucu: ${i.islem === 'sil' ? 'sil' : 'taşı'} · ${p.bina || '?'}${ad}`;
-  let ne = '';
-  if (i.islem === 'tasi') {
-    const yeni = kurucuDegerleri(i.deger) || {};
-    const once = p.simdi ? kurucuDegerYazisi(Object.fromEntries(Object.keys(yeni).map(k => [k, p.simdi![k as keyof KurucuBinaDegeri]]))) : '';
-    // Konum değişiyorsa kaç metre: boylamın metresi enleme göre kısalır
-    const m = p.simdi && (yeni.x !== undefined || yeni.y !== undefined)
-      ? Math.round(Math.hypot(((yeni.x ?? p.simdi.x) - p.simdi.x) * 111320 * Math.cos((p.simdi.y * Math.PI) / 180), ((yeni.y ?? p.simdi.y) - p.simdi.y) * 110540))
-      : null;
-    ne = `${once ? `${once} → ` : ''}${kurucuDegerYazisi(yeni)}${m !== null ? ` (${m} m öteye)` : ''}`;
-  } else if (p.simdi) {
-    ne = `bina kalkar (${kurucuDegerYazisi(p.simdi)})`;
-  }
-  return `${p.cakisma ? `Çakışma, uygulanmaz: ${p.cakisma}. ` : ''}${yer}${ne ? ` · ${ne}` : ''}`;
 }
 
 /** Yeni maddenin kaydı (saf iş): bağlar çözülür, uymayan ya da bulunamayan bağ `atlanan`a */
@@ -534,7 +430,7 @@ export async function kararlariOku(anahtar: string): Promise<KararDosyasi | null
 }
 
 /** Bugün hâlâ yapılabilecek işler (ikinci basışta boş döner) */
-export function gecerliIslemler(items: Item[], islemler: KararIslemi[], harita?: { belge: KurucuBelge | null; hazir: boolean }): KararIslemi[] {
+export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIslemi[] {
   const kimlik = new Map(items.map(i => [i.id, i]));
   const bosluklar = new Map(bosluklariCikar(items).map(b => [b.anahtar, b]));
   return islemler.filter(i => {
@@ -560,8 +456,6 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[], harita?:
     if (i.tur === 'oyunKarti' || i.tur === 'gddBolumu') return !yapilmis(items, i);
     // Dönem kararı da öyle: değişmiş ya da aynı adla başka yıllarda duran dönem "çakışma" diye görünür
     if (i.tur === 'donem') return !yapilmis(items, i);
-    // Kurucu kararı da öyle; harita kaydı okunmadan listede kalır ("henüz okunmadı")
-    if (i.tur === 'kurucuBina') return !kurucuBinaPlani(items, harita, i).yapildi;
     // Sitedeki viki klasöründe olmayan yol listede durmaz
     if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
     if (i.tur === 'eskiAlan') return typeof i.alan === 'string' && !!i.alan.trim() && !KORUNAN_ALANLAR.has(i.alan.split('.')[0]) && typeof i.deger === 'string' && !yapilmis(items, i);
@@ -583,39 +477,14 @@ export async function kararlariUygula(
     guncelle: (i: Item) => Promise<void>; sil: (id: string) => Promise<void>;
     /** `yeniMadde` ve `kitapBolumu` için; verilmezse yeni madde ve yeni kitap / bölüm atlanır */
     ekle?: (i: Omit<Item, 'createdAt' | 'updatedAt' | 'userId'> & { id: string }) => Promise<void>;
-    /** `kurucuBina` için harita kaydı; verilmezse Kurucu kararları atlanır */
-    harita?: KurucuYazici;
   },
   ilerleme?: (n: number) => void
 ): Promise<Uygulama> {
   const guncel = new Map(items.map(i => [i.id, i]));
   const sonuc: Uygulama = { uygulanan: [], atlanan: [] };
   let n = 0;
-  // Kurucu kararları önce bu kopyada birikir, döngü bitince tek yazmada gider (yazma kotası)
-  let kurucu = kurucuTaslagi(yaz.harita?.duzen);
-  const kurucuBekleyen: KararIslemi[] = [];
   for (const islem of islemler) {
     try {
-      if (islem.tur === 'kurucuBina') {
-        const p = kurucuBinaPlani([...guncel.values()], yaz.harita ? { belge: kurucu, hazir: yaz.harita.hazir } : undefined, islem);
-        if (p.yapildi) { sonuc.uygulanan.push(islem); ilerleme?.(++n); continue; }
-        if (p.cakisma || !kurucu || !p.simdi) { sonuc.atlanan.push({ islem, neden: p.cakisma || 'Kurucu\'da bu bina yok' }); continue; }
-        if (!yaz.harita?.kaydet) { sonuc.atlanan.push({ islem, neden: 'bu ekrandan Kurucu\'ya yazılamıyor' }); continue; }
-        const binalar = { ...(kurucu.yeniBinalar || {}) };
-        if (islem.islem === 'sil') {
-          // Yalnız bu bina: Kurucu'da kaldırılmış (gizli) duruyorsa o iz de gider; başka hiçbir şeye dokunulmaz
-          delete binalar[p.bina];
-          kurucu = { ...kurucu, yeniBinalar: binalar, gizlenen: (kurucu.gizlenen || []).filter(x => x !== p.bina) };
-        } else {
-          const b = binalar[p.bina];
-          const y = p.yeni!;
-          binalar[p.bina] = { tur: b.tur, x: y.x, y: y.y, en: y.en, boy: y.boy, aci: y.aci, ...(b.kat ? { kat: b.kat } : {}) };
-          kurucu = { ...kurucu, yeniBinalar: binalar };
-        }
-        kurucuBekleyen.push(islem);
-        ilerleme?.(++n);
-        continue;
-      }
       if (islem.tur === 'sil') {
         const k = guncel.get(islem.id);
         if (!k || k.type !== 'aday' || k.archived) { sonuc.atlanan.push({ islem, neden: 'öneri tepside yok' }); continue; }
@@ -854,16 +723,6 @@ export async function kararlariUygula(
       sonuc.atlanan.push({ islem, neden: e instanceof Error ? e.message : String(e) });
     }
     ilerleme?.(++n);
-  }
-  // Kurucu'nun kendi kaydı gibi: harita kaydının taslağı tek seferde yazılır
-  if (kurucuBekleyen.length && kurucu && yaz.harita?.duzen && yaz.harita.kaydet) {
-    let oldu = false, hata = '';
-    try { oldu = await yaz.harita.kaydet({ ...yaz.harita.duzen, guncelleme: Date.now(), kurucu, kurucuSayac: sonrakiKurucuSayaci(yaz.harita.duzen) }); }
-    catch (e) { hata = e instanceof Error ? e.message : String(e); }
-    for (const islem of kurucuBekleyen) {
-      if (oldu) sonuc.uygulanan.push(islem);
-      else sonuc.atlanan.push({ islem, neden: hata || 'harita kaydı sunucuya yazılamadı; bu tarayıcıda duruyor, bağlantı gelince gider ve sonraki Uygula makbuza düşürür' });
-    }
   }
   return sonuc;
 }

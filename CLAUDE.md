@@ -26,18 +26,19 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 ## Teknik
 
 - React 19 · TypeScript 5.8 · Vite 6 · Tailwind CSS 4 · Firebase/Firestore 12
-  · MapLibre GL 6 · @google/genai · lucide-react
+  · Three.js · @google/genai · lucide-react
 - `npm run dev` → `tsx server.ts` (Express; `/api/ai` Gemini'ye buradan gider)
 - `npm run lint` → `tsc --noEmit` · `npm run build` → vite + server paketi
 - **GitHub deposu tek doğru kaynak.** KKM https://kemskomutamerkezi.cloud.run/ adresinden açılır (GitHub'dan
   kendiliğinden yayınlanır). AI Studio bırakıldı (Kemal, 19 Kasım); oradan GitHub'a gönderi ya da eşitleme yapılmaz.
-- Harita verisi (`src/data/duzadaGeo.ts`) üretilir, elle düzenlenmez:
-  `python gen/duzada.py` (shapely, numpy, scipy, matplotlib gerekir). Ev ve
-  sokak dokusu orada (`_ege_dokusu`, Merkez için `_merkez_dokusu`, evler ve arsaları, Çiftlik arazileri).
-- Kurucu'nun kalıcı hâli (`src/data/kurucuGomulu.ts`) de üretilir:
-  `node scripts/kurucuyuGom.mjs <ajans>/kkm/harita-duzeni.json` (Kemal'in
-  "Haritayı ajansa gönder" dosyası). Harita kayıtta Kurucu işi yoksa bunu
-  açar; kayıt varsa kayıt kazanır, üst üste binmez. Evde oturanlar girmez.
+- **Tek harita** (Harita sayfası, `src/components/harita/TekHarita.tsx`, three.js): verisi `public/harita/`
+  altındaki dosyalar; üretilir, elle düzenlenmez. Üreteçler `gen/kompakt_*.py` (shapely, numpy, scipy,
+  matplotlib gerekir), her birinin denetimi `gen/kompakt_*_denetim.py`. Eski adadan gelen girdiler
+  `gen/kompakt-eski-girdiler.json`'da dondurulmuş (`gen/kompakt_eski.py` okur; elle düzenlenmez). Vikinin
+  "Haritada" kutusu `src/data/vikiYapilari.ts`'i okur (`gen/kompakt_viki_yapilar.py` üretir), mahalle 2B
+  resimleri `gen/kompakt_mahalle_2b.py`. Kemal'in değişiklikleri Harita → Düzenle'de taslak olarak durur;
+  "Haritaya işle" taslağı ajansa gönderir, ajans `gen/kompakt_taslak_uygula.py` ile dosyalara işler (elle
+  düzen `gen/tek-harita-elle.json`'da birikir) ve PR açar.
 - Tasarım jetonları `src/index.css` içindeki `@theme` bloğunda. Bütün font
   rolleri (sans, serif, mono, blok…) Poppins; rol adları bilerek duruyor.
   Tek satır değişince ~1000 yer değişir — jetona dokunmadan önce sor.
@@ -73,16 +74,13 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 - **Firestore:** iç içe dizi yasak. Bir alana `undefined` yazmak bütün
   kaydı reddettirir — alanı silmek için anahtarı nesneden çıkar.
   (`src/lib/firebase.ts` ayrıca temizliyor ama buna güvenme.)
-- Kurucu taslağına (`KurucuBelge`) yeni alan eklenirse `src/lib/haritaDuzeni.ts`
-  → `kurucuyuTemizle`'ye de eklenir; yoksa kayıtta sessizce düşer (30 Eylül'de
-  özel yapı, doğa ve madde bağları böyle kayboluyordu).
-- **Kurucu yazma sayacı** (18 Kasım): Kurucu taslağını (`kurucu`) yazan her kod harita kaydının
-  `kurucuSayac`'ını bir artırır (`sonrakiKurucuSayaci`, `duzenTipi.ts`); yoksa açık kalmış Kurucu
-  sekmesi yeni hâlin üstüne yazar. Kurucu açılıştaki sayaçtan yenisini görünce yazmaz.
-  `adaKusagi`: yoksa 2 (bugünkü ada), 3 kompakt ada. Harita yedeği: Durum → Eksikler → Harita yedeği.
+- **Eski harita kaydı** (`duzada/haritaDuzeni`, 23 Kasım'dan beri tek harita okumaz): yalnız Harita yedeği
+  (Durum → Eksikler → Harita yedeği), Drive'a harita yedeği ve evde oturanların göç kartı okur
+  (`src/lib/haritaDuzeni.ts`, biçimi `components/harita/duzenTipi.ts`). Kendiliğinden yazan kod yok; yedekten
+  geri yükleme yalnız Kemal basınca, sayacı (`kurucuSayac`) bir artırarak yazar.
 - **Tek harita taslağı** (22 Kasım, 7. adım): Düzenle modunun taslağı ayrı belgede, `duzada/tekHaritaTaslak`
   (`{ surum, guncelleme, sayac, veri }`; `veri` yalnız değişikliklerin JSON yazısı, en çok 400 bin harf). Yalnız Kemal
-  düzenledikçe, 20 sn biriktirilip yazılır; `sayac` Kurucu'nunki gibi eski sekmeyi durdurur. Harita kaydına dokunmaz.
+  düzenledikçe, 20 sn biriktirilip yazılır; `sayac` açık kalmış eski sekmenin üstüne yazmasını durdurur.
   Haritaya geçişi ajans yapar (`gen/kompakt_taslak_uygula.py`, PR).
 - **Veri göçleri tek seferliktir ve düğmeyle çalışır.** Kalıp:
   `src/lib/` altında yazılacak kayıtları üreten saf bir fonksiyon + Durum → Eksikler
@@ -92,8 +90,8 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   kodu silinir (2 Ekim gece: soru-cevap, W3–W5, kanon, viki düzeni gitti).
 - **Yazma kotası:** veritabanı ücretsiz katmanda; günlük yazma sınırı belge
   boyutuna göre sayılıyor (2 Ekim'de doldu). Büyük belgeyi sık yazan kod
-  yazılmaz; Kurucu 20 sn biriktirip yazar, yollar `lib/hatSadelestir.ts`'den
-  geçer. Yazma reddedilirse ekranda uyarı çıkar.
+  yazılmaz; Düzenle taslağı 20 sn biriktirip yazar. Yazma reddedilirse ekranda
+  uyarı çıkar.
 
 **Yazı ve ad**
 - **Kurgu metni yazma.** Künye, mekân hikâyesi, slogan, drop anlatısı
@@ -156,12 +154,6 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   kartının özet, açıklama, depo alanı; ad yazılmaz) ve `gddBolumu` (tasarım
   belgesi adımının yazısı; adım yoksa açılır). Dolu adımın ya da bu arada
   değişmiş alanın üzerine yazılmaz; listede "çakışma" diye görünür.
-  16 Kasım: `kurucuBina` (Kurucu'da konan binayı taşı ya da sil; `bina`
-  `yeniBinalar` kimliği). Kurucu'nun kendi kaydı gibi harita kaydının taslağına
-  (`duzada/haritaDuzeni` → `kurucu`) tek yazmada gider; haritaya "Kurucu
-  taslağını haritaya işle" ile geçer. Taşımada `eski` kayıttakinden farklıysa,
-  silmede binaya madde bağı, oturan ya da onu gösteren madde varsa uygulanmaz.
-  Kurucu başka sekmede açıksa kendi hâlini yazınca bu değişikliği geri alır.
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz
   yok" diye açıkça söylenir (30 Eylül'de karışmıştı).
 
