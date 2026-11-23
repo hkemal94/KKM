@@ -102,7 +102,8 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 - **İbadet** — Merkez'de cami; İskele'de boş duran eski bir kilise (küçük
   şapel) ve bir mescit. Mezarlık Merkez'in dışında, zeytinliklerde.
 - **Güvenlik** — Merkez'de jandarma karakolu; Liman'da sahil güvenlik.
-- **Kamu** — postane 1950–1970'ler; sağlık ocağı 1980 sonrası. Okul ilk ve
+- **Kamu** — postane 1950–1970'ler; sağlık ocağı 1980 sonrası (2010'larda aile sağlığı merkezi oldu;
+  Kemal, 16 Kasım). Okul ilk ve
   ortaokul; lise anakarada. Ağır hastalıkta feribot, acilde deniz
   ambulansı. Liman İdare Binası: liman başkanlığı, feribot gişesi ve
   bekleme salonu, sahil güvenlik.
@@ -176,7 +177,7 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 - **Mutfak** — balık öne çıkar.
 - **Stadyum** — Dirlik Stadı 1980'ler. Taraftar birahanesi plajın üstünde,
   plaja bakan kıyıda; maç öncesi buluşma yeri.
-- **Adalılar** — hafif Ege ağzı yalnız yaşlılarda. Lise, aile hekimi ve
+- **Adalılar** — hafif Ege ağzı yalnız yaşlılarda. Lise ve
   büyük alışveriş için Küçükkuyu'ya; hastane ve resmî işler için Küçükkuyu
   üzerinden Ayvacık'a gidilir (Kemal, 14 Kasım).
 - **Otel** — misafirler: sanatçı ve yazarlar, siyasetçi ve bürokratlar, iş
