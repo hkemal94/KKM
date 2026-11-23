@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -8,6 +8,29 @@
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 23 Kasım: tek harita: evlerin bahçeleri
+
+Kemal (23 Kasım): "sen bu evleri bahçesiz yapıyorsun, daha öncesinde bahçe ve evi kombinasyonlu
+yapıyorduk." Eski haritadaki ev + arsa kalıbı tek haritaya geldi (`tek/bahceKatmani.ts`). Kemal'in kararları:
+- Duvar: kasabada (İskele, Liman, Merkez'in bitişik sıraları) badanalı, köyde taş. Arsanın kenarında; komşu
+  arsaların ortak kenarı bir kez; yola bakan kenarda kapı aralığı. Avlu zemini (kasabada taş döşeme, köyde
+  toprak), arkada bostan / çimen, duvar dibinde çalı.
+- Yakında eşyalar da gelsin: eski haritanın kuralıyla, evin arsasına bütünüyle sığıyorsa hazır bahçe arsası
+  modeli (8 çeşit; bina yeri evin tabanına); sığmıyorsa kapı aralığına bahçe kapısı, içeriye 2–4 eşya (kuyu,
+  çardak, sebze tarhı, çamaşır ipi, odun yığını, oturma köşesi, kümes) ve 1–2 çalı ya da servi. Kompakt adanın
+  arsalarında hazır arsa modeli neredeyse hiç sığmıyor (modelin ön bahçesi 8 m, arsada evin önü 1,5 m): bugün
+  yalnız 1 evde; öbürleri parça parça.
+- Arsası olmayan tek ev (fener bekçi evi gibi): çevresine pay bırakılarak duvarlı bahçe (köy bahçesi).
+- Düzenle'de taşınan (kendi arsasının dışına) ve yeni konan ev tek ev kuralıyla bahçesini yeni yerinde alır;
+  hazır gruptan gelen evin ve hazır grup konan arsanın bahçesini grup getirir.
+- Avlu ağaçları arsa kenarından 2,5 m içeride (duvarın üstüne binmesin; `gen/kompakt_agaclar.py` →
+  `avluDuvarPayiM`).
+- Arsanın köşeleri yapı dosyasında (`arsa`, `gen/kompakt_yapilar.py`): harita arsa dosyasını ayrıca indirmez.
+- Telefon: hafif modda duvarlar 500 m çevrede ve daha kaba, eşyalar yalnız çok yakında (60 m, kamera 420 m
+  altında); sahne 400 bin üçgenin altında kalsın diye hafif modda ağaçların en az payı 70 binden 40 bine indi
+  (sahne doluysa uzak ağaç öbekleri azalır).
+Ölçüler ve renkler DENEME. Kayda bir şey yazılmaz.
 
 ## 23 Kasım: tek harita eklemeleri (künyedeki sekiz öğe)
 

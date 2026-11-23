@@ -129,6 +129,10 @@ export interface Yapi {
   yukseklik: number;
   kot: number;
   taban: Nokta[]; // sahne x, z
+  /** Evin arsasının köşeleri (sahne x, z; yapı dosyasındaki `arsa`): bahçe ve duvar bununla çizilir */
+  arsa?: Nokta[];
+  /** Hazır gruptan gelen yapı (grubun kimliği): bahçesini grup getirir */
+  grup?: string;
 }
 
 export function yapilariOku(z: Zemin, k: Koleksiyon): Yapi[] {
@@ -148,7 +152,9 @@ export function yapilariOku(z: Zemin, k: Koleksiyon): Yapi[] {
       en: Number(p.en) || 6, boy: Number(p.boy) || 6,
       modelEn: typeof p.modelEn === 'number' ? p.modelEn : undefined,
       yukseklik: olcu?.[2] ?? (p.tur === 'kutu' ? 6 : 7),
-      kot, taban: halka
+      kot, taban: halka,
+      ...(Array.isArray(p.arsa) ? { arsa: (p.arsa as number[][]).map(c => sahneye(z.b, c)) } : {}),
+      ...(p.grup ? { grup: typeof p.grup === 'string' ? p.grup : String((p.grup as { kimlik?: unknown }).kimlik ?? 'grup') } : {})
     });
   }
   return cikti;

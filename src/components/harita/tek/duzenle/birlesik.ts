@@ -44,7 +44,7 @@ export function yeniYapidan(z: Zemin, id: string, y: YeniYapi): Yapi {
   const ex: Nokta = [y.ex[0], y.ex[1]];
   const taban = dikdortgen(merkez, ex, y.en, y.boy);
   const kot = Math.min(rakim(z, merkez[0], merkez[1]), ...taban.map(([x, sz]) => rakim(z, x, sz)));
-  return { id, tur: y.tur, dosya: y.dosya, vikiId: null, ad: null, mahalle: '', merkez, ex, en: y.en, boy: y.boy, modelEn: y.modelEn, yukseklik: y.yukseklik, kot, taban };
+  return { id, tur: y.tur, dosya: y.dosya, vikiId: null, ad: null, mahalle: '', merkez, ex, en: y.en, boy: y.boy, modelEn: y.modelEn, yukseklik: y.yukseklik, kot, taban, ...(y.grup ? { grup: y.grup.kimlik } : {}) };
 }
 
 /** Var olan yapının taşınmış hâli */
