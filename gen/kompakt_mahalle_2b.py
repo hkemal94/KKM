@@ -765,6 +765,9 @@ def harita_katmanlari(ax, kutu, A, kara, deniz, ana=True, olcek_m_px=5.0):
             doldur(ax, g, facecolor="#9C9C9C" if A else LACI, edgecolor=LACI, linewidth=0.4, zorder=10)
         elif kt == "iskele":
             doldur(ax, g, facecolor="#B8956A" if A else KREM, edgecolor=LACI, linewidth=0.4, zorder=10)
+        elif p.get("hat"):
+            # asıl çizgisi olan yapı (ör. halka biçimli kalıntı duvarı, 23 Kasım): taban kutusu değil, çizgisi kesik çizgiyle
+            hat(ax, gm({"type": "LineString", "coordinates": p["hat"]}), color="#3B4566" if A else LACI, linewidth=1.1, linestyle=(0, (2.2, 1.4)), zorder=11)
         else:
             fc = KIREMIT if viki_yapisi(p) else ("#3B4566" if A else LACI)
             doldur(ax, g, facecolor=fc, edgecolor=LACI if not A else "none", linewidth=0.25, zorder=11)

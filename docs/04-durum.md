@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -8,6 +8,30 @@
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 23 Kasım: tek harita eklemeleri (künyedeki sekiz öğe)
+
+Kemal (23 Kasım) künyede olup haritada olmayan öğeler için Harita Ajanı'nın önerdiği yerleri seçti; hepsi adsız (ad Kemal'in):
+Ada Tepesi'ne Merkez'in güney ucundan (Merkez Bağlantısı'nın başı) toprak yol, son kısmı patika; zirvenin yanında yangın
+gözetleme kulesi; zirveyi saran yıkık antik duvar halkası (Bizans ağırlıklı); Kemsköy Caddesi'nde boş arsada Kems Company
+dükkânı; İskele koyunda kumsalın önünde su sporları iskelesi (~60 m); Merkez'in batısında, Güney Sırt Yolu'nun yanında
+zeytinlikte mezarlık; Liman Kordonu'nun kuzey ucunda boş arsada kafe (2010 sonrası); fenerin kuzeyinde bekçi evi.
+
+- **Yol:** ekleme taslağı `gen/taslaklar/ekleme-23-11-2026.json` (Düzenle → "Haritaya işle" taslağının biçimi) →
+  `python gen/kompakt_taslak_uygula.py <dosya>` → `kompakt_agaclar.py` → denetimler; elle düzen `gen/tek-harita-elle.json`'da
+  birikir. Taslak biçimine iki ek: yeni yapının `tur`u `iskele` ise `katman: iskele` çokgeni olur (tek harita iskele modeliyle
+  döşer); `hat` (düz dizi) yapının asıl çizgisidir (duvar halkası: Blender modeli ve mahalle 2B resmi onu çizer).
+- **Tepe yolu** aday çizginin biçimiyle (önce batı yamacı, sonra doğu omzu) ama yamacı kıvrımlarla dolanır: toprak yol 5,99 km
+  (238 → 636 m, en dik %14, sınır %15), patika 0,79 km (zirvenin doğusundan kulenin kapısına). Aday çizgi ~4,2 km'ydi; o
+  çizgide yer yer %20'yi aşan dik yerler vardı.
+- **Modeller:** kule, antik duvar ve mezarlık yeni Blender modeli (`gen/blender_tek_eklemeler.py`; yerin yamacına göre). Mezarlık
+  Müslüman mezarlığı, Rum Mezarlığı'ndan farklı: sade baş ve ayak taşları, mezarlar kıbleye göre, serviler, zeytinler, alçak taş
+  duvar, kapısız giriş, su musluğu. Dükkân `dukkanli-ev`, kafe `kahvehane-meyhane`, bekçi evi `ev-tas-tek-katli`, iskele
+  `ahsap-iskele-duz` (KKM'nin modelleri). Yazı, tabela, arma yok. Bina kataloğuna üç yeni model girdi (türüyle).
+- İskeleler ayrı koylarda olabildiği için tek harita iskele / mendirek modelini en yakın olanına göre yükler (`limanModelleri.ts`).
+- Ağaçlar yeni yol ve yapıların üstünden kalktı; uzak kopyalar (47 model) ve mahalle 2B resimleri yeniden üretildi.
+- Ölçüler DENEME (mezarlık 90 × 60 m, kule ~14 m, duvar 0,3–2,2 m, iskele 60 × 3 m). Önizlemeler `docs/gorseller/tek-harita-eklemeler/`.
+  Telefonda denenmedi.
 
 ## 23 Kasım: tek harita 10. adım: künye tek haritaya göre
 
