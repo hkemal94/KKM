@@ -1,5 +1,5 @@
 import type { AreaType, Item } from '../types';
-import { HARITA_YAPILARI } from '../data/haritaYapilari';
+import { VIKI_YAPILARI } from '../data/vikiYapilari';
 import { isStub } from '../components/wiki/wikiSchema';
 import { bosAlanlar, taslakIstegi } from './taslakIstegi';
 import { getRol } from '../components/wiki/kunyeParser';
@@ -55,8 +55,10 @@ export interface Eksik {
 
 /** Haritada maddesi olması gereken yapılar */
 export function haritaBeklentisi(): Array<{ wikiId: string; ad: string }> {
-  // Liste gen/duzada.py'de binalardan çıkarılır (otelin kuleleri tek sayılır)
-  return HARITA_YAPILARI;
+  // Tek haritanın viki yapı listesi (23 Kasım; gen/kompakt_viki_yapilar.py). Aynı maddeye bağlı birden çok
+  // yapı tek sayılır.
+  const gorulen = new Set<string>();
+  return VIKI_YAPILARI.filter(y => !gorulen.has(y.vikiId) && !!gorulen.add(y.vikiId)).map(y => ({ wikiId: y.vikiId, ad: y.ad }));
 }
 
 /**

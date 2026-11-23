@@ -1002,6 +1002,8 @@ if __name__ == "__main__":
     with open(CIKTI, "w", encoding="utf-8") as f:
         json.dump(fc, f, ensure_ascii=False, separators=(",", ":"))
         f.write("\n")
+    import kompakt_viki_yapilar as VY   # vikinin "Haritada" kutusunun kısa listesi (11. adım)
+    VY.yaz(fc)
     from collections import Counter
     print(f"{len(YAPILAR)} yapı yazıldı → {os.path.relpath(CIKTI, KOK)}")
     print("  türe göre:", dict(Counter(f["properties"]["tur"] for f in YAPILAR)))

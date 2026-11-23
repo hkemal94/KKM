@@ -270,9 +270,7 @@ def main():
         yaz("Birahane yeri", False, "yok")
     # 10) kıyı köyü: bugünkü haritadaki sokak hatları, 0,70 ile taşınmış (Kemal, 20 Kasım akşam), bütünüyle kıyıya
     #     kaymış (Kemal, 21 Kasım)
-    gs = open(os.path.join(KOK, "src", "data", "kurucuGomulu.ts"), encoding="utf-8").read()
-    gi = gs.index("JSON.parse(", gs.index("GOMULU_DUZEN")) + len("JSON.parse(")
-    kur = json.loads(json.loads(gs[gi:gs.index('");', gi) + 1]))["kurucuIslenen"]
+    import kompakt_eski as EK      # eski haritanın dondurulmuş girdileri (tek harita 11. adım)
     ox, oy = b["odak"]
 
     # Kemal 21 Kasım: köy kıyıya doğru bütünüyle kaydı (duzada-sinirlar.geojson "kaymaM")
@@ -287,7 +285,7 @@ def main():
     agu = unary_union([y["g"] for y in G])
     sap = []
     for k_ in kk:
-        n_ = kur["yeniYollar"][k_]["n"]
+        n_ = EK.KIYI_KOYU_YOLLARI[k_]["n"]
         g_ = LineString([tasi(n_[i], n_[i + 1]) for i in range(0, len(n_), 2)])
         uc = 5.0 if g_.length > 12 else 0.0     # uçlar değdikleri yola oturtulur (birkaç metre)
         ds = [agu.distance(g_.interpolate(t)) for t in np.arange(uc, g_.length - uc + 0.01, 4.0)]
@@ -295,7 +293,7 @@ def main():
     yaz("Kıyı köyü sokakları bugünkü haritadakiyle aynı hat (0,70 ile taşınmış)", max(sap) <= 1.0,
         f"{len(kk)} yol, taşınmış eski hattan en çok {max(sap):.2f} m sapma")
     if "birahane-yeri" in korunan:
-        bb = kur["yeniBinalar"]["kurucu_bina_mw1zb16h"]
+        bb = EK.KIYI_KOYU_BIRAHANE      # Kurucu'daki kurucu_bina_mw1zb16h
         bq = Point(tasi(bb["x"], bb["y"]))
         # ölçek küçülünce bina yola binmesin diye ön yüzü yol kenarından 1,5 m geri çekilir (en çok birkaç metre).
         # Kemal 21 Kasım: yer modele göre derinleşti (15 → 27,5 m); ön yüz yerinde, merkez derinlik farkının yarısı kadar geride

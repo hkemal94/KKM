@@ -133,6 +133,8 @@ export interface Yapi {
   arsa?: Nokta[];
   /** Hazır gruptan gelen yapı (grubun kimliği): bahçesini grup getirir */
   grup?: string;
+  /** Evinde oturan var (yapı dosyasında `bag: "oturan"`): dokununca kartı açılır, kart oturanları gösterir */
+  oturanli?: boolean;
 }
 
 export function yapilariOku(z: Zemin, k: Koleksiyon): Yapi[] {
@@ -154,6 +156,7 @@ export function yapilariOku(z: Zemin, k: Koleksiyon): Yapi[] {
       yukseklik: olcu?.[2] ?? (p.tur === 'kutu' ? 6 : 7),
       kot, taban: halka,
       ...(Array.isArray(p.arsa) ? { arsa: (p.arsa as number[][]).map(c => sahneye(z.b, c)) } : {}),
+      ...(p.bag === 'oturan' ? { oturanli: true } : {}),
       ...(p.grup ? { grup: typeof p.grup === 'string' ? p.grup : String((p.grup as { kimlik?: unknown }).kimlik ?? 'grup') } : {})
     });
   }

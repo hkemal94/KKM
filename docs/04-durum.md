@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -8,6 +8,36 @@
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 23 Kasım: tek harita 11. adım, KKM-A: silmeden önce taşı
+
+Kemal'in kararları:
+- **20 Kasım:** eski üç harita (eski 3B, yeni 3B, 2B "kur" haritası / Kurucu) tek harita onaylandıktan sonra silinsin.
+- **23 Kasım:** (1) vikideki "Haritada" kutusu tek harita verisinden okusun: mahalle, aynı mahalledeki yapılar,
+  haritadaki adı; kat ve yükseklik satırları gider. (2) Evde oturanlar tek seferlik düğmeyle tek haritaya taşınsın;
+  tek haritada yapı kartında "Oturanlar". (3) Firestore `duzada/haritaDuzeni` harita yedeğinden sonra silinsin
+  (Eksikler kartı; `firestore.rules`'ta yalnız bu belge için silme, Kemal kuralı yapıştırır). (4) Sayfa adı
+  "Harita ve Kurucu" → "Harita".
+- **Sıra:** 0. Kemal harita yedeğini alır (Durum → Eksikler → Harita yedeği) → **KKM-A taşı** (bu PR) → KKM-B eski
+  kodu sil (eski haritalar, Kurucu, `duzadaGeo.ts`, `kurucuGomulu.ts`, `gen/duzada.py`, MapLibre, `kurucuBina` karar
+  türü, "Eski haritalar" düğmesi) ve ajans deposunda eşi → KKM-C kayıt temizliği (eski harita alanları; "Eski harita
+  kaydını sil" kartı). `duzada-harita` deposunu arşivlemek Kemal'in elle işi.
+
+KKM-A'da hiçbir eski kod silinmedi, yalnız taşındı:
+- **Üreteç girdileri donduruldu.** Tek haritanın üreteçleri eski haritadan okuduklarını (ada kıyısı, zirveler, eski
+  yükselti formülü, mahalle çokgenleri, The Imperial yerleşkesi, Liman sokakları, kıyı köyünün dokuz yolu, Sahil Yolu,
+  stat düzlüğü) artık `gen/kompakt-eski-girdiler.json`'dan okur (`gen/kompakt_eski.py`). `gen/duzada.py`,
+  `duzadaGeo.ts`, `kurucuGomulu.ts`, `gen/duzlukler.json`'a hiçbir `gen/kompakt_*` betiği dokunmaz. Zincir yeniden
+  çalışınca `public/harita/*` bayt bayt aynı çıktı (PR'da sağlama).
+- **Viki "Haritada" kutusu** ve Eksikler'deki "yapının maddesi yok" satırı tek haritanın viki yapı listesini okur
+  (`src/data/vikiYapilari.ts`; `gen/kompakt_viki_yapilar.py` üretir, `kompakt_yapilar.py` ve
+  `kompakt_taslak_uygula.py` yapı dosyasını yazınca kendiliğinden). Haritadan açılan maddeye `haritaBinaId` ve
+  mahalle (`region`) yazılır; eski `haritaKonum`, `haritaTur`, `kat`, `rakim` yazılmaz. Eski `haritaYapilari.ts`
+  KKM-B'de silinir.
+- **Evde oturanlar:** Durum → Eksikler → "Evde oturanları tek haritaya taşı" (yalnız iş varken görünür): eski
+  kayıttaki ev → kişi bağını kişinin maddesine `metadata.haritaEvi` (tek haritadaki evin kimliği) olarak yazar
+  (`src/lib/oturanGocu.ts`). Eski kayda dokunmaz; ikinci basışta iş kalmaz. Tek haritada evinde oturan olan eve
+  dokununca kart açılır, "Oturanlar" kişilerin maddesine götürür. Yeni Firestore kuralı gerekmez.
 
 ## 23 Kasım: tek harita: evlerin bahçeleri
 

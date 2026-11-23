@@ -719,6 +719,8 @@ def uygula(taslak_ham=None, yaz=True):
         for yol, fc in ((YAPILAR, yapilar), (YOLLAR, yollar)):
             with open(yol, "w", encoding="utf-8") as f:
                 json.dump(fc, f, ensure_ascii=False, separators=(",", ":"))
+        import kompakt_viki_yapilar as VY   # vikinin "Haritada" kutusunun kısa listesi, elle düzenle (11. adım)
+        VY.yaz(yapilar)
         if gzip.decompress(zemin_icerik) != gzip.decompress(open(IZGARA, "rb").read()):
             with open(IZGARA, "wb") as f:
                 f.write(zemin_icerik)

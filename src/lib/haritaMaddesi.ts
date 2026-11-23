@@ -1,4 +1,4 @@
-import { HARITA_YAPILARI } from '../data/haritaYapilari';
+import { VIKI_YAPILARI } from '../data/vikiYapilari';
 import type { Item } from '../types';
 
 /**
@@ -9,9 +9,9 @@ import type { Item } from '../types';
  * Düğme vardı, arkasında bir şey yoktu. Sessizce hiçbir şey yapmak en kötü
  * davranış: kullanıcı uygulamanın bozuk olduğunu sanıyor.
  *
- * Artık madde yoksa haritanın kendisinden kuruluyor. Ad, tür, mahalle,
- * rakım, kat ve koordinat zaten haritada var — bunları elle yeniden yazmak
- * saçma. Bölümler boş açılıyor; metni Kemal yazacak.
+ * Artık madde yoksa haritanın kendisinden kuruluyor. Ad ve mahalle zaten
+ * haritada var (23 Kasım'dan beri tek haritadan) — bunları elle yeniden
+ * yazmak saçma. Bölümler boş açılıyor; metni Kemal yazacak.
  *
  * Buradan çıkan madde `isProposal: false` — öneri değil, gerçekten var olan
  * bir yapının künyesi. Boş olması ayrı bir şey.
@@ -25,72 +25,42 @@ export const MAHALLE_ADI: Record<string, string> = {
   yer_ciftlik: 'Çiftlik'
 };
 
-/** Yapı türünden okunur bir etiket */
-const TUR_ADI: Record<string, string> = {
-  yapı: 'Yapı',
-  otel: 'Otel',
-  kafe: 'Kafe',
-  meyhane: 'Meyhane',
-  kulüp: 'Kulüp',
-  stadyum: 'Stadyum',
-  fener: 'Deniz feneri',
-  iskele: 'İskele',
-  konut: 'Konut'
-};
-
 export interface HaritaKunyesi {
-  /** Haritadaki yapı kimliği (bina_belediye) */
+  /** Tek haritadaki yapı kimliği (bina_belediye) */
   binaId: string;
   /** Maddenin kimliği (mekan_belediye) */
   wikiId: string;
+  /** Haritadaki adı (boş olabilir) */
   ad: string;
-  tur: string;
-  turAdi: string;
   mahalleId: string | null;
   mahalleAdi: string | null;
-  kat: number | null;
-  yukseklik: number | null;
-  rakim: number | null;
-  konum: { x: number; y: number } | null;
 }
 
 /**
  * Verilen wikiId'ye karşılık gelen yapıyı haritada arar.
  * Bulamazsa null döner — o zaman madde kurulmaz, uydurma yapılmaz.
  *
- * 1 Ekim (K-3): bütün harita verisi yerine `haritaYapilari.ts` okunur
- * (gen/duzada.py binalardan çıkarır, merkez de orada hesaplanır). Ana sayfa
- * açılırken harita verisi inmesin diye.
+ * 23 Kasım (tek harita 11. adım, Kemal): tek haritanın viki yapı listesi
+ * okunur (`vikiYapilari.ts`, gen/kompakt_viki_yapilar.py tek haritanın yapı
+ * dosyasından üretir). Kat, yükseklik, rakım ve eski koordinat yok.
  */
 export function haritadaAra(wikiId: string): HaritaKunyesi | null {
   if (!wikiId) return null;
-  const p = HARITA_YAPILARI.find(y => y.wikiId === wikiId);
+  const p = VIKI_YAPILARI.find(y => y.vikiId === wikiId);
   if (!p) return null;
-  const mahalleId = typeof p.mahalle === 'string' ? p.mahalle : null;
-  const tur = String(p.tur || 'yapı');
+  const mahalleId = p.mahalle;
   return {
-    binaId: String(p.id),
+    binaId: p.id,
     wikiId,
-    ad: String(p.ad || ''),
-    tur,
-    turAdi: TUR_ADI[tur] || 'Yapı',
+    ad: p.ad,
     mahalleId,
-    mahalleAdi: mahalleId ? MAHALLE_ADI[mahalleId] ?? null : null,
-    kat: typeof p.kat === 'number' ? p.kat : null,
-    yukseklik: typeof p.yukseklik === 'number' ? p.yukseklik : null,
-    rakim: typeof p.taban === 'number' && p.taban >= 1 ? Math.round(p.taban) : null,
-    konum: p.merkez
+    mahalleAdi: mahalleId ? MAHALLE_ADI[mahalleId] ?? null : null
   };
 }
 
-/** Künyeden okunur tek satır: "Yapı · Merkez Mahallesi · 3 kat · 312 m" */
+/** Künyeden okunur tek satır: "Yapı · Merkez Mahallesi" */
 export function kunyeSatiri(k: HaritaKunyesi): string {
-  return [
-    k.turAdi,
-    k.mahalleAdi ? `${k.mahalleAdi} Mahallesi` : null,
-    k.kat ? `${k.kat} kat` : null,
-    k.rakim ? `${k.rakim} m rakım` : null
-  ].filter(Boolean).join(' · ');
+  return ['Yapı', k.mahalleAdi ? `${k.mahalleAdi} Mahallesi` : null].filter(Boolean).join(' · ');
 }
 
 
@@ -116,13 +86,10 @@ export function maddeTohumu(
     images: [],
     archived: false,
     isProposal: false,
+    // Tek harita alanları (23 Kasım): yapı kimliği ve mahalle; boş alan yazılmaz
     metadata: {
-      region: k.mahalleAdi ? k.mahalleAdi.toLocaleLowerCase('tr') : undefined,
-      haritaKonum: k.konum,
       haritaBinaId: k.binaId,
-      haritaTur: k.tur,
-      kat: k.kat ?? undefined,
-      rakim: k.rakim ?? undefined
+      ...(k.mahalleAdi ? { region: k.mahalleAdi.toLocaleLowerCase('tr') } : {})
     }
   };
 }
