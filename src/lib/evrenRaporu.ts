@@ -17,13 +17,13 @@ import { faaliyetiSuz } from './zamanCizgisi';
  * Ekran (DuzadaRaporu), .md ve PDF (raporPdf) aynı yapıyı okur.
  */
 
-/** Harita üretecinin ölçtüğü değerler (`src/data/duzadaGeo.ts` başlığı) */
+/** Künyedeki ölçüler (tek haritaya göre; Kemal, 23 Kasım) */
 export const ADA_OLCULERI: [string, string][] = [
   ['Konum', '39,60° K · 25,85° D'],
-  ['Yüzölçümü', '162,2 km²'],
-  ['Doğu–batı', '18,7 km'],
-  ['Kuzey–güney', '12,7 km'],
-  ['Kıyı', '52,7 km'],
+  ['Yüzölçümü', 'yaklaşık 79 km²'],
+  ['Doğu–batı', 'yaklaşık 13,1 km'],
+  ['Kuzey–güney', 'yaklaşık 8,8 km'],
+  ['Kıyı', 'yaklaşık 37 km'],
   ['Zirve', 'Ada Tepesi, 742 m']
 ];
 

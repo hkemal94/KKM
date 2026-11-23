@@ -18,14 +18,17 @@ W3 60. tur).
 
 | Ölçü | Değer |
 |---|---|
-| Yüzölçümü | 162,2 km² |
-| Doğu–batı genişlik | 18,7 km |
-| Kuzey–güney uzunluk | 12,7 km |
-| Kıyı uzunluğu | 52,7 km |
+| Yüzölçümü | yaklaşık 79 km² |
+| Doğu–batı genişlik | yaklaşık 13,1 km |
+| Kuzey–güney uzunluk | yaklaşık 8,8 km |
+| Kıyı uzunluğu | yaklaşık 37 km |
 | En yüksek nokta | Ada Tepesi — 742 m |
 
-Bu sayılar sabittir. Değiştirilmez, yuvarlanmaz, "yaklaşık" diye yeniden
-yazılmaz.
+Mahalle alanları (yaklaşık): Merkez 16,1 km² · Liman 21,1 km² · İskele
+16,6 km² · Stadyum 12,1 km² · Çiftlik 13,6 km².
+
+Bu sayılar sabittir; ölçüyü harita verir (Kemal, 23 Kasım 2026: tek haritaya
+göre yenilendi; eski değerler 162,2 km², 18,7 × 12,7 km, kıyı 52,7 km idi).
 
 ## Mahalleler
 
@@ -43,7 +46,9 @@ düşük nüfusluyken köyün dışında kalan Kemsköy. Küçük bir liman cadd
 liman var. Bu caddeye bağlı sokaklarda ekonomik olarak üst seviyedeki
 sakinler oturuyor. Adanın eğlence mekânları ve ilk oteli burada.
 
-**Stadyum Mahallesi** — Dirlik Spor Kulübü ve Dirlik Stadı.
+**Stadyum Mahallesi** — Dirlik Spor Kulübü ve Dirlik Stadı. Mahallenin
+kıyısında, Kuzey Plajı'nın arkasında küçük bir yerleşim var; Taraftar
+Birahanesi burada (adı yok; Kemal, 23 Kasım 2026).
 
 **Çiftlik Mahallesi** — Küçükçetmi Sürek Kulübü.
 
@@ -308,7 +313,8 @@ Ayrıntı: `docs/soru-cevap/madde-1.md`.
 - **Eski Kilise** — maddenin adı; gerçek adı bilinmiyor.
 - **Kemsköy Caddesi** — Kems Company dükkânı, Eski Kilise, barlar ve
   meyhaneler bu caddede. **Sade Meyhane** caddede değil: otelin yanında,
-  koya bakan yamaçta (Kemal, 8 Kasım 2026: harita doğru).
+  kıyıda, koya bakan (Kemal, 8 Kasım 2026: harita doğru; 23 Kasım: tek
+  haritaya göre "yamaçta" yerine kıyıda).
 - **Otel** — Sahil Merdiveni otelden kayalık yamaç boyunca inen taş merdiven;
   dipte otelin kum cebi ve tahta iskele; Otel Yolu otele çıkar. Otelin
   restoranı otelin içinde, sol kulede; ayrı bir restoran yapısı yok (Kemal,
@@ -324,8 +330,9 @@ Ayrıntı: `docs/soru-cevap/madde-2.md`.
 - **Sade Meyhane** — meyhanenin adı (Kemal, 8 Ekim). Eski metinlerdeki
   "Sade Meze" adı değişti; eski ad maddenin takma adı.
 - **Güney Burnu** — kanon ad (96 m, İskele; adı yönünden).
-- **Zirvelerin mahallesi** (haritadaki sınır): Ada Tepesi, Kuzey Sırtı ve
-  Çetmi Sırtı Merkez; Fener Burnu Liman; Güney Burnu İskele.
+- **Zirvelerin mahallesi** (haritadaki sınır): Ada Tepesi Merkez; Kuzey
+  Sırtı Stadyum; Çetmi Sırtı Çiftlik; Fener Burnu Liman; Güney Burnu İskele
+  (Kemal, 23 Kasım 2026: tek haritaya göre; önceden iki sırt Merkez'deydi).
 - **Sezon** — Merkez'in kamu yapıları ve esnafı yıl boyu; Liman Balık Hali
   ve Balık Lokantası yıl boyu; Taraftar Birahanesi yıl boyu, maç günleri dolu.
 - **Merkez Camii** — Devlet (Diyanet); köy döneminden, 1980 sonrası yenilendi.
@@ -361,7 +368,8 @@ Bunlar kanon, kullanılabilir:
 - **Dirlik Stadı**, **Dirlik Spor Kulübü** — Stadyum Mahallesi
 - **Küçükçetmi Sürek Kulübü** — Çiftlik Mahallesi
 - **The Imperial Kemsköy** — İskele Mahallesi
-- **Kuzey Sırtı** (440 m), **Çetmi Sırtı** (290 m) — zirveler
+- **Kuzey Sırtı** (440 m) — zirve, Stadyum Mahallesi (Kemal, 23 Kasım)
+- **Çetmi Sırtı** (290 m) — zirve, Çiftlik Mahallesi (Kemal, 23 Kasım)
 - **Fener Burnu** (118 m) — burun, Liman Mahallesi; yamacında Deniz Feneri (Kemal, 22 Ekim; 5 Kasım)
 - **Güney Burnu** (96 m) — burun, İskele Mahallesi (Kemal, 22 Ekim)
 - **Liman İdare Binası** — Liman Mahallesi
