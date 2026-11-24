@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { DatabaseBackup } from 'lucide-react';
 import type { Item } from '../types';
 import { auth, driveDosyaIzni, driveIzniniUnut, driveIzniVarMi, sunucuyaUlas } from '../lib/firebase';
-import { buluttakiHaritaKaydi, haritaDuzeniniYedektenYaz } from '../lib/haritaDuzeni';
+import { buluttakiHaritaKaydi } from '../lib/haritaDuzeni';
 import {
-  EN_COK_YEDEK, geriYuklemeOzeti, kuralHatasiMi, vikiGeriYuklemeleri, yedegiBulutaYaz, yedegiIndir,
-  yedegiOku, yedekIcerigi, yedekleriListele, yedekMi, type GeriYuklemeOzeti, type HaritaYedegi, type YedekBasi
+  EN_COK_YEDEK, kuralHatasiMi, yedegiBulutaYaz, yedegiIndir,
+  yedegiOku, yedekIcerigi, yedekleriListele, yedekMi, type YedekBasi
 } from '../lib/haritaYedegi';
 import {
   DRIVE_KLASORU, DriveHatasi, drivedanOku, driveaYukle, driveYedekleri, izinPenceresiHatasi, klasorAdresi, klasoruBul,
@@ -22,28 +22,19 @@ import {
  * silmek için Kemal'in onayı istenir. Drive'da hiçbir yedek silinmez: 3'ten
  * fazlası olursa kart yalnız söyler.
  *
- * "Geri yükle": önce ne değişeceğini gösterir; Kemal onaylayınca şimdiki hâli
- * bilgisayara indirir, sonra harita kaydını tek yazmada yedekteki hâline
- * döndürür. Viki alanları yalnız kutu işaretlenirse yazılır.
+ * "Geri yükle" 24 Kasım'da kalktı (tek harita 11. adım, KKM-C): eski harita
+ * silindi, kaydı da "Eski harita kaydını sil" kartıyla silinir; geri yükleme
+ * kodu git geçmişinde. Kart artık yedekleri gösterir: her yedek bilgisayara
+ * indirilir, buluttaki yedek Drive'a da yüklenir. Eski harita kaydı yoksa
+ * "Yedeği al" kapalı (yedeklenecek kayıt kalmadı).
  *
- * Sayfa açılınca yalnız yedek listesi okunur (Drive'ınki yalnız izin bu
- * oturumda verilmişse; pencere kendiliğinden açılmaz); kayda hiçbir şey yazılmaz.
+ * Sayfa açılınca yedek listesi ve kaydın var olup olmadığı okunur (Drive'ınki
+ * yalnız izin bu oturumda verilmişse; pencere kendiliğinden açılmaz); kayda
+ * hiçbir şey yazılmaz.
  */
 
 interface Props {
   items: Item[];
-  onUpdateItem: (item: Item) => Promise<void>;
-}
-
-interface GeriYukleme {
-  /** Yedeğin alındığı an */
-  olusturma: number;
-  /** Nereden: buluttaki yedek ya da Drive */
-  kaynak: 'bulut' | 'drive';
-  yedek: HaritaYedegi;
-  simdi: Record<string, unknown> | null;
-  ozet: GeriYuklemeOzeti;
-  viki: Item[];
 }
 
 const tarihYaz = (ms: number) => new Date(ms).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -58,7 +49,7 @@ const dugme = 'shrink-0 min-h-9 px-3 rounded-lg text-[12px] font-semibold disabl
 const koyu = `${dugme} bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8]`;
 const bos = `${dugme} border border-[#CFC5B4] dark:border-[#2C3C72] text-[#0E1C4F] dark:text-[#F3EFE8]`;
 
-export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
+export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
   const [liste, setListe] = useState<YedekBasi[] | null>(null);
   const [listeHatasi, setListeHatasi] = useState<string | null>(null);
   /** Veritabanı kuralı yayımlanmamış: bulut yedeği denenmez, yalnız indirme */
@@ -67,8 +58,8 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
   const [rapor, setRapor] = useState<{ metin: string; hata?: boolean } | null>(null);
   /** 3 yedek varken: silinecek en eski yedek (Kemal onaylarsa) */
   const [silOnayi, setSilOnayi] = useState<YedekBasi | null>(null);
-  const [geri, setGeri] = useState<GeriYukleme | null>(null);
-  const [vikiDe, setVikiDe] = useState(false);
+  /** Eski harita kaydı bulutta duruyor mu (null: okunuyor ya da okunamadı) */
+  const [kayitVar, setKayitVar] = useState<boolean | null>(null);
   /** Drive'daki yedekler (izin bu oturumda verildiyse) */
   const [driveListe, setDriveListe] = useState<DriveYedegi[] | null>(null);
   const [driveKlasor, setDriveKlasor] = useState<string | null>(null);
@@ -88,6 +79,12 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
     }
   }, [uid]);
   useEffect(() => { void listele(); }, [listele]);
+  useEffect(() => {
+    if (!uid) return;
+    let iptal = false;
+    sunucuyaUlas(buluttakiHaritaKaydi()).then(h => { if (!iptal) setKayitVar(!!h); }).catch(() => { /* bilinmiyor: düğme açık kalır */ });
+    return () => { iptal = true; };
+  }, [uid]);
 
   /** Drive bağlamı: izin yoksa `pencere` ile Google penceresi açılır */
   const driveBaglami = async (pencere: boolean): Promise<DriveBaglami | null> => {
@@ -181,55 +178,51 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
     }
   };
 
-  /** Geri yükleme: önce yalnız oku ve özeti göster (bulut ya da Drive) */
-  const geriYukleHazirla = async (anahtar: string, olusturma: number, kaynak: GeriYukleme['kaynak'], oku: () => Promise<HaritaYedegi>) => {
+  /** Yedeği bilgisayara indirir (bulut ya da Drive) */
+  const indir = async (anahtar: string, kaynak: 'bulut' | 'drive', oku: () => Promise<unknown>) => {
     if (calisiyor || !uid) return;
     setRapor(null);
-    setGeri(null);
-    setVikiDe(false);
     setCalisiyor(anahtar);
     try {
-      const [yedek, simdi] = await Promise.all([oku(), sunucuyaUlas(buluttakiHaritaKaydi())]);
-      if (!yedek.haritaDuzeni) { setRapor({ metin: 'Bu yedekte harita kaydı yok; geri yüklenecek bir şey bulunmadı.', hata: true }); return; }
-      setGeri({ olusturma, kaynak, yedek, simdi, ozet: geriYuklemeOzeti(simdi, yedek.haritaDuzeni), viki: vikiGeriYuklemeleri(items, yedek.vikiAlanlari) });
+      const y = await oku();
+      if (!yedekMi(y)) throw new DriveHatasi('diger', 'Dosya bir harita yedeği değil.');
+      yedegiIndir(y);
+      setRapor({ metin: `${tarihYaz(y.olusturma)} yedeği bilgisayarına indi.` });
     } catch (e) {
       setRapor({ metin: `Yedek okunamadı: ${kaynak === 'drive' ? driveHatasiniIsle(e) : `${hataYaz(e)}.`}`, hata: true });
     } finally {
       setCalisiyor(null);
     }
   };
-  const buluttanHazirla = (bas: YedekBasi) => geriYukleHazirla(bas.id, bas.olusturma, 'bulut', () => yedegiOku(uid!, bas));
-  const drivedanHazirla = (d: DriveYedegi) => geriYukleHazirla(`drive-${d.id}`, d.olusturma, 'drive', async () => {
+  const buluttanIndir = (bas: YedekBasi) => indir(bas.id, 'bulut', () => yedegiOku(uid!, bas));
+  const drivedanIndir = (d: DriveYedegi) => indir(`drive-${d.id}`, 'drive', async () => {
     const b = await driveBaglami(true);
     if (!b) throw new DriveHatasi('izin', 'Drive izni verilmedi.');
-    const y = await drivedanOku(b, d.id);
-    if (!yedekMi(y)) throw new DriveHatasi('diger', "Drive'daki dosya bir harita yedeği değil.");
-    return y;
+    return drivedanOku(b, d.id);
   });
 
-  /** Kemal onayladı: şimdiki hâli indir, sonra tek yazmada geri yaz */
-  const geriYukle = async () => {
-    if (!geri || calisiyor) return;
-    setCalisiyor('geri');
+  /** Buluttaki yedeği Drive'a yükler (Drive'daki hiçbir dosya silinmez) */
+  const drivea = async (bas: YedekBasi) => {
+    if (calisiyor || !uid) return;
     setRapor(null);
+    setCalisiyor(`yukle-${bas.id}`);
     try {
-      // Geri dönüş yolu: şimdiki hâl önce bilgisayara iner
-      yedegiIndir(yedekIcerigi(geri.simdi, items), 'kkm-harita-geri-yukleme-oncesi');
-      if (!geri.ozet.ayni) await sunucuyaUlas(haritaDuzeniniYedektenYaz(geri.yedek.haritaDuzeni, Number(geri.simdi?.kurucuSayac) || 0));
-      let viki = 0;
-      if (vikiDe) for (const i of geri.viki) { await onUpdateItem(i); viki++; }
-      setRapor({ metin: `${geri.ozet.ayni ? `Harita zaten yedektekiyle aynıydı; ${viki} viki maddesi` : `Harita${viki ? ` ve ${viki} viki maddesi` : ''}`} ${tarihYaz(geri.olusturma)} ${geri.kaynak === 'drive' ? "Drive'daki " : ''}yedeğindeki hâline döndü. Geri yüklemeden önceki hâl bilgisayarına indi. Açık kalan Kurucu sekmeleri artık eski hâllerini yazamaz; onları yenile.` });
-      setGeri(null);
+      const b = await driveBaglami(true);
+      if (!b) throw new DriveHatasi('izin', 'Drive izni verilmedi.');
+      const y = await yedegiOku(uid, bas);
+      const klasor = await klasoruBul(b, true);
+      await driveaYukle(b, klasor, y.olusturma, JSON.stringify(y));
+      setDriveKlasor(klasor);
+      try { setDriveListe(await driveYedekleri(b, klasor)); setDriveListeHatasi(null); } catch { /* liste sonra */ }
+      setRapor({ metin: `${tarihYaz(bas.olusturma)} yedeği Drive'a yazıldı: "${DRIVE_KLASORU}" klasöründe.` });
     } catch (e) {
-      setRapor({ metin: `Geri yüklenemedi: ${hataYaz(e)}.`, hata: true });
+      setRapor({ metin: `Drive'a yazılamadı: ${driveHatasiniIsle(e)}`, hata: true });
     } finally {
       setCalisiyor(null);
     }
   };
 
   if (!uid) return null;
-
-  const degisen = geri?.ozet.satirlar.filter(r => r.gelecek || r.gidecek || r.degisecek) ?? [];
 
   return (
     <div className="mb-2.5 px-4 py-3 rounded-xl border border-[#CFC5B4] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#13204A]">
@@ -239,12 +232,14 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
           <p className="text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">Harita yedeği</p>
           <p className="mt-0.5 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]">
             Eski haritanın bütün kaydı (Kurucu'da konan yapılar, yollar, bağlar, evde oturanlar) ve haritaya bağlı viki alanları
-            (rakım, harita konumu, işaretler) bilgisayarına iner, Drive'ında "{DRIVE_KLASORU}" klasörüne ve buluta yazılır.
-            Bulutta en çok {EN_COK_YEDEK} yedek durur. Drive için ilk basışta Google izin sorar (yalnız KKM'nin açtığı dosyalar).
-            Geri yüklemeden önce ne değişeceği gösterilir; sen onaylamadan hiçbir şey yazılmaz.
+            (rakım, harita konumu, işaretler). Her yedek bilgisayarına indirilebilir; buluttaki yedek Drive'ında "{DRIVE_KLASORU}"
+            klasörüne de yüklenir. Drive için ilk basışta Google izin sorar (yalnız KKM'nin açtığı dosyalar).
+            {kayitVar === false
+              ? ' Eski harita kaydı silindi: yeni yedek alınmaz, geri yükleme yok (kodu git geçmişinde).'
+              : ` Bulutta en çok ${EN_COK_YEDEK} yedek durur. Geri yükleme yok: eski harita silindi (kodu git geçmişinde).`}
           </p>
         </div>
-        <button type="button" disabled={!!calisiyor} onClick={() => void yedekAl()} className={koyu}>
+        <button type="button" disabled={!!calisiyor || kayitVar === false} onClick={() => void yedekAl()} className={koyu}>
           {calisiyor === 'al' ? 'Alınıyor…' : 'Yedeği al'}
         </button>
       </div>
@@ -280,8 +275,11 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
               <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9] flex-1 min-w-0">
                 {b.ozet.yapi} yapı · {b.ozet.yol} yol · {b.ozet.bag} bağ · {b.ozet.oturanEv} evde oturan · {b.ozet.vikiMadde} viki maddesi
               </span>
-              <button type="button" disabled={!!calisiyor} onClick={() => void buluttanHazirla(b)} className={bos}>
-                {calisiyor === b.id ? 'Okunuyor…' : 'Yedekten geri yükle'}
+              <button type="button" disabled={!!calisiyor} onClick={() => void buluttanIndir(b)} className={bos}>
+                {calisiyor === b.id ? 'İniyor…' : 'İndir'}
+              </button>
+              <button type="button" disabled={!!calisiyor} onClick={() => void drivea(b)} className={bos}>
+                {calisiyor === `yukle-${b.id}` ? 'Yükleniyor…' : "Drive'a yükle"}
               </button>
             </li>
           ))}
@@ -315,50 +313,14 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items, onUpdateItem }) => {
                   <span className="block text-[12px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">{tarihYaz(d.olusturma)}</span>
                   <span className="block truncate text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{d.ad}</span>
                 </span>
-                <button type="button" disabled={!!calisiyor} onClick={() => void drivedanHazirla(d)} className={bos}>
-                  {calisiyor === `drive-${d.id}` ? 'Okunuyor…' : 'Drive\'dan geri yükle'}
+                <button type="button" disabled={!!calisiyor} onClick={() => void drivedanIndir(d)} className={bos}>
+                  {calisiyor === `drive-${d.id}` ? 'İniyor…' : 'İndir'}
                 </button>
               </li>
             ))}
           </ul>
         )}
       </div>
-
-      {geri && (
-        <div className="mt-2.5 ml-7 p-3 rounded-lg border border-[#F26B6F]/50 bg-white/70 dark:bg-[#0E1C4F]/60 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
-          <p className="font-semibold">{tarihYaz(geri.olusturma)} {geri.kaynak === 'drive' ? "Drive'daki " : ''}yedeğine dönülürse</p>
-          {geri.ozet.ayni ? (
-            <p className="mt-1 text-[#6A5E4C] dark:text-[#A6B0C9]">Harita kaydı yedektekiyle aynı; haritada bir şey değişmez.</p>
-          ) : (
-            <table className="mt-1.5 w-full text-[11px] tabular-nums">
-              <thead className="text-[#6A5E4C] dark:text-[#A6B0C9]">
-                <tr><th className="text-left font-normal">Ne</th><th className="text-right font-normal">Şimdi</th><th className="text-right font-normal">Yedekte</th><th className="text-right font-normal">Geri gelir</th><th className="text-right font-normal">Kalkar</th><th className="text-right font-normal">Eski hâline döner</th></tr>
-              </thead>
-              <tbody>
-                {degisen.map(r => (
-                  <tr key={r.ad}><td>{r.ad}</td><td className="text-right">{r.simdi}</td><td className="text-right">{r.yedekte}</td><td className="text-right">{r.gelecek || ''}</td><td className="text-right">{r.gidecek || ''}</td><td className="text-right">{r.degisecek || ''}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {geri.ozet.islenenDegisir && <p className="mt-1 text-[#6A5E4C] dark:text-[#A6B0C9]">Haritaya işlenmiş hâl (3B'de görünen) de yedektekine döner.</p>}
-          {geri.viki.length > 0 ? (
-            <label className="mt-2 flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={vikiDe} onChange={e => setVikiDe(e.target.checked)} className="mt-0.5" />
-              <span>Viki alanlarını da geri yaz ({geri.viki.length} madde: {geri.viki.slice(0, 4).map(i => i.title).join(', ')}{geri.viki.length > 4 ? '…' : ''}). Yalnız rakım, harita konumu, işaret ve ilgili not satırı değişir.</span>
-            </label>
-          ) : (
-            <p className="mt-1 text-[#6A5E4C] dark:text-[#A6B0C9]">Viki alanları yedektekiyle aynı.</p>
-          )}
-          <p className="mt-2 text-[#6A5E4C] dark:text-[#A6B0C9]">Onaylarsan önce şimdiki hâl bilgisayarına iner, sonra harita kaydı tek yazmada yedekteki hâline döner.</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button type="button" onClick={() => setGeri(null)} className={bos}>Vazgeç</button>
-            <button type="button" disabled={!!calisiyor || (geri.ozet.ayni && !(vikiDe && geri.viki.length))} onClick={() => void geriYukle()} className={`${dugme} bg-[#F26B6F] text-white`}>
-              {calisiyor === 'geri' ? 'Geri yükleniyor…' : 'Onayla, geri yükle'}
-            </button>
-          </div>
-        </div>
-      )}
 
       {rapor && (
         <p className={`mt-2 ml-7 text-[12px] ${rapor.hata ? 'text-[#D6484C] dark:text-[#F26B6F] font-semibold' : 'text-[#336659] dark:text-[#8FC4A8]'}`}>{rapor.metin}</p>

@@ -1,8 +1,6 @@
-import { doc, getDocFromServer, setDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDocFromServer } from 'firebase/firestore';
 import { db } from './firebase';
-import {
-  sonrakiKurucuSayaci, type HaritaDuzeni, type KurucuBelge, type MekanDuzeni, type Nokta, type SinirHatlari
-} from '../components/harita/duzenTipi';
+import type { HaritaDuzeni, KurucuBelge, MekanDuzeni, Nokta, SinirHatlari } from '../components/harita/duzenTipi';
 
 /**
  * Eski harita kaydı (`duzada/haritaDuzeni`): yalnız yedek işleri.
@@ -11,8 +9,9 @@ import {
  * canlı dinleyen ve yazan kod da onlarla gitti. Kalanlar: Harita yedeği kartı
  * ve Drive'a harita yedeği buluttaki kaydı olduğu gibi okur
  * (`buluttakiHaritaKaydi`), yedeğin özeti ve evde oturanların göç kartı onu
- * çözer (`haritaKaydiniCoz`), geri yükleme yedekteki kaydı olduğu gibi geri
- * yazar (`haritaDuzeniniYedektenYaz`; yalnız Kemal basınca).
+ * çözer (`haritaKaydiniCoz`). Kayda yazan kod yok; geri yükleme KKM-C'de
+ * kalktı (git geçmişinde). Durum → Eksikler → "Eski harita kaydını sil"
+ * kaydı yalnız Kemal basınca siler (`haritaKaydiniSil`).
  */
 
 const belgeYolu = () => doc(db, 'duzada', 'haritaDuzeni');
@@ -80,33 +79,19 @@ export const haritaKaydiniCoz = (ham: unknown): HaritaDuzeni | null => {
 };
 
 /**
- * Yedekteki harita kaydını olduğu gibi geri yazar (tek yazma). Kayıt
- * Firestore'dan geldiği için biçimi zaten yazılabilir; yalnız zaman ve
- * sayaç değişir (sayaç buluttakinin de yedektekinin de üstüne çıkar).
- */
-export async function haritaDuzeniniYedektenYaz(ham: unknown, buluttakiSayac?: number): Promise<void> {
-  if (!ham || typeof ham !== 'object' || Array.isArray(ham)) return;
-  const v = ham as Record<string, unknown>;
-  const sayac = Math.max(
-    sonrakiKurucuSayaci({ kurucuSayac: tamSayi(v.kurucuSayac) }),
-    sonrakiKurucuSayaci({ kurucuSayac: buluttakiSayac })
-  );
-  // Bellekteki eski işaret yazılmaz; tanımsız alan da (Firestore bütün kaydı reddeder)
-  const { eskiKoordinat: _eski, ...kalan } = v;
-  const belge: Record<string, unknown> = Object.fromEntries(Object.entries(kalan).filter(([, x]) => x !== undefined));
-  belge.surum = Number(v.surum) || 1;
-  belge.hatlar = nesne(v.hatlar);
-  belge.yollar = nesne(v.yollar);
-  belge.guncelleme = Date.now();
-  belge.kurucuSayac = sayac;
-  await setDoc(belgeYolu(), belge);
-}
-
-/**
  * Harita yedeği için buluttaki kaydı olduğu gibi okur (18 Kasım).
  * Kayıt yoksa null.
  */
 export async function buluttakiHaritaKaydi(): Promise<Record<string, unknown> | null> {
   const s = await getDocFromServer(belgeYolu());
   return s.exists() ? (s.data() as Record<string, unknown>) : null;
+}
+
+/**
+ * Eski harita kaydını siler (tek harita 11. adım, KKM-C; Kemal, 23 Kasım:
+ * harita yedeğinden sonra silinsin). Yalnız Eksikler kartındaki düğmeyle;
+ * kural yalnız bu belgenin silinmesine izin verir (`firestore.rules`).
+ */
+export async function haritaKaydiniSil(): Promise<void> {
+  await deleteDoc(belgeYolu());
 }

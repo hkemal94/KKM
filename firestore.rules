@@ -50,16 +50,13 @@ service cloud.firestore {
         && data.theme is string && data.theme.size() <= 50;
     }
 
-    // Harita düzeni (H1) — dünyaya ait, kullanıcıya değil. Tek belge:
-    // duzada/haritaDuzeni. Google'a bağlı olmak şart (22 Ekim).
+    // Eski harita kaydı (H1'den 23 Kasım'a dek; duzada/haritaDuzeni) ve tek
+    // haritanın taslağı. Google'a bağlı olmak şart (22 Ekim). Eski kayda
+    // yazan kod kalmadı (24 Kasım, tek harita 11. adım, KKM-C): yalnız okunur
+    // ve Durum → Eksikler → "Eski harita kaydını sil" düğmesiyle silinir.
     match /duzada/{docId} {
       allow read: if isSignedIn() && (docId == 'haritaDuzeni' || docId == 'tekHaritaTaslak');
-      allow create, update: if isSignedIn() && docId == 'haritaDuzeni'
-        && incoming().keys().hasAll(['surum', 'guncelleme', 'hatlar', 'yollar'])
-        && incoming().surum is number
-        && incoming().guncelleme is number
-        && incoming().hatlar is map
-        && incoming().yollar is map;
+      allow delete: if isSignedIn() && docId == 'haritaDuzeni';
       // Tek harita yönetim ekranının taslağı (7. adım, 22 Kasım): yalnız
       // değişiklikler, JSON yazı olarak; sayaç açık kalmış eski sekmeyi durdurur.
       allow create, update: if isSignedIn() && docId == 'tekHaritaTaslak'
@@ -70,7 +67,6 @@ service cloud.firestore {
         && incoming().sayac is int
         && incoming().veri is string
         && incoming().veri.size() <= 400000;
-      allow delete: if false;
     }
 
     // Eski ortak alan (kems_public): Durum → Eksikler'deki taşıma kartı

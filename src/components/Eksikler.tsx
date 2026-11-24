@@ -9,6 +9,7 @@ import { MukerrerKarti, UymayanBagKarti } from './MukerrerKarti';
 import { BuyukKayitKarti } from './BuyukKayitKarti';
 import { HaritaYedegiKarti } from './HaritaYedegiKarti';
 import { OturanGocuKarti } from './OturanGocuKarti';
+import { EskiHaritaKaydiKarti } from './EskiHaritaKaydiKarti';
 import { GaleriDisariKarti } from './GaleriDisariKarti';
 import { SilinmisGaleriKarti, SilinmisGaleriDenetle, GorselIsteyenSatiri, useSilinmisGaleri } from './VikiGorselKarti';
 import { YerKartlariKarti, MahalleDerlemeKarti, MaddeSoruTuruKarti, ClaudeDerlemeKarti } from './YerKartlari';
@@ -92,10 +93,12 @@ export const Eksikler: React.FC<EksiklerProps> = ({
     <div className="mb-8">
       {/* Ortak alan (1 Ekim): eski ortak alanda kayıt kaldıysa tek seferlik taşıma */}
 
-      {/* Harita yedeği ve geri yükleme (18 Kasım, kompakt ada A adımı) */}
-      {onUpdateItem && <HaritaYedegiKarti items={items} onUpdateItem={onUpdateItem} />}
+      {/* Harita yedeği (18 Kasım, kompakt ada A adımı; 24 Kasım'dan beri yalnız görme, indirme, Drive'a yükleme) */}
+      <HaritaYedegiKarti items={items} />
       {/* Evde oturanlar tek haritaya (23 Kasım, tek harita 11. adım): yalnız iş varken görünür */}
       {onUpdateItem && <OturanGocuKarti items={items} onUpdateItem={onUpdateItem} />}
+      {/* Eski harita kaydını sil (24 Kasım, tek harita 11. adım, KKM-C): yalnız kayıt bulutta varken görünür */}
+      <EskiHaritaKaydiKarti />
 
       {/* Temizlik (29 Eylül): kullanılmayan kayıtlar silinir, önce yedek */}
       {onDeleteItem && <TemizlikKarti items={items} onDeleteItem={onDeleteItem} />}
