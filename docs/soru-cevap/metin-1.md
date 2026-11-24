@@ -120,4 +120,4 @@ kurgu cümlesi değil. Stüdyo bunu ansiklopedik, 2–3 paragraflık taslağa
    sonrası butik şaraphaneler (bağcılık bu dönemde başladı); Ada Tepesi
    yamaçlarında arıcılık. Söylenti yok.
 
-> **16 Kasım 2026'da değişti (Kemal):** Düzada Rumları 1923 mübadelesinin dışında kaldı; yıllar içinde, kendi istekleriyle yavaş yavaş adadan ayrıldılar. Aşağıdaki/yukarıdaki eski cevaplardaki "1923'te gittiler" ve "boşalan evlere" sözleri geçmiş kayıttır.
+> **16 Kasım 2026'da değişti (Kemal):** Düzada Rumları 1923 mübadelesinin dışında kaldı; yıllar içinde, kendi istekleriyle yavaş yavaş adadan ayrıldılar. Yukarıdaki eski cevaplardaki "1923'te gittiler" ve "boşalan evlere" sözleri geçmiş kayıttır.
