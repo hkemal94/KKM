@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronRight, PenLine } from 'lucide-react';
 import type { Item, ItemType, WikiSection } from '../types';
 import { semaAlanlari } from '../lib/alanSablonu';
-import { schemaKeyFor, TYPE_LABELS, WIKI_TYPES, getKunyeFields, getArticleBody, mahalleEslesir, eslesmeBasligi } from './wiki/wikiSchema';
+import { schemaKeyFor, TYPE_LABELS, WIKI_TYPES, getKunyeFields, getArticleBody, mahalleEslesir, eslesmeBasligi, eksikSayilmaz } from './wiki/wikiSchema';
 import { parseKunye } from './wiki/kunyeParser';
 import { SayfaRayi, type RayBolumu } from './SayfaRayi';
 import { ADA_KIMLIGI } from '../lib/vikiSifirlama';
@@ -125,6 +125,8 @@ export function bosluklariCikar(items: Item[]): Bosluk[] {
     const govdeDolu = getArticleBody(item).length > 0;
     for (const s of sorular) {
       if (ATLANAN_ALAN.has(s.id) || s.istegeBagli) continue;
+      // Gerçek yerin Mahalle alanı boş kalır, sorulmaz (24 Kasım, Kemal)
+      if (eksikSayilmaz(item, s.id)) continue;
       // Mahalle yazılı ama hiçbir mahalleyle eşleşmiyorsa boş sayılır (2 Ekim)
       if (s.id === 'region' && MAHALLELI.has(item.type as ItemType) && mahalleler.length) {
         const yazili = yazilanMahalle(item);
@@ -167,7 +169,7 @@ export function boslukOrani(items: Item[]): { toplam: number; bos: number } {
     if (item.id === ADA_KIMLIGI) continue;
     const anahtar = schemaKeyFor(item.type as ItemType);
     if (!anahtar) continue;
-    toplam += semaAlanlari(anahtar).filter(s => !ATLANAN_ALAN.has(s.id) && !s.istegeBagli).length;
+    toplam += semaAlanlari(anahtar).filter(s => !ATLANAN_ALAN.has(s.id) && !s.istegeBagli && !eksikSayilmaz(item, s.id)).length;
     toplam += ((item.metadata?.wikiSections as WikiSection[] | undefined) || []).filter(b => b?.title?.trim()).length;
   }
   return { toplam, bos: bosluklariCikar(items).length };

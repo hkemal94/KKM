@@ -13,6 +13,8 @@ import { depoAdi } from './depoBelgesi';
 import { GDD_BOLUMLERI, gddBolumleri } from '../components/oyun/OyunSureci';
 import { donemKaydi, donemleriOku } from './zamanCizgisi';
 import { donemPlani, type DonemYillari } from './donemKarari';
+import { alaniBosaltPlani, bolumSilPlani, bolumYazPlani, gercekYerPlani, kunyeSatiriCikar } from './vikiKarari';
+import { basliklarEslesir } from '../components/wiki/wikiSchema';
 
 /**
  * Ajansın kararlarını uygula (22 Ekim, Kemal: "Ajans kendi uygulasın ama ben
@@ -88,6 +90,18 @@ import { donemPlani, type DonemYillari } from './donemKarari';
  *     uygulanmış sayılır, başka yıllarla varsa çakışma olur. `eski` (`ad`, `bas`,
  *     `bit`) verilirse onu birebir tutan dönem yenisiyle değişir; tutan yoksa çakışma.
  *     Silme yok. Ayrıntı ve saf iş `donemKarari.ts`.
+ *   - 24 Kasım (Kemal viki madde standardını onayladı): `bolumYaz` (`madde`, `bolum`
+ *     bölümün başlığı, `metin`, isteğe bağlı `sira` (1 = ilk), `eski`, `eskiBaslik`).
+ *     O başlıkta bölüm yoksa `sira`ya (yoksa sona) açılır; varsa ve boşsa ya da yazısı
+ *     `eski` ile birebir aynıysa yazısı değişir, değilse çakışma (yeni bölüm de açılmaz).
+ *     `eskiBaslik` bölümü o başlıkla bulur ve adını `bolum` yapar. `bolumSil` (`madde`,
+ *     `bolum`, `eski`, isteğe bağlı `tekrar`): yazısı birebir `eski` olan bölüm çıkar;
+ *     `tekrar` ise aynı bölümün kopyalarından ilki kalır. `gercekYer` (`madde`,
+ *     `kaynakAdi`, `kaynakUrl`): madde "Gerçek yer" diye işaretlenir, başlığın yanındaki
+ *     rozet kaynağı açar (`vikipediKaynagi.ts`). `alaniBosalt` (`madde`, `alan`, `eski`):
+ *     künye alanı yalnız bugünkü değeri `eski` ise (ör. "Bilinmiyor") boşalır; alan boş
+ *     yazıyla yazılır, metindeki "* Alan: Bilinmiyor" satırı da çıkar. Dördü de ikinci
+ *     basışta bir şey yapmaz. Saf iş `vikiKarari.ts`.
  *
  * Uygulanınca ajansın deposuna `kkm/uygulananlar/` altına bir makbuz yazılır;
  * ajansın akşam ve sabah raporu neyin işlendiğini oradan listeler.
@@ -117,7 +131,13 @@ export type KararIslemi =
   | { kimlik: string; tur: 'kitapBolumu'; kitap: string; sira: number; baslik: string; metin: string; eski?: string; neden?: string }
   | { kimlik: string; tur: 'oyunKarti'; oyun: string; alan: OyunKartiAlani; eski?: string; deger: string; baslik: string; neden?: string }
   | { kimlik: string; tur: 'gddBolumu'; oyun: string; bolum: string; eski?: string; metin: string; baslik: string; neden?: string }
-  | { kimlik: string; tur: 'donem'; ad: string; bas: number; bit?: number | null; eski?: DonemYillari; baslik: string; neden?: string };
+  | { kimlik: string; tur: 'donem'; ad: string; bas: number; bit?: number | null; eski?: DonemYillari; baslik: string; neden?: string }
+  | { kimlik: string; tur: 'bolumYaz'; madde: string; bolum: string; metin: string; sira?: number; eski?: string; eskiBaslik?: string; baslik: string; neden?: string }
+  | { kimlik: string; tur: 'bolumSil'; madde: string; bolum: string; eski: string; tekrar?: boolean; baslik: string; neden?: string }
+  | { kimlik: string; tur: 'gercekYer'; madde: string; kaynakAdi: string; kaynakUrl: string; baslik: string; neden?: string }
+  | { kimlik: string; tur: 'alaniBosalt'; madde: string; alan: string; eski: string; baslik: string; neden?: string };
+
+type VikiStandardiIslemi = Extract<KararIslemi, { tur: 'bolumYaz' | 'bolumSil' | 'gercekYer' | 'alaniBosalt' }>;
 
 type KitapBolumuIslemi = Extract<KararIslemi, { tur: 'kitapBolumu' }>;
 
@@ -316,7 +336,50 @@ function kunyeAlani(m: Item, alan: string) {
   // metinden gelen eski kararlar "uygulanmamış" sanılıp listeye geri dönüyordu)
   const hamYazi = typeof ham === 'string' || typeof ham === 'number' ? String(ham).trim() : '';
   const deger = hamYazi || getKunyeFields(m, { includeEmpty: true, includeSecrets: true }).find(x => x.id === f.id)?.value || '';
-  return { yol: f.fieldPath, deger };
+  return { yol: f.fieldPath, deger, ham: hamYazi, adlar: [f.label, ...(f.esAdlar || [])] };
+}
+
+/** `alaniBosalt`: ne olacak (saf iş); `yeni` boşaltılmış madde (kayıttaki alan '' olur, metindeki satır çıkar) */
+function alaniBosaltHesabi(items: Item[], i: Extract<KararIslemi, { tur: 'alaniBosalt' }>) {
+  const m = maddeBul(items, i.madde);
+  const a = m && kunyeAlani(m, i.alan);
+  if (!m) return { m, a, yapildi: false, cakisma: `madde bulunamadı ya da aynı adla birden çok var (${i.madde})`, yeni: null as Item | null };
+  if (!a) return { m, a, yapildi: false, cakisma: `"${i.alan}" bu türün künyesinde yok`, yeni: null as Item | null };
+  if (typeof i.eski !== 'string' || !i.eski.trim()) return { m, a, yapildi: false, cakisma: 'eski değer verilmemiş', yeni: null as Item | null };
+  const p = alaniBosaltPlani(a.deger, i.eski);
+  if (p.yapildi) return { m, a, yapildi: true, cakisma: null, yeni: null as Item | null };
+  if (p.eskimis) return { m, a, yapildi: false, cakisma: `alan bu arada değişmiş (şimdi: ${a.deger})`, yeni: null as Item | null };
+  let yeni: Item = a.ham ? alanaYaz(m, a.yol, '') : m;
+  const notes = kunyeSatiriCikar(yeni.notes || '', e => a.adlar.some(ad => basliklarEslesir(e, ad)), i.eski);
+  if (notes !== null) yeni = { ...yeni, notes };
+  return { m, a, yapildi: false, cakisma: null, yeni: yeni === m ? null : yeni };
+}
+
+/** Viki standardı kararının planı (yeni bölüm kimliği `yeniId`) */
+function vikiStandardiPlani(items: Item[], i: VikiStandardiIslemi, yeniId = 'bolum') {
+  if (i.tur === 'alaniBosalt') {
+    const h = alaniBosaltHesabi(items, i);
+    return { m: h.m, yapildi: h.yapildi, cakisma: h.cakisma || (!h.yapildi && !h.yeni ? 'alan kayıtta ve metinde bulunamadı' : null), yeni: h.yeni,
+      ne: h.a ? `${i.alan}: ${h.a.deger || 'boş'} → boş` : '' };
+  }
+  const m = maddeBul(items, i.madde);
+  const p = i.tur === 'bolumYaz' ? bolumYazPlani(m, i, yeniId) : i.tur === 'bolumSil' ? bolumSilPlani(m, i) : null;
+  if (p) return { m, yapildi: p.yapildi, cakisma: p.cakisma, ne: p.ne, yeni: m && p.bolumler ? { ...m, metadata: { ...(m.metadata || {}), wikiSections: p.bolumler } as Item['metadata'] } : null };
+  const g = gercekYerPlani(m, i as Extract<KararIslemi, { tur: 'gercekYer' }>);
+  return { m, yapildi: g.yapildi, cakisma: g.cakisma, ne: g.ne, yeni: m && g.metadata ? { ...m, metadata: g.metadata } : null };
+}
+
+/** Onay listesindeki satır: hangi madde, ne değişecek; çakışma varsa başta */
+export function vikiKarariOnizleme(items: Item[], i: VikiStandardiIslemi, sinir = 180): string {
+  const kisalt = (s: string) => { const t = (s || '').replace(/\s+/g, ' ').trim(); return t.length > sinir ? `${t.slice(0, sinir).trimEnd()}… (${t.length} harf)` : t; };
+  const p = vikiStandardiPlani(items, i);
+  const ad = p.m?.title || i.madde;
+  if (p.cakisma) return `Çakışma, uygulanmaz: ${p.cakisma}. ${ad}`;
+  if (p.yapildi) return `${ad}: zaten yapılmış`;
+  if (i.tur === 'bolumYaz') return `${ad} · ${p.ne} → ${kisalt(i.metin)}`;
+  if (i.tur === 'bolumSil') return `${ad} · ${p.ne}: ${kisalt(i.eski)}`;
+  if (i.tur === 'gercekYer') return `${ad} · ${p.ne} · ${i.kaynakUrl}`;
+  return `${ad} · ${p.ne}`;
 }
 
 const bolumlerOf = (m: Item) => ((m.metadata?.wikiSections as Array<{ content?: string }> | undefined) || []);
@@ -402,6 +465,7 @@ function yapilmis(items: Item[], i: KararIslemi): boolean {
   if (i.tur === 'oyunKarti') return oyunKartiPlani(items, i).yapildi;
   if (i.tur === 'gddBolumu') return gddBolumuPlani(items, i).yapildi;
   if (i.tur === 'donem') return donemPlani(donemleriOku(items), i).yapildi;
+  if (i.tur === 'bolumYaz' || i.tur === 'bolumSil' || i.tur === 'gercekYer' || i.tur === 'alaniBosalt') return vikiStandardiPlani(items, i).yapildi;
   if (i.tur === 'kitapBolumu') {
     const { bolum } = kitapBolumuPlani(items, i);
     return !!bolum && (bolum.notes || '').trim() === (i.metin || '').trim() && bolum.metadata?.chapterIndex === i.sira;
@@ -456,6 +520,10 @@ export function gecerliIslemler(items: Item[], islemler: KararIslemi[]): KararIs
     if (i.tur === 'oyunKarti' || i.tur === 'gddBolumu') return !yapilmis(items, i);
     // Dönem kararı da öyle: değişmiş ya da aynı adla başka yıllarda duran dönem "çakışma" diye görünür
     if (i.tur === 'donem') return !yapilmis(items, i);
+    // Viki standardı (24 Kasım): çakışan bölüm kararı listede "çakışma" diye kalır; boşaltılacak alan
+    // bu arada başka bir değer aldıysa karar eskimiştir, listede durmaz
+    if (i.tur === 'alaniBosalt') { const h = alaniBosaltHesabi(items, i); return !h.yapildi && !(h.a && h.cakisma?.startsWith('alan bu arada')); }
+    if (i.tur === 'bolumYaz' || i.tur === 'bolumSil' || i.tur === 'gercekYer') return !yapilmis(items, i);
     // Sitedeki viki klasöründe olmayan yol listede durmaz
     if (i.tur === 'gorselEkle') return vikiGorseliMi(i.deger?.trim()) && !yapilmis(items, i);
     if (i.tur === 'eskiAlan') return typeof i.alan === 'string' && !!i.alan.trim() && !KORUNAN_ALANLAR.has(i.alan.split('.')[0]) && typeof i.deger === 'string' && !yapilmis(items, i);
@@ -600,6 +668,13 @@ export async function kararlariUygula(
           await yaz.ekle({ ...k.yeni, id });
           guncel.set(id, { ...k.yeni, id, createdAt: Date.now(), updatedAt: Date.now(), userId: '' } as Item);
         }
+      } else if (islem.tur === 'bolumYaz' || islem.tur === 'bolumSil' || islem.tur === 'gercekYer' || islem.tur === 'alaniBosalt') {
+        const p = vikiStandardiPlani([...guncel.values()], islem, `bolum_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`);
+        if (p.yapildi) { sonuc.uygulanan.push(islem); ilerleme?.(++n); continue; }
+        if (p.cakisma || !p.yeni) { sonuc.atlanan.push({ islem, neden: p.cakisma || 'değişecek bir şey yok' }); continue; }
+        const yeni: Item = { ...p.yeni, updatedAt: Date.now() };
+        await yaz.guncelle(yeni);
+        guncel.set(yeni.id, yeni);
       } else if (islem.tur === 'gddBolumu') {
         const p = gddBolumuPlani([...guncel.values()], islem);
         if (p.yapildi) { sonuc.uygulanan.push(islem); ilerleme?.(++n); continue; }
