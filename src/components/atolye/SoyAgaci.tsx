@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Maximize2, Minus, Plus, Search, X } from 'lucide-react';
 import type { Item } from '../../types';
-import { schemaKeyFor, getKunyeFields, getEkBilgiler } from '../wiki/wikiSchema';
-import { DEFAULT_QUESTIONS_BY_CAT } from '../wiki/kunyeSorulari';
+import { soyDegeri } from '../wiki/soyDegeri';
+import { MonogramIcerik } from '../wiki/AileMonogrami';
+import { aileGorseliVar } from '../../lib/aileAgaci';
 import { donemleriOku } from '../../lib/zamanCizgisi';
 import { maddeGorseli, siluetMi } from '../../lib/maddeGorseli';
 import {
@@ -61,22 +62,7 @@ const yilMetni = (b: { bas?: number; bit?: number }) => (b.bas === undefined ? '
 const kisalt = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 const basHarfler = (ad: string) => ad.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toLocaleUpperCase('tr');
 
-/** Türkçe harfler sadeleşir, boşluk düşer: "Soyadı" ~ "soyadi", "Doğum yılı" ~ "dogumYili" (20 Kasım) */
-const sade = (s: string) => s.trim().replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr')
-  .replace(/[çğıöşüâî]/g, h => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i' } as Record<string, string>)[h] || h)
-  .replace(/[^a-z0-9]+/g, '');
-
-/** Künye değeri: alan kimliğiyle ya da etiketiyle ("Eşi" gibi türe sonradan eklenen alanlar) */
-const degerOku = (i: Item, id: string) => {
-  if (!schemaKeyFor(i.type)) return '';
-  const alanlar = getKunyeFields(i);
-  // Kimlik ve hazır alanın adları (ör. dogumYili → "Doğum yılı", "Doğum", "Doğum tarihi")
-  const hazir = DEFAULT_QUESTIONS_BY_CAT.kisi.find(f => f.id === id);
-  const adlar = new Set([id, ...(hazir ? [hazir.label, ...(hazir.esAdlar || [])] : [])].map(sade));
-  const etiket = (f: { label: string }) => adlar.has(sade(f.label));
-  // Şemada yoksa metindeki künye satırından ("* Eşi: …") okunur
-  return (alanlar.find(f => f.id === id) || alanlar.find(etiket) || getEkBilgiler(i).find(etiket))?.value || '';
-};
+const degerOku = soyDegeri;
 
 interface Gorunum { x: number; y: number; k: number }
 
@@ -134,6 +120,11 @@ export const SoyAgaci: React.FC<Props> = ({ items, onMaddeAc, ilkAile = null }) 
   );
   const kisi = useMemo(() => new Map(veri.kisiler.map(k => [k.id, k])), [veri]);
   const aileRengi = useMemo(() => new Map(veri.aileler.map((a, n) => [a.id, AILE_RENK[n % AILE_RENK.length]])), [veri]);
+  /** 24 Kasım: görseli olmayan ailenin çerçeve başlığında monogram (yer tutucu) */
+  const monogramli = useMemo(() => new Set(veri.aileler.filter(a => {
+    const i = madde.get(a.id);
+    return !!i && !aileGorseliVar(i, items);
+  }).map(a => a.id)), [veri, madde, items]);
 
   // ---- Tuval: kaydırma ve yakınlaştırma ----
   const [gor, setGor] = useState<Gorunum>({ x: 0, y: 0, k: 1 });
@@ -345,7 +336,10 @@ export const SoyAgaci: React.FC<Props> = ({ items, onMaddeAc, ilkAile = null }) 
                       <rect x={b.x} y={b.y} width={b.en} height={b.boy} rx={22} fill={renk} fillOpacity={0.06} stroke={renk} strokeOpacity={0.35} strokeWidth={1.2} />
                       <rect x={b.x} y={b.y} width={b.en} height={34} rx={22} fill={renk} fillOpacity={0.9} />
                       <rect x={b.x} y={b.y + 20} width={b.en} height={14} fill={renk} fillOpacity={0.9} />
-                      <text x={b.x + 18} y={b.y + 22} fontSize={14} fontWeight={700} fill="#fff" letterSpacing={0.4}>{b.ad.toLocaleUpperCase('tr')}</text>
+                      {monogramli.has(b.id) && (
+                        <g transform={`translate(${b.x + 12} ${b.y + 4}) scale(0.65)`}><MonogramIcerik ad={b.ad} /></g>
+                      )}
+                      <text x={b.x + (monogramli.has(b.id) ? 46 : 18)} y={b.y + 22} fontSize={14} fontWeight={700} fill="#fff" letterSpacing={0.4}>{b.ad.toLocaleUpperCase('tr')}</text>
                     </g>
                   );
                 })}

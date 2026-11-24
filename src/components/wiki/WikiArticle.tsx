@@ -4,7 +4,11 @@ import { BagliIlhamlar } from '../urunler/BagliIlhamlar';
 import { AlertCircle, Bot, ChevronRight, ExternalLink, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
 import { gercekYerMi, kaynakAdi, kaynakAdresi } from '../../lib/vikipediKaynagi';
 import { Item, WikiSection } from '../../types';
-import { MaddeDuzenleyici, AileUyeleri } from './MaddeDuzenleyici';
+import { MaddeDuzenleyici } from './MaddeDuzenleyici';
+import { AileAgaci } from './AileAgaci';
+import { AileMonogrami } from './AileMonogrami';
+import { soyDegeri } from './soyDegeri';
+import { aileGorseliVar, hayattaDegil } from '../../lib/aileAgaci';
 import { maddeyiAnanNotlar } from '../../lib/notBaglari';
 import { esleri } from '../../lib/aileUyeligi';
 import { resolveAllRelations, getRelationLabels, isEntityUnlinked } from '../../utils/relations';
@@ -226,13 +230,37 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
   const gorsel = gorseller[Math.min(secilenGorsel, gorseller.length - 1)] || gorseller[0];
   /** 3B modeli olan bina (`lib/maddeModelleri.ts`, 19 Kasım) */
   const model = maddeModeli(item.id);
+  /**
+   * 24 Kasım, Kemal: "hayatta olmayanlar için künyede ekstra siyah-beyaz görsel
+   * (eski fotoğraf gibi)". Yaşam'da ölüm yılı ya da aralığı yazılı kişide ilk
+   * görselin (portre) yanında aynı görsel gri tonlu, eski fotoğraf çerçevesinde.
+   * Yalnız ekranda; dosya üretilmez, kayda yazılmaz.
+   */
+  const eskiFotograf = useMemo(() => (item.type === 'kisi' || item.type === 'karakter')
+    && hayattaDegil(soyDegeri(item, 'dogumYili'), soyDegeri(item, 'yasam')) ? gorseller[0] : undefined, [item, gorseller]);
+  /** 24 Kasım: aile monogramı yer tutucu; ailenin görseli gelince gizlenir */
+  const monogram = item.type === 'aile' && !aileGorseliVar(item, allItems);
+  const anaGorsel = gorsel ? (
+    <img
+      src={gorsel}
+      alt={item.title}
+      className="block mx-auto w-full max-h-64 object-contain"
+    />
+  ) : null;
   const gorselAlani = gorsel ? (
     <>
-      <img
-        src={gorsel}
-        alt={item.title}
-        className="block mx-auto w-full max-h-64 object-contain"
-      />
+      {eskiFotograf ? (
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">{anaGorsel}</div>
+          <figure className="w-[42%] shrink-0 m-0">
+            <div className="bg-[#FBF8F1] p-1.5 pb-4 rotate-[2deg] shadow-[0_4px_12px_-4px_rgba(14,28,79,0.45)] border border-[#E4DCCB]">
+              <img src={eskiFotograf} alt={`${item.title}, siyah-beyaz eski fotoğraf hâli`}
+                className="block w-full aspect-[3/4] object-cover object-top [filter:grayscale(1)_sepia(0.28)_contrast(1.08)_brightness(1.03)]" />
+            </div>
+            <figcaption className="mt-2 text-center text-[10px] font-mono text-gri dark:text-bej/85">eski fotoğraf</figcaption>
+          </figure>
+        </div>
+      ) : anaGorsel}
       {gorseller.length > 1 && (
         <div className="mt-2 flex flex-wrap justify-center gap-1.5">
           {gorseller.map((g, n) => (
@@ -445,8 +473,9 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
             ))}
           </nav>
         )}
-        <h1 className="font-sans text-3xl sm:text-4xl text-lacivert dark:text-krem leading-tight tracking-tight">
-          {item.title}
+        <h1 className="font-sans text-3xl sm:text-4xl text-lacivert dark:text-krem leading-tight tracking-tight flex items-center gap-2.5">
+          {monogram && <AileMonogrami ad={item.title} className="shrink-0 w-8 h-8 sm:w-10 sm:h-10" />}
+          <span className="min-w-0">{item.title}</span>
         </h1>
 
         {adlar.length > 0 && (
@@ -489,8 +518,8 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
         ) : null;
       })()}
 
-      {/* Aile: üyeler ve basit aile ağacı */}
-      {item.type === 'aile' && <AileUyeleri aile={item} allItems={allItems} onNavigate={onNavigate} />}
+      {/* Aile: üyeler portreli kuşak ağacında (24 Kasım) */}
+      {item.type === 'aile' && <AileAgaci aile={item} allItems={allItems} onNavigate={onNavigate} />}
 
       {/* --- Yönetim uyarıları: ziyaretçi bunları görmez --- */}
       {admin && (unlinked || stub) && (

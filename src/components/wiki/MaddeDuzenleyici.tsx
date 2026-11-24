@@ -7,8 +7,6 @@ import { useKaydedilmemis } from '../../lib/kaydedilmemis';
 import { BAG_GRUPLARI, BAG_GRUP_SIRASI, bagAdaylari, etkinSablon, ozelAlanKimligi, semaAlanlari, takmaAdlar, type BagGrubu, type SablonAlani, type SemaAlani, type VikiSablonu } from '../../lib/alanSablonu';
 import { TYPE_LABELS, WIKI_TYPES, schemaKeyFor, getKunyeFields, getEkBilgiler } from './wikiSchema';
 import { BAG_TURLERI, getRelationLabels, resolveAllRelations, type BagTuru } from '../../utils/relations';
-import { aileUyeleri, type AileUyeligi } from '../../lib/aileUyeligi';
-import { tamAd } from '../../lib/kisiAdi';
 import { bagUygun, kaynakTurleri, uygunTurler } from '../../lib/bagKurallari';
 import { GERCEK_YER, gercekYerMi, kaynakAdi as kaynakAdiOku, vikipedidenGetir, type VikipediSonucu } from '../../lib/vikipediKaynagi';
 
@@ -531,57 +529,6 @@ export const MaddeDuzenleyici: React.FC<Props> = ({ item, allItems, onKaydet, on
         )}
       </div>
     </div>
-  );
-};
-
-/**
- * Aile sayfası: üyeler ve basit aile ağacı. Üyeler kişilerin "Aile", "Soyadı"
- * ve "Doğduğu aile" alanlarından ve eşlerinden hesaplanır (21 Ekim,
- * `lib/aileUyeligi.ts`): evlenip geçen kişi iki ailede de görünür.
- */
-export const AileUyeleri: React.FC<{ aile: Item; allItems: Item[]; onNavigate: (id: string) => void }> = ({ aile, allItems, onNavigate }) => {
-  const uyeler = useMemo(() => aileUyeleri(aile, allItems), [aile, allItems]);
-  const kutu = (u: AileUyeligi) => {
-    const rol = (u.kisi.metadata?.profile as Record<string, string> | undefined)?.profession;
-    const tam = tamAd(u.kisi);
-    const not = u.yol === 'dogum' ? 'doğduğu aile' : u.yol === 'evlilik' && u.es ? `eşi: ${u.es.title}` : '';
-    return (
-      <div key={u.kisi.id} className="relative flex flex-col items-center">
-        <span className="absolute -top-5 h-5 w-px bg-bej dark:bg-lacivert-600" />
-        <button type="button" onClick={() => onNavigate(u.kisi.id)} className="px-3 py-1.5 rounded border border-bej/80 dark:border-lacivert-600 bg-white/70 dark:bg-lacivert-800/40 text-[13px] hover:border-kiremit">
-          {tam || u.kisi.title}
-          {rol && <span className="block text-[10px] text-gri dark:text-bej/70">{rol}</span>}
-          {not && <span className="block text-[10px] text-gri dark:text-bej/70">{not}</span>}
-        </button>
-      </div>
-    );
-  };
-  const kendi = uyeler.filter(u => u.yol !== 'evlilik');
-  const evlilikle = uyeler.filter(u => u.yol === 'evlilik');
-  const sira = (liste: AileUyeligi[]) => (
-    <div className="relative flex flex-wrap justify-center gap-x-3 gap-y-4 pt-5 border-t border-bej dark:border-lacivert-600" style={{ minWidth: liste.length > 1 ? '60%' : undefined }}>
-      {liste.map(kutu)}
-    </div>
-  );
-  return (
-    <section className="mb-8">
-      <h2 className="font-sans text-[20px] mb-3">Üyeler</h2>
-      {uyeler.length === 0 ? (
-        <p className="text-[13px] text-gri dark:text-bej/80">Henüz üye yok. Bir kişinin künyesinde "Aile" ya da "Soyadı" alanına bu ailenin adı yazılınca burada görünür.</p>
-      ) : (
-        <div className="flex flex-col items-center">
-          <div className="px-4 py-2 rounded-lg bg-lacivert text-krem dark:bg-[#2C3C72] text-[14px] font-semibold">{aile.title}</div>
-          <div className="w-px h-5 bg-bej dark:bg-lacivert-600" />
-          {kendi.length > 0 && sira(kendi)}
-          {evlilikle.length > 0 && (
-            <>
-              <p className="mt-5 mb-1 text-[11px] font-mono uppercase tracking-wide text-gri dark:text-bej/80">Evlilikle bağlı olanlar</p>
-              {sira(evlilikle)}
-            </>
-          )}
-        </div>
-      )}
-    </section>
   );
 };
 

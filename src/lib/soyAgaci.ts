@@ -284,8 +284,10 @@ const ARA_Y = 92;
  * Kuşaklara dizme: ebeveyni bağıyla kuşak bulunur (çocuk ebeveynin bir
  * altında), eşler ve kardeşler aynı kuşağa çekilir. Kuşak içinde eşler
  * yan yana, çocuklar ebeveynlerinin altına (ortalama yerlerine) dizilir.
+ * `araX` / `araY`: kutular arası boşluk (aile sayfası daha sık dizer, 24 Kasım).
  */
-export function diz(kisiler: SoyKisi[], baglar: SoyBagi[], kutuEn = KUTU_EN, kutuBoy = KUTU_BOY, yon: Map<string, number> = new Map()): Map<string, { x: number; y: number }> {
+export function diz(kisiler: SoyKisi[], baglar: SoyBagi[], kutuEn = KUTU_EN, kutuBoy = KUTU_BOY, yon: Map<string, number> = new Map(),
+  araX = ARA_X, araY = ARA_Y): Map<string, { x: number; y: number }> {
   const ids = kisiler.map(k => k.id);
   const ebeveyn = new Map<string, string[]>();
   const es = new Map<string, string[]>();
@@ -362,8 +364,8 @@ export function diz(kisiler: SoyKisi[], baglar: SoyBagi[], kutuEn = KUTU_EN, kut
     let sonX = -Infinity;
     for (const id of sira) {
       const h = hedef(id);
-      const x = Math.max(h ?? -Infinity, sonX + kutuEn + ARA_X, h === null && sonX === -Infinity ? 0 : -Infinity);
-      konum.set(id, { x: Number.isFinite(x) ? x : 0, y: k * (kutuBoy + ARA_Y) });
+      const x = Math.max(h ?? -Infinity, sonX + kutuEn + araX, h === null && sonX === -Infinity ? 0 : -Infinity);
+      konum.set(id, { x: Number.isFinite(x) ? x : 0, y: k * (kutuBoy + araY) });
       sonX = konum.get(id)!.x;
     }
   }
