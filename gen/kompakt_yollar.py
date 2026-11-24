@@ -25,6 +25,10 @@ Kurallar:
     noktaları ana daldakiyle aynı kalır (gen/kompakt-sahil-ana.json): öbür köylerin arsaları yeniden dizilmez.
   - Stat, Merkez Meydanı, The Imperial sahanlığı ve kıyı köyündeki birahane yeri yola kapalı.
   - Dere üstünde kısa köprü; köprüde zemin oyulmaz.
+  - Doğal hat (Kemal, 24 Kasım: "düzgün, doğal bir yol olsun"): aramayla bulunan yollar (Sahil Yolu, bağlantılar,
+    tarla yolları) ızgaranın kırıklarıyla değil, ip germe + büyük yarıçaplı viraj + yumuşatmayla çizilir (dogal_hat).
+    Eğim sınırı yumuşak kural: dik yamaçta sınırın en çok ASIM_ORAN katı (yolun egimAsimi alanı; denetimde bilgi).
+    Köy sokakları ve İskele'nin içindeki Sahil Yolu eski hâliyle (sokak dokusu ayrı iş).
 
 Zemin dosyası bir kez düzlenir: başlığa "yolYatagi" yazılır. Yeniden üretmek için önce
 python gen/kompakt_zemin.py, sonra python gen/kompakt_yollar.py.
@@ -208,6 +212,14 @@ _yan = ndimage.maximum_filter(np.hypot(*np.gradient(ndimage.gaussian_filter(Z, 1
 YAN_CEZA = 1.0 + 6.0 * np.clip(_yan - 0.18, 0, None) + 3.0 * np.clip((40.0 - D_KARA) / 18.0, 0, 1)
 # köprü gerektiren hücre (kapatılmış vadi) pahalı: yollar vadiyi kısa yerden geçer
 YAN_CEZA = YAN_CEZA * np.where(ZR - Z > 2.5, 12.0, 1.0)
+# elle konan yapılar (gen/tek-harita-elle.json; ör. fener bekçi evi Sahil Yolu'nun yanında): doğal hat üstlerinden geçmez
+ELLE_YAPI = np.zeros(Z.shape, bool)
+_elle_d = os.path.join(BURASI, "tek-harita-elle.json")
+if os.path.exists(_elle_d):
+    for _yp in (json.load(open(_elle_d, encoding="utf-8")).get("taslak", {}).get("yeniYapilar") or {}).values():
+        if _yp.get("m") and _yp.get("en") and _yp.get("boy"):
+            ELLE_YAPI |= np.hypot(GX - m(_yp["m"])[0], GY - m(_yp["m"])[1]) <= math.hypot(_yp["en"], _yp["boy"]) / 2 + 8.0
+VADI = ZR - Z > 1.5        # kapatılmış dar vadi ya da yatak (yol orada köprüye çıkar)
 
 
 def ornek(Zm, x, y):
@@ -222,8 +234,16 @@ KOMSU = [(di, dj, H * math.hypot(di, dj)) for di in range(-2, 3) for dj in range
          if (di or dj) and math.gcd(abs(di), abs(dj)) == 1]
 
 
-def yol_ara(bas, hedef, sinir, carpan=None, yasak=None, pay=700.0, agirlik=1.2, dere_ceza=60.0):
+# dönüş cezası (24 Kasım): aramada yön değişimi 1 - cos(açı) ile pahalı; eğim sınırını küçük zikzaklarla (testere
+# dişi) "yumuşatan" hat yerine az sayıda büyük viraj seçilir. Köy sokaklarının araması (dokusu ayrı iş) cezasız.
+DONUS_CEZA = 80.0      # DENEME: 90°'lik dönüşün bedeli (m), 180° bunun iki katı
+_KY = [math.atan2(dj, di) for di, dj, _ in KOMSU]
+DONUS_TABLO = [[1.0 - math.cos(a - b) for b in _KY] for a in _KY]
+
+
+def yol_ara(bas, hedef, sinir, carpan=None, yasak=None, pay=700.0, agirlik=1.2, dere_ceza=60.0, donus=0.0):
     """bas noktasından hedef hücre kümesine eğim sınırını aşmayan en ucuz yol (A*).
+    donus > 0: yön değişimi cezası (gelinen yön hücrede tutulur; yaklaşık, yön durum sayılmaz).
     Döner: metre noktaları listesi (bas'tan hedefe) ya da None."""
     yasak = YASAK_TEMEL if yasak is None else yasak
     uz = ndimage.distance_transform_edt(~hedef) * H
@@ -234,14 +254,18 @@ def yol_ara(bas, hedef, sinir, carpan=None, yasak=None, pay=700.0, agirlik=1.2, 
     W, Hh = i1 - i0, j1 - j0
     sl = (slice(j0, j1), slice(i0, i1))
     zl = ZR[sl].ravel().tolist()
-    cl = (YAN_CEZA[sl] * (1.0 if carpan is None else carpan[sl])).ravel().tolist()
+    cl = YAN_CEZA[sl] * (1.0 if carpan is None else carpan[sl])
+    if donus:
+        cl = cl * np.where(VADI[sl], 6.0, 1.0)     # doğal hat: sığ vadi tabanı boyunca da gitmez (uzun menfez olurdu)
+    cl = cl.ravel().tolist()
     yl = yasak[sl].ravel().tolist()
     hl = (uz[sl] * agirlik).ravel().tolist()
     gl = hedef[sl].ravel().tolist()
     dl = DERE_M[sl].ravel().tolist()
-    nb = [(di, dj, L, dj * W + di) for di, dj, L in KOMSU]
+    nb = [(di, dj, L, dj * W + di, ki) for ki, (di, dj, L) in enumerate(KOMSU)]
     g = [math.inf] * (W * Hh)
     par = [-1] * (W * Hh)
+    gyon = [-1] * (W * Hh)
     kapali = bytearray(W * Hh)
     k0 = (bj - j0) * W + (bi - i0)
     g[k0] = 0.0
@@ -257,7 +281,8 @@ def yol_ara(bas, hedef, sinir, carpan=None, yasak=None, pay=700.0, agirlik=1.2, 
             break
         j, i = divmod(k, W)
         zk, gk, ck = zl[k], g[k], cl[k]
-        for di, dj, L, kd in nb:
+        dt = DONUS_TABLO[gyon[k]] if donus and gyon[k] >= 0 else None
+        for di, dj, L, kd, ki in nb:
             ii, jj = i + di, j + dj
             if ii < 0 or ii >= W or jj < 0 or jj >= Hh:
                 continue
@@ -271,9 +296,12 @@ def yol_ara(bas, hedef, sinir, carpan=None, yasak=None, pay=700.0, agirlik=1.2, 
             c = gk + L * 0.5 * (ck + cl[n]) * (1 + 2.0 * t * t)
             if dl[n] and not dl[k]:
                 c += dere_ceza
+            if dt is not None:
+                c += donus * dt[ki]
             if c < g[n]:
                 g[n] = c
                 par[n] = k
+                gyon[n] = ki
                 heapq.heappush(yig, (c + hl[n], n))
     if son < 0:
         return None
@@ -286,6 +314,338 @@ def yol_ara(bas, hedef, sinir, carpan=None, yasak=None, pay=700.0, agirlik=1.2, 
     yol.reverse()
     yol[0] = tuple(bas)
     return yol
+
+
+def en_buyuk_egim(geom, Zm=None, pencere=20.0):
+    Zm = ZR if Zm is None else Zm
+    L = geom.length
+    if L < 1:
+        return 0.0
+    s = np.arange(0, L + 0.01, 5.0)
+    p = np.array([geom.interpolate(t).coords[0] for t in s])
+    z = ornek(Zm, p[:, 0], p[:, 1])
+    k = max(1, int(pencere / 5))
+    if len(z) <= k:
+        return abs(z[-1] - z[0]) / max(L, 1)
+    return float(np.max(np.abs(z[k:] - z[:-k]) / (s[k:] - s[:-k])))
+
+
+# ------------------------------------------------------------------ doğal hat (Kemal, 24 Kasım: "düzgün, doğal bir yol olsun")
+# Izgara araması 10 m'lik hücrelerden ve 16 yönden geçer: eğim sınırı ve yan yamaç cezası yüzünden yol hücre hücre
+# kırılır; eski yumuşatma (3,5–9 m sadeleştirme + iki tur köşe kesme) bu kırıkları küçük kıvrımlara çeviriyordu
+# (testere dişi, kısa dirsek). Arama artık yalnız güzergâhı bulur; çizgi ondan sonra yeniden kurulur:
+# (1) ip germe: aramanın hattından düz gidilebilen en uzak noktaya gidilir (yasak yok, hattan en çok SAPMA kadar
+# uzak, zemin 10 m'de yumuşatılınca eğim sınırı içinde); (2) kalan köşeler büyük yarıçaplı yayla dönülür (dağ
+# yolunun virajı gibi; yay komşu düz kesimlerin yarısına sığmazsa yarıçap küçülür). Eğim yine aşılırsa engel değil uyarı.
+VIRAJ_R = {"ana": 70.0, "ara": 55.0, "sokak": 25.0, "gecit": 15.0, "toprak": 35.0, "patika": 12.0}   # DENEME: viraj yarıçapı hedefi (m)
+SAPMA = {"ana": 30.0, "ara": 30.0, "sokak": 15.0, "gecit": 10.0, "toprak": 25.0, "patika": 15.0}      # DENEME: aramanın hattından en çok (m)
+IP_EN_COK = 60          # ip germede en çok kaç arama noktası atlanır (~600 m)
+DOGAL_UYARI = []        # eğim sınırını aşan doğal hatlar (yumuşak kural: uyarı)
+
+
+KAZI_EN_COK = 2.5       # DENEME: düz kesimde zemin, yumuşatılmış hâlinden en çok bu kadar sapar (kazı / dolgu, m)
+
+
+def _profil_egimi(xs, ys, Zm=None):
+    """Düz kesimin 5 m'de bir örneklenmiş zemininde (10 m yumuşatılmış) 20 m pencerede en dik eğim. Yumuşatma
+    KAZI_EN_COK'tan büyük kazı / dolgu isterse (sırtı yarıp geçmek, vadiyi doldurmak) kesim geçmez (sonsuz)."""
+    Zm = ZR if Zm is None else Zm
+    z0 = ornek(Zm, xs, ys)
+    d = math.hypot(xs[-1] - xs[0], ys[-1] - ys[0])
+    if len(z0) < 3:
+        return abs(z0[-1] - z0[0]) / max(d, 1.0)
+    z = ndimage.gaussian_filter1d(z0, 2.0, mode="nearest")
+    if np.max(np.abs(z - z0)) > KAZI_EN_COK:
+        return math.inf
+    ds = d / (len(z) - 1)
+    k = min(len(z) - 1, 4)
+    return float(np.max(np.abs(z[k:] - z[:-k])) / (k * ds))
+
+
+ASIM_ORAN = 2.0        # DENEME: yumuşak kural; düz gidiş ancak sınırın bu katına kadar dik olabilir (uyarı olur)
+ASIM_HAT = []          # sınırı aşan düz kesimler (yol yatağı orada daha dik çizilir, denetimde bilgi)
+
+
+def ip_ger(ham, sinir, sapma, yasak=None, sabit_uclar=20.0, tut=(), asim=None):
+    """Arama hattının kırıklarını atlar: her noktadan, düz gidilebilen en uzak noktaya.
+    tut: atlanmayacak noktaların sırası (korunan hattın başı, teğet noktası).
+    asim: yumuşak sınır. Sınır içinde ancak kısa (< 80 m) gidilebiliyor, yumuşak sınırla iki katından uzağa
+    gidilebiliyorsa (aramanın hattı eğimi küçük zikzaklarla tutturmuş: testere dişi) düz kesim seçilir ve
+    ASIM_HAT'a yazılır. Döner: noktalar."""
+    p = np.asarray(ham, float)
+    n = len(p)
+    if n < 3:
+        return [tuple(q) for q in p]
+    yasak = YASAK_TEMEL if yasak is None else yasak
+    agac = cKDTree(np.asarray(LineString(p).segmentize(4.0).coords))
+    bas_, son_ = p[0], p[-1]
+
+    def egim(a, b):
+        u, v = p[a], p[b]
+        d = math.hypot(*(v - u))
+        k = max(2, int(math.ceil(d / 5.0)) + 1)
+        t = np.linspace(0, 1, k)
+        xs, ys = u[0] + t * (v[0] - u[0]), u[1] + t * (v[1] - u[1])
+        if agac.query(np.column_stack([xs, ys]))[0].max() > sapma:
+            return math.inf
+        ii = np.clip(np.round((xs - X0) / H).astype(int), 0, EN - 1)
+        jj = np.clip(np.round((ys - Y0) / H).astype(int), 0, BOY - 1)
+        uc = (np.hypot(xs - bas_[0], ys - bas_[1]) < sabit_uclar) | (np.hypot(xs - son_[0], ys - son_[1]) < sabit_uclar)
+        if ((yasak[jj, ii] | ELLE_YAPI[jj, ii]) & ~uc).any():
+            return math.inf
+        # vadi ve dere boyunca gitmez (aramadaki gibi; yalnız kısa geçiş, köprü ≤ ~40 m)
+        vd = VADI[jj, ii] | DERE_M[jj, ii]
+        if vd.sum() > 8:
+            return math.inf
+        return _profil_egimi(xs, ys)
+
+    tut = sorted(set(int(k) % n for k in tut))
+    out = [0]
+    i = 0
+    while i < n - 1:
+        sik, gev, ard = i + 1, i + 1, 0
+        sinir_j = min([k for k in tut if k > i] + [n - 1])
+        for j in range(i + 2, min(sinir_j, i + IP_EN_COK) + 1):
+            e = egim(i, j)
+            if e <= sinir:
+                sik, ard = j, 0
+            if asim and e <= asim:
+                gev, ard = j, 0
+            if e > (asim or sinir):
+                ard += 1
+                if ard > 8:
+                    break
+        d_sik, d_gev = math.dist(p[i], p[sik]), math.dist(p[i], p[gev])
+        if asim and gev > sik and d_sik < 80.0 and d_gev > 2.0 * d_sik:
+            ASIM_HAT.append(LineString([p[i], p[gev]]))
+            sik = gev
+        out.append(sik)
+        i = sik
+    return [tuple(p[k]) for k in out]
+
+
+def viraj_yuvarla(pts, R, kapali=False, adim=4.0, sabit=()):
+    """Köşeleri yarıçapı R olan yayla döner; yay komşu kesimin yarısına (uç ya da sabit köşe yanında
+    tamamına) sığmazsa yarıçap küçülür. sabit: dokunulmayacak köşelerin sırası (kavşak, korunan hat)."""
+    p = [np.asarray(q, float) for q in pts]
+    if kapali and np.hypot(*(p[0] - p[-1])) < 0.5:
+        p = p[:-1]
+    n = len(p)
+    if n < 3:
+        return [tuple(q) for q in pts]
+    sabit = set(sabit)
+
+    def pay(k_kom, l_):
+        uc = not kapali and k_kom in (0, n - 1)
+        return 0.9 * l_ if uc or (k_kom % n) in sabit else 0.5 * l_
+
+    out = []
+    for k in range(n):
+        if not kapali and k in (0, n - 1):
+            out.append(tuple(p[k]))
+            continue
+        a, b, c = p[(k - 1) % n], p[k], p[(k + 1) % n]
+        u, v = b - a, c - b
+        lu, lv = math.hypot(*u), math.hypot(*v)
+        if k in sabit or lu < 1e-6 or lv < 1e-6:
+            out.append(tuple(b))
+            continue
+        u, v = u / lu, v / lv
+        th = math.acos(max(-1.0, min(1.0, float(u @ v))))     # dönüş açısı
+        if th < math.radians(1.0):
+            out.append(tuple(b))
+            continue
+        t = min(R * math.tan(th / 2), pay(k - 1, lu), pay(k + 1, lv))
+        r = t / math.tan(th / 2)
+        P1 = b - u * t
+        sol = 1.0 if (u[0] * v[1] - u[1] * v[0]) > 0 else -1.0
+        O = P1 + np.array([-u[1], u[0]]) * sol * r
+        a1 = math.atan2(P1[1] - O[1], P1[0] - O[0])
+        m_ = max(2, int(math.ceil(r * th / adim)) + 1)
+        for q in np.linspace(0, 1, m_):
+            aa = a1 + sol * th * q
+            out.append((O[0] + r * math.cos(aa), O[1] + r * math.sin(aa)))
+    if kapali:
+        out.append(out[0])
+    return out
+
+
+EGRI_SIGMA = {"ana": 14.0, "ara": 12.0, "sokak": 6.0, "gecit": 5.0, "toprak": 10.0, "patika": 5.0}   # DENEME (m)
+
+
+def egri_yumusat(pts, sigma, kapali=False, adim=2.0, uc_pay=None):
+    """Çizgi 2 m'de bir örneklenir, koordinatlar yol boyunca Gauss ile yumuşatılır (sigma m): ızgaranın 10–30 m'lik
+    kırıkları söner, yüzlerce metrelik kıvrım kalır. Açık çizgide uçlar ve uç_pay kadarı yerinde kalır (kavşak)."""
+    p = np.asarray(pts, float)
+    if len(p) < 3 or sigma <= 0:
+        return [tuple(q) for q in p]
+    s = np.r_[0, np.cumsum(np.hypot(*np.diff(p, axis=0).T))]
+    if s[-1] < 4 * adim:
+        return [tuple(q) for q in p]
+    t = np.linspace(0, s[-1], int(math.ceil(s[-1] / adim)) + 1)
+    x, y = np.interp(t, s, p[:, 0]), np.interp(t, s, p[:, 1])
+    if kapali:
+        xs = ndimage.gaussian_filter1d(x[:-1], sigma / adim, mode="wrap")
+        ys = ndimage.gaussian_filter1d(y[:-1], sigma / adim, mode="wrap")
+        q = np.column_stack([np.r_[xs, xs[:1]], np.r_[ys, ys[:1]]])
+    else:
+        xs = ndimage.gaussian_filter1d(x, sigma / adim, mode="nearest")
+        ys = ndimage.gaussian_filter1d(y, sigma / adim, mode="nearest")
+        up = 2.5 * sigma if uc_pay is None else uc_pay
+        w = smooth_adim(np.minimum(t, s[-1] - t) / max(up, 1e-6))
+        q = np.column_stack([x + w * (xs - x), y + w * (ys - y)])
+        q[0], q[-1] = p[0], p[-1]
+    g = LineString(q).simplify(0.2)
+    return [tuple(c) for c in g.coords]
+
+
+def smooth_adim(t):
+    t = np.clip(t, 0, 1)
+    return t * t * (3 - 2 * t)
+
+
+def _egim_dizisi(q, adim=2.0):
+    """2 m'de bir noktalar: zemin (10 m yumuşatılmış) 20 m pencerede eğim, her nokta için (yolun gördüğü)."""
+    z = ndimage.gaussian_filter1d(ornek(ZR, q[:, 0], q[:, 1]), 10.0 / adim, mode="nearest")
+    k = int(20.0 / adim)
+    if len(z) <= k:
+        return np.zeros(len(z))
+    g = np.abs(z[k:] - z[:-k]) / (k * adim)
+    e = np.zeros(len(z))
+    for o in range(k + 1):        # her nokta, içinde bulunduğu pencerelerin en dikini alır
+        e[o:o + len(g)] = np.maximum(e[o:o + len(g)], g)
+    return e
+
+
+def egim_koru(yol, ref, sinir, kapali=False, adim=2.0):
+    """Yumuşatılmış hat bir yerde ip germe hattından (ref) daha dik olursa (viraj ya da yumuşatma kıvrımı kısaltıp
+    yamaca bindirdiyse) o yerde hat ref'e doğru geri çekilir; geçiş yumuşak (kavşak ve virajda kırık kalmaz)."""
+    p = np.asarray(yol, float)
+    s = np.r_[0, np.cumsum(np.hypot(*np.diff(p, axis=0).T))]
+    if s[-1] < 30:
+        return yol
+    t = np.linspace(0, s[-1], int(math.ceil(s[-1] / adim)) + 1)
+    q = np.column_stack([np.interp(t, s, p[:, 0]), np.interp(t, s, p[:, 1])])
+    R_ = LineString(ref)
+    r = np.array([R_.interpolate(R_.project(Point(c))).coords[0] for c in q])
+    e_ref = _egim_dizisi(r)
+    w = np.ones(len(q))
+    mod = "wrap" if kapali else "nearest"
+    for _ in range(8):
+        ws = np.clip(ndimage.gaussian_filter1d(w, 6.0, mode=mod), 0, 1)
+        c = r + ws[:, None] * (q - r)
+        e = _egim_dizisi(c)
+        fazla = e > np.maximum(sinir, e_ref + 0.005)
+        if not fazla.any():
+            break
+        w = np.where(ndimage.binary_dilation(fazla, iterations=15), w * 0.4, w)
+    if not kapali:
+        c[0], c[-1] = p[0], p[-1]
+    else:
+        c[-1] = c[0]
+    return [tuple(x) for x in LineString(c).simplify(0.2).coords]
+
+
+def dirsek_yerleri(q, adim=2.0, pencere=20.0, esik=60.0):
+    """2 m'de bir noktalar: 20 m içinde 60°'den çok dönen yerlerin sırası (denetimdeki ölçüyle aynı)."""
+    h = np.unwrap(np.arctan2(np.diff(q[:, 1]), np.diff(q[:, 0])))
+    k = int(pencere / adim)
+    if len(h) <= k:
+        return np.zeros(len(q), bool)
+    d = np.degrees(np.abs(h[k:] - h[:-k])) > esik
+    out = np.zeros(len(q), bool)
+    for o in range(k + 1):
+        out[o:o + len(d)] |= d
+    return out
+
+
+def dirsek_temizle(yol, sigma, kapali=False, uc_pay=None, adim=2.0):
+    """Eğim yüzünden geri çekilen yerde kalan keskin dirsekler (dik yamaçta, yol eğimi sınırı tutamıyor): yalnız
+    oralarda hat daha çok yumuşatılır; eğim aşılırsa yumuşak kural (ASIM_HAT, yatak orada daha dik)."""
+    p = np.asarray(yol, float)
+    s = np.r_[0, np.cumsum(np.hypot(*np.diff(p, axis=0).T))]
+    if s[-1] < 40:
+        return yol
+    t = np.linspace(0, s[-1], int(math.ceil(s[-1] / adim)) + 1)
+    q = np.column_stack([np.interp(t, s, p[:, 0]), np.interp(t, s, p[:, 1])])
+    mod = "wrap" if kapali else "nearest"
+    up = 2.5 * sigma if uc_pay is None else uc_pay
+    uc = np.ones(len(q)) if kapali else smooth_adim(np.minimum(t, s[-1] - t) / max(up, 1e-6))
+    degisti = np.zeros(len(q), bool)
+    for _ in range(4):
+        d = dirsek_yerleri(q) & (uc > 0.5)
+        if not d.any():
+            break
+        w = np.clip(ndimage.gaussian_filter1d(ndimage.binary_dilation(d, iterations=12).astype(float), 4.0, mode=mod) * 1.5, 0, 1) * uc
+        qs = np.column_stack([ndimage.gaussian_filter1d(q[:, 0], 2 * sigma / adim, mode=mod),
+                              ndimage.gaussian_filter1d(q[:, 1], 2 * sigma / adim, mode=mod)])
+        q = q + w[:, None] * (qs - q)
+        degisti |= w > 0.3
+    if degisti.any():
+        et, n_ = ndimage.label(degisti)
+        for e_ in range(1, n_ + 1):
+            ix = np.nonzero(et == e_)[0]
+            c = q[ix]
+            for a_ in range(0, len(c) - 1, 5):
+                ASIM_HAT.append(LineString([c[a_], c[min(a_ + 5, len(c) - 1)]]))
+    if not kapali:
+        q[0], q[-1] = p[0], p[-1]
+    else:
+        q[-1] = q[0]
+    return [tuple(x) for x in LineString(q).simplify(0.2).coords]
+
+
+def dogal_hat(ham, tur, sinir, yasak=None, ad=None, tut=(), kapali=False, uc_pay=None):
+    """Arama hattından doğal yol çizgisi: ip germe + büyük yarıçaplı viraj + yumuşatma. Uçlar yerinde kalır."""
+    ham = [tuple(q) for q in ham]
+    if len(ham) < 3:
+        return ham
+    # yol yatağının boy kesiti ana ve arada sınırın %85'iyle çizilir (bölüm 8): ip germe de ona göre
+    s_y = sinir * (0.85 if tur in ("ana", "ara") else 0.93)
+    ger = ip_ger(ham, s_y, SAPMA.get(tur, 20.0), yasak=yasak, tut=tut,
+                 asim=None if tur in ("patika", "merdiven") else s_y * ASIM_ORAN)
+    yol = viraj_yuvarla(ger, VIRAJ_R.get(tur, 30.0), kapali=kapali)
+    if not kapali:
+        yol[0], yol[-1] = ham[0], ham[-1]
+    # (3) kalan kısa kırıklar (dik yerde ip germe kısa kalınca) yol boyunca yumuşatılır; uçlar ve teğet payı yerinde
+    yol = egri_yumusat(yol, EGRI_SIGMA.get(tur, 8.0), kapali=kapali, uc_pay=uc_pay)
+    if tur not in ("patika", "merdiven"):
+        yol = egim_koru(yol, ger, s_y, kapali=kapali)
+        yol = dirsek_temizle(yol, EGRI_SIGMA.get(tur, 8.0), kapali=kapali, uc_pay=uc_pay)
+        e = en_buyuk_egim(LineString(yol))
+        if e > sinir * 1.02:
+            DOGAL_UYARI.append(f"{ad or tur}: en dik %{100 * e:.1f} (sınır %{100 * sinir:.0f})")
+    return yol
+
+
+def _yon(a, b):
+    v = np.subtract(b, a, dtype=float)
+    return v / max(np.hypot(*v), 1e-9)
+
+
+def dogal_ara(ham, bas_yon=None, son_yon=None, tur="ana", yasak=None, ad=None, teget=25.0):
+    """İki sabit hattın arasındaki arama hattından doğal hat. bas_yon / son_yon verilirse yol o uçta sabit hattın
+    yönünde girer çıkar (uçtan teget kadar ötede bir nokta tutulur): kavşakta kırık kalmaz."""
+    ham = [tuple(map(float, q)) for q in ham]
+    a, b = ham[0], ham[-1]
+    orta = ham[1:-1]
+    # teğet noktasının gerisinde ya da yakınında kalan baştaki / sondaki arama noktaları atılır (kanca kalmasın)
+    if bas_yon is not None:
+        while orta and (orta[0][0] - a[0]) * bas_yon[0] + (orta[0][1] - a[1]) * bas_yon[1] < teget * 1.5:
+            orta = orta[1:]
+    if son_yon is not None:
+        while orta and (b[0] - orta[-1][0]) * son_yon[0] + (b[1] - orta[-1][1]) * son_yon[1] < teget * 1.5:
+            orta = orta[:-1]
+    pts, tut = [a], []
+    if bas_yon is not None:
+        pts.append((a[0] + teget * bas_yon[0], a[1] + teget * bas_yon[1]))
+        tut.append(1)
+    pts += orta
+    if son_yon is not None:
+        pts.append((b[0] - teget * son_yon[0], b[1] - teget * son_yon[1]))
+        tut.append(len(pts) - 1)
+    pts.append(b)
+    return dogal_hat(pts, tur, EGIM[tur], yasak=yasak, ad=ad, tut=tut, uc_pay=teget)
 
 
 # ------------------------------------------------------------------ yol listesi
@@ -330,20 +690,48 @@ def ucu_aga_bagla(pts, turler=None):
 
 
 def baglanti(bas, hedef_maske, tur, ad=None, carpan=None, yasak=None, pay=900.0, ters=False, cikmaz=(False, False),
-             sinir_carpan=1.0):
-    yol = yol_ara(bas, hedef_maske, EGIM[tur] * sinir_carpan, carpan=carpan, yasak=yasak, pay=pay)
+             sinir_carpan=1.0, kes=True):
+    yol = yol_ara(bas, hedef_maske, EGIM[tur] * sinir_carpan, carpan=carpan, yasak=yasak, pay=pay,
+                  donus=0.0 if tur == "patika" else DONUS_CEZA)
     if yol is None:
         print(f"  UYARI: yol bulunamadı ({ad or tur}, {bas[0]:.0f},{bas[1]:.0f})")
         return None
-    ham = yol
-    for _sd in (9.0, 6.0, 3.5):        # en yumuşak hâl, eğimi aşmıyorsa
-        yol = yumusat(ham, tur=2, sade=_sd)
-        if tur in ("patika",) or en_buyuk_egim(LineString(yol)) <= EGIM[tur] * sinir_carpan * 0.95:
-            break
-    yol = ucu_aga_bagla(yol)
+    if tur == "patika":
+        # patika (yaya yolu) eskisi gibi: ızgara kırığı yalnız sadeleştirme ve köşe kesmeyle (dar ve kıvrımlı kalır)
+        yol = ucu_aga_bagla(yumusat(yol, tur=2, sade=9.0))
+    else:
+        # uç önce ağa oturur, sonra doğal hat (kavşakta kırık kalmasın; Kemal 24 Kasım)
+        yol = dogal_hat(ucu_aga_bagla(yol), tur, EGIM[tur] * sinir_carpan, yasak=yasak, ad=ad)
+        if kes:
+            yol = ilk_degmede_kes(yol)
     if ters:
         yol = yol[::-1]
     return ekle(LineString(yol), tur, ad, cikmaz=cikmaz)
+
+
+def ilk_degmede_kes(yol, yakin=6.0, bas_pay=40.0):
+    """Doğal hat ağa ilk yaklaştığı yerde biter (ağdaki yolun yanında koşut giden kuyruk kalmasın: iki yol yan yana
+    değil, kavşakta birleşir). Son nokta ağdaki en yakın yolun üstüne oturur."""
+    g = LineString(yol)
+    ag = [y["geom"] for y in YOLLAR if y["tur"] in ("ana", "ara") and y["geom"].length > 1]   # bağlı ana ağ
+    if not ag or g.length < bas_pay + 20:
+        return yol
+    agu = unary_union(ag)
+    for t in np.arange(bas_pay, g.length - 15.0, 2.0):
+        P = g.interpolate(t)
+        if agu.distance(P) < yakin:
+            h = min(ag, key=lambda h_: h_.distance(P))
+            # ağdaki yola gidiş yönünde, 12 m ileride yumuşakça katılır (dik sıçrama dirsek olurdu)
+            d = np.subtract(P.coords[0], g.interpolate(max(0.0, t - 8.0)).coords[0])
+            u = h.project(P)
+            a_, b_ = h.interpolate(max(0.0, u - 1.0)).coords[0], h.interpolate(min(h.length, u + 1.0)).coords[0]
+            isaret = 1.0 if float(np.dot(d, np.subtract(b_, a_))) >= 0 else -1.0
+            q = h.interpolate(min(h.length, max(0.0, u + isaret * 12.0)))
+            parca = list(substring(g, 0, t).coords)
+            if math.dist(parca[-1], (q.x, q.y)) > 0.05:
+                parca.append((q.x, q.y))
+            return [tuple(c) for c in parca]
+    return yol
 
 
 def disk(xy, r):
@@ -382,31 +770,78 @@ _imp = Point(OTEL.centroid)
 carpan_sahil = np.where(D_KARA > 160, 1 + ((D_KARA - 160) / 140) ** 2,
                         np.where(D_KARA < 70, 1 + ((70 - D_KARA) / 20) ** 2, 1.0))
 carpan_sahil = carpan_sahil * np.where(np.hypot(GX - _imp.x, GY - _imp.y) < 230, 4.0, 1.0)
-kullanilan = np.zeros(Z.shape, bool)
-halka = []
+def sahil_halka(donus):
+    """Duraklar arası eğim sınırlı aramalar, sırayla (kapalı halkanın ham noktaları)."""
+    kullanilan = np.zeros(Z.shape, bool)
+    halka = []
+    i, atlanan = 0, 0
+    while i < len(nok):
+        a = nok[i]
+        yol = None
+        for dene in range(3):
+            b_ = nok[(i + 1 + dene) % len(nok)]
+            c_ = carpan_sahil * np.where(kullanilan & ~disk(a, 60) & ~disk(b_, 60), 8.0, 1.0)
+            yol = yol_ara(a, disk(b_, 12), EGIM["ana"], carpan=c_, pay=600, donus=donus)
+            if yol is not None:
+                atlanan += dene
+                break
+        if yol is None:
+            sys.exit(f"HATA: Sahil Yolu {a} noktasından ilerleyemedi")
+        yol[-1] = b_
+        halka.extend(yol[:-1])
+        kullanilan |= cizgi_maske([LineString(yol)], 3)
+        i += 1 + dene
+    return halka, atlanan
+
+
 nok = [d_[1] for d_ in duraklar]
-i = 0
-atlanan = 0
-while i < len(nok):
-    a = nok[i]
-    hedef_i = (i + 1) % len(nok)
-    yol = None
-    for dene in range(3):
-        b_ = nok[(i + 1 + dene) % len(nok)]
-        c_ = carpan_sahil * np.where(kullanilan & ~disk(a, 60) & ~disk(b_, 60), 8.0, 1.0)
-        yol = yol_ara(a, disk(b_, 12), EGIM["ana"], carpan=c_, pay=600)
-        if yol is not None:
-            atlanan += dene
-            break
-    if yol is None:
-        sys.exit(f"HATA: Sahil Yolu {a} noktasından ilerleyemedi")
-    yol[-1] = b_
-    halka.extend(yol[:-1])
-    kullanilan |= cizgi_maske([LineString(yol)], 3)
-    i += 1 + dene
-    if (i + 0) >= len(nok) and (i % len(nok)) != 0:
-        pass
+# halkanın araması dönüş cezasız (İskele'nin içinde kalan kısmı eskisiyle aynı olsun; dışarıda kırıkları doğal hat siler)
+halka, atlanan = sahil_halka(0.0)
+_ham_halka = list(halka)
+# doğal hat (24 Kasım): duraklar arası aramaların kırıkları ip germeyle atlanır, köşeler büyük yarıçapla dönülür.
+# İskele'nin sokak dokusu Sahil Yolu'na göre kurulur (köyün ortası yolun üstünde, sokaklar ondan uzak durur):
+# köyün içinde Sahil Yolu eski hâliyle kalır (sokak dokusu ayrı iş), yeni hat ona onun yönünde bağlanır.
 halka = yumusat(halka, kapali=True, tur=2, sade=3.5)
+from shapely.ops import nearest_points, substring  # noqa: E402
+_R = LineString(halka + [halka[0]])
+_isk = YERLESIM["yerlesim_iskele"]
+# korunan yer: köy dokusunun sınırı (koy_dokusu'ndaki gibi, aynı rastgele sayılarla) ve 25 m payı (sokaklar
+# Sahil Yolu'ndan 22 m uzak durur)
+_rng = np.random.default_rng(sum(map(ord, "yerlesim_iskele")))
+_f1, _f2 = _rng.uniform(0, 2 * np.pi, 2)
+_th = np.linspace(0, 2 * np.pi, 72, endpoint=False)
+_rr = _isk["yaricapM"] * 1.05 * (1 + 0.12 * np.sin(3 * _th + _f1) + 0.07 * np.sin(5 * _th + _f2))
+_ci = nearest_points(_R, Point(_isk["xy"]))[0] if _R.distance(Point(_isk["xy"])) < 40 else Point(_isk["xy"])
+_koru = Polygon(np.column_stack([_ci.x + _rr * np.cos(_th), _ci.y + _rr * np.sin(_th)])).buffer(25.0)
+
+
+def _halka_dondur(R, t):
+    """Kapalı halkayı t konumundan başlat."""
+    t = t % R.length
+    a, b = substring(R, t, R.length), substring(R, 0, t)
+    return LineString(list(a.coords) + list(b.coords)[1:])
+
+
+_R = _halka_dondur(_R, _R.project(Point(_isk["xy"])) + _R.length / 2)
+_P = _R.intersection(_koru)
+_P = max(getattr(_P, "geoms", [_P]), key=lambda g: g.length)
+_R = _halka_dondur(_R, min(_R.project(Point(_P.coords[0])), _R.project(Point(_P.coords[-1]))))
+_Lp = _P.length
+_KORU_HAT = substring(_R, 0, _Lp)
+_pe, _ps = _KORU_HAT.coords[-1], _KORU_HAT.coords[0]
+# yeni aramanın noktaları kendi sırasıyla: korunan hattın sonundan başına (halkanın köy dışındaki kısmı)
+_hh = np.asarray(_ham_halka)
+_ie = int(np.argmin(np.hypot(_hh[:, 0] - _pe[0], _hh[:, 1] - _pe[1])))
+_is = int(np.argmin(np.hypot(_hh[:, 0] - _ps[0], _hh[:, 1] - _ps[1])))
+_sira = [(_ie + k) % len(_hh) for k in range((_is - _ie) % len(_hh) + 1)]
+_kb = _koru.buffer(10.0)
+_serbest = [tuple(_hh[k]) for k in _sira if not _kb.contains(Point(_hh[k]))]
+_yeni = dogal_ara([_pe] + _serbest + [_ps], _yon(_KORU_HAT.interpolate(_Lp - 10).coords[0], _pe),
+                  _yon(_ps, _KORU_HAT.interpolate(10).coords[0]), ad="Sahil Yolu", teget=50.0)
+halka = [tuple(c) for c in _KORU_HAT.coords] + [tuple(c) for c in _yeni[1:-1]]
+# halka eskisi gibi ilk duraktan başlar (yol yatağının boy kesiti halkanın iki ucunda kesilir; İskele'de kalmasın)
+_R = _halka_dondur(LineString(halka + [halka[0]]), LineString(halka + [halka[0]]).project(Point(nok[0])))
+halka = [tuple(c) for c in _R.coords][:-1]
 SAHIL = LineString(halka + [halka[0]])
 if not SAHIL.is_simple:
     # kendi üstüne dönen küçük ilmekleri ayıkla: halkanın çokgen dış sınırını al
@@ -491,12 +926,22 @@ if _sa < 0 or _sb > SAHIL.length:
 _pa, _pb = SAHIL.interpolate(_sa), SAHIL.interpolate(_sb)
 _kyasak = YASAK_TEMEL | maske(KK_KUSAK, 8)
 _c0, _c1 = CEKIRDEK.coords[0], CEKIRDEK.coords[-1]
-_y1 = yol_ara((_pa.x, _pa.y), disk(_c0, 8), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_kyasak & ~disk(_c0, 20))
-_y2 = yol_ara(_c1, disk((_pb.x, _pb.y), 12), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_kyasak & ~disk(_c1, 20))
+_y1 = yol_ara((_pa.x, _pa.y), disk(_c0, 8), EGIM["ana"], pay=600, donus=DONUS_CEZA, carpan=carpan_sahil, yasak=_kyasak & ~disk(_c0, 20))
+_y2 = yol_ara(_c1, disk((_pb.x, _pb.y), 12), EGIM["ana"], pay=600, donus=DONUS_CEZA, carpan=carpan_sahil, yasak=_kyasak & ~disk(_c1, 20))
 if _y1 is None or _y2 is None:
     sys.exit("HATA: Sahil Yolu'nun kıyı köyü kesimi bulunamadı")
-_y1 = yumusat(list(_y1[:-1]) + [_c0], tur=3, sade=6.0)
-_y2 = yumusat([_c1] + list(_y2[1:-1]) + [(_pb.x, _pb.y)], tur=3, sade=6.0)
+# doğal hat (24 Kasım): arama hattı iki yandaki sabit hatlara onların yönünde bağlanır; Sahil Yolu'nun dışarıdaki
+# hattından 120 m daha birlikte yeniden çizilir (kavşakta kırık kalmasın)
+_BAG = 120.0
+_ona = [tuple(c) for c in substring(SAHIL, _sa - _BAG, _sa).coords]
+_ard = [tuple(c) for c in substring(SAHIL, _sb, _sb + _BAG).coords]
+_cy = _yon(CEKIRDEK.coords[0], CEKIRDEK.interpolate(10).coords[0])
+_cy2 = _yon(CEKIRDEK.interpolate(CEKIRDEK.length - 10).coords[0], CEKIRDEK.coords[-1])
+_y1 = dogal_ara(_ona[:-1] + list(_y1[:-1]) + [_c0], _yon(_ona[0], SAHIL.interpolate(_sa - _BAG + 10).coords[0]), _cy,
+                yasak=_kyasak & ~disk(_c0, 20), ad="Sahil Yolu (kıyı köyü batısı)")
+_y2 = dogal_ara([_c1] + list(_y2[1:-1]) + _ard, _cy2, _yon(SAHIL.interpolate(_sb + _BAG - 10).coords[0], _ard[-1]),
+                yasak=_kyasak & ~disk(_c1, 20), ad="Sahil Yolu (kıyı köyü doğusu)")
+_sa, _sb = _sa - _BAG, _sb + _BAG
 _yk = [tuple(c) for c in _y1[:-1]] + list(CEKIRDEK.coords) + [tuple(c) for c in _y2[1:]]
 _p1, _p3 = substring(SAHIL, 0, _sa), substring(SAHIL, _sb, SAHIL.length)
 SAHIL = LineString(list(_p1.coords)[:-1] + _yk + list(_p3.coords)[1:])
@@ -552,8 +997,8 @@ if _sa < 0 or _sb > SAHIL.length:
 _pa, _pb = SAHIL.interpolate(_sa), SAHIL.interpolate(_sb)
 _lyasak = YASAK_TEMEL | maske(LM_ALAN, 8)
 _c0, _c1 = LM_CEKIRDEK.coords[0], LM_CEKIRDEK.coords[-1]
-_y1 = yol_ara((_pa.x, _pa.y), disk(_c0, 8), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_lyasak & ~disk(_c0, 20))
-_y2 = yol_ara(_c1, disk((_pb.x, _pb.y), 12), EGIM["ana"], pay=600, carpan=carpan_sahil, yasak=_lyasak & ~disk(_c1, 20))
+_y1 = yol_ara((_pa.x, _pa.y), disk(_c0, 8), EGIM["ana"], pay=600, donus=DONUS_CEZA, carpan=carpan_sahil, yasak=_lyasak & ~disk(_c0, 20))
+_y2 = yol_ara(_c1, disk((_pb.x, _pb.y), 12), EGIM["ana"], pay=600, donus=DONUS_CEZA, carpan=carpan_sahil, yasak=_lyasak & ~disk(_c1, 20))
 if _y1 is None or _y2 is None:
     sys.exit("HATA: Sahil Yolu'nun Liman kesimi bulunamadı")
 # kasabanın 20 m dışına kadar eski hat birebir; ötesindeki uzantı bağlantıyla birlikte yumuşatılır (kavşakta kırık kalmasın)
@@ -563,8 +1008,16 @@ _t0 = min(LM_CEKIRDEK.project(Point(_tam.coords[0])), LM_CEKIRDEK.project(Point(
 _t1 = max(LM_CEKIRDEK.project(Point(_tam.coords[0])), LM_CEKIRDEK.project(Point(_tam.coords[-1])))
 _e0, _e1 = substring(LM_CEKIRDEK, 0, _t0), substring(LM_CEKIRDEK, _t1, LM_CEKIRDEK.length)
 _tam = substring(LM_CEKIRDEK, _t0, _t1)
-_y1 = yumusat(list(_y1[:-1]) + list(_e0.coords), tur=3, sade=10.0)
-_y2 = yumusat(list(_e1.coords) + list(_y2[1:-1]) + [(_pb.x, _pb.y)], tur=3, sade=10.0)
+# doğal hat (24 Kasım): kıyı köyündeki gibi; kasabanın eski hattına onun yönünde girer, dışarıda 120 m birlikte
+_ona = [tuple(c) for c in substring(SAHIL, _sa - _BAG, _sa).coords]
+_ard = [tuple(c) for c in substring(SAHIL, _sb, _sb + _BAG).coords]
+_ty = _yon(_tam.coords[0], _tam.interpolate(10).coords[0])
+_ty2 = _yon(_tam.interpolate(_tam.length - 10).coords[0], _tam.coords[-1])
+_y1 = dogal_ara(_ona[:-1] + list(_y1[:-1]) + list(_e0.coords), _yon(_ona[0], SAHIL.interpolate(_sa - _BAG + 10).coords[0]),
+                _ty, yasak=_lyasak, ad="Sahil Yolu (Liman batısı)")
+_y2 = dogal_ara(list(_e1.coords) + list(_y2[1:-1]) + _ard, _ty2, _yon(SAHIL.interpolate(_sb + _BAG - 10).coords[0], _ard[-1]),
+                yasak=_lyasak, ad="Sahil Yolu (Liman doğusu)")
+_sa, _sb = _sa - _BAG, _sb + _BAG
 _yk = [tuple(c) for c in _y1[:-1]] + list(_tam.coords) + [tuple(c) for c in _y2[1:]]
 SAHIL_ONCEKI, LM_KESIM = SAHIL, (_sa, _sb)     # Liman kesiminden önceki hat (ana daldaki) ve değişen aralık
 _eski_par = SAHIL_PARCALAR.pop(id(SAHIL))
@@ -604,20 +1057,6 @@ def kontur_acisi(xy):
     gy_, gx_ = np.gradient(Zs, H)
     gx, gy = float(ornek(gx_, *xy)), float(ornek(gy_, *xy))
     return math.degrees(math.atan2(gx, -gy))     # eş yükselti yönü (eğime dik)
-
-
-def en_buyuk_egim(geom, Zm=None, pencere=20.0):
-    Zm = ZR if Zm is None else Zm
-    L = geom.length
-    if L < 1:
-        return 0.0
-    s = np.arange(0, L + 0.01, 5.0)
-    p = np.array([geom.interpolate(t).coords[0] for t in s])
-    z = ornek(Zm, p[:, 0], p[:, 1])
-    k = max(1, int(pencere / 5))
-    if len(z) <= k:
-        return abs(z[-1] - z[0]) / max(L, 1)
-    return float(np.max(np.abs(z[k:] - z[:-k]) / (s[k:] - s[:-k])))
 
 
 def capraz_yakin(g, mevcut, esik=14.0, oran=0.55):
@@ -1121,7 +1560,7 @@ for _t_ in np.arange(0, STAT_CEVRE.exterior.length, 5.0):
 # eskisinde köyün batı ucunun Sahil Yolu'na bağlandığı yere iner
 _j1 = KK_HAT["kurucu_yol_muqydtwz"].coords[0]
 _sbg = baglanti((_sq.x, _sq.y), disk(_j1, 10),
-                "ana", "Stadyum Bağlantısı", pay=1200, sinir_carpan=0.8)   # sekiden inişte yatağa uysun
+                "ana", "Stadyum Bağlantısı", pay=1200, sinir_carpan=0.8, kes=False)   # sekiden inişte yatağa uysun
 if _sbg is not None and Point(_sbg["geom"].coords[-1]).distance(Point(_j1)) < 12.0:
     _sbg["geom"] = LineString(list(_sbg["geom"].coords)[:-1] + [_j1])   # köyün kuşak yoluyla aynı kavşakta
 # Çiftlik Bağlantısı: Çiftlik köyünden en yakın Sahil Yolu'na
@@ -1187,10 +1626,10 @@ for k in rng.permutation(len(axy))[:400]:
     hd = tuple(axy[k])
     if (ndimage.distance_transform_edt(~ag_maske()) * H)[int(round((hd[1] - Y0) / H)), int(round((hd[0] - X0) / H))] < 200:
         continue
-    yol = yol_ara(hd, ag_maske(), EGIM["toprak"], pay=500)
+    yol = yol_ara(hd, ag_maske(), EGIM["toprak"], pay=500, donus=DONUS_CEZA)
     if yol is None:
         continue
-    yol = ucu_aga_bagla(yumusat(yol, sade=6.0))[::-1]
+    yol = dogal_hat(ucu_aga_bagla(yol), "toprak", EGIM["toprak"], yasak=YASAK_TEMEL & ~disk(hd, 20), ad="tarla yolu")[::-1]
     g = LineString(yol)
     if g.length < 200 or g.length > 1200 or capraz_yakin(g, tum_hatlar(), 20, 0.3):
         print(f"    tarla yolu elendi: {g.length:.0f} m")
@@ -1260,36 +1699,62 @@ def smooth(t):
 
 
 def alt_zarf(z, ds, lim):
-    """z'yi hiçbir yerde aşmayan, eğimi lim'i geçmeyen en yüksek profil (yol zemini kazar, doldurmaz)."""
+    """z'yi hiçbir yerde aşmayan, eğimi lim'i geçmeyen en yüksek profil (yol zemini kazar, doldurmaz).
+    lim tek sayı ya da kesim başına dizi (yumuşak kuralla aşılan yerde daha büyük)."""
     z = z.copy()
+    lim = np.broadcast_to(np.asarray(lim, float), (len(z),))
     for i_ in range(1, len(z)):
-        z[i_] = min(z[i_], z[i_ - 1] + lim * ds[i_ - 1])
+        z[i_] = min(z[i_], z[i_ - 1] + lim[i_] * ds[i_ - 1])
     for i_ in range(len(z) - 2, -1, -1):
-        z[i_] = min(z[i_], z[i_ + 1] + lim * ds[i_])
+        z[i_] = min(z[i_], z[i_ + 1] + lim[i_] * ds[i_])
     return z
 
 
 def sinirla_sabit(z, ds, lim, sabit):
     """Kavşakta (sabit) kot öbür yolunki kalır; aradaki noktalar eğim sınırına çekilir."""
     z = z.copy()
+    lim = np.broadcast_to(np.asarray(lim, float), (len(z),))
     for _ in range(3):
         for i_ in range(1, len(z)):
             if not sabit[i_]:
-                z[i_] = min(max(z[i_], z[i_ - 1] - lim * ds[i_ - 1]), z[i_ - 1] + lim * ds[i_ - 1])
+                z[i_] = min(max(z[i_], z[i_ - 1] - lim[i_] * ds[i_ - 1]), z[i_ - 1] + lim[i_] * ds[i_ - 1])
         for i_ in range(len(z) - 2, -1, -1):
             if not sabit[i_]:
-                z[i_] = min(max(z[i_], z[i_ + 1] - lim * ds[i_]), z[i_ + 1] + lim * ds[i_])
+                z[i_] = min(max(z[i_], z[i_ + 1] - lim[i_] * ds[i_]), z[i_ + 1] + lim[i_] * ds[i_])
     return z
 
 
 def sinirla(z, ds, lim):
+    lim = np.broadcast_to(np.asarray(lim, float), (len(z),))
     zf = z.copy()
     for i_ in range(1, len(z)):
-        zf[i_] = min(max(zf[i_], zf[i_ - 1] - lim * ds[i_ - 1]), zf[i_ - 1] + lim * ds[i_ - 1])
+        zf[i_] = min(max(zf[i_], zf[i_ - 1] - lim[i_] * ds[i_ - 1]), zf[i_ - 1] + lim[i_] * ds[i_ - 1])
     zb = z.copy()
     for i_ in range(len(z) - 2, -1, -1):
-        zb[i_] = min(max(zb[i_], zb[i_ + 1] - lim * ds[i_]), zb[i_ + 1] + lim * ds[i_])
+        zb[i_] = min(max(zb[i_], zb[i_ + 1] - lim[i_] * ds[i_]), zb[i_ + 1] + lim[i_] * ds[i_])
     return 0.5 * (zf + zb)
+
+
+ASIM_AGAC = STRtree(ASIM_HAT) if ASIM_HAT else None
+
+
+def asim_bolgesi(p):
+    """Yolun örnek noktalarından doğal hattın yumuşak kuralla aştığı düz kesime (8 m yakın, koşut) düşenler."""
+    n = len(p)
+    if ASIM_AGAC is None or n < 2:
+        return np.zeros(n, bool)
+    yon = np.gradient(p, axis=0)
+    yon = yon / np.maximum(np.hypot(*yon.T), 1e-9)[:, None]
+    out = np.zeros(n, bool)
+    for k in range(n):
+        P = Point(p[k])
+        for j in ASIM_AGAC.query(P, predicate="dwithin", distance=8.0):
+            c = np.asarray(ASIM_HAT[int(j)].coords)
+            v = (c[1] - c[0]) / max(np.hypot(*(c[1] - c[0])), 1e-9)
+            if abs(float(v @ yon[k])) > 0.94:
+                out[k] = True
+                break
+    return out
 
 
 # kavşak noktaları: başka bir yolun ucu bu yolun üstündeyse o nokta yolun köşesi olur
@@ -1312,11 +1777,23 @@ for i_, y in enumerate(YOLLAR):
         so_ = so_[np.r_[True, np.diff(so_) > 0.05]]
         y["s_eski"], y["p_eski"] = so_, np.array([go_.interpolate(t).coords[0] for t in so_])
 
+def _lim_dizisi(y, p, ds, lim):
+    """Boy kesitinin eğim sınırı, nokta başına. Yumuşak kural (24 Kasım): doğal hattın sınırı aştığı düz kesimde
+    boy kesiti de o kadar dik olabilir (sınırın ASIM_ORAN katına kadar), geçiş ~30 m; yoksa yatak derin yarma olurdu."""
+    if y["tur"] not in EGIM or y["tur"] == "patika" or len(p) < 3:
+        return lim
+    az = asim_bolgesi(p)
+    if not az.any():
+        return lim
+    w = np.clip(ndimage.gaussian_filter1d(az.astype(float), 15.0 / max(float(np.median(ds)), 0.5), mode="nearest") * 2.0, 0, 1)
+    return lim + w * (EGIM[y["tur"]] * ASIM_ORAN * 0.97 - lim)
+
+
 def _profil(y, s, p):
     """Yolun boy kesiti (yol yatağının profili), köprü kesimleri ve zemin kotu: (zp, kop, zg)."""
     n = len(s)
     ds = np.diff(s)
-    lim = EGIM[y["tur"]] * (0.85 if y["tur"] in ("ana", "ara") else 0.93)
+    lim = _lim_dizisi(y, p, ds, EGIM[y["tur"]] * (0.85 if y["tur"] in ("ana", "ara") else 0.93))
     zg = ornek(Z, p[:, 0], p[:, 1])
     zr = ornek(ZR, p[:, 0], p[:, 1])
     # köprü: dar vadi / dere (yol araması onu kapalı görür, gerçek zemin 3 m'den derin)
@@ -1381,7 +1858,7 @@ for y in YOLLAR:
         d0, d1 = s - _sa, _sa + LIMAN_KESIM_BOY - s
         zp = np.where(ic, zp + (zb0 - zn0) * np.clip(1 - d0 / 60.0, 0, 1) + (zb1 - zn1) * np.clip(1 - d1 / 60.0, 0, 1), zp)
         zp = np.where(dis, zo[io], zp)
-        _lim = EGIM[y["tur"]] * 0.85
+        _lim = np.broadcast_to(_lim_dizisi(y, p, np.diff(s), EGIM[y["tur"]] * 0.85), (len(s),))
         zp = sinirla_sabit(zp, np.diff(s), _lim, dis)     # kesimin içi eğim sınırına çekilir, dışı sabit
         kop = np.where(dis, ko[io], kop)
         zg = np.where(dis, go[io], zg)
@@ -1560,7 +2037,18 @@ _d = _say["geom"].length - SAHIL_ONCEKI.length                  # Liman kesimini
 _w0 = max(t for t in _so if t < _sa - _pay)
 _w1 = min(t for t in _so if t > _sb + _pay) + _d
 _orta = [i_ for i_ in _say["ix"] if _w0 + 0.5 < _say["s"][i_] < _w1 - 0.5]
-_say["cikti"] = (_sol + [ll(*_say["p"][i_]) + [round(float(_say["z"][i_]), 1)] for i_ in _orta] + _sag)
+if os.environ.get("SAHIL_ANA_YENILE"):
+    # tek seferlik (24 Kasım, doğal hat): Sahil Yolu'nun yeni hâli dondurulmuş dosyaya yazılır; ikinci çalışmada
+    # Liman dışındaki noktalar bununla aynı kalır
+    _yeni = [ll(*_say["p"][i_]) + [round(float(_say["z"][i_]), 1)] for i_ in _say["ix"]]
+    _kay = json.load(open(os.path.join(BURASI, "kompakt-sahil-ana.json"), encoding="utf-8"))
+    _kay["koordinatlar"] = _yeni
+    with open(os.path.join(BURASI, "kompakt-sahil-ana.json"), "w", encoding="utf-8") as f:
+        json.dump(_kay, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"  Sahil Yolu: dondurulmuş dosya yenilendi ({len(_yeni)} nokta); şimdi bir kez daha çalıştır")
+    _say["cikti"] = _yeni
+else:
+    _say["cikti"] = (_sol + [ll(*_say["p"][i_]) + [round(float(_say["z"][i_]), 1)] for i_ in _orta] + _sag)
 _say["g_out"] = LineString([m(c[:2]) for c in _say["cikti"]])
 print(f"  Sahil Yolu: Liman dışında ana daldaki {len(_sol) + len(_sag)} nokta aynen, Liman kesiminde {len(_orta)} yeni nokta "
       f"(ana dalda {len(SAHIL_ANA) - len(_sol) - len(_sag)})")
@@ -1598,6 +2086,7 @@ ALANLAR = {
     "vikiId": "vikideki maddesi; yoksa boş",
     "genislik": "metre",
     "uzunlukM": "metre (bilgi)", "mahalle": "mahalle kimliği", "cikmaz": "[baş, son] uç çıkmaz mı",
+    "egimAsimi": "yumuşak kural: kademe eğim sınırının aşıldığı yerler, yol boyunca [baş, son] metre (uyarı; en çok sınırın 2 katı)",
 }
 ozellik = []
 kullanilan_id = set()
@@ -1633,6 +2122,15 @@ for y, b_ in zip(YOLLAR, _bu):
         pr["mahalle"] = mh
     if any(cik):
         pr["cikmaz"] = cik
+    # yumuşak kural (24 Kasım): doğal hattın eğim sınırını aştığı yerler, yol boyunca metre aralığı (geçişle)
+    _go = LineString([m(c[:2]) for c in koord])
+    if ASIM_AGAC is not None and tur in EGIM and tur != "patika" and _go.length > 20:
+        _ss = np.arange(0, _go.length + 0.01, 2.0)
+        _az = asim_bolgesi(np.array([_go.interpolate(t).coords[0] for t in _ss]))
+        if _az.any():
+            _et, _sy = ndimage.label(_az)
+            pr["egimAsimi"] = [[round(max(0.0, float(_ss[_et == e_].min()) - 30.0)), round(min(_go.length, float(_ss[_et == e_].max()) + 30.0))]
+                               for e_ in range(1, _sy + 1)]
     ozellik.append({"type": "Feature", "properties": pr, "geometry": {"type": "LineString", "coordinates": koord}})
     y["id"] = kimlik
 for k_ in KOPRULER:
@@ -1681,5 +2179,6 @@ print("Uzunluklar:", ", ".join(f"{k} {top[k] / 1000:.1f} km" for k in KADEMELER 
 print(f"Toprak payı: %{100 * top.get('toprak', 0) / T:.1f}; toprak + patika: "
       f"%{100 * (top.get('toprak', 0) + top.get('patika', 0)) / T:.1f}")
 print(f"Köprü: {len(KOPRULER)}")
+print("Doğal hat, eğim uyarısı (yumuşak kural):", "; ".join(DOGAL_UYARI) or "yok")
 print("Adlı yollar:", ", ".join(sorted({y['ad'] for y in YOLLAR if y['ad']})))
 print(f"Yazıldı: {os.path.relpath(CIKTI, KOK)} ({os.path.getsize(CIKTI) / 1e6:.2f} MB), zemin güncellendi")

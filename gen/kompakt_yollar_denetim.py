@@ -23,8 +23,30 @@ YOLLAR = os.path.join(KOK, "public", "harita", "duzada-yollar.geojson")
 EGIM = {"ana": 0.10, "ara": 0.10, "sokak": 0.15, "gecit": 0.15, "toprak": 0.15}
 SERBEST = ("patika", "merdiven", "basamak")   # eğim sınırı yok (basamaklı geçit dahil)
 PENCERE = 20.0      # m; eğim bu uzunlukta ölçülür
+ASIM_ORAN = 2.0     # gen/kompakt_yollar.py ile aynı: yumuşak kuralla (egimAsimi) en çok sınırın bu katı
 OTURMA = 1.0        # m; yol yüzeyi ile zemin arasında en çok fark (köprü dışında)
 KIYI_PAY = 15.0     # m; yol kıyıya bundan çok yaklaşmaz (merdiven hariç)
+
+
+def dirsek_yerleri(xy, adim=2.0, pencere=20.0, esik=60.0):
+    """Keskin dirsekler: yol 2 m'de bir örneklenir; 20 m içinde yönü 60°'den çok dönen yer bir dirsek (sonra 20 m atlanır).
+    Döner: dirseklerin metre noktaları."""
+    q = np.asarray(xy, float)
+    s = np.r_[0, np.cumsum(np.hypot(*np.diff(q, axis=0).T))]
+    if s[-1] < pencere + 2 * adim:
+        return []
+    t = np.arange(0, s[-1], adim)
+    r = np.column_stack([np.interp(t, s, q[:, 0]), np.interp(t, s, q[:, 1])])
+    h = np.unwrap(np.arctan2(np.diff(r[:, 1]), np.diff(r[:, 0])))
+    k = int(pencere / adim)
+    out, i = [], 0
+    while i + k < len(h):
+        if math.degrees(abs(h[i + k] - h[i])) > esik:
+            out.append(tuple(r[i + k // 2]))
+            i += k
+        else:
+            i += 1
+    return out
 
 
 def main():
@@ -86,6 +108,7 @@ def main():
     # (KKM Düzenle → Zemin; gen/tek-harita-elle.json → yolOnceki) yumuşak kural: aşımı yalnız bilgi
     import kompakt_taslak_uygula as _U
     elle_yol = set((_U.birikmis_oku().get("yolOnceki") or {}).keys()) if os.path.exists(_U.ELLE) else set()
+    yum_m, yum_en = {}, {}
     for tur, lim in EGIM.items():
         en, asan, top = 0.0, 0.0, 0.0
         kim = ""
@@ -111,6 +134,16 @@ def main():
             if len(s) <= k:
                 continue
             e = np.abs(pts[k:, 2] - pts[:-k, 2]) / (s[k:] - s[:-k])
+            # yumuşak kural (24 Kasım, doğal hat): yolun egimAsimi aralıklarında sınırın ASIM_ORAN katına kadar bilgi
+            sm = 0.5 * (s[k:] + s[:-k])
+            yum = np.zeros(len(e), bool)
+            for a_, b_ in y["p"].get("egimAsimi", []):
+                yum |= (sm >= a_ - 1.0) & (sm <= b_ + 1.0)
+            if yum.any():
+                ey = e[yum]
+                yum_m[tur] = yum_m.get(tur, 0.0) + float((ey > lim + 1e-3).sum() * 2.0)
+                yum_en[tur] = max(yum_en.get(tur, 0.0), float(ey.max()))
+                e = np.where(yum & (e <= lim * ASIM_ORAN + 1e-3), 0.0, e)
             top += L
             asan += (e > lim + 1e-3).sum() * 2.0
             if e.max() > en:
@@ -119,6 +152,9 @@ def main():
                 kim += f" @ {q[0]:.0f},{q[1]:.0f}"
         yaz(f"Eğim, {tur} (sınır %{lim * 100:.0f})", asan == 0,
             f"en dik %{en * 100:.1f} ({kim}); sınırı aşan {asan:.0f} m")
+        if yum_m.get(tur):
+            print(f"  [bilgi] Eğim, {tur}, yumuşak kural (doğal hat, sınırın {ASIM_ORAN:g} katına kadar): "
+                  f"{yum_m[tur]:.0f} m sınırı aşıyor, en dik %{yum_en[tur] * 100:.1f}")
         if bilgi_elle:
             print(f"  [bilgi] Eğim, {tur}, elle zemindeki yol (yumuşak kural): {', '.join(bilgi_elle)}")
     for tur in SERBEST:
@@ -131,6 +167,23 @@ def main():
                 k = int(PENCERE / 2.0)
                 en = max(en, float(np.max(np.abs(pts[k:, 2] - pts[:-k, 2]) / (s[k:] - s[:-k]))))
         print(f"  [bilgi] Eğim, {tur} (sınır yok): en dik %{en * 100:.0f}")
+
+    # 1b) keskin dirsek / zikzak (Kemal 24 Kasım: "düzgün, doğal bir yol olsun"): yol boyunca 20 m içinde 60°'den
+    # çok yön değişimi bir dirsek sayılır (2 m'de bir örnek; sayıldıktan sonra 20 m atlanır). Adlı ana ve ara yollarda
+    # (Sahil Yolu, bağlantılar) hiç olmamalı; köy sokaklarında ve merdivende yalnız bilgi (sokak dokusu ayrı iş).
+    say, adli_d = {}, []
+    for y in G:
+        n_ = len(dirsek_yerleri(y["xy"]))
+        say[y["p"]["kademe"]] = say.get(y["p"]["kademe"], 0) + n_
+        if n_ and y["p"].get("ad") and y["p"]["kademe"] in ("ana", "ara"):
+            adli_d.append(f"{y['p']['ad']} {n_}")
+    yaz("Keskin dirsek / zikzak, adlı ana ve ara yollar (20 m içinde 60°'den çok dönüş)", not adli_d,
+        ", ".join(adli_d) or "yok")
+    tum = json.load(open(YOLLAR, encoding="utf-8"))
+    elle_d = [f"{f['properties']['id']} {len(dirsek_yerleri(np.column_stack(mt(*np.asarray(f['geometry']['coordinates'], float)[:, :2].T))))}"
+              for f in tum["features"] if f["properties"].get("katman") == "yol" and f["properties"].get("elle")]
+    print(f"  [bilgi] Keskin dirsek / zikzak, kademe başına: {sum(say.values())} "
+          f"({', '.join(f'{k} {v}' for k, v in say.items() if v) or '-'}); elle yollar: {', '.join(elle_d) or '-'}")
 
     # 2) yol zemine oturuyor mu (köprü dışında)
     en, kim, top_k = 0.0, "", 0.0

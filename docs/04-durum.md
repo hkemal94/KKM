@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -8,6 +8,33 @@
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 24 Kasım: tek harita: zikzak yollar düzeldi
+
+Kemal (24 Kasım): kıyı yolundaki dirsekler "inanılmaz saçma", Çiftlik yolu ve Stadyum kıyı köyüne gelen yol zikzak;
+"düzgün, doğal bir yol olsun".
+- **Neden:** yol araması (`gen/kompakt_yollar.py` → `yol_ara`) 10 m'lik ızgarada, 16 yönde gider ve her adımda eğimi
+  sınırlar. Yamaçta eğim sınırını yolu kısa kısa kırarak tutturuyordu (testere dişi); eski yumuşatma (3,5–9 m sadeleştirme,
+  iki tur köşe kesme) bu kırıkları küçük kıvrımlara çeviriyordu. Yol yatağı ve noktaların zemine itilmesi neden değildi.
+  Etkilenen: aramayla çizilen bütün yollar (Sahil Yolu, bağlantılar, tarla yolları); köy sokakları değil.
+- **Doğal hat:** arama yalnız güzergâhı bulur; çizgi sonra yeniden kurulur: ip germe (aramanın hattından 30 m içinde
+  düz gidilebilen en uzak noktaya), büyük yarıçaplı viraj (ana 70 m, ara 55 m, toprak 35 m hedef), yol boyunca
+  yumuşatma; kalan keskin dirsek yerinde daha çok yumuşatılır. Bağlantılar ağa ilk değdikleri yerde, yolun yönünde
+  katılır (yan yana koşut kuyruk ve kanca yok). Aramada dönüş cezası (bağlantılar ve kesimler) ve sığ vadi tabanı
+  cezası var. Elle konan yapıların üstünden geçmez. Ölçüler DENEME.
+- **Yumuşak kural (eğim):** düz gidiş sınırın içinde çok kısa kalıyorsa yol sınırı en çok 2 katına kadar aşabilir;
+  yol yatağı orada o eğimle açılır (derin yarma olmasın), yolun `egimAsimi` alanına yazılır, denetimde [bilgi]
+  (ana 2,5 km, en dik %19,7; ara 0,4 km, %15,9). Dışında sınır aynı, SORUN.
+- **Ölçü:** yol denetiminde "keskin dirsek / zikzak" (20 m içinde 60°'den çok yön değişimi). Önce 247 (ana 155,
+  ara 66, toprak 5, sokak 8, geçit 4, merdiven 2, Ada Tepesi yolları 7); sonra 22 (ara 3, sokak 8, geçit 4, merdiven 2
+  köy içi; Ada Tepesi toprak yolunun 5 dar U virajı). Adlı ana ve ara yollarda 0 (denetimde SORUN kuralı).
+- **Korunan:** köy sokak dokuları (Liman, İskele, Çiftlik, Stadyum, Merkez, kıyı köyü) aynı; İskele'nin içinde Sahil
+  Yolu eski hattında (sokaklar ona göre). Sahil Yolu'nun dondurulmuş dosyası (`gen/kompakt-sahil-ana.json`) bir kez
+  yenilendi (`SAHIL_ANA_YENILE=1`). Elle düzen korunur; Ada Tepesi toprak yolu ve patikası elle taslakta yumuşatıldı
+  (uçlar yerinde; en dik %16, yumuşak kural).
+- Yol yatağında en çok kazı 13,4 → 9,1 m. Arsalar, yapılar, ağaçlar, mahalle 2B resimleri yeniden üretildi; Çiftlik'te
+  Sahil Yolu kısalıp düzleşince 21 arsa, 24 yapı az. Bütün denetimler temiz. Önizlemeler `docs/gorseller/tek-harita-yollar/`.
+  Telefonda denenmedi.
 
 ## 24 Kasım: tek harita 11. adım, KKM-C: eski harita kayıtları (11. adım tamam)
 
