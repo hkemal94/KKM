@@ -507,6 +507,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Viki madde standardı: "Gerçek yer" rozeti (tıklanınca kaynak açılır), "Bilinmiyor" dolu sayılmaz, gerçek yerin Mahalle alanı eksik sayılmaz; ajansa dört yeni karar türü (bölüm yaz, bölüm sil, gerçek yer, alanı boşalt)', not: 'Maddeler kendiliğinden değişmez: düzeltmeler ajansın kararlarıyla Onay bekleyenler\'e gelir, Kemal "Uygula"ya basınca yazılır.' },
   { id: 'baslik-degistir-karari', paket: 'W', kimde: 'claude', nereden: '24 Kasım · Kemal', bitti: true,
     ad: 'Ajansın kararlarına başlık değiştirme: Onay bekleyenler\'de "Başlık: eski → yeni"; eski başlık maddenin eski adlarına girer, arama ve bağlar kırılmaz', not: 'Kayıt yalnız Kemal "Uygula"ya basınca değişir; başlık bu arada değiştiyse ya da yeni başlıkta başka madde varsa uygulanmaz.' },
+  { id: 'kunye-rol-duzelt', paket: 'K', kimde: 'claude', nereden: '24 Kasım · ajans', bitti: true,
+    ad: 'Künye: "Elif Yılmaz (2022–), …" gibi yıl aralığıyla başlayan ilk cümle artık "Rol" sanılmaz; bozuk Rol satırı gider, ilk cümle gövdede görünür', not: 'Yalnız okuma; kayıtlara bir şey yazılmaz. Eski "Ad — rol" başlıkları aynen okunur.' },
   { id: 'yardimci', paket: 'K', ad: 'Yardımcı erişimi: düzenler ama silemez', nereden: 'yapisal-2, 26', kimde: 'claude', not: 'İhtiyaç olunca.' },
   { id: 'buffer', uzak: true, paket: 'M', ad: 'Sosyal medyada Buffer bağlantısı (ücretli plan)', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal planı alınca bağlantı kurulur.' },
   { id: 'site-ingilizce', paket: 'K', ad: 'Sitenin İngilizcesi', nereden: 'yapisal-4, 19', kimde: 'claude', not: 'Yayından sonra.' },
