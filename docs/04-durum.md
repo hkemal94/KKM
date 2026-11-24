@@ -9,6 +9,26 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
+## 24 Kasım gece: tek harita, adanın Ege'deki yeri
+
+Kemal (24 Kasım): Ege'deki konum geri gelsin. Eski haritada ada anakara, Küçükkuyu, Bozcaada ve Edremit Körfezi ile
+birlikte görünüyordu; tek haritada yoktu.
+
+- **Uzaklaşınca çevre görünür** (eski haritadaki gibi): anakara (Biga Yarımadası, Babakale, Edremit Körfezi kıyısı),
+  Bozcaada, Gökçeada, Midilli, Limni, Gelibolu; içeri 350 m kumsal şeridi, ince kıyı çizgisi, kıyıdan açığa üç sığlık
+  bandı (gerçek derinlik değil, kıyıya uzaklık). Kamera artık 260 km'ye kadar uzaklaşır ve uzaktayken adanın dışına
+  kayabilir. Yakında çevre çizilmez (sis örter).
+- **Yer adları** uzakken: Bozcaada, Gökçeada, Midilli, Limni, Babakale, Biga Yarımadası, Edremit Körfezi ve
+  "● Küçükkuyu Limanı" (eski haritanın yazı biçimleriyle). Çok uzakta mahalle adlarının yerine "DÜZADA" yazar.
+- **"Ege'de" düğmesi** ("Bütün ada"nın yanında): kamera adayı Küçükkuyu, Bozcaada, Edremit Körfezi ve Babakale ile
+  birlikte ekrana sığdırır, daha dik bakar; "Tepeden" açıksa üstten. Açılış görünümü değişmedi.
+- **Kaynak:** kıyılar eski haritanınkiyle aynı: Natural Earth 1:10m Land (kamu malı), 23 Kasım'da silinen
+  `src/data/cevreCografyasi.ts`'ten (git geçmişi, 819bda2 öncesi) `scripts/egeCevresiUret.mjs` ile
+  `public/harita/ege-cevresi.json` (yaklaşık 70 KB sıkıştırılmış; harita açıldıktan sonra ayrı iner). Küçükkuyu
+  Limanı'nın yeri eski haritadaki değer (26,607 D · 39,548 K). Katman `src/components/harita/tek/egeKatmani.ts`.
+- Gelmeyenler: eski feribot hattı (eski Liman'dan çıkıyordu; yeni adada iskelenin yeri ayrı karar) ve denizin dalga
+  dokusu. Kayda bir şey yazılmaz. Resimler: `docs/gorseller/tek-harita-ege/`. Telefonda denenmedi.
+
 ## 24 Kasım akşam: soy ağacı tek ağaç (aile çerçeveleri kalktı)
 
 Kemal (canlıda gördü): "Elif Kübra'nın kızı gibi duruyor. Aile gruplandırmalarını kaldır, yalnızca doğduğu ailenin
