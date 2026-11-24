@@ -18,7 +18,7 @@ import { AjanIsiIcerigi, KucukResim } from './AjanIsiIcerigi';
 import { useBekleyenIsler } from '../anasayfa/BekleyenIsler';
 import { EksikOzeti } from '../anasayfa/EksikOzeti';
 import { ISLEM_ADI, useAjansKararlari } from '../anasayfa/AjansKararlariKarti';
-import { kitapBolumuOnizleme, maddeTuru, oyunKarariOnizleme } from '../../lib/ajansKararlari';
+import { kitapBolumuOnizleme, maddeTuru, oyunKarariOnizleme, vikiKarariOnizleme } from '../../lib/ajansKararlari';
 import { donemleriOku } from '../../lib/zamanCizgisi';
 import { donemOnizleme } from '../../lib/donemKarari';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
@@ -324,6 +324,7 @@ export const OnayBekleyenler: React.FC<Props> = ({
                   {i.tur === 'kitapBolumu' && <> → <b>{kitapBolumuOnizleme(items, i)}</b></>}
                   {(i.tur === 'oyunKarti' || i.tur === 'gddBolumu') && <> → <b>{oyunKarariOnizleme(items, i)}</b></>}
                   {i.tur === 'donem' && <> → <b>{donemOnizleme(donemleriOku(items), i)}</b></>}
+                  {(i.tur === 'bolumYaz' || i.tur === 'bolumSil' || i.tur === 'gercekYer' || i.tur === 'alaniBosalt') && <> → <b>{vikiKarariOnizleme(items, i)}</b></>}
                   <span className={`block text-[11px] ${IKINCIL}`}>{i.neden}</span>
                 </li>
               ))}

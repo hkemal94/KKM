@@ -158,6 +158,13 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   kartının özet, açıklama, depo alanı; ad yazılmaz) ve `gddBolumu` (tasarım
   belgesi adımının yazısı; adım yoksa açılır). Dolu adımın ya da bu arada
   değişmiş alanın üzerine yazılmaz; listede "çakışma" diye görünür.
+  24 Kasım (viki madde standardı, Kemal): `bolumYaz` (`madde`, `bolum` başlık, `metin`, isteğe bağlı
+  `sira`, `eski`, `eskiBaslik`; bölüm yoksa sıraya açılır, doluysa yalnız `eski` birebir tutarsa değişir,
+  yoksa çakışma), `bolumSil` (`eski` birebir tutan bölüm çıkar; `tekrar` ise kopyalardan ilki kalır),
+  `gercekYer` (`kaynakAdi`, `kaynakUrl`; "Gerçek yer" rozeti, `metadata.kaynak = 'gercek'`),
+  `alaniBosalt` (`alan`, `eski`; alan yalnız `eski` değerindeyse boş yazılır, metindeki künye satırı da
+  çıkar). Saf iş `src/lib/vikiKarari.ts`. "Bilinmiyor" doluluğa girmez; gerçek yerin Mahalle alanı
+  eksik sayılmaz (`wikiSchema.ts` → `kunyeDolu`, `eksikSayilmaz`).
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz
   yok" diye açıkça söylenir (30 Eylül'de karışmıştı).
 

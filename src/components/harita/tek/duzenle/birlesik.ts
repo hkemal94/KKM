@@ -1,4 +1,4 @@
-import { rakim, sahneye, type Koleksiyon, type Nokta, type Oge, type Yapi, type Zemin } from '../tekVeri';
+import { rakim, sahneye, tabanKotu, type Koleksiyon, type Nokta, type Oge, type Yapi, type Zemin } from '../tekVeri';
 import { cografyaya, dikdortgen, duzdenSahneye, hucreAnahtari, icinde } from './geometri';
 import { grupCizimi, kirpilmis, yerlesim, type GrupVerisi } from './gruplar';
 import type { KareVerisi } from './kareler';
@@ -38,13 +38,13 @@ const BOYA_RENGI = Object.fromEntries(BOYALAR.map(b => [b.id, b.renk]));
 /** Boyanan "ağaç" karesine konan ağaç (KKM'nin bitki modeli) */
 export const BOYA_AGACI = 'bitkiler/zeytin-yasli.glb';
 
-/** Yeni yapı → haritanın yapı kaydı (taban dikdörtgen; en alçak köşesine oturur) */
+/** Yeni yapı → haritanın yapı kaydı (taban dikdörtgen; çizilen zemine oturur, `tabanKotu`) */
 export function yeniYapidan(z: Zemin, id: string, y: YeniYapi): Yapi {
   const merkez = sahneye(z.b, y.m);
   const ex: Nokta = [y.ex[0], y.ex[1]];
   const taban = dikdortgen(merkez, ex, y.en, y.boy);
-  const kot = Math.min(rakim(z, merkez[0], merkez[1]), ...taban.map(([x, sz]) => rakim(z, x, sz)));
-  return { id, tur: y.tur, dosya: y.dosya, vikiId: null, ad: null, mahalle: '', merkez, ex, en: y.en, boy: y.boy, modelEn: y.modelEn, yukseklik: y.yukseklik, kot, taban, ...(y.grup ? { grup: y.grup.kimlik } : {}) };
+  const { kot, zeminAlt } = tabanKotu(z, { tur: y.tur, dosya: y.dosya, merkez, ex, en: y.en, boy: y.boy, modelEn: y.modelEn, taban });
+  return { id, tur: y.tur, dosya: y.dosya, vikiId: null, ad: null, mahalle: '', merkez, ex, en: y.en, boy: y.boy, modelEn: y.modelEn, yukseklik: y.yukseklik, kot, zeminAlt, taban, ...(y.grup ? { grup: y.grup.kimlik } : {}) };
 }
 
 /** Var olan yapının taşınmış hâli */
@@ -52,8 +52,8 @@ export function tasinmis(z: Zemin, y: Yapi, m: number[], exH: number[]): Yapi {
   const merkez = sahneye(z.b, m);
   const ex: Nokta = [exH[0], exH[1]];
   const taban = dikdortgen(merkez, ex, y.en, y.boy);
-  const kot = Math.min(rakim(z, merkez[0], merkez[1]), ...taban.map(([x, sz]) => rakim(z, x, sz)));
-  return { ...y, merkez, ex, taban, kot };
+  const { kot, zeminAlt } = tabanKotu(z, { ...y, merkez, ex, taban });
+  return { ...y, merkez, ex, taban, kot, zeminAlt };
 }
 
 /** Veri dosyasındaki küçük öğeler (katman agac / donati; ajansın işlediği taslaklardan) */

@@ -1,11 +1,12 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
-import { ExternalLink, Inbox, X } from 'lucide-react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, ExternalLink, Inbox, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { YakinlasanGorsel, type YakinlasanGorselTutamagi } from './YakinlasanGorsel';
 import { anahtariOku } from '../../lib/oyunAyarlari';
 import { gorselAdresi } from '../../lib/geceTuru';
 import { SayfaBasi } from '../kabuk/SayfaBasi';
 import {
   AY_ADLARI, PUL_DURUMLARI, pulAdi, pulKaydet, pulOzeti, pullariOku, pulSerisi,
-  type PulKaydi, type PullarDosyasi, type PulOyunu, type PulTasarimDurumu,
+  type PulKaydi, type PullarDosyasi, type PulOyunu, type PulTasarimDurumu, type SeriYili,
 } from '../../lib/pullar';
 import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 
@@ -18,6 +19,8 @@ import { DUGME_BOS, DUGME_LAC, ETIKET, IKINCIL, KART, YAZI } from '../anasayfa/s
  * `kkm/pullar.json`'una yazar (`lib/pullar.ts`). KKM kayıtlarına hiçbir şey
  * yazılmaz. Pul çizimi kart oyunundaki pulun dilinde (tırtıklı kenar, ince
  * çerçeve; büyük pulda çift çerçeve ve köşe süsü), burada yeniden yazıldı.
+ * Paneldeki "Büyüt" ya da küçük resim pulu büyük görünümde açar (24 Kasım,
+ * Kemal): yakınlaştırma, aynı çeyreğin öbür pullarına geçiş; yalnız gösterir.
  */
 
 const hata = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -127,6 +130,7 @@ export default function Pullar({ onAjans, onOnay }: { onAjans: () => void; onOna
   const [okumaHatasi, setOkumaHatasi] = useState<string | null>(null);
   const [oyunId, setOyunId] = useState<string | null>(null);
   const [secili, setSecili] = useState<string | null>(null);
+  const [buyukPul, setBuyukPul] = useState<string | null>(null);
 
   useEffect(() => {
     if (!anahtar) return;
@@ -195,7 +199,7 @@ export default function Pullar({ onAjans, onOnay }: { onAjans: () => void; onOna
 
         {secili && (
           <PulPaneli key={`${oyun.id}:${secili}`} anahtar={anahtar} oyun={oyun} pulAnahtari={secili} kayit={kayitlar[secili]}
-            onKapat={() => setSecili(null)} onOnay={onOnay}
+            onKapat={() => setSecili(null)} onOnay={onOnay} onBuyut={() => setBuyukPul(secili)}
             onKaydedildi={(durum, canva) => setVeri(v => {
               if (!v) return v;
               const oyunPullari = { ...(v.pullar[oyun.id] || {}) };
@@ -206,6 +210,12 @@ export default function Pullar({ onAjans, onOnay }: { onAjans: () => void; onOna
               else oyunPullari[secili] = yeni;
               return { ...v, guncellendi: new Date().toISOString(), pullar: { ...v.pullar, [oyun.id]: oyunPullari } };
             })} />
+        )}
+
+        {buyukPul && (
+          <PulBuyukGorunum anahtar={anahtar} oyun={oyun} kayitlar={kayitlar}
+            siradakiler={ceyrekPullari(seri, buyukPul).filter(k => !!kayitlar[k]?.gorsel)}
+            ilk={buyukPul} onKapat={() => setBuyukPul(null)} />
         )}
       </div>
     );
@@ -246,8 +256,8 @@ const OzetSeridi: React.FC<{ oyun: PulOyunu; kayitlar: Record<string, PulKaydi>;
 /** Pula dokununca açılan ayrıntı paneli: telefonda alttan, masada sağ altta */
 const PulPaneli: React.FC<{
   anahtar: string; oyun: PulOyunu; pulAnahtari: string; kayit?: PulKaydi;
-  onKapat: () => void; onOnay: () => void; onKaydedildi: (durum: PulTasarimDurumu, canva: string) => void;
-}> = ({ anahtar, oyun, pulAnahtari, kayit, onKapat, onOnay, onKaydedildi }) => {
+  onKapat: () => void; onOnay: () => void; onBuyut: () => void; onKaydedildi: (durum: PulTasarimDurumu, canva: string) => void;
+}> = ({ anahtar, oyun, pulAnahtari, kayit, onKapat, onOnay, onBuyut, onKaydedildi }) => {
   const ilkDurum = kayit?.durum || 'tasarlanmadi';
   const [durum, setDurum] = useState<PulTasarimDurumu>(ilkDurum);
   const [canva, setCanva] = useState(kayit?.canva || '');
@@ -279,9 +289,16 @@ const PulPaneli: React.FC<{
       <section role="dialog" aria-label={pulAdi(pulAnahtari)}
         className={`${KART} fixed z-50 inset-x-2 bottom-2 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[380px] p-3.5 space-y-3 shadow-xl max-h-[85vh] overflow-y-auto`}>
         <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-[#0E1C4F] dark:bg-[#0B132B] p-2 shrink-0">
-            <PulCizimi durum={durum} buyuk={buyuk} resim={resim} className={buyuk ? 'block w-[66px] h-[80px]' : 'block w-[56px] h-[67px]'} />
-          </div>
+          {kayit?.gorsel ? (
+            <button type="button" onClick={onBuyut} aria-label="Pulu büyüt" title="Büyüt"
+              className="rounded-lg bg-[#0E1C4F] dark:bg-[#0B132B] p-2 shrink-0 cursor-zoom-in hover:outline hover:outline-1 hover:outline-[#F26B6F]">
+              <PulCizimi durum={durum} buyuk={buyuk} resim={resim} className={buyuk ? 'block w-[66px] h-[80px]' : 'block w-[56px] h-[67px]'} />
+            </button>
+          ) : (
+            <div className="rounded-lg bg-[#0E1C4F] dark:bg-[#0B132B] p-2 shrink-0">
+              <PulCizimi durum={durum} buyuk={buyuk} resim={resim} className={buyuk ? 'block w-[66px] h-[80px]' : 'block w-[56px] h-[67px]'} />
+            </div>
+          )}
           <div className="min-w-0 flex-1 space-y-1">
             <div className={ETIKET}>{oyun.ad}</div>
             <div className={`text-[15px] font-bold leading-snug ${YAZI}`}>{pulAdi(pulAnahtari)}</div>
@@ -331,10 +348,108 @@ const PulPaneli: React.FC<{
           <button type="button" onClick={() => void kaydet()} disabled={mesgul || !degisti || canvaGecersiz} className={DUGME_LAC}>
             {mesgul ? 'Kaydediliyor…' : 'Kaydet'}
           </button>
+          {kayit?.gorsel && (
+            <button type="button" onClick={onBuyut} className={DUGME_BOS}><Maximize2 className="w-3.5 h-3.5" /> Büyüt</button>
+          )}
           <button type="button" onClick={onKapat} className={DUGME_BOS}>Kapat</button>
           {mesaj && <span className={`text-[11px] ${mesaj.startsWith('Yazılamadı') ? 'text-[#B8474B] dark:text-[#F7A3A6]' : IKINCIL}`}>{mesaj}</span>}
         </div>
       </section>
     </>
+  );
+};
+
+/** Bir pulun çeyreğindeki pullar sırayla: üç aylık pul, sonra büyük pul */
+function ceyrekPullari(seri: SeriYili[], pulAnahtari: string): string[] {
+  for (const y of seri) for (const c of y.ceyrekler) {
+    const liste = [...c.aylar.map(a => a.anahtar), c.anahtar];
+    if (liste.includes(pulAnahtari)) return liste;
+  }
+  return [pulAnahtari];
+}
+
+/**
+ * Pulun büyük görünümü (24 Kasım, Kemal): ekranı kaplar, pulun resmi kendi
+ * dosyasından tam boyutuyla gelir. Yakınlaştırma tekerlek, çift tıklama, iki
+ * parmak ya da +/−; ←/→, ekrandaki oklar ve telefonda yana kaydırma aynı
+ * çeyreğin resmi olan öbür pullarına geçer. X, Esc ya da boşluğa tıklama kapatır.
+ * Hiçbir şey yazmaz.
+ */
+const PulBuyukGorunum: React.FC<{
+  anahtar: string; oyun: PulOyunu; kayitlar: Record<string, PulKaydi>; siradakiler: string[]; ilk: string; onKapat: () => void;
+}> = ({ anahtar, oyun, kayitlar, siradakiler, ilk, onKapat }) => {
+  const liste = siradakiler.includes(ilk) ? siradakiler : [ilk];
+  const [sira, setSira] = useState(() => Math.max(0, liste.indexOf(ilk)));
+  const [olcek, setOlcek] = useState(1);
+  const gorsel = useRef<YakinlasanGorselTutamagi>(null);
+  const pul = liste[sira] || ilk;
+  const kayit = kayitlar[pul];
+  const durum = kayit?.durum || 'tasarlanmadi';
+  const resim = useResim(anahtar, kayit?.gorsel);
+  const coklu = liste.length > 1;
+  const gec = (yon: 1 | -1) => { if (coklu) setSira(i => (i + yon + liste.length) % liste.length); };
+  const gecRef = useRef(gec);
+  gecRef.current = gec;
+  const kapatRef = useRef(onKapat);
+  kapatRef.current = onKapat;
+
+  useEffect(() => {
+    const tus = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopPropagation(); kapatRef.current(); }
+      else if (e.key === 'ArrowRight') gecRef.current(1);
+      else if (e.key === 'ArrowLeft') gecRef.current(-1);
+      else if (e.key === '+' || e.key === '=') gorsel.current?.yakinlastir(1.4);
+      else if (e.key === '-') gorsel.current?.yakinlastir(1 / 1.4);
+      else if (e.key === '0') gorsel.current?.sifirla();
+    };
+    window.addEventListener('keydown', tus);
+    return () => window.removeEventListener('keydown', tus);
+  }, []);
+
+  const yuvarlak = 'w-11 h-11 shrink-0 inline-flex items-center justify-center rounded-full bg-[#F3EFE8]/10 text-[#F3EFE8] hover:bg-[#F26B6F] hover:text-[#0E1C4F] disabled:opacity-30 cursor-pointer';
+  const ok = (yon: 1 | -1) => (
+    <button type="button" onClick={() => gec(yon)} disabled={!coklu} aria-label={yon === 1 ? 'Sonraki pul' : 'Önceki pul'} className={yuvarlak}>
+      {yon === 1 ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+    </button>
+  );
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col bg-[#0E1C4F]/95 dark:bg-[#0B132B]/95 backdrop-blur-md text-[#F3EFE8]"
+      role="dialog" aria-modal="true" aria-label={`${pulAdi(pul)} büyük görünüm`}>
+      {/* Üst satır: oyun, pul, durum, sıra; yakınlaştırma ve kapat */}
+      <div className="flex items-center gap-2 px-3 sm:px-5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">
+        <div className="min-w-0 flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#F3EFE8]/60">{oyun.ad}</span>
+          <span className="text-[14px] font-semibold truncate">{pulAdi(pul)}</span>
+          <span className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${durum === 'onayli' ? 'bg-[#F3EFE8] text-[#0E1C4F]' : durum === 'taslak' ? 'bg-[#F26B6F] text-[#0E1C4F]' : 'border border-[#F3EFE8]/40 text-[#F3EFE8]/80'}`}>{durumAdi(durum)}</span>
+          {coklu && <span className="text-[11px] tabular-nums text-[#F3EFE8]/60">{sira + 1} / {liste.length}</span>}
+        </div>
+        <button type="button" onClick={() => gorsel.current?.yakinlastir(1 / 1.4)} disabled={olcek <= 1} aria-label="Uzaklaştır" className={yuvarlak}><ZoomOut className="w-5 h-5" /></button>
+        <button type="button" onClick={() => gorsel.current?.yakinlastir(1.4)} disabled={olcek >= 6} aria-label="Yakınlaştır" className={yuvarlak}><ZoomIn className="w-5 h-5" /></button>
+        <button type="button" onClick={onKapat} aria-label="Kapat" className={yuvarlak}><X className="w-5 h-5" /></button>
+      </div>
+
+      {/* Orta: yanlarda oklar (masada), ortada pul */}
+      <div className="flex-1 min-h-0 flex items-center gap-2 px-2 sm:px-4">
+        {coklu && <span className="hidden sm:inline-flex">{ok(-1)}</span>}
+        {resim ? (
+          <YakinlasanGorsel ref={gorsel} adres={resim} alt={pulAdi(pul)} onKaydir={gec} onBosTik={onKapat} onOlcek={setOlcek}
+            className="flex-1 h-full min-w-0" />
+        ) : (
+          <div className="flex-1 h-full flex items-center justify-center text-[13px] text-[#F3EFE8]/70" onClick={onKapat}>Resim yükleniyor…</div>
+        )}
+        {coklu && <span className="hidden sm:inline-flex">{ok(1)}</span>}
+      </div>
+
+      {/* Alt satır: telefonda oklar; ipucu */}
+      <div className="flex items-center justify-center gap-3 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        {coklu && <span className="sm:hidden">{ok(-1)}</span>}
+        <span className="text-[11px] text-[#F3EFE8]/55 text-center">
+          <span className="hidden sm:inline">Tekerlek ya da çift tıklama: yakınlaştır{coklu ? ' · ← →: çeyreğin öbür pulları' : ''} · Esc: kapat</span>
+          <span className="sm:hidden">İki parmak ya da çift dokunuş: yakınlaştır{coklu ? ' · yana kaydır: öbür pul' : ''}</span>
+        </span>
+        {coklu && <span className="sm:hidden">{ok(1)}</span>}
+      </div>
+    </div>
   );
 };

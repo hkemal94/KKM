@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Zemin } from './tekVeri';
+import { kiyiBolgesi, type Zemin } from './tekVeri';
 
 /**
  * Tek harita zemini: tek parça 10 m ızgara, 128 hücrelik karelere bölünür.
@@ -41,39 +41,6 @@ function duraktan(duraklar: Array<[number, THREE.Color]>, v: number, c: THREE.Co
   return c.copy(duraklar[duraklar.length - 1][1]);
 }
 
-/**
- * Kıyı çizgisi (6b, 22 Kasım; Kemal: kumsal kenarı tırtıklı): verideki kıyı 10 m'lik
- * hücrelerde basamaklı (kumsal ~3 m'den denize tek hücrede iner), çizimde testere dişi
- * görünüyordu. Yalnız çizim için, yalnız kıyı şeridinde (2 hücre içinde hem deniz hem
- * kara olan, 4 m'den alçak hücreler) rakım çevresinin ağırlıklı ortalaması olur.
- * Veri değişmez; yapı ve yol yerleşimi asıl rakımı kullanır.
- */
-function kiyiYumusat(z: Zemin): Float32Array {
-  const cikti = new Float32Array(z.h);
-  kiyiBolgesi(z, cikti, 0, 0, z.b.en - 1, z.b.boy - 1);
-  return cikti;
-}
-
-/** Kutudaki hücrelerin çizim rakımı (`kiyiYumusat`'ın bir bölgesi; 8. adım: zemin aracı) */
-function kiyiBolgesi(z: Zemin, cikti: Float32Array, i0: number, j0: number, i1: number, j1: number) {
-  const { b, h } = z;
-  const R = 2;
-  for (let j = Math.max(0, j0); j <= Math.min(b.boy - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(b.en - 1, i1); i++) {
-    const k = j * b.en + i;
-    cikti[k] = h[k];
-    if (j < R || i < R || j >= b.boy - R || i >= b.en - R) continue;
-    if (h[k] >= 4 || h[k] < -6) continue;
-    let deniz = false, kara = false, top = 0, agirlik = 0;
-    for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++) {
-      const v = h[k + dj * b.en + di];
-      if (v > 0) kara = true; else deniz = true;
-      const w = (R + 1 - Math.abs(di)) * (R + 1 - Math.abs(dj));
-      top += v * w; agirlik += w;
-    }
-    if (deniz && kara) cikti[k] = top / agirlik;
-  }
-}
-
 type KareKaydi = { ci: number; cj: number; cx: number; cz: number; cy: number; derin: boolean; adim: number; mesh?: THREE.Mesh };
 
 export class ZeminKatmani {
@@ -82,7 +49,7 @@ export class ZeminKatmani {
   private kareler: KareKaydi[] = [];
   private onbellek = new Map<string, THREE.BufferGeometry>();
   private malzeme: THREE.MeshLambertMaterial;
-  /** Çizimde kullanılan rakım: kıyı çizgisi yumuşatılmış (`kiyiYumusat`) */
+  /** Çizimde kullanılan rakım: kıyı çizgisi yumuşatılmış (`z.ciz`, `tekVeri.ts` → `kiyiBolgesi`; yapılar da buna oturur) */
   private h: Float32Array;
   ucgen = 0;
   /** Dışarıdan renk karışımı (bölge yeniden boyanınca da uygulanır) */
@@ -90,8 +57,7 @@ export class ZeminKatmani {
 
   constructor(private z: Zemin) {
     const { b } = z;
-    const h = kiyiYumusat(z);
-    this.h = h;
+    this.h = z.ciz;
     this.malzeme = new THREE.MeshLambertMaterial({ vertexColors: true });
     // Hücre renkleri bir kez (bayt olarak; 1,5 milyon hücre)
     this.renk = new Uint8Array(b.en * b.boy * 3);
@@ -149,7 +115,7 @@ export class ZeminKatmani {
    * yeniden kurulur (bir sonraki `guncelle`de).
    */
   bolgeYenile(i0: number, j0: number, i1: number, j1: number) {
-    kiyiBolgesi(this.z, this.h, i0 - 2, j0 - 2, i1 + 2, j1 + 2);
+    kiyiBolgesi(this.z, i0 - 2, j0 - 2, i1 + 2, j1 + 2);
     this.renkleriKur(i0 - 3, j0 - 3, i1 + 3, j1 + 3);
     // Kenar normalleri ve kaba karelerin ortalaması 8 hücreye kadar komşuya bakar
     const P = 11;

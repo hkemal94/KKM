@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { KisaListe } from '../kabuk/KisaListe';
 import { BagliIlhamlar } from '../urunler/BagliIlhamlar';
 import { AlertCircle, Bot, ChevronRight, ExternalLink, Link2, PencilLine, Pin, Unlink, GitFork } from 'lucide-react';
-import { kaynakAdresi, wikipediadanMi } from '../../lib/vikipediKaynagi';
+import { gercekYerMi, kaynakAdi, kaynakAdresi } from '../../lib/vikipediKaynagi';
 import { Item, WikiSection } from '../../types';
 import { MaddeDuzenleyici, AileUyeleri } from './MaddeDuzenleyici';
 import { maddeyiAnanNotlar } from '../../lib/notBaglari';
@@ -397,15 +397,15 @@ export const WikiArticle: React.FC<WikiArticleProps> = ({
               adı henüz konmadı
             </span>
           )}
-          {/* Wikipedia'dan (3 Kasım): gerçek dünyadan gelen madde; bağlantı yeni sekmede */}
-          {wikipediadanMi(item) && (kaynakAdresi(item) ? (
-            <a href={kaynakAdresi(item)} target="_blank" rel="noopener noreferrer" title="Kaynak: Wikipedia · yeni sekmede açılır"
+          {/* Gerçek yer (24 Kasım, Kemal; eski "Wikipedia'dan" işaretinin yerinde): gerçek dünyadan gelen madde; kaynak yeni sekmede */}
+          {gercekYerMi(item) && (kaynakAdresi(item) ? (
+            <a href={kaynakAdresi(item)} target="_blank" rel="noopener noreferrer" title={`Kaynak: ${kaynakAdi(item) || decodeURI(kaynakAdresi(item)).replace(/^https?:\/\//, '')} · yeni sekmede açılır`}
               className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full border border-[#0E1C4F]/25 text-[#0E1C4F] dark:border-[#F3EFE8]/30 dark:text-[#F3EFE8] hover:border-[#F26B6F] hover:text-[#F26B6F] transition-colors">
-              Wikipedia'dan <ExternalLink size={10} aria-hidden />
+              Gerçek yer <ExternalLink size={10} aria-hidden />
             </a>
           ) : (
             <span title="Kaynak bağlantısı yazılmamış" className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-[#0E1C4F]/25 text-[#0E1C4F] dark:border-[#F3EFE8]/30 dark:text-[#F3EFE8]">
-              Wikipedia'dan
+              Gerçek yer
             </span>
           ))}
           {item.type === 'aile' && onSoyAgaci && (

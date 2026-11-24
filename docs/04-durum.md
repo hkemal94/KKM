@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -35,6 +35,45 @@ Kemal (24 Kasım): kıyı yolundaki dirsekler "inanılmaz saçma", Çiftlik yolu
 - Yol yatağında en çok kazı 13,4 → 9,1 m. Arsalar, yapılar, ağaçlar, mahalle 2B resimleri yeniden üretildi; Çiftlik'te
   Sahil Yolu kısalıp düzleşince 21 arsa, 24 yapı az. Bütün denetimler temiz. Önizlemeler `docs/gorseller/tek-harita-yollar/`.
   Telefonda denenmedi.
+## 24 Kasım: viki madde standardı (Kemal'in altı kararı)
+
+Kemal 24 Kasım'da ajansın viki madde standardını onayladı. Kararları:
+1. Gerçek dünya yerinin başlığının yanında **"Gerçek yer" rozeti**; tıklanınca kaynak yeni sekmede açılır. Eski
+   "Wikipedia'dan" işaretinin yerine geçti (eski işaretli madde de gerçek yer sayılır). Kayıtta `metadata.kaynak =
+   'gercek'`, `metadata.kaynakAdi`, `metadata.kaynakUrl` (`lib/vikipediKaynagi.ts`); düzenleyicide "Gerçek yer" kutusu.
+2. Gerçek yerin sonunda 1–3 satırlık, adlandırılmış **"Kaynaklar"** bölümü (çıplak adres yok).
+3. Gerçek yerler kurgu maddeleriyle aynı uzunlukta; gerçek sayı (nüfus, ölçü) yazılmaz.
+4. Künyede **"Bilinmiyor" yazısı silinir**, alan boş görünür. Doluluk yüzdesi "Bilinmiyor"u artık dolu saymaz.
+5. Gerçek yerde künyenin **Mahalle alanı boş kalır ama eksik sayılmaz** (doluluk, Boşluklar); Adın kökeni kaynaklı dolar.
+6. Tür başına **sabit bölüm listesi ve sırası**; bilgi yoksa bölüm açılmaz.
+
+Uygulamada: maddeler kendiliğinden değişmez. Ajansın kararlarına dört tür eklendi (`lib/vikiKarari.ts`, saf iş ve
+`npm test` denemesi): `bolumYaz` (bölüm aç ya da yazısını değiştir; sıraya konur), `bolumSil` (yazısı birebir tutan
+bölümü ya da tekrar eden kopyayı çıkar), `gercekYer` (rozet ve kaynak), `alaniBosalt` (yalnız "Bilinmiyor" gibi beklenen
+değerdeyse alanı boşaltır). Düzeltmeler Onay bekleyenler'e gelir; Kemal "Uygula"ya basınca yazılır.
+## 24 Kasım: tek harita: yapılar zemine oturur
+
+Kemal (24 Kasım): "Liman'da bazı binalar havada asılı, bazıları yarı gömülü" (kıyıdaki ev, Dondurmacı Kızlar, sağdaki sundurma).
+- **Neden:** harita her yapıyı tabanının (orta ve köşelerinin) en alçak noktasına oturtuyordu. Yamaçta ve Liman kumsalının
+  eğiminde (dükkânın tabanında 3 m fark) yapının yokuş yukarı yanı toprağa giriyordu: Dondurmacı Kızlar'ın duvarları kumun
+  altında kaldı, yalnız damı ve tentesi göründü; uzaktan "havada bir dam" gibi duruyordu. Kıyı yumuşatması (6b, yalnız çizim)
+  ve modellerin taban noktası sebep değil: modellerin tabanı 0'da, yumuşatma yalnız 4 m'den alçak kıyı şeridinde. Verideki
+  `kotM` (köşelerin ortalaması) harita tarafından hiç kullanılmıyor.
+- **Yeni kural** (`tek/tekVeri.ts` → `tabanKotu`, `cizilenRakim`): taban ekranda çizilen zemine göre ölçülür (kıyısı
+  yumuşatılmış ızgara, zemin katının üçgenleriyle aynı yüzey; `z.ciz`). Kot zeminin ortalaması, yokuş yukarı tarafta yapı
+  en çok 0,6 m gömülür; tabanın altındaki zemin kottan aşağıdaysa yapının altında taş kaide (`yapiKatmani.ts`, bütün
+  yapılar tek çizimde). Yamaca göre yapılan Blender modelleri (Sürek Kulübü, İskele Mescidi, Rum Mezarlığı, kule, antik
+  duvar, mezarlık) ve kendi temeliyle gelen The Imperial eski kuralla (`modelEsleme.ts` → `YAMAC_MODELLERI`). Düzenle'de
+  konan, taşınan ve zemini değişen yapı da aynı kuralla oturur.
+- **Bahçeler:** avlu zemini, duvar ve çalılar da çizilen zemine oturur (`bahceKatmani.ts`).
+- **Denetim:** `python gen/kompakt_rakim_denetim.py` (aynı kural; KKM'nin hesabıyla bütün yapılarda aynı sonuç). Önce / sonra:
+  1,0 m'den fazla gömülü (zeminin ortalaması kotun üstünde) 193 → 0; yokuş yukarı kenarı 1 m'den derin 598 → 0; havada
+  (kaidesiz, 0,3 m'den çok) 1 → 0. 979 yapıda kaide; ortanca 0,7 m. Yüksek kaideler: Deniz Feneri 11 m (tabanında 11,6 m
+  fark; eskiden 7 m gömülüydü), Yağ Fabrikası 6,6 m, Sade Meyhane 5,4 m, Eski Kilise 5,3 m. Kemal beğenmezse bu yapıların
+  yeri ya da altındaki zemin düzlenir (ayrı iş).
+- Yollar, iskele ve mendirek, ağaçlar değişmedi (ağaçlar ham rakımda; kıyıda fark yalnız 4 m'den alçak şeritte).
+  Hafif modda kıyı şeridi biraz farklı çizilir; fark küçük. Veri dosyası değişmedi, kayda bir şey yazılmaz. Ölçüler DENEME.
+  Önizlemeler `docs/gorseller/tek-harita-rakim/` (önce / sonra). Telefonda denenmedi.
 
 ## 24 Kasım: tek harita 11. adım, KKM-C: eski harita kayıtları (11. adım tamam)
 
@@ -553,6 +592,11 @@ ayrıntı paneli: durum, küçük resim, ayın görevi (yoksa oyunun koşulu, o 
 bağlantısı. Kemal durumu ve bağlantıyı değiştirip "Kaydet"e basınca KKM ajansın `kkm/pullar.json`'unda
 yalnız o pulu yazar (dosyanın güncel hâlinin üstüne). Dosya yoksa yazmaz. KKM kayıtlarına bir şey yazılmaz.
 Standart ajansın `docs/pul-koleksiyonu.md`'sinde. Taslaklar Onay bekleyenler'e ajansın öneri listesiyle düşer.
+
+**Büyük görünüm** (24 Kasım, Kemal): pul kartındaki "Büyüt" (ya da kartın küçük resmi) pulu ekranı kaplayan
+görünümde açar; resim kendi dosyasının tam boyutuyla gelir. Yakınlaştırma: tekerlek, çift tıklama, iki parmak,
++/−. Aynı çeyreğin resmi olan öbür pulları ←/→, ekrandaki oklar ya da telefonda yana kaydırmayla. Kapatma:
+X, Esc, boşluğa tıklama. Yalnız gösterir, bir şey yazmaz (`components/urunler/YakinlasanGorsel.tsx`).
 
 ## DK Lite paneli (10 Kasım, Kemal)
 

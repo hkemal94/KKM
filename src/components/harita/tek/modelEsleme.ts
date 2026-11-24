@@ -16,3 +16,16 @@ export const MODEL_ESLEME: Record<string, string> = {
   // Rum Mezarlığı: alçak kuru taş duvar, kapalı demir kapı, yazısız mezar taşları (servi halkası ağaç katında)
   yapi_rum_mezarligi: 'binalar/rum-mezarligi.glb'
 };
+
+/**
+ * Kendi zemini olan modeller: yamaca göre yapılanlar (Blender: `gen/blender_uc_yapi.py`,
+ * `gen/blender_tek_eklemeler.py`; zeminleri, duvarları, taşları tabanın en alçak noktasına göre)
+ * ve kendi temeliyle gelen The Imperial (temeli ve terasları 19 m aşağı iner, tepesinin sahanlığı
+ * düzlenmiş). Tek harita onları eski kuralla (en alçak nokta, kaidesiz) oturtur
+ * (`tekVeri.ts` → `tabanKotu`; 24 Kasım).
+ */
+export const YAMAC_MODELLERI = new Set([
+  'binalar/kucukcetmi-surek-kulubu.glb', 'binalar/iskele-mescidi.glb', 'binalar/rum-mezarligi.glb',
+  'binalar/yangin-gozetleme-kulesi.glb', 'binalar/antik-sur-kalintisi.glb', 'binalar/merkez-mezarligi.glb',
+  'binalar/the-imperial-kemskoy.glb'
+]);
