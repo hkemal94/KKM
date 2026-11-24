@@ -1531,6 +1531,52 @@ print(f"  İskele: {len(IS_HAT)} sokak, en dik %{100 * _is_dik[0][0]:.1f} ({_is_
       f"%15'i aşan {sum(1 for e, _ in _is_dik if e > EGIM['sokak'])}; Sahil Yolu'nun köydeki eski hattı en dik "
       f"%{100 * en_buyuk_egim(IS_CEKIRDEK):.1f}")
 
+# İskele'ye inen yol (Kemal, 24 Kasım, #286'ya son cevap: "iskeleye inen ayrı yol yapılsın"; köyün sokaklarından eski
+# feribot iskelesinin köküne; eğim sınırına uysun, gerekirse basamaklı; yapıların üstünden geçmesin). Arama iskelenin
+# kökünden köyün sokaklarına (Kemsköy Caddesi dahil), köy sokağının eğim sınırıyla (yamaçta çapraz iner); köyün adlı
+# yapıları (Sade Meyhane, Eski Kilise, evinde oturanı olan ev; taşınmış eski yerleri) ve meydancıkları yola kapalı. Öbür evler yoldan sonra
+# arsalara dizilir (gen/kompakt_parseller.py), yolun üstüne gelmez. Bulunamazsa ya da sınırı aşarsa basamaklı geçit
+# (kilisenin önünden dik iner). Hat ve ölçüler DENEME.
+_fS, _fn = IS.feribot_koku(kiyi, ADA)
+IS_ISKELE_KOK = tuple(_fS - _fn * IS.FERIBOT_KARAYA)       # iskelenin kökü (karada)
+_eskiy = json.load(open(os.path.join(BURASI, "kompakt-yapilar-eski.json"), encoding="utf-8"))["yapilar"]
+# (evinde oturanı olan evin ölçüsü kayıtta yok; evi arsasıyla birlikte yerinde kalsın diye 25 m yarıçap, DENEME)
+_isk_yapi = [Point(IS.tasi(*e["eskiKonum"])).buffer((math.hypot(e["olcu"]["en"], e["olcu"]["boy"]) / 2 + 6.0)
+                                                     if e.get("olcu") else 25.0)
+             for e in _eskiy if not e.get("ozelYer") and e.get("eskiKonum") and IS.eski_iskelede(e["eskiKonum"], e["mahalle"])]
+# Kemsköy Caddesi'nin kıyı yanındaki arsa sırası (40 m) yola kapalı; yol caddeye ancak arsa sırasının batı ucunda
+# (caddenin en alçak kesimi, oturanlı evin 60 m batısı) katılır: yoksa yol sırayı çapraz keser, oradaki evler arsasız
+# kalıyordu (DENEME)
+_kc = next(g for k, g in IS_HAT.items() if IS_AD[k] == "Kemsköy Caddesi")
+_kc_bati = min(_kc.coords[0], _kc.coords[-1], key=lambda c: c[0])
+_otur = [IS.tasi(*e["eskiKonum"]) for e in _eskiy if e["bag"] == "oturan" and IS.eski_iskelede(e["eskiKonum"], e["mahalle"])]
+_sira_bati = min([o[0] for o in _otur] + [IS.tasi(*IS.FERIBOT_HIZA)[0]]) - 60.0
+_iy_yasak = (~KARA | maske(unary_union(_isk_yapi + IS_MEYDAN)) | maske(SAHANLIK, 4) | maske(OTEL, 8)
+             | (maske(_kc, 40.0) & (GX > _sira_bati)))
+_iy_hedef = cizgi_maske(list(IS_HAT.values()), 1) & ~disk(IS_ISKELE_KOK, 40)
+_iy = yol_ara(IS_ISKELE_KOK, _iy_hedef, EGIM["sokak"] * 0.9, yasak=_iy_yasak & ~disk(IS_ISKELE_KOK, 6), pay=250,
+              donus=DONUS_CEZA)
+ISKELE_YOLU = None
+if _iy is not None:
+    _son = Point(_iy[-1])
+    _sg = min(IS_HAT.values(), key=lambda g: g.distance(_son))
+    _q = _sg.interpolate(_sg.project(_son))
+    _iy = [tuple(c) for c in _iy[:-1]] + [(_q.x, _q.y)]
+    _iy = dogal_hat(_iy, "sokak", EGIM["sokak"], yasak=_iy_yasak & ~disk(IS_ISKELE_KOK, 6), ad="İskele'ye inen yol")
+    _iyg = LineString(_iy[::-1])                            # köyden iskeleye
+    _iye = en_buyuk_egim(_iyg)
+    if _iye <= 0.93 * EGIM["sokak"] and not any(_iyg.intersects(g) for g in _isk_yapi):
+        ISKELE_YOLU = kaynak_ekle(_iyg, IS_ID, "sokak", "iskele")
+        print(f"  İskele'ye inen yol: {_iyg.length:.0f} m, en dik %{100 * _iye:.1f} (köy sokağı)")
+    else:
+        print(f"  İskele'ye inen yol: arama hattı sınırı aşıyor (%{100 * _iye:.1f}); basamaklı geçit")
+if ISKELE_YOLU is None:
+    _sg = min(IS_HAT.values(), key=lambda g: g.distance(Point(IS_ISKELE_KOK)))
+    _q = _sg.interpolate(_sg.project(Point(IS_ISKELE_KOK)))
+    _iyg = LineString([(_q.x, _q.y), IS_ISKELE_KOK])
+    ISKELE_YOLU = kaynak_ekle(_iyg, IS_ID, "gecit", "iskele", yuzey="basamak", genislik=2.5)
+    print(f"  İskele'ye inen yol: basamaklı geçit {_iyg.length:.0f} m, en dik %{100 * en_buyuk_egim(_iyg):.0f}")
+
 
 # ------------------------------------------------------------------ adlı caddeler
 def adlandir(yid, ad, kiyiya=False):

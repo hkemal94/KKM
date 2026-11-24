@@ -216,8 +216,16 @@ def main():
 
     # 3) kıyıya / denize taşma
     kiyi = ada.exterior
+    import kompakt_iskele as IS
+    _fS, _fn = IS.feribot_koku(kiyi, ada)
+    isk_kok = Point(_fS - _fn * IS.FERIBOT_KARAYA)     # eski feribot iskelesinin kökü (Kemal, 24 Kasım)
+    iskeleye = [y for y in G if min(isk_kok.distance(Point(y["xy"][0])), isk_kok.distance(Point(y["xy"][-1]))) < 1.0]
     en_y, kim = 1e9, ""
     for y in G:
+        if any(y is q for q in iskeleye):     # iskeleye inen yol kıyıya iner (aşağıda ayrı denetim)
+            if not ada.buffer(0.5).contains(y["g"]):
+                yaz("İskele'ye inen yol karada", False, "bir kısmı denizde")
+            continue
         if y["p"]["k"] in ("merdiven", "basamak"):
             if not ada.buffer(0.5).contains(y["g"]):
                 yaz("Merdiven karada", False, "merdivenin bir kısmı denizde")
@@ -228,6 +236,24 @@ def main():
         if dd < en_y:
             en_y, kim = dd, y["p"].get("ad") or y["p"]["id"]
     yaz("Kıyıya taşma (merdiven ve basamaklı geçit hariç)", en_y >= KIYI_PAY, f"kıyıya en yakın yol {en_y:.0f} m ({kim}); sınır {KIYI_PAY:.0f} m")
+    # İskele'ye inen yol (Kemal, 24 Kasım): köyün sokağından eski feribot iskelesinin köküne; eğim sınırında (köy sokağı
+    # %15) ya da basamaklı; öbür ucu köyün yoluna bağlı
+    if len(iskeleye) != 1:
+        yaz("İskele'ye inen yol (köyden eski feribot iskelesinin köküne)", False, f"{len(iskeleye)} yol iskelenin kökünde")
+    else:
+        y = iskeleye[0]
+        ust = Point(y["xy"][0]) if isk_kok.distance(Point(y["xy"][-1])) < 1.0 else Point(y["xy"][-1])
+        bagli = any(q is not y and q["g"].distance(ust) < 0.5 for q in G)
+        g3 = LineString(np.column_stack([y["xy"], y["z"]]))
+        s_ = np.arange(0, y["g"].length + 0.01, 2.0)
+        pz = np.array([g3.interpolate(t).coords[0][2] for t in s_])
+        e_ = float(np.max(np.abs(pz[10:] - pz[:-10]) / 20.0)) if len(pz) > 10 else 0.0
+        lim_ = None if y["p"]["k"] == "basamak" else EGIM.get(y["p"]["kademe"])
+        yaz("İskele'ye inen yol (köyden eski feribot iskelesinin köküne, eğim sınırında ya da basamaklı)",
+            bagli and (lim_ is None or e_ <= lim_ + 1e-3),
+            f"{y['p']['id']} ({y['p']['kademe']}, {y['p']['tur']}), {y['g'].length:.0f} m, kot {max(pz[0], pz[-1]):.1f} → "
+            f"{min(pz[0], pz[-1]):.1f} m, en dik %{100 * e_:.1f}" + ("" if lim_ is None else f" (sınır %{100 * lim_:.0f})")
+            + ("" if bagli else "; üst ucu yola bağlı değil"))
 
     # 4) kendi kendini kesme
     kesen = [y["p"].get("ad") or y["p"]["id"] for y in G if not y["g"].is_simple]
@@ -400,7 +426,9 @@ def main():
         if kc_ is not None else "yok")
     # seyreltme (Kemal, 24 Kasım: "sokakları azalt"): kaldırılan sokakların ortası haritada yol değil
     is_hepsi = IS.eski_iskele(hepsi=True)[0]
-    duran = [k_ for k_ in IS.GIDEN if agu.distance(LineString([IS.tasi(*c) for c in is_hepsi[k_][2]]).interpolate(0.5, normalized=True)) < 3.0]
+    # (iskeleye inen yol sayılmaz: yamaçta kaldırılan bir sokağın ortasına yakın geçebilir; 24 Kasım)
+    agu_ = unary_union([y["g"] for y in G if not any(y is q for q in iskeleye)])
+    duran = [k_ for k_ in IS.GIDEN if agu_.distance(LineString([IS.tasi(*c) for c in is_hepsi[k_][2]]).interpolate(0.5, normalized=True)) < 3.0]
     yaz("İskele'de kaldırılan sokaklar haritada yok", not duran, f"{len(IS.GIDEN)} sokak kaldırıldı, {len(is_sokak)} kaldı; duran: {', '.join(duran) or '-'}")
     is_u_hepsi = unary_union([LineString([IS.tasi(*c) for c in hat_]) for _, _, hat_ in is_hepsi.values()])
     sy_g = next((y["g"] for y in G if y["p"].get("ad") == "Sahil Yolu"), None)

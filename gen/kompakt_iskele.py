@@ -78,11 +78,55 @@ def eski_iskele(hepsi=False):
 # Eski haritada, vikide ve Kurucu kayıtlarında yeri yok (git geçmişi tarandı: eski haritada İskele'de yalnız The
 # Imperial'in Otel İskelesi vardı). YER TAHMİNİ (DENEME): köyün önünde, Eski Kilise hizasında kıyıya dik (Sade Meyhane
 # ile kilisenin arası; köyün en eski yapıları); orada kıyı düz ve su doğuya göre daha çabuk derinleşir. Taş iskele
-# (artık feribot yanaşmaz). Ölçüler DENEME: 80 m (ucu ~4 m derin), 8 m en. Mendirek yok (Kemal'e soruldu).
+# (artık feribot yanaşmaz). Ölçüler DENEME: 80 m (ucu ~4 m derin), 8 m en.
+# Kemal (24 Kasım, #286'ya son cevap): yeri Eski Kilise hizasında KALSIN; mendirek B (doğudan kısa, iskelenin önüne
+# kıvrılan); iskeleye inen ayrı yol (aşağıda MENDIREK_B ve ISKELE_YOLU_*).
 FERIBOT_HIZA = (25.787494, 39.5779193)   # Eski Kilise'nin eski haritadaki yeri (taşınınca kıyıdaki karşılığı kök olur)
 FERIBOT_BOY = 80.0     # DENEME: kıyıdan denize (m)
 FERIBOT_EN = 8.0       # DENEME
 FERIBOT_KARAYA = 2.0   # kök kıyıdan bu kadar karaya girer (m)
+
+# Mendirek B (Kemal, 24 Kasım: "doğudan kısa, iskelenin önüne kıvrılan"; PR'daki 2-mendirek-secenekleri.jpg → B). Taş,
+# Liman'daki mendirek gibi (8 m en, aynı model). Noktalar iskelenin kökünden (doğuya m, denize m): kıyıdan iskelenin
+# 70 m doğusunda başlar, denize iner, iskelenin ucunun önüne kıvrılır; ağzı batıya açık. Köşeler yumuşatılır. Ölçüler DENEME.
+MENDIREK_B = [(70.0, 0.0), (80.0, 45.0), (55.0, 95.0), (15.0, 112.0)]
+MENDIREK_EN = 8.0      # DENEME (Liman'daki mendirekle aynı)
+MENDIREK_ISKELEYE_EN_AZ = 20.0   # mendirek iskeleden bu kadar uzak durur (tekne geçsin; Liman'daki gibi)
+
+
+def feribot_koku(kiyi, ada):
+    """Eski feribot iskelesinin kıyıdaki yeri: (S kıyı noktası, n denize doğru birim yön). Eski Kilise'nin taşınmış eski
+    yerinin kıyıdaki en yakın noktası; yön kıyının 80 m'lik kirişine dik. Yollar (iskeleye inen yol) ve yapılar aynısını
+    kullanır."""
+    import numpy as np
+    from shapely.geometry import Point
+    T = Point(tasi(*FERIBOT_HIZA))
+    s = kiyi.project(T)
+    S = kiyi.interpolate(s)
+    a, b = kiyi.interpolate(s - 40.0), kiyi.interpolate(s + 40.0)
+    t = np.array([b.x - a.x, b.y - a.y]); t /= np.hypot(*t)
+    n = np.array([-t[1], t[0]])
+    if ada.contains(Point(S.x + n[0] * 5, S.y + n[1] * 5)):
+        n = -n
+    return np.array([S.x, S.y]), n
+
+
+def mendirek_b_noktalari(kiyi, ada):
+    """Mendirek B'nin ham noktaları (metre), kökten uca; köşeler Chaikin'le yumuşak."""
+    import numpy as np
+    S, n = feribot_koku(kiyi, ada)
+    kok = S - n * FERIBOT_KARAYA
+    dogu = np.array([n[1], -n[0]])
+    if dogu[0] < 0:          # doğuya bakan yön (x artan)
+        dogu = -dogu
+    p = np.array([kok + dogu * a + n * b for a, b in MENDIREK_B])
+    for _ in range(3):
+        q = [p[0]]
+        for i in range(len(p) - 1):
+            q += [0.75 * p[i] + 0.25 * p[i + 1], 0.25 * p[i] + 0.75 * p[i + 1]]
+        q.append(p[-1])
+        p = np.array(q)
+    return [tuple(c) for c in p]
 
 
 ISKELE_KUMSAL_PAY = 15.0   # DENEME: köyün önünde kumsal şeridi (öbür kıyılarda gen/kompakt_parseller.py → KUMSAL_PAY)

@@ -610,20 +610,45 @@ def dk_iskele_ve_mendirek(taban, kumsal):
 
 
 def eski_feribot_iskelesi():
-    """Eski feribot iskelesi (Kemal, 24 Kasım; yer tahmini, gen/kompakt_iskele.py → FERIBOT_*): Eski Kilise'nin taşınmış
-    eski yerinin kıyıdaki en yakın noktasından kıyıya dik, taş. (çokgen, orta çizgisi, sorunlar)."""
-    T = Point(IS.tasi(*IS.FERIBOT_HIZA))
-    s = KIYI.project(T)
-    S = KIYI.interpolate(s)
-    a, b = KIYI.interpolate(s - 40.0), KIYI.interpolate(s + 40.0)
-    t = np.array([b.x - a.x, b.y - a.y]); t /= np.hypot(*t)
-    n = np.array([-t[1], t[0]])
-    if ADA.contains(Point(S.x + n[0] * 5, S.y + n[1] * 5)):
-        n = -n
-    S = np.array([S.x, S.y])
+    """Eski feribot iskelesi (Kemal, 24 Kasım; yeri Eski Kilise hizasında kalır, gen/kompakt_iskele.py → FERIBOT_*):
+    Eski Kilise'nin taşınmış eski yerinin kıyıdaki en yakın noktasından kıyıya dik, taş. (çokgen, orta çizgisi, sorunlar)."""
+    S, n = IS.feribot_koku(KIYI, ADA)
     hat = LineString([tuple(S - n * IS.FERIBOT_KARAYA), tuple(S + n * IS.FERIBOT_BOY)])
     g = hat.buffer(IS.FERIBOT_EN / 2, cap_style=2, join_style=2)
     sorun = []
+    if any(g.intersects(d) for d in DOLU):
+        sorun.append("bir yapıya değiyor")
+    return g, hat, sorun
+
+
+def iskele_mendiregi(iskele):
+    """İskele'nin mendireği (Kemal, 24 Kasım: B, "doğudan kısa, iskelenin önüne kıvrılan"; gen/kompakt_iskele.py →
+    MENDIREK_B): taş, Liman'daki mendirek gibi. Kök Liman'daki gibi kıyıya oturur. (çokgen, orta çizgisi, sorunlar)."""
+    pts = IS.mendirek_b_noktalari(KIYI, ADA)
+    hat = LineString(pts)
+    k = 0.0
+    if ADA.contains(Point(pts[0])):
+        deniz_ = hat.difference(ADA)
+        parca = max(getattr(deniz_, "geoms", [deniz_]), key=lambda q: q.length)
+        a0, a1 = np.array(parca.coords[0]), np.array(parca.coords[1])
+        v = (a0 - a1) / np.hypot(*(a0 - a1))
+        hat = LineString([tuple(a0 + v * 2.0)] + list(parca.coords))
+    else:
+        p0, p1 = np.array(pts[0]), np.array(pts[1])
+        v = (p0 - p1) / np.hypot(*(p0 - p1))
+        while not ADA.contains(Point(p0 + v * k)) and k < 300:
+            k += 0.5
+        hat = LineString([tuple(p0 + v * (k + 2.0))] + pts)
+    kok = hat.coords[0]
+    g = hat.buffer(IS.MENDIREK_EN / 2, cap_style=1, join_style=1).simplify(0.05)
+    kara = g.difference(Point(kok).buffer(IS.MENDIREK_EN * 2)).intersection(ADA).area
+    sorun = []
+    if k >= 300:
+        sorun.append("kökü kıyıya ulaşmıyor")
+    if kara > 1.0:
+        sorun.append(f"karaya {kara:.0f} m² giriyor")
+    if g.distance(iskele) < IS.MENDIREK_ISKELEYE_EN_AZ:
+        sorun.append(f"iskeleye {IS.MENDIREK_ISKELEYE_EN_AZ:.0f} m'den yakın")
     if any(g.intersects(d) for d in DOLU):
         sorun.append("bir yapıya değiyor")
     return g, hat, sorun
@@ -994,9 +1019,18 @@ def uret():
         deniz.append({"type": "Feature", "properties": {
             "katman": "iskele", "id": "iskele_eski_feribot", "tur": "taş", "genislik": IS.FERIBOT_EN,
             "uzunlukM": round(hat.length), "hat": [ll(x, y) for x, y in hat.coords], "modeller": ["deniz/mendirek-duz.glb"],
-            "not": "Eski feribot iskelesi (Kemal, 24 Kasım; künye: feribot İskele'den yeni limana taşındı). Yeri ve ölçüleri "
-                   "tahmin, DENEME: eski haritada yok, Eski Kilise hizasında kıyıya dik; taslak, Kemal onaylamadı"},
+            "not": "Eski feribot iskelesi (Kemal, 24 Kasım; künye: feribot İskele'den yeni limana taşındı). Yeri Kemal'in "
+                   "kararıyla Eski Kilise hizasında, kıyıya dik; ölçüleri DENEME; taslak"},
             "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in g.exterior.coords]]}})
+        gm_, hm_, sm_ = iskele_mendiregi(g)
+        DK_ISKELE["iskele_mendirek"] = sm_
+        if not sm_:
+            deniz.append({"type": "Feature", "properties": {
+                "katman": "mendirek", "id": "mendirek_iskele", "tur": "taş", "genislik": IS.MENDIREK_EN,
+                "uzunlukM": round(hm_.length), "hat": [ll(x, y) for x, y in hm_.coords], "modeller": ["deniz/mendirek-duz.glb"],
+                "not": "İskele'nin mendireği (Kemal, 24 Kasım: B, doğudan kısa, eski feribot iskelesinin önüne kıvrılır). "
+                       "Taş, Liman'daki gibi; ölçüleri DENEME; taslak"},
+                "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in gm_.exterior.coords]]}})
     return arsa_koseleri({
         "type": "FeatureCollection",
         "not": "Kompakt ada yapıları, taslak (Kemal onaylamadı). gen/kompakt_yapilar.py üretir.",
@@ -1066,5 +1100,7 @@ if __name__ == "__main__":
     if "mendirek" in DK_ISKELE:
         print("  mendirek:", "kondu" if not DK_ISKELE["mendirek"][2] else "KONMADI (" + ", ".join(DK_ISKELE["mendirek"][2]) + ")")
     print("  eski feribot iskelesi:", "kondu" if not DK_ISKELE.get("feribot") else "KONMADI (" + ", ".join(DK_ISKELE["feribot"]) + ")")
+    if "iskele_mendirek" in DK_ISKELE:
+        print("  İskele mendireği (B):", "kondu" if not DK_ISKELE["iskele_mendirek"] else "KONMADI (" + ", ".join(DK_ISKELE["iskele_mendirek"]) + ")")
     for e, neden in YERLESEMEYEN:
         print(f"  YERLEŞEMEDİ: {e['id']} ({e['ad']}): {neden}")
