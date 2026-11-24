@@ -1,5 +1,5 @@
 import type { Item, ItemType } from '../types';
-import { WIKI_TYPES, getKunyeFields } from '../components/wiki/wikiSchema';
+import { WIKI_TYPES, getKunyeFields, eksikSayilmaz, kunyeDolu as kunyeDoluMu } from '../components/wiki/wikiSchema';
 import { haritaBeklentisi } from './eksikler';
 import { boslukOrani } from '../components/Bosluklar';
 import { ADA_KIMLIGI } from './vikiSifirlama';
@@ -35,11 +35,12 @@ export function durumOranlari(items: Item[]): DurumOranlari {
   let kunyeDolu = 0, kunyeToplam = 0, madde = 0;
   for (const i of items) {
     if (!canli(i) || !WIKI_TYPES.includes(i.type as ItemType) || i.id === ADA_KIMLIGI) continue;
-    const alanlar = getKunyeFields(i, { includeEmpty: true });
+    // 24 Kasım: gerçek yerin Mahalle alanı sayılmaz, "Bilinmiyor" dolu sayılmaz
+    const alanlar = getKunyeFields(i, { includeEmpty: true }).filter(f => !eksikSayilmaz(i, f.id));
     if (!alanlar.length) continue;
     madde++;
     kunyeToplam += alanlar.length;
-    kunyeDolu += alanlar.filter(f => f.value.trim()).length;
+    kunyeDolu += alanlar.filter(f => kunyeDoluMu(f.value)).length;
   }
 
   // Merch: ürünlerin hayat çizgisi (Konsept → Tasarım → Üretim → Satışta)
