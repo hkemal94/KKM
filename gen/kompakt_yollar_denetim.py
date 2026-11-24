@@ -262,7 +262,7 @@ def main():
     # 5) kopuk uç
     geoms = [y["g"] for y in G]
     agac = STRtree(geoms)
-    sah = imp["sahanlik"].buffer(3)
+    sah = (imp["sahanlik"].union(imp["teras"]) if "teras" in imp else imp["sahanlik"]).buffer(3)   # teras: 25 Kasım
     kopuk = []
     cikmaz = 0
     for i, y in enumerate(G):

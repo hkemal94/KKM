@@ -774,7 +774,8 @@ for yid in KOY_KIYI:
     duraklar = [d_ for d_ in duraklar if min(abs(d_[0] - s), kiyi.length - abs(d_[0] - s)) > 650]
     duraklar.append((s, q))
 duraklar.sort()
-_imp = Point(OTEL.centroid)
+# otelin 20 Kasım'daki yerinin ortası (esnek alanın merkezi; 25 Kasım'dan beri bina kıyı yanında): Sahil Yolu eskisi gibi
+_imp = Point(IMP_ALAN.centroid)
 carpan_sahil = np.where(D_KARA > 160, 1 + ((D_KARA - 160) / 140) ** 2,
                         np.where(D_KARA < 70, 1 + ((70 - D_KARA) / 20) ** 2, 1.0))
 carpan_sahil = carpan_sahil * np.where(np.hypot(GX - _imp.x, GY - _imp.y) < 230, 4.0, 1.0)
@@ -1803,6 +1804,10 @@ print("The Imperial ...")
 isk = YERLESIM["yerlesim_iskele"]["xy"]
 kenar = SAHANLIK.exterior
 s_bas = kenar.interpolate(kenar.project(Point(isk)))
+if s_bas.distance(OTEL) < 15.0:
+    # 25 Kasım: bina kıyı yanına döndü; yol sahanlığın binadan uzak (arka) kenarına çıkar
+    _kn_ = [kenar.interpolate(t) for t in np.arange(0, kenar.length, 2.0)]
+    s_bas = min([q for q in _kn_ if q.distance(OTEL) >= 15.0] or _kn_, key=lambda q: q.distance(Point(isk)))
 yasak_otel = (D_KARA < 15) | maske(STAT, 6) | maske(OTEL, 6)
 otel = baglanti((s_bas.x, s_bas.y), ag_maske(turler={"ana", "ara", "sokak"}) & ~maske(IMP_ALAN.buffer(-60)),
                 "ara", "Otel Yolu", yasak=yasak_otel, pay=900, ters=True, cikmaz=(False, False))
@@ -2289,7 +2294,7 @@ def _bul(a):
 for i_, y in enumerate(YOLLAR):
     for j_ in _ag.query(y["g_out"], predicate="dwithin", distance=0.3):
         _ata[_bul(i_)] = _bul(int(j_))
-_ic = [i_ for i_, y in enumerate(YOLLAR) if SAHANLIK.buffer(3).intersects(y["g_out"])]
+_ic = [i_ for i_, y in enumerate(YOLLAR) if SAHANLIK_TUM.buffer(3).intersects(y["g_out"])]
 for a_ in _ic[1:]:
     _ata[_bul(a_)] = _bul(_ic[0])
 _kok = _bul(next(i_ for i_, y in enumerate(YOLLAR) if y["ad"] == "Sahil Yolu"))

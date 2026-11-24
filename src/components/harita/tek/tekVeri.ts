@@ -152,7 +152,7 @@ const TABANA_UYAR = new Set(['ev', 'dukkanli', 'ciftlik', 'yazlik', 'depo']);
  * Denetimi: `gen/kompakt_rakim_denetim.py` (aynı kural).
  */
 export function tabanKotu(z: Zemin, y: Pick<Yapi, 'merkez' | 'ex' | 'en' | 'boy' | 'modelEn' | 'tur' | 'dosya' | 'taban' | 'modelYeri'>): { kot: number; zeminAlt: number } {
-  // Kaidesiz model (The Imperial): kotu veride, zemin ona göre üretildi
+  // Kendi kayalığıyla gelen model (The Imperial): kotu veride, zemin ona göre üretildi
   if (y.modelYeri) return { kot: y.modelYeri.kot, zeminAlt: y.modelYeri.kot };
   if (y.dosya && YAMAC_MODELLERI.has(y.dosya)) {
     const kot = Math.min(rakim(z, y.merkez[0], y.merkez[1]), ...y.taban.map(([x, sz]) => rakim(z, x, sz)));
@@ -230,7 +230,7 @@ export interface Yapi {
   /** Evinde oturan var (yapı dosyasında `bag: "oturan"`): dokununca kartı açılır, kart oturanları gösterir */
   oturanli?: boolean;
   /**
-   * Kaidesiz model (The Imperial, 25 Kasım): modelin başlangıç noktası (sahne x, z) ve kotu
+   * Kendi kayalığıyla gelen model (The Imperial, 25 Kasım): modelin başlangıç noktası (sahne x, z) ve kotu
    * veriden (`modelBaslangic`, `modelKot`). Model ölçeksiz oraya oturur; taban yalnız seçim ve ad için.
    */
   modelYeri?: { nokta: Nokta; kot: number };

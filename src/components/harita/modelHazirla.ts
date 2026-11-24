@@ -17,27 +17,27 @@ export interface HaritaModeli {
   ucgen: number;
 }
 
-/** Kaidesiz çizilen modelin ayarı (`tek/modelEsleme.ts` → `KAIDESIZ`) */
-export interface KaideAyari {
+/** Kendi zeminiyle gelen modelin haritadaki kırpması (`tek/modelEsleme.ts` → `MODEL_KIRPMA`) */
+export interface KirpmaAyari {
   /** Bu adlardaki parçalar hiç çizilmez */
   atla: ReadonlySet<string>;
-  /** Bütün köşeleri bu yüksekliğin altında kalan üçgenler atılır (modelin kaidesi) */
-  altSinir: number;
+  /** Suyun içi: bütün köşeleri `z`'den ileride ve en yükseği `y`'nin altında kalan üçgenler atılır */
+  suIci: { z: number; y: number };
 }
 
 /**
  * Modeli haritaya hazırlar: zemin altı parçalar atılır, aynı renkler tek parçada birleşir.
- * `kaide` verilirse (The Imperial, 25 Kasım) parça parça değil üçgen üçgen kırpılır: modelin
- * sahanlık altında kalan kaidesi atılır, sahanlık üstü (bina) kalır.
+ * `kirpma` verilirse (The Imperial, 25 Kasım) zemin altı kuralı yerine o kırpılır: adlı parçalar ve suyun
+ * içindeki üçgenler atılır, kayalık yar, merdiven, kum cebi kalır.
  */
-export function hazirla(sahne: THREE.Object3D, kaide?: KaideAyari): HaritaModeli {
+export function hazirla(sahne: THREE.Object3D, kirpma?: KirpmaAyari): HaritaModeli {
   sahne.updateMatrixWorld(true);
   const gruplar = new Map<string, { renk: THREE.Color; cift: boolean; geo: THREE.BufferGeometry[] }>();
   const kutu = new THREE.Box3();
   sahne.traverse(o => {
     const m = o as THREE.Mesh;
     if (!m.isMesh) return;
-    if (kaide?.atla.has(m.name)) return;
+    if (kirpma?.atla.has(m.name)) return;
     const kaynak = m.geometry;
     const konum = kaynak.getAttribute('position');
     if (!konum) return;
@@ -49,16 +49,18 @@ export function hazirla(sahne: THREE.Object3D, kaide?: KaideAyari): HaritaModeli
     if (kaynak.index) g.setIndex(Array.from(kaynak.index.array as ArrayLike<number>));
     g.applyMatrix4(m.matrixWorld);
     g.computeBoundingBox();
-    if (!kaide && g.boundingBox!.max.y <= ZEMIN_ESIGI) { g.dispose(); return; }
+    if (!kirpma && g.boundingBox!.max.y <= ZEMIN_ESIGI) { g.dispose(); return; }
     // Düz gölgeli low-poly: normaller yüzlerden
     let duz = g.index ? g.toNonIndexed() : g;
     if (duz !== g) g.dispose();
-    if (kaide) {
-      // Kaidenin üçgenleri (bütün köşeleri altSinir'in altında) atılır
+    if (kirpma) {
+      // Suyun içindeki üçgenler (modelin kendi iskelesi, kayıklar, sudaki kayalar) atılır
       const p0 = duz.getAttribute('position');
       const kalan: number[] = [];
+      const { z: sz, y: sy } = kirpma.suIci;
       for (let t = 0; t < p0.count / 3; t++) {
-        if (Math.max(p0.getY(t * 3), p0.getY(t * 3 + 1), p0.getY(t * 3 + 2)) < kaide.altSinir) continue;
+        if (Math.min(p0.getZ(t * 3), p0.getZ(t * 3 + 1), p0.getZ(t * 3 + 2)) > sz
+          && Math.max(p0.getY(t * 3), p0.getY(t * 3 + 1), p0.getY(t * 3 + 2)) < sy) continue;
         for (let k = 0; k < 9; k++) kalan.push(p0.array[t * 9 + k]);
       }
       duz.dispose();

@@ -48,7 +48,7 @@ export function yeniYapidan(z: Zemin, id: string, y: YeniYapi): Yapi {
 }
 
 /**
- * Var olan yapının taşınmış hâli. Kaidesiz model (The Imperial) taşınınca verideki yeri ve
+ * Var olan yapının taşınmış hâli. Kendi kayalığıyla gelen model (The Imperial) taşınınca verideki yeri ve
  * kotu (`modelYeri`) geçmez: öbür yapılar gibi tabanına ve zemine göre oturur.
  */
 export function tasinmis(z: Zemin, y: Yapi, m: number[], exH: number[]): Yapi {

@@ -9,25 +9,26 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
-## 25 Kasım: tek harita: The Imperial Otel kalıbı modeliyle, 20 m'lik tepede, önü denize
+## 25 Kasım: tek harita: The Imperial Otel kalıbı düzeniyle, 20 m'lik tepede, önü denize
 
 Kemal (24 Kasım): Oyunlar'daki "The Imperial Kemskoy · Otel kalıbı" modeli "harita için çok güzel"; ön cephe denize dönsün;
-kıyıya inen merdiven ve iskele yoktu. #293'ün ilk hâli (otel kıyıda, modelin kayalık kaidesiyle) için Kemal (25 Kasım):
-"kocaman bir kaide üzerinde duruyor, oysa 20 m yükseklikte bu tipte olmalıydı."
-- **Yer:** otel eski yerinde (20 Kasım'daki 20 m'lik sahanlık; binanın ortası eski tabanın ortasında), yalnız döndü: önü
-  kıyıya dik, denize (298°). Veride `modelBaslangic`, `modelKot` 20,1 m (`duzada-yapilar.geojson` → `bina_imperial`;
-  `tekVeri.ts` → `modelYeri`, `yapiKatmani.ts` → `modelMatrisi`). Düzenle'de taşınırsa öbür yapılar gibi oturur.
-- **Model kaidesiz:** `the-imperial-kemskoy.glb` değişmedi; haritada yalnız binası ve avlusu çizilir. Sahanlığın 0,5 m
-  altında kalan bütün üçgenler (kayalık kaide, kum, model içi merdiven ve iskele, kayıklar), çimen ve denizi atılır
-  (`tek/modelEsleme.ts` → `KAIDESIZ`, `modelHazirla.ts`). Uzak kopyası aynı kuralla yeniden üretildi.
-- **Yamaç adanın zemini** (`gen/kompakt_zemin.py`, "The Imperial modelinin yeri"): binanın altı ve önündeki teras 20 m düz,
-  teras kıyıdan 24 m içeride biter (DENEME); oradan Imperial'in eğim sınırıyla kayalık yar kıyıya iner. Bu iş zeminin en
-  sonunda, yalnız otelin 120 m çevresinde yapılır; adanın geri kalanı bayt bayt aynı.
-- **Sahil Merdiveni:** binanın önünden terası geçer, yardan üç kollu zikzakla dip terasa (20 Kasım'daki dip teras, 1,8 m)
-  iner; 3,5 m en (DENEME). Haritada sık noktalarla zemine oturur, üstünde 1,6 m'de bir basamak çizgisi (`yolKatmani.ts`).
-- **Tahta iskele:** kum cebinin yanında, otelin önüyle aynı yönde, 30 x 3 m (DENEME; `iskele_imperial`).
-- **Yollar:** Sahil Yolu, sokaklar, arsalar, kareler aynı; Otel Yolu biraz değişti (sahanlığın kenarına çıkar).
-  Binanın önündeki teras yola kapalı (`duzada-sinirlar` → imperial `teras`).
+kıyıya inen merdiven ve iskele yoktu. #293'ün ilk hâlleri için Kemal (25 Kasım): "kocaman bir kaide üzerinde duruyor, oysa
+20 m yükseklikte bu tipte olmalıydı"; yar kayalık olsun, merdiven yarın yüzünde zikzak, iskele dipteki terastan.
+- **Yer:** otel 20 m'lik tepede (sahanlık 20 m), eski yerinin kıyı yanında: binanın ortası eski tabanın ortasından kıyıya
+  dik 50 m, kıyı boyunca 14 m kuzeye (güneydeki kayalık Sahil Yolu'ndan uzak dursun; DENEME). Önü kıyıya dik, denize
+  (298°). Veride `modelBaslangic`, `modelKot` 20,1 m (`duzada-yapilar.geojson` → `bina_imperial`; `tekVeri.ts` →
+  `modelYeri`, `yapiKatmani.ts` → `modelMatrisi`). Düzenle'de taşınırsa öbür yapılar gibi oturur.
+- **Model:** `the-imperial-kemskoy.glb` değişmedi. Haritada binası, kayalık yarı, taş merdiveni, kum cebi ve taş terası
+  çizilir; çimeni (sahanlık adanın zemini), denizi ve suyun içindeki parçaları (kendi iskelesi, kayıklar) çizilmez
+  (`tek/modelEsleme.ts` → `MODEL_KIRPMA`, `modelHazirla.ts`). Uzak kopyası aynı kuralla yeniden üretildi.
+- **Zemin** (`gen/kompakt_zemin.py`, "The Imperial modelinin yeri"; yalnız otelin 50 m çevresinde, adanın geri kalanı
+  bayt bayt aynı): modelin sahanlığının altı ve çevresi 20 m düz; modelin yarının altı deniz seviyesinde (kaya örter); iki
+  yanında adanın yarı (eğim sınırı 66°, `duzada-sinirlar` → imperial `yar`; denetimde kendi sınırı). Modelin suyu
+  sahanlığın 16,6 m altında: kum cebi ve teras denizden ~3,5 m yukarıda kalır.
+- **İskele:** adanın tahta iskelesi (`iskele_imperial`, 30 x 3 m, DENEME) modelin kum cebinden / terasından denize.
+- **Yollar:** Sahil Yolu, sokaklar, arsalar, kareler aynı (Sahil Yolu'nun hesabı otelin eski yerinin ortasını kullanır).
+  Otel Yolu sahanlığın binadan uzak kenarına çıkar. Sahil Merdiveni modelin merdiveninin başında (adı ve vikisi için);
+  haritada merdivenler sık noktalarla zemine oturur, üstünde basamak çizgileri (`yolKatmani.ts`).
 - Bütün denetimler temiz. Önce / sonra: `docs/gorseller/tek-harita-imperial/`. Telefonda denenmedi.
 
 ## 24 Kasım gece: tek harita, adanın Ege'deki yeri

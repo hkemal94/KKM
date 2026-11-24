@@ -539,7 +539,7 @@ DK_MENDIREK = [(239, -95), (227, -142), (209, -176), (183, -206), (149, -233), (
                                                                       # su -26, -z deniz, +x denize bakınca sağ
 DK_MENDIREK_EN = 8.0    # oyun kodu
 DK_ISKELE = {}          # iskele ve mendirek (uret() yazar)
-OTEL_ISKELE = (30.0, 3.0, 3.0)   # The Imperial'in tahta iskelesi: kıyıdan denize boy, en, karaya giren baş (m, DENEME)
+OTEL_ISKELE = (30.0, 3.0)        # The Imperial'in tahta iskelesi: kıyıdan denize boy, en (m, DENEME)
 
 
 def dk_iskele_kok():
@@ -1023,19 +1023,19 @@ def uret():
             "not": "Mendirek: oyundaki biçimiyle koyun ağzında; sağda kıyıdan başlar, solda açık biter. " + _not},
             "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in g.exterior.coords]]}})
     # The Imperial'in tahta iskelesi (künye: "dipte otelin kum cebi ve tahta iskele"; 25 Kasım, Kemal: Otel kalıbındaki
-    # gibi): otelin dibindeki iskele yerinden denize, önü otelin önüyle aynı yöne. Boy ve en DENEME.
+    # gibi): yarın dibindeki taş terastan (iskele yeri) denize, önü otelin önüyle aynı yöne. Boy ve en DENEME.
     _iy = next((m(f["geometry"]["coordinates"]) for f in SF if f["properties"]["katman"] == "imperial"
                 and f["properties"].get("tur") == "iskele-yeri"), None)
     if _iy is not None and IMPERIAL_MODEL:
         _n = np.array(IMPERIAL_MODEL["on"], float); _t = np.array([-_n[1], _n[0]])
         _q = KIYI.interpolate(KIYI.project(Point(_iy)))
-        _bas = np.array([_q.x, _q.y]) - _n * OTEL_ISKELE[2]
-        _uc = np.array([_q.x, _q.y]) + _n * OTEL_ISKELE[0]
+        _bas = np.array(_iy, float)                          # dipteki taş terastan başlar
+        _uc = _bas + _n * (float(np.dot(np.array([_q.x, _q.y]) - _bas, _n)) + OTEL_ISKELE[0])
         _w = OTEL_ISKELE[1] / 2
         _g = Polygon([tuple(_bas - _t * _w), tuple(_uc - _t * _w), tuple(_uc + _t * _w), tuple(_bas + _t * _w)])
         deniz.append({"type": "Feature", "properties": {
             "katman": "iskele", "id": "iskele_imperial", "tur": "ahşap", "genislik": OTEL_ISKELE[1],
-            "uzunlukM": round(OTEL_ISKELE[0] + OTEL_ISKELE[2]), "modeller": ["deniz/ahsap-iskele-duz.glb"],
+            "uzunlukM": round(float(np.hypot(*(_uc - _bas)))), "modeller": ["deniz/ahsap-iskele-duz.glb"],
             "not": "The Imperial'in tahta iskelesi (künye), otelin dibindeki kum cebinin yanında, kıyıya dik; ölçüleri DENEME; taslak"},
             "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in _g.exterior.coords]]}})
     g, hat, sorun = eski_feribot_iskelesi()

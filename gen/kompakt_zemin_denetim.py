@@ -76,6 +76,10 @@ def main():
     imp_f = [f for f in geo["features"] if f["properties"]["katman"] == "imperial"
              and f["properties"]["tur"] == "alan"]
     imp = _alan(imp_f[0]) if imp_f else np.zeros(Z.shape, bool)
+    # The Imperial'in kayalık yarı (25 Kasım): eğim sınırı orada kendi değeri; kıyı sıçraması bilgi
+    yar_f = [f for f in geo["features"] if f["properties"]["katman"] == "imperial" and f["properties"]["tur"] == "yar"]
+    yar = ndimage.binary_dilation(_alan(yar_f[0]), iterations=1) if yar_f else np.zeros(Z.shape, bool)
+    yar_siniri = float(yar_f[0]["properties"].get("egimSiniri", 66.0)) + 4.0 if yar_f else 0.0
     # Kıyı türü: her hücre için en yakın kıyı parçasının türü
     from scipy.spatial import cKDTree
     kn, kt = [], []
@@ -117,8 +121,11 @@ def main():
         f"{egim[dis].max():.1f}° (sınır {EGIM_SINIRI:.0f}°); 30°'yi geçen kara "
         f"{(egim[dis] > 30).mean() * 100:.2f} %")
     if imp.any():
-        yaz("En dik yamaç (The Imperial tepesi)", egim[kara & imp].max() <= EGIM_SINIRI_IMPERIAL,
-            f"{egim[kara & imp].max():.1f}° (sınır {EGIM_SINIRI_IMPERIAL:.0f}°)")
+        yaz("En dik yamaç (The Imperial tepesi)", egim[kara & imp & ~yar].max() <= EGIM_SINIRI_IMPERIAL,
+            f"{egim[kara & imp & ~yar].max():.1f}° (sınır {EGIM_SINIRI_IMPERIAL:.0f}°; yar hariç)")
+    if yar.any():
+        yaz("En dik yamaç (The Imperial'in kayalık yarı)", egim[kara & yar].max() <= yar_siniri,
+            f"{egim[kara & yar].max():.1f}° (sınır {yar_siniri:.0f}°)")
 
     yaz("Deniz seviyesinin altında kara hücresi", int((Z[kara] <= 0).sum()) == 0,
         f"{int((Z[kara] <= 0).sum())} hücre; en alçak kara {Z[kara].min():.1f} m")
@@ -157,7 +164,7 @@ def main():
     for dj, di in ((0, 1), (1, 0)):
         a, c = kara[:B - dj, :E - di], kara[dj:, di:]
         za, zc = Z[:B - dj, :E - di], Z[dj:, di:]
-        m = (a != c) & ~(elle[:B - dj, :E - di] | elle[dj:, di:])
+        m = (a != c) & ~(elle[:B - dj, :E - di] | elle[dj:, di:]) & ~(yar[:B - dj, :E - di] | yar[dj:, di:])
         fark = np.abs(za - zc)
         sn = tur_sinir[:B - dj, :E - di]
         im_ = imp[:B - dj, :E - di]
