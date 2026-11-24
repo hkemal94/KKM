@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { modelYukle } from '../../../lib/modelYukle';
 import { ARSA_OLCULERI, BAHCE } from '../../../lib/binaKutuphanesi';
 import { hazirla, type HaritaModeli } from '../modelHazirla';
-import { rakim, sahneye, type Koleksiyon, type Nokta, type Yapi, type Zemin } from './tekVeri';
+import { cizilenRakim, rakim, sahneye, type Koleksiyon, type Nokta, type Yapi, type Zemin } from './tekVeri';
 
 /**
  * Evlerin bahçeleri (23 Kasım, Kemal: "sen bu evleri bahçesiz yapıyorsun, daha öncesinde bahçe ve evi
@@ -302,7 +302,8 @@ export class BahceKatmani {
     return k;
   }
 
-  private y(x: number, sz: number) { return Math.max(0, rakim(this.z, x, sz)); }
+  /** Çizilen zemin (24 Kasım): avlu, duvar ve bitki ekrandaki zemine oturur (kıyıda yumuşatılmış, kare üçgenleri) */
+  private y(x: number, sz: number) { return Math.max(0, cizilenRakim(this.z, x, sz)); }
 
   /** Üçgen (renkli) ekler */
   private ucgenEkle(h: Parca, renk: string, ...k: number[][]) {
