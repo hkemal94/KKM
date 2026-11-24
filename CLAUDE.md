@@ -165,6 +165,9 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
   `alaniBosalt` (`alan`, `eski`; alan yalnız `eski` değerindeyse boş yazılır, metindeki künye satırı da
   çıkar). Saf iş `src/lib/vikiKarari.ts`. "Bilinmiyor" doluluğa girmez; gerçek yerin Mahalle alanı
   eksik sayılmaz (`wikiSchema.ts` → `kunyeDolu`, `eksikSayilmaz`).
+  24 Kasım (Kemal: "Feriha (Ercan)" → "Feriha Yıldız"): `baslikDegistir` (`madde`, `eski` bugünkü
+  başlık birebir, `yeni`); başlık başkaysa ya da `yeni` başlıkta başka canlı madde varsa çakışma. Eski
+  başlık `eskiAdlar` ve `adYayilacak`a girer (ekrandan ad değiştirmedeki gibi). Saf iş `src/lib/baslikKarari.ts`.
 - Belge ile uygulama ayrıdır: karar belgeye yazıldıysa "uygulamada henüz
   yok" diye açıkça söylenir (30 Eylül'de karışmıştı).
 
