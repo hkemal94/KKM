@@ -45,11 +45,7 @@ export function kayitBoyutlari(items: Item[]): { toplam: number; turler: TurBoyu
 
 /** Parça dosyasının adından bölüm adı (Vite parçaları "Ad-karma.js") */
 const PARCA_ADLARI: Array<[RegExp, string]> = [
-  [/maplibre/i, 'Harita motoru'],
-  [/duzadaGeo/i, 'Harita verisi (ada, yollar, evler)'],
-  [/duzadaDem/i, 'Harita verisi (arazi yükseltisi)'],
-  [/DuzadaHarita|duzenKatmani|haritaMaddesi|harita/i, 'Harita'],
-  [/Kurucu|kurucu/i, 'Kurucu'],
+  [/TekHarita|haritaMaddesi|harita/i, 'Harita'],
   [/jspdf|html2canvas|purify/i, 'PDF yazıcı'],
   [/raporPdf|pdfYazici|DuzadaRaporu|evrenRaporu/i, 'Evren Raporu'],
   [/Studyo|studyo|genai/i, 'Yapay zekâ stüdyosu'],

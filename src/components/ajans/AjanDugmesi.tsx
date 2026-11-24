@@ -9,7 +9,7 @@ import { DUGME_BOS, DUGME_LAC, IKINCIL, KART, YAZI } from '../anasayfa/stil';
 /**
  * Ajan düğmesi (2 Kasım, yol haritası 7. adım; Kemal, Tur 6: "tuş + kendi
  * cümlem; zorlanmamak için hazır örnekler görünsün; sonuç Onay ekranına
- * düşsün"). İçerik, Viki, Marka ve merch, Oyunlar, Harita ve Kurucu'nun
+ * düşsün"). İçerik, Viki, Marka ve merch, Oyunlar, Harita'nın
  * başında. İstek ajansın deposuna yazılır (`lib/kemalIstekleri.ts`); Kems
  * ilgili ajana verir, çıktı ön elemeden sonra Onay bekleyenler'e gelir.
  * Hiçbir kayıt değişmez; ajan kendi başına yayınlamaz.
@@ -19,7 +19,7 @@ const ORNEKLER: Record<string, string[]> = {
   'Viki': ['Boş künye alanları için aday cevaplar getir', 'Şu maddeyi kanonla karşılaştır, çelişkileri listele: ', 'Ayvacık ve Bozcaada gerçek bilgisiyle şu maddeyi doğrula: '],
   'Marka ve merch': ['Kış dropu için kök kuralına uyan 5 aday fikir', 'Şu fikir için Canva mockup taslağı hazırla: ', 'Drop için moodboard notu çıkar'],
   'Oyunlar': ['DK Lite için bir sonraki bölümün mekanik önerisi', 'Oyun depolarının derlemesini kontrol et, hataları listele', 'Şu oyun için asset istem listesi: '],
-  'Harita ve Kurucu': ['Şu kişi şu mahallede oturur, ev ve sokak öner: ', 'Haritadaki boş arsaları künyeyle karşılaştır', 'Cadde adları için aday liste (karar benim)']
+  'Harita': ['Şu kişi şu mahallede oturur, ev ve sokak öner: ', 'Haritadaki boş arsaları künyeyle karşılaştır', 'Cadde adları için aday liste (karar benim)']
 };
 
 export const AjanDugmesi: React.FC<{ ekran: string }> = ({ ekran }) => {

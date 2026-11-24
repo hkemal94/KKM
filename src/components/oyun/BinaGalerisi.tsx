@@ -16,7 +16,7 @@ const ModelOnizleme = React.lazy(() => import('./ModelOnizleme'));
 /**
  * Ortak bina kütüphanesi galerisi (4 Kasım). Binalar, sokak parçaları ve The
  * Imperial Kemskoy (kat planları ve iç görünümleriyle). Her kartta döndürülebilir
- * 3B önizleme, Kurucu türü ve "taslak" işareti; Kemal'in kararı için
+ * 3B önizleme, yapı türü (tek haritanın Düzenle modundaki) ve "taslak" işareti; Kemal'in kararı için
  * Tamam · Düzelt · Sil (ajansın `kkm/asset-kararlari.json`'una yazılır).
  */
 
@@ -184,7 +184,7 @@ export const BinaGalerisi: React.FC<{ onVikideAc?: () => void; onMinigolfPlanlar
         )}
         {turler.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {turler.map(t => <Rozet key={t} renk="bekliyor">Kurucu: {KURUCU_TUR_ADI[t] ?? t}</Rozet>)}
+            {turler.map(t => <Rozet key={t} renk="bekliyor">Tür: {KURUCU_TUR_ADI[t] ?? t}</Rozet>)}
           </div>
         )}
         <KararSatiri kimlik={m.kimlik} karar={kararlar?.[m.kimlik]} anahtar={anahtar}

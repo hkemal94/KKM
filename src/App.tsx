@@ -34,7 +34,7 @@ import {
   Inbox,
   Briefcase,
   Package,
-  Hammer,
+  Map as HaritaSimgesi,
   Sun,
   Moon,
   KeyRound,
@@ -155,7 +155,7 @@ const durumSekmesi = (s: unknown): DurumSekmesi => (DURUM_SEKMELERI.includes(s a
  */
 /** Ajan düğmesi olan sayfalar ve ajanlardaki ekran adı (2 Kasım, yol haritası 7. adım; Kemal, Tur 6) */
 const AJAN_EKRANI: Partial<Record<string, string>> = {
-  duzada: 'Viki', harita: 'Harita ve Kurucu', icerik: 'İçerik', marka: 'Marka ve merch', oyun: 'Oyunlar'
+  duzada: 'Viki', harita: 'Harita', icerik: 'İçerik', marka: 'Marka ve merch', oyun: 'Oyunlar'
 };
 const SEKMEYE_GECENLER = ['fanzin', 'takvim', 'yolharitasi', 'galeri', 'atolye', 'yazi', 'markalar', 'merch', 'sosyal', 'blog'];
 const MARKA_SEKMELERI: MarkaSekmesi[] = ['markalar', 'merch'];
@@ -201,7 +201,7 @@ export default function App() {
   /** Ana sayfadaki tepsiden açılan iş (13 Kasım) */
   const [onayAcik, setOnayAcik] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Sayfa>(() => (ilkEkran?.tab && !KALKAN_SAYFALAR.has(ilkEkran.tab) ? ilkEkran.tab as Sayfa : 'ana'));
-  /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kurucu, Kitap) */
+  /** Paket 4: alt sekmeye doğrudan gitme istekleri (telefonda Harita, Kitap) */
   const [duzadaIstek, setDuzadaIstek] = useState<{ sekme: DuzadaSekmesi; n: number } | null>(() =>
     ilkEkran?.tab === 'duzada' && (ilkEkran.duzada === 'wiki' || ilkEkran.duzada === 'rapor') ? { sekme: ilkEkran.duzada, n: Date.now() } : null);
   const [atolyeIstek, setAtolyeIstek] = useState<{ sekme: AtolyeSekmesi; n: number; aile?: string } | null>(null);
@@ -619,7 +619,7 @@ export default function App() {
       // Stüdyo kalktı (3 Kasım): öneriler Onay bekleyenler'de
       setActiveTab('onay');
     } else if (item.type === 'map_pin') {
-      // Harita notu (5. gece): Harita ve Kurucu'da
+      // Harita notu (5. gece): Harita sayfasına (tek harita notları göstermez; 23 Kasım)
       yonlendir('harita');
     } else if (item.type === 'fikir') {
       /*
@@ -675,7 +675,7 @@ export default function App() {
   const yonlendir = (hedef: string, ayrinti?: string | null) => {
     const n = Date.now();
     switch (hedef) {
-      // 2 Kasım (yol haritası 6. adım): Atölye ikiye ayrıldı: Harita ve Kurucu · Görünümler
+      // 2 Kasım (yol haritası 6. adım): Atölye ikiye ayrıldı: Harita · Görünümler (eski 'kurucu' adresi de Harita'ya)
       case 'harita': case 'kurucu': case 'atolye': setAtolyeIstek({ sekme: 'harita', n }); setActiveTab('harita'); break;
       // 20 Kasım (Kemal): Görünümler soy ağacıyla açılır; eski "bağ ağı" adresi yine bağ ağına gider
       case 'gorunumler': setAtolyeIstek({ sekme: 'soy', n }); setActiveTab('gorunumler'); break;
@@ -922,7 +922,7 @@ export default function App() {
     { grup: 'Evren', simge: Compass, satirlar: [
       { id: 'duzada', ad: 'Viki', alt: 'Düzada vikisi ve Evren Raporu', simge: Compass, nokta: bildirimVar('kanon') },
       { id: 'kitap', ad: 'Kitap', alt: 'kitap projeleri ve bölümler', simge: PenTool },
-      { id: 'harita', ad: 'Harita ve Kurucu', alt: '2D kur, 3D bak', simge: Hammer },
+      { id: 'harita', ad: 'Harita', alt: 'tek harita', simge: HaritaSimgesi },
       { id: 'gorunumler', ad: 'Görünümler', alt: 'soy ağacı, zaman çizgisi, bağ ağı', simge: Share2 }
     ] },
     { grup: 'Ürünler', simge: Package, satirlar: [
@@ -942,7 +942,7 @@ export default function App() {
 
   const SAYFA_ADI: Record<Sayfa, string> = {
     ana: 'Ana sayfa', onay: 'Onay bekleyenler', notlar: 'Notlar', isler: 'İşler ve takvim', ajanlar: 'Ajanlar ve otomasyonlar', duzada: 'Viki',
-    kitap: 'Kitap', harita: 'Harita ve Kurucu', gorunumler: 'Görünümler',
+    kitap: 'Kitap', harita: 'Harita', gorunumler: 'Görünümler',
     oyun: 'Oyunlar', marka: 'Marka ve merch', icerik: 'İçerik', pullar: 'Pullar', ilham: 'İlham ve kaynaklar', durum: 'Eksikler ve ayarlar'
   };
 
@@ -1223,12 +1223,11 @@ export default function App() {
 
             {activeTab === 'harita' && (
               <Atolye
-                baslik="Harita ve Kurucu"
+                baslik="Harita"
                 sekmeler={['harita']}
                 items={items}
                 onAddItem={handleAddItem}
                 onUpdateItem={handleUpdateItem}
-                onDeleteItem={handleDeleteItem}
                 istek={atolyeIstek}
                 onMaddeAc={id => { setDuzadaIstek({ sekme: 'wiki', n: Date.now() }); setActiveItemId(id); setActiveTab('duzada'); }}
               />

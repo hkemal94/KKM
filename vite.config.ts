@@ -19,29 +19,11 @@ export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     define: { 'import.meta.env.VITE_SURUM': JSON.stringify(surum) },
-    // MapLibre işini bir Web Worker'da yapar. Vite'ın bağımlılık
-    // ön-derlemesinden geçtiğinde bu worker açılır açılmaz kapanıyor ve
-    // harita hiç yüklenmiyor. Ön-derlemenin dışında bırakınca düzeliyor.
-    optimizeDeps: {
-      exclude: ['maplibre-gl'],
-    },
-    // Harita motoru (MapLibre, ~1,3 MB) kendi paketinde (8 Ekim denetimi):
-    // yoksa küçük bir yardımcıyla aynı pakete düşüyor, Atölye'nin başlangıç
-    // ekranı ve Site bile onu indiriyordu. Artık yalnız 3D açılınca iner.
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: (id: string) => (id.includes('node_modules/maplibre-gl') ? 'maplibre' : undefined)
-        }
-      }
-    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
     },
-    // Harita düzenleyici artık ayrı sayfa değil: Düzada Haritası sekmesindeki
-    // "Düzenle" düğmesiyle açılıyor (H2).
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.

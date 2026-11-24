@@ -8,7 +8,7 @@ import { kisiMi } from './adaSakini';
  *
  * Eskiden kimin hangi evde oturduğu yalnız eski haritanın kaydında
  * (`duzada/haritaDuzeni` → Kurucu taslağının `oturanlar`'ı: ev → kişiler)
- * duruyordu. Eski haritalar silinecek; bağ kişinin kendi maddesine geçer:
+ * duruyordu. Eski haritalar silindi (23 Kasım); bağ kişinin kendi maddesine geçer:
  * `metadata.haritaEvi` = tek haritadaki evin kimliği (ev kimlikleri tek
  * haritada aynı). Tek haritanın yapı kartı "Oturanlar"ı buradan okur.
  *

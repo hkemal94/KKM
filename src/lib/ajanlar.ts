@@ -47,7 +47,7 @@ const HATLAR: Record<string, { hat: string; ekran: string }> = {
   'lore-arastirmacisi': { hat: 'Evren', ekran: 'Viki' },
   'viki-editoru': { hat: 'Evren', ekran: 'Viki' },
   'kanon-denetcisi': { hat: 'Evren', ekran: 'Viki' },
-  'harita-ajani': { hat: 'Harita', ekran: 'Harita ve Kurucu' },
+  'harita-ajani': { hat: 'Harita', ekran: 'Harita' },
   'bulten-ajani': { hat: 'Bülten', ekran: 'İçerik' },
   'oyun-tasarimcisi': { hat: 'Oyun', ekran: 'Oyunlar' },
   'oyun-gelistiricisi': { hat: 'Oyun', ekran: 'Oyunlar' },

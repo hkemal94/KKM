@@ -1,10 +1,11 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { BookOpen, Feather, History, Image as GorselSimgesi, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, Pencil, X } from 'lucide-react';
+import { BookOpen, Feather, Image as GorselSimgesi, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, Pencil, X } from 'lucide-react';
 import type { Item } from '../../types';
 import { ESLEME, kisaGiris } from '../../lib/yasayanHarita';
 import { maddeGorseli } from '../../lib/maddeGorseli';
+import { isaretle } from '../../lib/olcumler';
 import { evdeOturanlar } from '../../lib/oturanGocu';
 import { GorselImg } from '../GorselImg';
 import { GOK } from './haritaStili';
@@ -57,8 +58,6 @@ type Props = {
   className?: string;
   items?: Item[];
   onMaddeAc?: (id: string) => void;
-  /** Eski haritalara geçiş (11. adıma kadar duruyorlar) */
-  onEskiHarita?: () => void;
   /** Düzenle modunun taslak deposu (deneme sayfası bellekte tutar; yoksa KKM kaydı) */
   taslakDeposu?: TaslakDeposu;
   /** Düzenle modu açık başlasın (deneme sayfası) */
@@ -75,11 +74,13 @@ const EGIM_3B = THREE.MathUtils.degToRad(52);
 /** Telefon mu (dokunmatik ve dar ekran): hafif mod buna göre açılır */
 const telefonMu = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900;
 
-export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEskiHarita, taslakDeposu, duzenleIlk, seciliIlk }) => {
+export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslakDeposu, duzenleIlk, seciliIlk }) => {
   const kap = useRef<HTMLDivElement>(null);
   const etiketKabi = useRef<HTMLDivElement>(null);
   const [hata, setHata] = useState('');
   const [hazir, setHazir] = useState(false);
+  // Açılış hızı (Durum → Boyut ve hız): Harita'ya girişten haritanın çizilmesine
+  useEffect(() => { if (hazir) isaretle('harita-hazir'); }, [hazir]);
   const [tepeden, setTepeden] = useState(false);
   const [hafif, setHafif] = useState<boolean>(() => {
     try { const v = localStorage.getItem(HAFIF_ANAHTARI); if (v === '1' || v === '0') return v === '1'; } catch { /* yok */ }
@@ -621,11 +622,6 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, onEski
           title={duzenle ? 'Düzenle modundan çık (taslak kayıtlı kalır)' : 'Haritayı düzenle: bina, yol, hazır grup, kare boyama, zemin'}>
           <Pencil className="w-3.5 h-3.5" /> {duzenle ? 'Düzenlemeyi bitir' : 'Düzenle'}
         </button>
-        {onEskiHarita && !duzenle && (
-          <button type="button" onClick={onEskiHarita} className={bos} title="Eski haritalar (11. adıma kadar duruyor)">
-            <History className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Eski haritalar</span><span className="sm:hidden">Eski</span>
-          </button>
-        )}
       </div>
       {!hazir && !hata && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-mono text-xs text-[#0E1C4F]">Tek harita yükleniyor…</div>
