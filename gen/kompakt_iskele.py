@@ -47,10 +47,66 @@ def tasi(lng, lat):
     return tasi_m(*_m(lng, lat))
 
 
-def eski_iskele():
+# Seyreltme (Kemal, 24 Kasım, #286'ya cevap: "Sokakları azalt; daha az ev olabilir ama dolu olsun"). Eski ızgaranın
+# adaları 0,70'te küçük kalıyordu (yol kenarları arası ~20 m): iki yanına arsa sığmıyor, adaların içi boş görünüyordu.
+# Kurucu'daki hatlardan bir kısmı kaldırılır, kalanlar aynı hatta kalır (yeni sokak yok, birleştirme yok):
+#   - doğu-batı uzanan dört ara sokak (48, 50, 52, 54): kalanlar Kemsköy Caddesi, 49, 51, 53 (aralar ~32 m'den ~65 m'ye);
+#   - bu sokaklara inip öbür yanda devam etmeyen kısa bağlantılar (çıkmaz kalırdı);
+#   - her kuşakta kuzey-güney bağlantılar birbirine 65 m'den yakın olmasın (ara yol 1072, Eski Kilise'nin önündeki 14 kalır);
+#   - batı uçta ve kuzeyde (Sahil Yolu'nun öbür yanı) küçük adaları bölen birkaç kısa sokak;
+#   - Kemsköy Caddesi'nin güneyindeki kıyı sokakları (46, 47 ve bağlantıları): caddeyle aralarında ~18 m kalıyordu, iki
+#     yandan da arsa sığmıyordu (boş ada). Caddenin güneyi tek sıra arsa olur; Sade Meyhane caddenin güney yanında
+#     (eski yerinde; arkası caddeye bakar, önü kumsala).
+# Kalanlar: Kemsköy Caddesi, Sahil Yolu'nun köy içi hattı, ara yollar, Eski Kilise'nin önündeki 14, köyün çevresindeki
+# halka. Seçim bir kez hesaplanıp donduruldu (DENEME, Kemal onaylamadı).
+GIDEN = frozenset(
+    [f"sokak_yer_iskele_{n}" for n in [1, 2, 3, 4, 6, 7, 10, 16, 18, 20, 26, 28, 29, 30, 33, 34, 35, 36, 39, 40, 42, 44, 45, 46, 47, 48, 50, 52, 54, 55, 56, 57, 58, 59, 60, 61, 64, 65, 68, 70, 72, 73, 75, 77, 79, 82, 84, 85, 87, 90, 92, 93, 94, 95, 97, 98]]
+    + [f"kurucu_yol_{k}" for k in ['muqyomuq', 'muqyp0xl', 'muqyp4bg', 'muqyprn5', 'muqyr3tr', 'muqyr8ke', 'muqyrsy8', 'muqyt2ia', 'muqytenz', 'muqz63od', 'muqz6zky', 'muqz78yy', 'muqz7eki', 'muqz81ho', 'muqza110', 'muqzakd5']])
+
+
+def eski_iskele(hepsi=False):
     """Eski haritadaki İskele: sokaklar {kimlik: (ad, kademe, [(boylam, enlem)…])}, meydancıklar [[(boylam, enlem)…]],
-    Sahil Yolu [(boylam, enlem)…] (Kemal'in Kurucu'daki son hâli; dondurulmuş girdiden)."""
-    return E.iskele()
+    Sahil Yolu [(boylam, enlem)…] (Kemal'in Kurucu'daki son hâli; dondurulmuş girdiden). hepsi=False: GIDEN çıkar."""
+    sok, meydan, sahil = E.iskele()
+    if not hepsi:
+        sok = {k: v for k, v in sok.items() if k not in GIDEN}
+    return sok, meydan, sahil
+
+
+# Eski feribot iskelesi (Kemal, 24 Kasım: "Eski feribotun yanaştığı iskele vardı"). Künye: "Kemsköy — otelden (1954)
+# önce köyün iskelesi"; "Feribot İskele'den yeni limana taşındı" (Liman 1980–1990'lar); balık hali de önce İskele'deydi.
+# Eski haritada, vikide ve Kurucu kayıtlarında yeri yok (git geçmişi tarandı: eski haritada İskele'de yalnız The
+# Imperial'in Otel İskelesi vardı). YER TAHMİNİ (DENEME): köyün önünde, Eski Kilise hizasında kıyıya dik (Sade Meyhane
+# ile kilisenin arası; köyün en eski yapıları); orada kıyı düz ve su doğuya göre daha çabuk derinleşir. Taş iskele
+# (artık feribot yanaşmaz). Ölçüler DENEME: 80 m (ucu ~4 m derin), 8 m en. Mendirek yok (Kemal'e soruldu).
+FERIBOT_HIZA = (25.787494, 39.5779193)   # Eski Kilise'nin eski haritadaki yeri (taşınınca kıyıdaki karşılığı kök olur)
+FERIBOT_BOY = 80.0     # DENEME: kıyıdan denize (m)
+FERIBOT_EN = 8.0       # DENEME
+FERIBOT_KARAYA = 2.0   # kök kıyıdan bu kadar karaya girer (m)
+
+
+ISKELE_KUMSAL_PAY = 15.0   # DENEME: köyün önünde kumsal şeridi (öbür kıyılarda gen/kompakt_parseller.py → KUMSAL_PAY)
+
+
+def kumsal_dar_alan():
+    """Kumsal şeridinin dar olduğu alan (Kemal, 24 Kasım: "boş ada kalmasın"; Kemsköy Caddesi'nin güneyindeki adalara
+    da arsa düşsün; 8 Ekim: evler plaj kenarında olabilir): köyün seyreltmeden önceki bütün sokaklarının çevresi."""
+    from shapely.geometry import LineString
+    from shapely.ops import unary_union
+    return unary_union([LineString([tasi(*c) for c in hat]) for _, _, hat in eski_iskele(hepsi=True)[0].values()]
+                       ).convex_hull.buffer(30.0)
+
+
+def kumsal_seridi(kum, kiyi_seridi, kumsal_pay):
+    """Kumlu kıyıların kumsal şeridi (kum: kıyı çizgileri); İskele köyünün önünde dar."""
+    from shapely.geometry import Polygon
+    from shapely.ops import unary_union
+    if not kum:
+        return Polygon()
+    alan = kumsal_dar_alan()
+    genis = unary_union([k.buffer(kiyi_seridi + kumsal_pay) for k in kum])
+    dar = unary_union([k.buffer(kiyi_seridi + ISKELE_KUMSAL_PAY) for k in kum])
+    return unary_union([genis.difference(alan), dar.intersection(alan)])
 
 
 def sahile_kadar():

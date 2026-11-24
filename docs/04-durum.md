@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 24 Kasım 2026 (tek harita: İskele eski haritadaki sokaklarıyla); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 24 Kasım 2026 (tek harita: İskele eski sokaklarıyla; Kemal'in cevapları: sokaklar seyreldi, eski feribot iskelesi); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -15,7 +15,7 @@ Kemal (24 Kasım, İskele'nin resmine yorum): İskele'nin sokakları tümden de�
 0,70 ölçekle (Liman'daki gibi). Sahil Yolu İskele'den geçiyor; sokaklar ona göre kurulmuştu.
 - **Sokaklar** (`gen/kompakt_iskele.py`, `gen/kompakt_yollar.py`): köy dokusu üretilmez. Kemal'in Kurucu'daki son hâli
   (gizlenenler çıkar, yolDuzeni'yle değişen hat ve Kemal'in köye çizdiği yollar girer; The Imperial çevresindekiler girmez):
-  124 sokak ve yol, 3 meydancık. Git geçmişindeki eski harita dosyalarından bir kez `gen/kompakt-eski-girdiler.json`'a
+  124 sokak ve yol (52'si kaldı, aşağıda "Seyreltme"), 3 meydancık. Git geçmişindeki eski harita dosyalarından bir kez `gen/kompakt-eski-girdiler.json`'a
   ("iskele") donduruldu. Kemsköy Caddesi eski hattıyla ve adıyla (ara, asfalt); numaralı sokak adları taşınmaz.
 - **Taşıma:** adanın küçültmesi (0,70, aynı odak; kıyı köyündeki gibi) ve köyün kara yönüne 26 m kayması (DENEME).
   Kompakt kıyı burada eski kıyının küçültülmüşü; ama tepeler aynı yükseklikte kaldığı için kıyı yamacı dikleşti, yalnız
@@ -33,15 +33,27 @@ Kemal (24 Kasım, İskele'nin resmine yorum): İskele'nin sokakları tümden de�
   (`gen/kompakt_yapilar.py` → `eski_iskelede`). Rum Mezarlığı kiliseye göre aynı yerde (Kemal'in 21 Kasım seçimi), sokağa
   değmesin diye en yakın boş yerde (16 m). İskele Mescidi yerinde. Kaide: Sade Meyhane 5,4 → 4,9 m, Eski Kilise 5,3 → 2,8 m.
 - **Elle düzen** korunur; tek değişiklik: Kems Company dükkânının eski yeri yeni bir sokağın üstünde kaldı, Kemsköy
-  Caddesi'nin yeni hattında köyün ortasındaki kavşağın yanında boş yere taşındı (`gen/tek-harita-elle.json`, DENEME).
-- **Arsa ve ev:** İskele'de de 16 m derin arsa denenir (Liman gibi). Arsa 254 → 119, yapı 199 → 106 (elle düzen dahil): eski ızgaranın
-  adaları 0,70'te küçük (yol kenarları arası ~20 m), iki yandan arsa sığmıyor; evler seyrek.
+  Caddesi'nin yeni hattında köyün ortasındaki kavşağın yanında boş yere taşındı (`gen/tek-harita-elle.json`; Kemal onayladı).
+- **Seyreltme** (Kemal'in cevabı: "Sokakları azalt; daha az ev olabilir ama dolu olsun", boş ada kalmasın):
+  `gen/kompakt_iskele.py` → `GIDEN`: 124 hattan 72'si kalktı, 52 kaldı; kalanlar aynı hatta (yeni sokak, birleştirme yok).
+  Giden: doğu-batı dört ara sokak (aralar ~32 m'den ~65 m'ye), bunlara inip çıkmaz kalan bağlantılar, her kuşakta 65 m'den
+  yakın kuzey-güney bağlantılar, batı uçta ve Sahil Yolu'nun kuzeyinde küçük adaları bölen birkaç sokak, Kemsköy
+  Caddesi'nin güneyindeki kıyı sokakları (caddeyle arası ~18 m, iki yandan arsa sığmıyordu). Kalan: Kemsköy Caddesi,
+  Sahil Yolu'nun köy içi hattı, ara yollar, Eski Kilise'nin önündeki sokak, köyün çevresindeki halka. Köyün önünde
+  kumsal şeridi dar (15 m; öbür kıyılarda 60 m; `kumsal_seridi`), caddenin güneyi tek sıra arsa; İskele'de arsa boş
+  bırakılmaz (`BOS_ORANI` 0). Sade Meyhane eski yerine oturdu (hedeften 2 m; önceki hâlde 27 m), caddenin güney yanında.
+- **Arsa ve ev:** arsa 254 (ana dal) → 119 (ilk hâl) → 238, yapı 196 → 103 → 231 (yerleşime göre; elle düzen dahil).
+  Denetim: köyün yollarının çevrelediği 28 adanın hepsinde yapı var (`kompakt_yapilar_denetim.py`).
+- **Eski feribot iskelesi** (Kemal: "Eski feribotun yanaştığı iskele vardı"): künye (feribot İskele'den yeni limana
+  taşındı; otelden önce köyün iskelesi), viki, eski harita dosyaları (git geçmişi), Kurucu kayıtları tarandı: yeri hiçbir
+  yerde yok (eski haritada İskele'de yalnız Otel İskelesi). Yer tahmini (DENEME): Eski Kilise hizasında kıyıya dik taş
+  iskele, 80 m (ucu ~4 m derin), 8 m en (`duzada-yapilar.geojson` → `iskele_eski_feribot`, `tur: taş`; tek harita mendirek
+  taşlarıyla çizer). Yola bağlı değil (kumsalın önünde). Mendirek eklenmedi: seçenekler Kemal'e soru
+  (`docs/gorseller/tek-harita-iskele/2-mendirek-secenekleri.jpg`).
 - **İskele dışında değişen:** Güney Sırt Yolu (İskele'den çıkar; Merkez ucunda 1 arsa, 2 ev fazla), Liman–Merkez
   bağlantısının son kısmı (Liman'da 3 ev yeniden dizildi, sayı aynı), Çiftlik'te bir dükkânlı evin modeli, bu yolların çevresindeki ağaçlar. Mahalle 2B resimleri yeniden
   üretildi. Bütün denetimler temiz (rakım denetimi dahil). Önizlemeler `docs/gorseller/tek-harita-iskele/`.
-- **Yapılmadı:** eski haritada İskele'de iskele ve mendirek yoktu (yalnız The Imperial'in Otel İskelesi ve Liman'ın
-  mendireği); su sporları iskelesi (23 Kasım eklemesi) yerinde. İskele'ye mendirek ve iskele Kemal'in kararına kaldı.
-  Telefonda denenmedi.
+- Su sporları iskelesi (23 Kasım eklemesi) yerinde. Mendirek Kemal'in kararına kaldı. Telefonda denenmedi.
 
 ## 24 Kasım: tek harita: zikzak yollar düzeldi
 

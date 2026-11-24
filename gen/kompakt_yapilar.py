@@ -65,9 +65,9 @@ BOS_ORANI = {   # DENEME: arsanın boş kalma oranı (seyrek köy hissi; 21 Kas�
                 #  boş kareler ileride park / bahçe ile dolacak, Stadyum'un seyrekliği sorun değil)
     "bitisik": 0.03,
     "buyuk": 0.20,
-    "avlulu": {"yerlesim_merkez": 0.15, "yerlesim_liman": 0.22, "yerlesim_iskele": 0.22,
+    "avlulu": {"yerlesim_merkez": 0.15, "yerlesim_liman": 0.22, "yerlesim_iskele": 0.0,
                "yerlesim_stadyum": 0.35, "yerlesim_stadyum_kiyi": 0.20, "yerlesim_ciftlik": 0.35},
-}
+}   # İskele 0 (Kemal, 24 Kasım: "daha az ev olabilir ama dolu olsun"; sokaklar seyreldi, arsalar boş kalmaz)
 DAR_CEPHE = 8.5          # 1 kare cepheli (dar) avlulu arsa: dar ev konur
 DAR_YAN_PAY = 0.5        # DENEME: dar evin iki yanında kalan pay (m)
 SIRA_EV_GOVDE = 1.22     # DENEME (Kemal, 21 Kasım: sıra ev gövdeleri değsin): bitişik arsadaki evin modeli tabanından bu
@@ -609,6 +609,26 @@ def dk_iskele_ve_mendirek(taban, kumsal):
     DK_ISKELE["mendirek"] = (g, hat, sorun)
 
 
+def eski_feribot_iskelesi():
+    """Eski feribot iskelesi (Kemal, 24 Kasım; yer tahmini, gen/kompakt_iskele.py → FERIBOT_*): Eski Kilise'nin taşınmış
+    eski yerinin kıyıdaki en yakın noktasından kıyıya dik, taş. (çokgen, orta çizgisi, sorunlar)."""
+    T = Point(IS.tasi(*IS.FERIBOT_HIZA))
+    s = KIYI.project(T)
+    S = KIYI.interpolate(s)
+    a, b = KIYI.interpolate(s - 40.0), KIYI.interpolate(s + 40.0)
+    t = np.array([b.x - a.x, b.y - a.y]); t /= np.hypot(*t)
+    n = np.array([-t[1], t[0]])
+    if ADA.contains(Point(S.x + n[0] * 5, S.y + n[1] * 5)):
+        n = -n
+    S = np.array([S.x, S.y])
+    hat = LineString([tuple(S - n * IS.FERIBOT_KARAYA), tuple(S + n * IS.FERIBOT_BOY)])
+    g = hat.buffer(IS.FERIBOT_EN / 2, cap_style=2, join_style=2)
+    sorun = []
+    if any(g.intersects(d) for d in DOLU):
+        sorun.append("bir yapıya değiyor")
+    return g, hat, sorun
+
+
 KAYITLAR = []        # rapor için: viki bağlı yapının eski ve yeni yeri
 YERLESEMEYEN = []
 
@@ -968,6 +988,15 @@ def uret():
             "uzunlukM": round(hat.length), "hat": [ll(x, y) for x, y in hat.coords], "modeller": ["deniz/mendirek-duz.glb"],
             "not": "Mendirek: oyundaki biçimiyle koyun ağzında; sağda kıyıdan başlar, solda açık biter. " + _not},
             "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in g.exterior.coords]]}})
+    g, hat, sorun = eski_feribot_iskelesi()
+    DK_ISKELE["feribot"] = sorun
+    if not sorun:
+        deniz.append({"type": "Feature", "properties": {
+            "katman": "iskele", "id": "iskele_eski_feribot", "tur": "taş", "genislik": IS.FERIBOT_EN,
+            "uzunlukM": round(hat.length), "hat": [ll(x, y) for x, y in hat.coords], "modeller": ["deniz/mendirek-duz.glb"],
+            "not": "Eski feribot iskelesi (Kemal, 24 Kasım; künye: feribot İskele'den yeni limana taşındı). Yeri ve ölçüleri "
+                   "tahmin, DENEME: eski haritada yok, Eski Kilise hizasında kıyıya dik; taslak, Kemal onaylamadı"},
+            "geometry": {"type": "Polygon", "coordinates": [[ll(x, y) for x, y in g.exterior.coords]]}})
     return arsa_koseleri({
         "type": "FeatureCollection",
         "not": "Kompakt ada yapıları, taslak (Kemal onaylamadı). gen/kompakt_yapilar.py üretir.",
@@ -997,7 +1026,7 @@ def uret():
             "eskiKonum_": "eski haritada yeri olmayan yapıda null (Kemal'in seçtiği aday yer)",
             "tasima": "nasıl taşındı: yöntem, eski yerin kompakt adadaki karşılığı (hedef) ve yapının ona uzaklığı",
             "bak": "önü bu noktaya bakar (meydana bakan yapılar)",
-            "katman": "yapi; iskele ve mendirek: suyun üstündeki liman öğeleri (çokgen; mendirekte hat: orta çizgisi)",
+            "katman": "yapi; iskele ve mendirek: suyun üstündeki liman öğeleri (çokgen; mendirekte ve taş iskelede hat: orta çizgisi)",
         },
         "olculer": {"not": "Hepsi DENEME (Kemal onaylamadı)", "bosOrani": BOS_ORANI, "siraEvEnDar": SIRA_EV_EN_DAR,
                     "siraEvGovdeCarpani": SIRA_EV_GOVDE,
@@ -1036,5 +1065,6 @@ if __name__ == "__main__":
         print(f"  {e['id']:26s} {(e['ad'] or '(evde oturan)'):26s} {p['tasima']['yontem']:40s} hedeften {p['tasima']['hedeftenM']:6.1f} m  {p['mahalle']}")
     if "mendirek" in DK_ISKELE:
         print("  mendirek:", "kondu" if not DK_ISKELE["mendirek"][2] else "KONMADI (" + ", ".join(DK_ISKELE["mendirek"][2]) + ")")
+    print("  eski feribot iskelesi:", "kondu" if not DK_ISKELE.get("feribot") else "KONMADI (" + ", ".join(DK_ISKELE["feribot"]) + ")")
     for e, neden in YERLESEMEYEN:
         print(f"  YERLEŞEMEDİ: {e['id']} ({e['ad']}): {neden}")

@@ -398,8 +398,13 @@ def main():
         LineString([IS.tasi(*c) for c in is_sokak["yol_kemskoy"][2]])) <= 4.0,
         f"taşınmış eski hattan en çok {kc_.hausdorff_distance(LineString([IS.tasi(*c) for c in is_sokak['yol_kemskoy'][2]])):.2f} m"
         if kc_ is not None else "yok")
+    # seyreltme (Kemal, 24 Kasım: "sokakları azalt"): kaldırılan sokakların ortası haritada yol değil
+    is_hepsi = IS.eski_iskele(hepsi=True)[0]
+    duran = [k_ for k_ in IS.GIDEN if agu.distance(LineString([IS.tasi(*c) for c in is_hepsi[k_][2]]).interpolate(0.5, normalized=True)) < 3.0]
+    yaz("İskele'de kaldırılan sokaklar haritada yok", not duran, f"{len(IS.GIDEN)} sokak kaldırıldı, {len(is_sokak)} kaldı; duran: {', '.join(duran) or '-'}")
+    is_u_hepsi = unary_union([LineString([IS.tasi(*c) for c in hat_]) for _, _, hat_ in is_hepsi.values()])
     sy_g = next((y["g"] for y in G if y["p"].get("ad") == "Sahil Yolu"), None)
-    es_ = LineString([IS.tasi(*c) for c in is_sahil]).intersection(is_u.convex_hull)
+    es_ = LineString([IS.tasi(*c) for c in is_sahil]).intersection(is_u_hepsi.convex_hull)
     es_ = max(getattr(es_, "geoms", [es_]), key=lambda g: g.length)
     ds_ = [sy_g.distance(es_.interpolate(t)) for t in np.arange(0, es_.length + 0.01, 4.0)] if sy_g is not None else [99.0]
     yaz("Sahil Yolu İskele'nin içinde eski haritadaki hattından", max(ds_) <= 1.0,

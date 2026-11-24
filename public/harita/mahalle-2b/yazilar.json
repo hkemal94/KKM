@@ -6,7 +6,7 @@
    "dosya": "yer_ciftlik-A.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 682365,
+   "bayt": 682326,
    "yazilar": [
     {
      "tur": "yol",
@@ -133,7 +133,7 @@
    "dosya": "yer_ciftlik-B.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 1026428,
+   "bayt": 1026459,
    "yazilar": [
     {
      "tur": "yol",
@@ -197,16 +197,11 @@
    "dosya": "yer_iskele-A.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 579302,
+   "bayt": 578355,
    "yazilar": [
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "pencere"
     },
     {
@@ -235,18 +230,8 @@
      "yer": "pencere"
     },
     {
-     "tur": "yapi",
-     "metin": "The Imperial Kemsköy",
-     "yer": "pencere"
-    },
-    {
      "tur": "yol",
-     "metin": "Otel Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Sahil Merdiveni",
+     "metin": "Güney Sırt Yolu",
      "yer": "pencere"
     },
     {
@@ -255,14 +240,19 @@
      "yer": "ana"
     },
     {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
+     "tur": "yapi",
+     "metin": "The Imperial Kemsköy",
      "yer": "ana"
     },
     {
      "tur": "zirve",
      "metin": "Güney Burnu",
      "rakim": 96,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Otel Yolu",
      "yer": "ana"
     },
     {
@@ -349,16 +339,11 @@
    "dosya": "yer_iskele-B.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 895585,
+   "bayt": 869838,
    "yazilar": [
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "pencere"
     },
     {
@@ -387,18 +372,8 @@
      "yer": "pencere"
     },
     {
-     "tur": "yapi",
-     "metin": "The Imperial Kemsköy",
-     "yer": "pencere"
-    },
-    {
      "tur": "yol",
-     "metin": "Otel Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Sahil Merdiveni",
+     "metin": "Güney Sırt Yolu",
      "yer": "pencere"
     },
     {
@@ -407,14 +382,19 @@
      "yer": "ana"
     },
     {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
+     "tur": "yapi",
+     "metin": "The Imperial Kemsköy",
      "yer": "ana"
     },
     {
      "tur": "zirve",
      "metin": "Güney Burnu",
      "rakim": 96,
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Otel Yolu",
      "yer": "ana"
     },
     {
@@ -438,7 +418,7 @@
    "dosya": "yer_liman-A.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 445193,
+   "bayt": 440801,
    "yazilar": [
     {
      "tur": "yol",
@@ -478,11 +458,6 @@
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "ana"
     },
     {
@@ -591,7 +566,7 @@
    "dosya": "yer_liman-B.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 713782,
+   "bayt": 714754,
    "yazilar": [
     {
      "tur": "yol",
@@ -631,11 +606,6 @@
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "ana"
     },
     {
@@ -685,7 +655,7 @@
    "dosya": "yer_merkez-A.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 897471,
+   "bayt": 901738,
    "yazilar": [
     {
      "tur": "yol",
@@ -741,16 +711,6 @@
      "tur": "yapi",
      "metin": "Düzada Sağlık Ocağı",
      "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "ana"
     },
     {
      "tur": "yol",
@@ -863,7 +823,7 @@
    "dosya": "yer_merkez-B.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 1483671,
+   "bayt": 1482474,
    "yazilar": [
     {
      "tur": "yol",
@@ -922,16 +882,6 @@
     },
     {
      "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
      "metin": "Merkez Bağlantısı",
      "yer": "ana"
     },
@@ -982,7 +932,7 @@
    "dosya": "yer_stadyum-A.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 426697,
+   "bayt": 427446,
    "yazilar": [
     {
      "tur": "yol",
@@ -1120,7 +1070,7 @@
    "dosya": "yer_stadyum-B.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 723834,
+   "bayt": 724224,
    "yazilar": [
     {
      "tur": "yol",

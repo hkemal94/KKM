@@ -139,7 +139,9 @@ SERIT_AGAC = STRtree(YOL_SERIT)
 
 # ------------------------------------------------------------------ yasak alanlar
 _kiyi_bant = ADA.exterior.buffer(KIYI_SERIDI)
-_kumsal = unary_union([k.buffer(KIYI_SERIDI + KUMSAL_PAY) for k in KUM]) if KUM else Polygon()
+# İskele köyünün önünde kumsal şeridi dar (Kemal, 24 Kasım: "boş ada kalmasın"; gen/kompakt_iskele.py → kumsal_seridi)
+import kompakt_iskele as IS  # noqa: E402
+_kumsal = IS.kumsal_seridi(KUM, KIYI_SERIDI, KUMSAL_PAY)
 _korunan = unary_union([g.buffer(KORUNAN_PAY) for g in KORUNAN.values()] + [g.buffer(KORUNAN_PAY) for g in IMP]
                        + [g.buffer(KORUNAN_PAY) for _, g in MEYDANCIK] + KOPRU)
 YASAK = unary_union([_kiyi_bant, _kumsal, _korunan])
@@ -503,7 +505,7 @@ OLCULER = {"not": "Hepsi DENEME (Kemal onaylamadı)", "kareM": KARE, "derinlikKa
                         for k in TUR_KADEME[t]} for t in ARSA},
            "cepheOynama": {t: 0.0 for t in ARSA}, "araKare": ARA_KARE, "buyukUcOrani": BUYUK_UC_ORANI,
            "kaldirimM": KALDIRIM, "kosePayM": KOSE_PAY,
-           "egimSiniri": EGIM_SINIRI, "kiyiSeridiM": KIYI_SERIDI, "kumsalPayM": KUMSAL_PAY,
+           "egimSiniri": EGIM_SINIRI, "kiyiSeridiM": KIYI_SERIDI, "kumsalPayM": KUMSAL_PAY, "iskeleKumsalPayM": IS.ISKELE_KUMSAL_PAY,
            "yerlesimKusagiM": YERLESIM_KUSAGI, "yerlesimCarpan": YERLESIM_CARPAN,
            "bitisikMeydanM": BITISIK_MEYDAN, "bitisikMeydancikM": BITISIK_MEYDANCIK}
 ozellik = []

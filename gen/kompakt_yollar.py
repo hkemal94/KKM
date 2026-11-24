@@ -24,7 +24,8 @@ Kurallar:
     içinden eski hattının taşınmışından geçer; iki yanda ilk hatta eğim sınırlı arama. Sahil Yolu'nun Liman dışındaki
     noktaları ana daldakiyle aynı kalır (gen/kompakt-sahil-ana.json): öbür köylerin arsaları yeniden dizilmez.
   - İskele köyü (Kemal, 24 Kasım) eski haritadaki sokaklarıyla aynı: Kurucu'nun son hâlindeki 124 sokak ve yol (Kemsköy
-    Caddesi dahil) ve 3 meydancık adanın küçültmesiyle (0,70) taşınır (gen/kompakt_iskele.py); köy dokusu üretilmez.
+    Caddesi dahil; seyreltmeyle 52'si kalır, gen/kompakt_iskele.py → GIDEN) ve 3 meydancık adanın küçültmesiyle (0,70)
+    taşınır (gen/kompakt_iskele.py); köy dokusu üretilmez.
     Sahil Yolu köyün içinden eski hattının taşınmışından geçer; Liman'daki gibi iki yanda arama ve doğal hat. Sahil
     Yolu'nun profili kesim kesim kurulur (ana daldaki hat → Liman kesimi → İskele kesimi; sahil_profili).
   - Stat, Merkez Meydanı, The Imperial sahanlığı ve kıyı köyündeki birahane yeri yola kapalı.
@@ -1067,7 +1068,8 @@ IS_HAT = {k: LineString([IS.tasi(*c) for c in hat]) for k, (ad, kd, hat) in _is_
 IS_AD = {k: ad for k, (ad, kd, hat) in _is_sokak.items()}
 IS_KADEME = {k: kd for k, (ad, kd, hat) in _is_sokak.items()}
 IS_MEYDAN = [Polygon([IS.tasi(*c) for c in p]) for p in _is_meydan]
-IS_ALAN = unary_union(list(IS_HAT.values())).convex_hull
+# köyün alanı seyreltmeden önceki bütün sokaklarla (Sahil Yolu'nun köydeki eski hattı aynı kalsın; 24 Kasım)
+IS_ALAN = unary_union([LineString([IS.tasi(*c) for c in hat]) for _, _, hat in IS.eski_iskele(hepsi=True)[0].values()]).convex_hull
 _es = LineString([IS.tasi(*c) for c in _is_sahil]).intersection(IS_ALAN.buffer(IS.SAHIL_PAY))
 IS_CEKIRDEK = max(getattr(_es, "geoms", [_es]), key=lambda g: g.length)
 if SAHIL.project(Point(IS_CEKIRDEK.coords[0])) > SAHIL.project(Point(IS_CEKIRDEK.coords[-1])):

@@ -761,7 +761,7 @@ def harita_katmanlari(ax, kutu, A, kara, deniz, ana=True, olcek_m_px=5.0):
     # yapılar (vikide maddesi olan kiremit)
     for p, g in yapilar_kutuda(kutu):
         kt = p["katman"]
-        if kt == "mendirek":
+        if kt == "mendirek" or (kt == "iskele" and p.get("tur") == "taş"):
             doldur(ax, g, facecolor="#9C9C9C" if A else LACI, edgecolor=LACI, linewidth=0.4, zorder=10)
         elif kt == "iskele":
             doldur(ax, g, facecolor="#B8956A" if A else KREM, edgecolor=LACI, linewidth=0.4, zorder=10)
