@@ -38,8 +38,20 @@ export interface ParsedKunye {
 /** '* Fizik: ...' veya '- Fizik: ...' satırlarını yakalar */
 const FIELD_RE = /^\s*[*\-•]\s*([^:]{2,40}?)\s*:\s*(.+)$/;
 
-/** 'Esra Gezgin (38) — Başaşçı' veya 'Ad — Rol' başlığı */
-const HEADER_RE = /^(.+?)(?:\s*\((\d{1,3})\))?\s*[—–-]\s*(.+)$/;
+/**
+ * 'Esra Gezgin (38) — Başaşçı' veya 'Ad — Rol' başlığı.
+ * Ayraç yalnız iki yanında boşluk olan tire / uzun tiredir (24 Kasım): viki
+ * standardındaki "Elif Yılmaz (2022–), …" gibi yıl aralığının "–"si ayraç sayılmaz.
+ */
+const HEADER_RE = /^(.+?)(?:\s*\((\d{1,3})\))?\s+[—–-]\s+(.+)$/;
+
+/** Satır künye başlığı mı: başlık kısmı maddenin adıyla başlar, virgül taşımaz (düz cümle değil) */
+export function kunyeBasligi(satir: string, baslik: string): { yas?: string; rol: string } | null {
+  const hm = satir.match(HEADER_RE);
+  if (!hm || hm[1].includes(',')) return null;
+  if (!norm(hm[1]).startsWith(norm(baslik).slice(0, 8))) return null;
+  return { yas: hm[2], rol: hm[3].trim() };
+}
 
 /** Listelerde kullanılacak kısa tanıtım için tercih sırası */
 const OZET_ONCELIK = ['kişilik', 'ayrıntı', 'fizik', 'hobiler', 'sevdikleri'];
@@ -82,11 +94,11 @@ export function parseKunye(item: Item): ParsedKunye {
       const prev = idx > 0 ? lines[idx - 1].trim() : '';
       const atStart = idx === 0 || prev === '' || prev === '---';
       if (atStart) {
-        const hm = line.match(HEADER_RE);
         // Başlık, maddenin kendi adıyla başlıyorsa gerçekten künye başlığıdır
-        if (hm && norm(hm[1]).startsWith(norm(item.title).slice(0, 8))) {
-          yas = hm[2];
-          rol = hm[3].trim();
+        const hb = kunyeBasligi(line, item.title);
+        if (hb) {
+          yas = hb.yas;
+          rol = hb.rol;
           headerConsumed = true;
           return;
         }
