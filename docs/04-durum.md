@@ -567,6 +567,11 @@ bağlantısı. Kemal durumu ve bağlantıyı değiştirip "Kaydet"e basınca KKM
 yalnız o pulu yazar (dosyanın güncel hâlinin üstüne). Dosya yoksa yazmaz. KKM kayıtlarına bir şey yazılmaz.
 Standart ajansın `docs/pul-koleksiyonu.md`'sinde. Taslaklar Onay bekleyenler'e ajansın öneri listesiyle düşer.
 
+**Büyük görünüm** (24 Kasım, Kemal): pul kartındaki "Büyüt" (ya da kartın küçük resmi) pulu ekranı kaplayan
+görünümde açar; resim kendi dosyasının tam boyutuyla gelir. Yakınlaştırma: tekerlek, çift tıklama, iki parmak,
++/−. Aynı çeyreğin resmi olan öbür pulları ←/→, ekrandaki oklar ya da telefonda yana kaydırmayla. Kapatma:
+X, Esc, boşluğa tıklama. Yalnız gösterir, bir şey yazmaz (`components/urunler/YakinlasanGorsel.tsx`).
+
 ## DK Lite paneli (10 Kasım, Kemal)
 
 Kemal (9 Kasım): DK Lite'ın bölümlerini, arka planlarını, hediyelerini "sürükle bırakla" değiştirebileceği
