@@ -23,6 +23,10 @@ export interface KirpmaAyari {
   atla: ReadonlySet<string>;
   /** Suyun içi: bütün köşeleri `z`'den ileride ve en yükseği `y`'nin altında kalan üçgenler atılır */
   suIci: { z: number; y: number };
+  /** Bu adlardaki parçaların kutudaki (x, z aralığı) ve en yükseği `y`'nin altında kalan üçgenleri atılır (modelin kendi merdiveni) */
+  kutu?: { adlar: ReadonlySet<string>; x: [number, number]; z: [number, number]; y: number };
+  /** Bu adlardaki parçalar `y` kadar aşağı (modelin cep plajı deniz seviyesine) */
+  indir?: { adlar: ReadonlySet<string>; y: number };
 }
 
 /**
@@ -48,6 +52,7 @@ export function hazirla(sahne: THREE.Object3D, kirpma?: KirpmaAyari): HaritaMode
     g.setAttribute('position', new THREE.BufferAttribute(p, 3));
     if (kaynak.index) g.setIndex(Array.from(kaynak.index.array as ArrayLike<number>));
     g.applyMatrix4(m.matrixWorld);
+    if (kirpma?.indir?.adlar.has(m.name)) g.translate(0, kirpma.indir.y, 0);
     g.computeBoundingBox();
     if (!kirpma && g.boundingBox!.max.y <= ZEMIN_ESIGI) { g.dispose(); return; }
     // Düz gölgeli low-poly: normaller yüzlerden
@@ -61,6 +66,11 @@ export function hazirla(sahne: THREE.Object3D, kirpma?: KirpmaAyari): HaritaMode
       for (let t = 0; t < p0.count / 3; t++) {
         if (Math.min(p0.getZ(t * 3), p0.getZ(t * 3 + 1), p0.getZ(t * 3 + 2)) > sz
           && Math.max(p0.getY(t * 3), p0.getY(t * 3 + 1), p0.getY(t * 3 + 2)) < sy) continue;
+        const k = kirpma.kutu?.adlar.has(m.name) ? kirpma.kutu : undefined;
+        if (k && [0, 1, 2].every(q => {
+          const x = p0.getX(t * 3 + q), zz = p0.getZ(t * 3 + q);
+          return x >= k.x[0] && x <= k.x[1] && zz >= k.z[0] && zz <= k.z[1];
+        }) && Math.max(p0.getY(t * 3), p0.getY(t * 3 + 1), p0.getY(t * 3 + 2)) < k.y) continue;
         for (let k = 0; k < 9; k++) kalan.push(p0.array[t * 9 + k]);
       }
       duz.dispose();

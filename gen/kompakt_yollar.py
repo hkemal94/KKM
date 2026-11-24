@@ -108,6 +108,10 @@ SAHANLIK = geom_m(IMP["sahanlik"]["geometry"])
 SAHANLIK_TUM = SAHANLIK.union(geom_m(IMP["teras"]["geometry"])) if "teras" in IMP else SAHANLIK
 OTEL = geom_m(IMP["otel"]["geometry"])
 MERDIVEN = geom_m(IMP["merdiven-hatti"]["geometry"])
+# Taş merdiven (25 Kasım): yüksekliği verideki üçüncü sayıdan (kayalık yarın önünde; zemine oturmaz)
+_mc = IMP["merdiven-hatti"]["geometry"]["coordinates"]
+MERDIVEN_Z = (np.r_[0.0, np.cumsum(np.hypot(*np.diff(np.asarray(MERDIVEN.coords), axis=0).T))], np.array([c[2] for c in _mc])) \
+    if all(len(c) > 2 for c in _mc) else None
 IMP_ALAN = geom_m(IMP["alan"]["geometry"])
 
 # Vikideki maddeler (Kems Ajans kkm/viki.json, 16 Kasım dökümü)
@@ -1813,7 +1817,9 @@ otel = baglanti((s_bas.x, s_bas.y), ag_maske(turler={"ana", "ara", "sokak"}) & ~
                 "ara", "Otel Yolu", yasak=yasak_otel, pay=900, ters=True, cikmaz=(False, False))
 # Sahil Merdiveni: otelin önündeki terastan kayalık yardan dip terasa zikzak (25 Kasım; zemin üreteci çizer). 3,5 m en
 # (DENEME): uzaktan da taş merdiven olarak okunsun
-ekle(MERDIVEN, "merdiven", "Sahil Merdiveni", cikmaz=(False, True), genislik=3.5)
+_my = ekle(MERDIVEN, "merdiven", "Sahil Merdiveni", cikmaz=(False, True), genislik=3.5)
+if MERDIVEN_Z is not None:
+    _my["z3"] = MERDIVEN_Z
 
 # ================================================================== 5. patikalar ve tarla yolları
 print("Patika ve tarla yolları ...")
@@ -2205,6 +2211,10 @@ KOPRULER = []
 for y in YOLLAR:
     p = y["p"]
     zf = ornek(Z, p[:, 0], p[:, 1])
+    if "z3" in y:                       # taş merdiven: kendi yüksekliği
+        y["z"] = np.interp(y["s"], *y["z3"])
+        y["kopru"] = np.zeros(len(p), bool)
+        continue
     if "zp" not in y:
         y["z"] = zf
         y["kopru"] = np.zeros(len(p), bool)
@@ -2345,6 +2355,8 @@ for y, b_ in zip(YOLLAR, _bu):
     pr = {"katman": "yol", "id": kimlik, "kademe": tur, "tur": y["yuzey"], "kurucuTuru": KURUCU_TURU[tur],
           "ad": y["ad"] or "", "vikiId": y["vikiId"] or "", "genislik": y["genislik"],
           "uzunlukM": round(y["geom"].length)}
+    if "z3" in y:
+        pr["tasMerdiven"] = True
     if mh:
         pr["mahalle"] = mh
     if any(cik):

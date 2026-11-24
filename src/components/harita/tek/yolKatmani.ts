@@ -54,6 +54,12 @@ export class YolKatmani {
           return [x, q.length > 2 ? q[2] : rakim(z, x, sz), sz] as const;
         });
         const sira = Math.max(0, SIRA.indexOf(kademe));
+        if (kademe === 'merdiven' && pr.tasMerdiven) {
+          // Taş merdiven (The Imperial, 25 Kasım): kayalık yarın önünde, kendi yüksekliğinde; her basamak altındaki
+          // zemine kadar dolu taş (merdiven yarın önünde duvarıyla durur)
+          tasMerdivenEkle(al('basamak'), al('merdiven'), z, c, w / 2);
+          continue;
+        }
         if (kademe === 'merdiven') {
           // Merdiven (25 Kasım, Kemal: "yamaçta ince kırık çizgi"): dik yamaçta da zeminin üstünde kalsın diye sık
           // noktalarla, çizilen zeminden aşağı inmeden; üstünde basamak çizgileri
@@ -119,6 +125,41 @@ function merdivenNoktalari(z: Zemin, c: ReadonlyArray<readonly [number, number, 
     }
   }
   return out;
+}
+
+/**
+ * Taş merdiven: yolun noktaları arasında 0,8 m'lik basamaklar; her basamak üstü düz (yolun o yerdeki yüksekliği),
+ * altı basamağın altındaki en alçak çizilen zemine kadar dolu taş. Üstler `ust`e, yan yüzler `yan`a.
+ */
+function tasMerdivenEkle(yan: { p: number[]; i: number[] }, ust: { p: number[]; i: number[] }, z: Zemin,
+  c: ReadonlyArray<readonly [number, number, number]>, yari: number) {
+  const DERIN = 0.8;
+  for (let n = 0; n < c.length - 1; n++) {
+    const a = c[n], b = c[n + 1];
+    const dx = b[0] - a[0], dz = b[2] - a[2], u = Math.hypot(dx, dz);
+    if (u < 0.01) continue;
+    const tx = dx / u, tz = dz / u, px = -tz * yari, pz = tx * yari;
+    const adim = Math.max(1, Math.round(u / DERIN));
+    for (let k = 0; k < adim; k++) {
+      const t0 = k / adim, t1 = (k + 1) / adim;
+      const x0 = a[0] + dx * t0, z0 = a[2] + dz * t0, x1 = a[0] + dx * t1, z1 = a[2] + dz * t1;
+      const y = a[1] + (b[1] - a[1]) * (t0 + t1) / 2;
+      const kose: Array<[number, number]> = [[x0 + px, z0 + pz], [x1 + px, z1 + pz], [x1 - px, z1 - pz], [x0 - px, z0 - pz]];
+      const alt = Math.min(...kose.map(([x, sz]) => cizilenRakim(z, x, sz))) - 0.5;
+      if (alt >= y) continue;
+      // üst yüz
+      const ki = ust.p.length / 3;
+      for (const [x, sz] of kose) ust.p.push(x, y, sz);
+      ust.i.push(ki, ki + 2, ki + 1, ki, ki + 3, ki + 2, ki, ki + 1, ki + 2, ki, ki + 2, ki + 3);
+      // dört yan yüz
+      for (let e = 0; e < 4; e++) {
+        const [xa, za] = kose[e], [xb, zb] = kose[(e + 1) % 4];
+        const kb = yan.p.length / 3;
+        yan.p.push(xa, y, za, xb, y, zb, xb, alt, zb, xa, alt, za);
+        yan.i.push(kb, kb + 1, kb + 2, kb, kb + 2, kb + 3, kb, kb + 2, kb + 1, kb, kb + 3, kb + 2);
+      }
+    }
+  }
 }
 
 /** Basamak çizgileri: merdiven boyunca BASAMAK_ARALIGI'nda bir, şeridin eninde ince koyu dörtgen */
