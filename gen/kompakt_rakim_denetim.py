@@ -17,7 +17,8 @@ denizde kalır, denetime girmez) için tabanın altındaki **çizilen** zemini �
   Eşik: havada > 0,3 m (kaidesiz), gömülü > 1,0 m. Ölçüler DENEME.
 - Kendi zemini olan modeller (yamaca göre yapılan Blender modelleri: Sürek Kulübü, İskele Mescidi, Rum Mezarlığı,
   kule, antik duvar, mezarlık; kendi temeliyle The Imperial) eski kuralla durur (tabanın en alçak noktası; zemini,
-  temeli kendi içinde): eşiğe sayılmaz, ayrı satırda yazılır.
+  temeli kendi içinde): eşiğe sayılmaz, ayrı satırda yazılır. The Imperial 25 Kasım'dan beri verideki kotuyla
+  (`modelKot`; tekVeri.ts → tabanKotu gibi).
 
   python gen/kompakt_rakim_denetim.py [--liste N]
 
@@ -146,6 +147,8 @@ def main():
         eski = float(z.ham_rakim(hx, hz).min())
         yamac = dosya in YAMAC_MODELLERI
         yeni = eski if yamac else max(dort, dmax - GOMME_SINIRI)
+        if isinstance(p.get("modelKot"), (int, float)):     # kendi kıyısıyla gelen model (The Imperial, 25 Kasım)
+            yamac, yeni = True, float(p["modelKot"])
         kaide = 0.0 if yamac else max(0.0, yeni - dmin)
         satirlar.append(dict(id=p["id"], ad=p.get("ad"), tur=p.get("tur"), mahalle=p.get("mahalle"), dosya=dosya,
                              yamac=yamac, dmin=dmin, dort=dort, dmax=dmax, veri=p.get("kotM"), eski=eski, yeni=yeni, kaide=kaide,

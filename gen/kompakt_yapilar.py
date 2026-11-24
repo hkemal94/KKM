@@ -213,6 +213,8 @@ YERLESIM = {f["properties"]["id"]: f["properties"] | {"m": m(f["geometry"]["coor
             for f in SF if f["properties"]["katman"] == "yerlesim"}
 IMPERIAL = {f["properties"]["tur"]: gm(f["geometry"]) for f in SF
             if f["properties"]["katman"] == "imperial" and f["geometry"]["type"] == "Polygon"}
+IMPERIAL_MODEL = next((f["properties"] for f in SF if f["properties"]["katman"] == "imperial"
+                       and f["properties"].get("tur") == "model"), None)   # modelin yeri, kotu, önü (25 Kasım)
 ZIRVE = {f["properties"]["ad"]: m(f["geometry"]["coordinates"]) for f in SF if f["properties"]["katman"] == "zirve"}
 
 YOL = [(f["properties"], gm(f["geometry"])) for f in YF if f["properties"]["katman"] == "yol"]
@@ -223,7 +225,7 @@ MEYDAN = next(g for p, g in KORUNAN if p.get("tur") == "meydan")
 MEYDANCIK = [g for p, g in KORUNAN if p["katman"] == "meydancik"]
 STAT = next(g for p, g in KORUNAN if p.get("tur") == "stat")
 BIRAHANE_YERI = next(g for p, g in KORUNAN if p.get("tur") == "birahane-yeri")
-ENGEL_SABIT = [g for p, g in KORUNAN if p.get("tur") != "seki"] + [IMPERIAL[k] for k in ("sahanlik", "otel", "dip-teras") if k in IMPERIAL]
+ENGEL_SABIT = [g for p, g in KORUNAN if p.get("tur") != "seki"] + [IMPERIAL[k] for k in ("sahanlik", "otel", "model") if k in IMPERIAL]
 
 PARSELLER = []
 for f in PF:
@@ -676,6 +678,12 @@ def viki_yapilari():
             taban, on, yid = ayrilan_yer(e, g)
             T, ys = hedef(e)
             yontem = "ayrılan yer (" + e["ozelYer"] + ")"
+            if e["ozelYer"] == "imperial-otel" and IMPERIAL_MODEL:
+                # The Imperial modeliyle (25 Kasım): taban modelin sahanlığı (yol şeridi çıkar), önü denize; model ölçeksiz kendi yerine
+                on = np.array(IMPERIAL_MODEL["on"], float)
+                ozel["modelBaslangic"] = IMPERIAL_MODEL["baslangic"]
+                ozel["modelKot"] = IMPERIAL_MODEL["modelKot"]
+                yontem += ", modelin kendi yeri, önü denize"
         elif e["bag"] == "oturan":
             # Evde oturanı olan ev: hedefe en yakın uygun parselde, parselin evi olarak
             T, ys = hedef(e)

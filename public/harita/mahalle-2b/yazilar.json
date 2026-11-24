@@ -197,7 +197,7 @@
    "dosya": "yer_iskele-A.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 580281,
+   "bayt": 575481,
    "yazilar": [
     {
      "tur": "yol",
@@ -253,6 +253,11 @@
     {
      "tur": "yol",
      "metin": "Otel Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Merdiveni",
      "yer": "ana"
     },
     {
@@ -339,7 +344,7 @@
    "dosya": "yer_iskele-B.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 870457,
+   "bayt": 870902,
    "yazilar": [
     {
      "tur": "yol",
@@ -395,6 +400,11 @@
     {
      "tur": "yol",
      "metin": "Otel Yolu",
+     "yer": "ana"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Merdiveni",
      "yer": "ana"
     },
     {

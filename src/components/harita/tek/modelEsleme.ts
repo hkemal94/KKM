@@ -22,10 +22,21 @@ export const MODEL_ESLEME: Record<string, string> = {
  * `gen/blender_tek_eklemeler.py`; zeminleri, duvarları, taşları tabanın en alçak noktasına göre)
  * ve kendi temeliyle gelen The Imperial (temeli ve terasları 19 m aşağı iner, tepesinin sahanlığı
  * düzlenmiş). Tek harita onları eski kuralla (en alçak nokta, kaidesiz) oturtur
- * (`tekVeri.ts` → `tabanKotu`; 24 Kasım).
+ * (`tekVeri.ts` → `tabanKotu`; 24 Kasım). The Imperial'in veride kendi kotu varsa (`modelKot`, 25 Kasım) o geçer.
  */
 export const YAMAC_MODELLERI = new Set([
   'binalar/kucukcetmi-surek-kulubu.glb', 'binalar/iskele-mescidi.glb', 'binalar/rum-mezarligi.glb',
   'binalar/yangin-gozetleme-kulesi.glb', 'binalar/antik-sur-kalintisi.glb', 'binalar/merkez-mezarligi.glb',
   'binalar/the-imperial-kemskoy.glb'
 ]);
+
+/**
+ * Kendi kıyısıyla gelen model (25 Kasım, Kemal: Oyunlar'daki "Otel kalıbı" haritaya): The Imperial
+ * kayalık yamacı, zikzak taş merdiveni, dipteki kum cebi, taş terası ve ahşap iskelesiyle bir bütün.
+ * Haritada bütün parçaları çizilir (zemin altı kuralı uygulanmaz); yalnız modelin kendi denizi
+ * (`deniz`) atılır, deniz haritanınki. Yeri ve kotu veride (`modelBaslangic`, `modelKot`):
+ * modelin başlangıç noktası oraya, ölçeksiz oturur (`yapiKatmani.ts` → `modelMatrisi`).
+ */
+export const KENDI_KIYILI: Record<string, ReadonlySet<string>> = {
+  'binalar/the-imperial-kemskoy.glb': new Set(['deniz'])
+};

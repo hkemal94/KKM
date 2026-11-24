@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { modelYukle } from '../../../lib/modelYukle';
 import { hazirla, type HaritaModeli } from '../modelHazirla';
 import { KAIDE_ESIGI, type Yapi } from './tekVeri';
+import { KENDI_KIYILI } from './modelEsleme';
 import { uzakModelleriBirak, type UzakModel } from './uzakModeller';
 
 /**
@@ -214,7 +215,7 @@ export class YapiKatmani {
       if (this.inenler.has(d)) continue;
       this.inenler.add(d);
       modelYukle(d)
-        .then(g => { if (!this.kapandi) { this.modeller.set(d, hazirla(g.scene)); this.sonra(); } })
+        .then(g => { if (!this.kapandi) { this.modeller.set(d, hazirla(g.scene, KENDI_KIYILI[d])); this.sonra(); } })
         .catch(e => console.warn('[tek harita] model inmedi', d, e))
         .finally(() => this.inenler.delete(d));
     }
@@ -325,6 +326,8 @@ export class YapiKatmani {
 const donus = (ex: [number, number]) => new THREE.Matrix4().set(ex[0], 0, -ex[1], 0, 0, 1, 0, 0, ex[1], 0, ex[0], 0, 0, 0, 0, 1);
 
 function modelMatrisi(y: Yapi, m: Pick<HaritaModeli, 'cx' | 'cz' | 'w' | 'd'>): THREE.Matrix4 {
+  // Kendi kıyısıyla gelen model (The Imperial): başlangıç noktası veride, ölçeksiz
+  if (y.modelYeri) return new THREE.Matrix4().makeTranslation(y.modelYeri.nokta[0], y.modelYeri.kot, y.modelYeri.nokta[1]).multiply(donus(y.ex));
   let sx = 1, sy = 1, sz = 1, ax = m.cx, az = m.cz;
   if (y.dosya!.startsWith('deniz/')) {
     // Kalıp modeli (fener): kendi başlangıç noktası tabanın merkezine, kendi ölçüsünde

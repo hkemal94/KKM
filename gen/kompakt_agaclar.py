@@ -198,7 +198,7 @@ DERELER = [gm(f["geometry"]) for f in SINIR if f["properties"]["katman"] == "der
 KUM_KIYI = [gm(f["geometry"]) for f in SINIR if f["properties"]["katman"] == "kiyi" and f["properties"].get("tur") == "kum"]
 IMPERIAL = unary_union([gm(f["geometry"]).buffer(3) for f in SINIR if f["properties"]["katman"] == "imperial"
                         and f["geometry"]["type"] in ("Polygon", "MultiPolygon", "LineString")
-                        and f["properties"].get("tur") != "alan"])
+                        and f["properties"].get("tur") not in ("alan", "eski-yer")])
 
 YOL_SERIT = []
 for f in YOLLAR:

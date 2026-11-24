@@ -47,13 +47,17 @@ export function yeniYapidan(z: Zemin, id: string, y: YeniYapi): Yapi {
   return { id, tur: y.tur, dosya: y.dosya, vikiId: null, ad: null, mahalle: '', merkez, ex, en: y.en, boy: y.boy, modelEn: y.modelEn, yukseklik: y.yukseklik, kot, zeminAlt, taban, ...(y.grup ? { grup: y.grup.kimlik } : {}) };
 }
 
-/** Var olan yapının taşınmış hâli */
+/**
+ * Var olan yapının taşınmış hâli. Kendi kıyısıyla gelen model (The Imperial) taşınınca verideki yeri ve
+ * kotu (`modelYeri`) geçmez: öbür yapılar gibi tabanına ve zemine göre oturur.
+ */
 export function tasinmis(z: Zemin, y: Yapi, m: number[], exH: number[]): Yapi {
   const merkez = sahneye(z.b, m);
   const ex: Nokta = [exH[0], exH[1]];
   const taban = dikdortgen(merkez, ex, y.en, y.boy);
-  const { kot, zeminAlt } = tabanKotu(z, { ...y, merkez, ex, taban });
-  return { ...y, merkez, ex, taban, kot, zeminAlt };
+  const { modelYeri: _eskiYer, ...geri } = y;
+  const { kot, zeminAlt } = tabanKotu(z, { ...geri, merkez, ex, taban });
+  return { ...geri, merkez, ex, taban, kot, zeminAlt };
 }
 
 /** Veri dosyasındaki küçük öğeler (katman agac / donati; ajansın işlediği taslaklardan) */

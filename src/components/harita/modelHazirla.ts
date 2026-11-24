@@ -17,14 +17,19 @@ export interface HaritaModeli {
   ucgen: number;
 }
 
-/** Modeli haritaya hazırlar: zemin altı parçalar atılır, aynı renkler tek parçada birleşir */
-export function hazirla(sahne: THREE.Object3D): HaritaModeli {
+/**
+ * Modeli haritaya hazırlar: zemin altı parçalar atılır, aynı renkler tek parçada birleşir.
+ * `atilacak` verilirse (kendi zeminiyle gelen model; The Imperial, 25 Kasım) zemin altı kuralı
+ * uygulanmaz: yalnız bu adlardaki parçalar atılır, kayalık, kum ve iskele kalır.
+ */
+export function hazirla(sahne: THREE.Object3D, atilacak?: ReadonlySet<string>): HaritaModeli {
   sahne.updateMatrixWorld(true);
   const gruplar = new Map<string, { renk: THREE.Color; cift: boolean; geo: THREE.BufferGeometry[] }>();
   const kutu = new THREE.Box3();
   sahne.traverse(o => {
     const m = o as THREE.Mesh;
     if (!m.isMesh) return;
+    if (atilacak?.has(m.name)) return;
     const kaynak = m.geometry;
     const konum = kaynak.getAttribute('position');
     if (!konum) return;
@@ -36,7 +41,7 @@ export function hazirla(sahne: THREE.Object3D): HaritaModeli {
     if (kaynak.index) g.setIndex(Array.from(kaynak.index.array as ArrayLike<number>));
     g.applyMatrix4(m.matrixWorld);
     g.computeBoundingBox();
-    if (g.boundingBox!.max.y <= ZEMIN_ESIGI) { g.dispose(); return; }
+    if (!atilacak && g.boundingBox!.max.y <= ZEMIN_ESIGI) { g.dispose(); return; }
     // Düz gölgeli low-poly: normaller yüzlerden
     const duz = g.index ? g.toNonIndexed() : g;
     if (duz !== g) g.dispose();

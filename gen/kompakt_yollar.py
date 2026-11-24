@@ -211,7 +211,10 @@ ZR = ndimage.gaussian_filter(ndimage.grey_closing(Z, size=(5, 5)), 1.0)
 _sk = ndimage.binary_dilation(maske(SEKI), iterations=6)
 ZR = np.where(_sk, ndimage.gaussian_filter(Z, 1.0), ZR)
 ZR[maske(SEKI)] = SEKI_KOT
-YASAK_TEMEL = (D_KARA < 22) | maske(STAT, 6) | maske(OTEL, 8) | maske(SAHANLIK, 4)
+# otelin eski yeri (25 Kasım'dan beri otel kıyıda): eskisi gibi yola kapalı, Sahil Yolu ve yol ağı aynı kalsın
+ESKI_YER = geom_m(IMP["eski-yer"]["geometry"]) if "eski-yer" in IMP else None
+YASAK_TEMEL = (D_KARA < 22) | maske(STAT, 6) | maske(OTEL, 8) | maske(SAHANLIK, 4) \
+    | (maske(ESKI_YER, 4) if ESKI_YER is not None else False)
 # yan yamaç cezası: yol dik yamaca oturursa büyük kazı / dolgu ister; aramada pahalıdır
 _yan = ndimage.maximum_filter(np.hypot(*np.gradient(ndimage.gaussian_filter(Z, 1.0), H)), size=3)
 YAN_CEZA = 1.0 + 6.0 * np.clip(_yan - 0.18, 0, None) + 3.0 * np.clip((40.0 - D_KARA) / 18.0, 0, 1)
@@ -771,7 +774,8 @@ for yid in KOY_KIYI:
     duraklar = [d_ for d_ in duraklar if min(abs(d_[0] - s), kiyi.length - abs(d_[0] - s)) > 650]
     duraklar.append((s, q))
 duraklar.sort()
-_imp = Point(OTEL.centroid)
+# otelin eski yerinin ortası (esnek alanın merkezi; 25 Kasım'dan beri otel aşağıda, kıyıda): Sahil Yolu eskisi gibi
+_imp = Point(IMP_ALAN.centroid)
 carpan_sahil = np.where(D_KARA > 160, 1 + ((D_KARA - 160) / 140) ** 2,
                         np.where(D_KARA < 70, 1 + ((70 - D_KARA) / 20) ** 2, 1.0))
 carpan_sahil = carpan_sahil * np.where(np.hypot(GX - _imp.x, GY - _imp.y) < 230, 4.0, 1.0)
@@ -1799,11 +1803,16 @@ print("The Imperial ...")
 # Otel Yolu: sahanlığın kara yanındaki kenarından ağa (≤ %10)
 isk = YERLESIM["yerlesim_iskele"]["xy"]
 kenar = SAHANLIK.exterior
-s_bas = kenar.interpolate(kenar.project(Point(isk)))
+# 25 Kasım: otel kıyıda; yol sahanlığın kara yanından (arkadan) çıkar: kenarın kıyıdan en az 60 m içerideki kesiminde
+# İskele'ye en yakın nokta
+_kn_ = [kenar.interpolate(t) for t in np.arange(0, kenar.length, 2.0)]
+_kn_ = [q for q in _kn_ if float(ornek(D_KARA, np.array([q.x]), np.array([q.y]))[0]) >= 60.0] or _kn_
+s_bas = min(_kn_, key=lambda q: q.distance(Point(isk)))
 yasak_otel = (D_KARA < 15) | maske(STAT, 6) | maske(OTEL, 6)
 otel = baglanti((s_bas.x, s_bas.y), ag_maske(turler={"ana", "ara", "sokak"}) & ~maske(IMP_ALAN.buffer(-60)),
                 "ara", "Otel Yolu", yasak=yasak_otel, pay=900, ters=True, cikmaz=(False, False))
-# Sahil Merdiveni: 1. adımın merdiven hattı aynen (sahanlıktan dip terasa)
+# Sahil Merdiveni: The Imperial modelinin taş merdiveninin üstünden (sahanlıktan kum cebine; 25 Kasım). Merdivenin
+# kendisi modelde; zemin modelin altında kaldığı için çizgi görünmez, yalnız adı ve vikisi için
 ekle(MERDIVEN, "merdiven", "Sahil Merdiveni", cikmaz=(False, True))
 
 # ================================================================== 5. patikalar ve tarla yolları
