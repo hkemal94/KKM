@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { modelYukle } from '../../../lib/modelYukle';
 import { hazirla, type HaritaModeli } from '../modelHazirla';
-import type { Yapi } from './tekVeri';
+import { KAIDE_ESIGI, type Yapi } from './tekVeri';
 import { uzakModelleriBirak, type UzakModel } from './uzakModeller';
 
 /**
@@ -18,6 +18,9 @@ import { uzakModelleriBirak, type UzakModel } from './uzakModeller';
  *   aynı modeldeki bütün yapılar onu paylaşır. Üçgen bütçesi dolunca kalanı kutu.
  * - Viki bağlı yapılar normal modda uzaktan da modeliyle (yer imi gibi).
  * - Hafif mod: daha dar çevre, daha küçük bütçe, gölge yok.
+ * - Taş kaide (24 Kasım, Kemal: "binalar havada asılı, bazıları yarı gömülü"): yapı çizilen
+ *   zemine oturur (`tekVeri.ts` → `tabanKotu`); yamaçta tabanın altındaki en alçak zemin kottan
+ *   aşağıdaysa yapının altında o kota kadar taş kaide (bütün yapılar tek çizimde).
  * Kayda hiçbir şey yazılmaz.
  */
 
@@ -26,6 +29,10 @@ const GOVDE: Record<string, string> = {
   depo: '#CBC2B0', kamu: '#E9E2D4', ozel: '#E7DDCC', kutu: '#DDD3C2', alan: '#BFB6A2'
 };
 const CATI = '#B8735A';
+/** Yamaçtaki yapının altındaki taş kaide (DENEME) */
+const KAIDE = '#A59886';
+/** Kaide tabanın bu oranı (model kutusu saçakları da kapsar; duvarın biraz dışında kalsın) */
+const KAIDE_PAYI = 0.94;
 
 /** Yapının modeli dosyasına göre mi ölçülür (ev türleri tabana uyar) */
 const TABANA_UYAR = new Set(['ev', 'dukkanli', 'ciftlik', 'yazlik', 'depo']);
@@ -60,6 +67,7 @@ export class YapiKatmani {
   modelli = 0;
   private govde: THREE.InstancedMesh;
   private cati: THREE.InstancedMesh;
+  private kaide: THREE.InstancedMesh | null = null;
   private kutuMatris: THREE.Matrix4[] = [];
   private catiMatris: THREE.Matrix4[] = [];
   private modeller = new Map<string, HaritaModeli>();
@@ -111,6 +119,21 @@ export class YapiKatmani {
     this.govde.receiveShadow = true;
     this.govde.computeBoundingSphere(); this.cati.computeBoundingSphere();
     this.grup.add(this.govde, this.cati, this.secim);
+
+    // Taş kaide: kottan tabanın altındaki en alçak zeminin biraz altına kadar
+    const kaideli = yapilar.filter(y => y.zeminAlt !== undefined && y.kot - y.zeminAlt > KAIDE_ESIGI);
+    if (kaideli.length) {
+      this.kaide = new THREE.InstancedMesh(kutu, new THREE.MeshLambertMaterial({ color: KAIDE, flatShading: true }), kaideli.length);
+      kaideli.forEach((y, n) => {
+        const alt = y.zeminAlt! - 0.4, ust = y.kot - 0.02;
+        const en = TABANA_UYAR.has(y.tur) && y.modelEn ? y.modelEn : y.en;
+        this.kaide!.setMatrixAt(n, new THREE.Matrix4().makeTranslation(y.merkez[0], alt, y.merkez[1]).multiply(donus(y.ex))
+          .multiply(new THREE.Matrix4().makeScale(en * KAIDE_PAYI, ust - alt, y.boy * KAIDE_PAYI)));
+      });
+      this.kaide.castShadow = this.kaide.receiveShadow = true;
+      this.kaide.computeBoundingSphere();
+      this.grup.add(this.kaide);
+    }
   }
 
   /** Bir seviyenin uzak kopyaları (ilk gerektiğinde kurulur) */
@@ -228,6 +251,7 @@ export class YapiKatmani {
     this.gizliKutu = gizle;
     if (degisti) { this.govde.instanceMatrix.needsUpdate = true; this.cati.instanceMatrix.needsUpdate = true; this.govde.computeBoundingSphere(); this.cati.computeBoundingSphere(); }
     this.govde.castShadow = this.cati.castShadow = golge;
+    if (this.kaide) this.kaide.castShadow = golge;
 
     // Uzak kopyalar: her karo bakılan yere uzaklığına göre bir sürümle (yakın karo
     // ayrıntılı); modeliyle çizilen yapının kopyası gizlenir
@@ -251,7 +275,7 @@ export class YapiKatmani {
     }
     this.modelli = secilen.length;
     const kutulu = this.yapilar.length - this.uzakli.size - [...gizle].filter(i => !this.uzakli.has(i)).length;
-    this.ucgen = toplam + kutulu * 24 + uzakUcgen;
+    this.ucgen = toplam + kutulu * 24 + uzakUcgen + (this.kaide?.count ?? 0) * 12;
   }
 
   /** Uzak kopyalarda gizlenecekler (modeliyle çizilenler): değişen karonun dizini yeniden kurulur */
@@ -292,6 +316,7 @@ export class YapiKatmani {
     this.uzakMalzeme.dispose();
     if (this.uzak && uzakDa) uzakModelleriBirak(this.uzak);
     this.govde.dispose(); this.cati.dispose();
+    if (this.kaide) { this.kaide.dispose(); (this.kaide.material as THREE.Material).dispose(); }
     this.govde.geometry.dispose(); this.cati.geometry.dispose(); (this.govde.material as THREE.Material).dispose(); (this.cati.material as THREE.Material).dispose();
   }
 }

@@ -9,7 +9,7 @@
  * dosyasının başlığındaki `lng0`, `lat0`, `mPerLng`, `mPerLat` ile.
  */
 
-import { MODEL_ESLEME } from './modelEsleme';
+import { MODEL_ESLEME, YAMAC_MODELLERI } from './modelEsleme';
 
 export type Nokta = [number, number];
 
@@ -24,6 +24,12 @@ export interface Zemin {
   h: Float32Array;
   /** Hücrenin kum ağırlığı 0–255 (kum kıyısına yakın, alçak kara; kenarda yumuşak) */
   kum: Uint8Array;
+  /**
+   * Ekranda çizilen rakım (24 Kasım): `h`'nin kıyı şeridi yumuşatılmış hâli (`kiyiYumusat`).
+   * Zemin katı bunu çizer; yapılar ve bahçeler buna oturur. Zemin aracı `h`'yi değiştirince
+   * zemin katı o bölgeyi yeniden hesaplar (`kiyiBolgesi`).
+   */
+  ciz: Float32Array;
 }
 
 type Ozellikler = Record<string, unknown>;
@@ -61,7 +67,36 @@ export async function zeminOku(sinyal?: AbortSignal): Promise<Zemin> {
   const h = new Float32Array(adet);
   const bas = 8 + n;
   for (let k = 0; k < adet; k++) h[k] = v.getInt16(bas + k * 2, true) * b.birim;
-  return { b, h, kum: new Uint8Array(adet) };
+  const z: Zemin = { b, h, kum: new Uint8Array(adet), ciz: new Float32Array(h) };
+  kiyiBolgesi(z, 0, 0, b.en - 1, b.boy - 1);
+  return z;
+}
+
+/**
+ * Kıyı çizgisi (6b, 22 Kasım; Kemal: kumsal kenarı tırtıklı): verideki kıyı 10 m'lik
+ * hücrelerde basamaklı (kumsal ~3 m'den denize tek hücrede iner), çizimde testere dişi
+ * görünüyordu. Yalnız çizim için, yalnız kıyı şeridinde (2 hücre içinde hem deniz hem
+ * kara olan, 4 m'den alçak hücreler) rakım çevresinin ağırlıklı ortalaması olur.
+ * Kutudaki hücrelerin `z.ciz`'i `z.h`'den yeniden hesaplanır (8. adım: zemin aracı da çağırır).
+ * Veri değişmez. 24 Kasım'dan beri yapılar da bu çizilen rakıma oturur (`tabanKotu`).
+ */
+export function kiyiBolgesi(z: Zemin, i0: number, j0: number, i1: number, j1: number) {
+  const { b, h, ciz } = z;
+  const R = 2;
+  for (let j = Math.max(0, j0); j <= Math.min(b.boy - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(b.en - 1, i1); i++) {
+    const k = j * b.en + i;
+    ciz[k] = h[k];
+    if (j < R || i < R || j >= b.boy - R || i >= b.en - R) continue;
+    if (h[k] >= 4 || h[k] < -6) continue;
+    let deniz = false, kara = false, top = 0, agirlik = 0;
+    for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++) {
+      const v = h[k + dj * b.en + di];
+      if (v > 0) kara = true; else deniz = true;
+      const w = (R + 1 - Math.abs(di)) * (R + 1 - Math.abs(dj));
+      top += v * w; agirlik += w;
+    }
+    if (deniz && kara) ciz[k] = top / agirlik;
+  }
 }
 
 /** Boylam, enlem → sahne x, z */
@@ -77,6 +112,60 @@ export function rakim(z: Zemin, x: number, sz: number): number {
   const u = Math.max(0, Math.min(1, fi - i)), w = Math.max(0, Math.min(1, fj - j));
   const k = j * b.en + i;
   return (h[k] * (1 - u) + h[k + 1] * u) * (1 - w) + (h[k + b.en] * (1 - u) + h[k + b.en + 1] * u) * w;
+}
+
+/**
+ * Sahne x, z'de ekranda çizilen zeminin yüksekliği (24 Kasım): zemin katının en ayrıntılı
+ * çizimiyle aynı yüzey. Kıyısı yumuşatılmış rakım (`z.ciz`), her kare yükseklikleri birbirine
+ * yakın iki köşeden iki üçgene bölünür (`zeminKatmani.ts` → `geometri`). Hafif modun kaba
+ * karelerinde kıyı şeridi biraz farklı çizilir (çevre ortalaması); oradaki fark küçük.
+ */
+export function cizilenRakim(z: Zemin, x: number, sz: number): number {
+  const { b } = z;
+  const h = z.ciz;
+  const fi = (x - b.x0) / b.hucre, fj = (-sz - b.y0) / b.hucre;
+  const i = Math.max(0, Math.min(b.en - 2, Math.floor(fi)));
+  const j = Math.max(0, Math.min(b.boy - 2, Math.floor(fj)));
+  const u = Math.max(0, Math.min(1, fi - i)), w = Math.max(0, Math.min(1, fj - j));
+  const k = j * b.en + i;
+  const a = h[k], bb = h[k + 1], c = h[k + b.en], d = h[k + b.en + 1];
+  if (Math.abs(a - d) < Math.abs(bb - c)) return u >= w ? a + u * (bb - a) + w * (d - bb) : a + w * (c - a) + u * (d - c);
+  return u + w <= 1 ? a + u * (bb - a) + w * (c - a) : d + (1 - u) * (c - d) + (1 - w) * (bb - d);
+}
+
+/** Taban kotu: yokuş yukarı tarafta yapı en çok bu kadar (m) toprağa gömülür (DENEME) */
+export const GOMME_SINIRI = 0.6;
+/** Tabanın altındaki zemin kottan bu kadar (m) aşağıdaysa taş kaide çizilir */
+export const KAIDE_ESIGI = 0.15;
+/** Modeli tabanından geniş çizilen yapılar (sıra ev; `yapiKatmani.ts` ile aynı) */
+const TABANA_UYAR = new Set(['ev', 'dukkanli', 'ciftlik', 'yazlik', 'depo']);
+
+/**
+ * Yapının tabanı (24 Kasım, Kemal: "bazı binalar havada asılı, bazıları yarı gömülü"):
+ * tabanın içinde ~2 m aralıklı noktalarda (kenarlar dahil) çizilen zemin ölçülür.
+ * - Kot: zeminin ortalaması; yokuş yukarı tarafta yapı en çok `GOMME_SINIRI` gömülür
+ *   (eskiden en alçak noktaya oturuyordu: yamaçta yarısı toprağa giriyordu).
+ * - `zeminAlt`: tabanın altındaki en alçak zemin; kot ondan yukarıdaysa yapının altında
+ *   o kota kadar taş kaide çizilir (yapı havada kalmaz).
+ * - Kendi zemini olan modeller (`YAMAC_MODELLERI`: yamaca göre yapılan Blender modelleri, The
+ *   Imperial) eski kuralla: tabanın en alçak noktası, kaidesiz (zemini, temeli o kota göre yapıldı).
+ * Denetimi: `gen/kompakt_rakim_denetim.py` (aynı kural).
+ */
+export function tabanKotu(z: Zemin, y: Pick<Yapi, 'merkez' | 'ex' | 'en' | 'boy' | 'modelEn' | 'tur' | 'dosya' | 'taban'>): { kot: number; zeminAlt: number } {
+  if (y.dosya && YAMAC_MODELLERI.has(y.dosya)) {
+    const kot = Math.min(rakim(z, y.merkez[0], y.merkez[1]), ...y.taban.map(([x, sz]) => rakim(z, x, sz)));
+    return { kot, zeminAlt: kot };
+  }
+  const en = TABANA_UYAR.has(y.tur) && y.modelEn ? y.modelEn : y.en, boy = y.boy;
+  const nx = Math.max(2, Math.ceil(en / 2) + 1), nz = Math.max(2, Math.ceil(boy / 2) + 1);
+  let enAz = Infinity, enCok = -Infinity, top = 0;
+  for (let a = 0; a < nx; a++) for (let c = 0; c < nz; c++) {
+    const s = (a / (nx - 1) - 0.5) * en, t = (c / (nz - 1) - 0.5) * boy;
+    const v = cizilenRakim(z, y.merkez[0] + s * y.ex[0] - t * y.ex[1], y.merkez[1] + s * y.ex[1] + t * y.ex[0]);
+    enAz = Math.min(enAz, v); enCok = Math.max(enCok, v); top += v;
+  }
+  const kot = Math.max(top / (nx * nz), enCok - GOMME_SINIRI);
+  return { kot, zeminAlt: enAz };
 }
 
 /**
@@ -127,7 +216,10 @@ export interface Yapi {
   en: number; boy: number;
   modelEn?: number;
   yukseklik: number;
+  /** Tabanın kotu (`tabanKotu`): model buraya oturur */
   kot: number;
+  /** Tabanın altındaki en alçak çizilen zemin: kottan aşağıdaysa arada taş kaide çizilir */
+  zeminAlt?: number;
   taban: Nokta[]; // sahne x, z
   /** Evin arsasının köşeleri (sahne x, z; yapı dosyasındaki `arsa`): bahçe ve duvar bununla çizilir */
   arsa?: Nokta[];
@@ -144,17 +236,20 @@ export function yapilariOku(z: Zemin, k: Koleksiyon): Yapi[] {
     if (p.katman !== 'yapi' || f.geometry.type !== 'Polygon') continue;
     const halka = (f.geometry.coordinates as number[][][])[0].map(c => sahneye(z.b, c));
     const merkez = sahneye(z.b, p.merkez as number[]);
-    // Taban en alçak köşesine oturur (yamaçta havada kalmasın); modelin altı zemine gömülür
-    const kot = Math.min(rakim(z, merkez[0], merkez[1]), ...halka.map(([x, sz]) => rakim(z, x, sz)));
     const olcu = p.modelOlcusu as number[] | undefined;
+    const temel = {
+      tur: String(p.tur), dosya: (p.dosya as string | null) || MODEL_ESLEME[String(p.id)] || null,
+      merkez, ex: p.ex as Nokta, en: Number(p.en) || 6, boy: Number(p.boy) || 6,
+      modelEn: typeof p.modelEn === 'number' ? p.modelEn : undefined, taban: halka
+    };
+    // Taban çizilen zemine oturur (24 Kasım): ortalamaya, yokuşta az gömülü, altında taş kaide
+    const { kot, zeminAlt } = tabanKotu(z, temel);
     cikti.push({
-      id: String(p.id), tur: String(p.tur), dosya: (p.dosya as string | null) || MODEL_ESLEME[String(p.id)] || null,
+      id: String(p.id), ...temel,
       vikiId: (p.vikiId as string | null) || null, ad: (p.ad as string | null) || null,
-      mahalle: String(p.mahalle ?? ''), merkez, ex: p.ex as Nokta,
-      en: Number(p.en) || 6, boy: Number(p.boy) || 6,
-      modelEn: typeof p.modelEn === 'number' ? p.modelEn : undefined,
+      mahalle: String(p.mahalle ?? ''),
       yukseklik: olcu?.[2] ?? (p.tur === 'kutu' ? 6 : 7),
-      kot, taban: halka,
+      kot, zeminAlt,
       ...(Array.isArray(p.arsa) ? { arsa: (p.arsa as number[][]).map(c => sahneye(z.b, c)) } : {}),
       ...(p.bag === 'oturan' ? { oturanli: true } : {}),
       ...(p.grup ? { grup: typeof p.grup === 'string' ? p.grup : String((p.grup as { kimlik?: unknown }).kimlik ?? 'grup') } : {})

@@ -9,7 +9,7 @@ import { BINA_MODELLERI, modelinTurleri, type BinaModeli } from '../../../../lib
 import { anahtariOku } from '../../../../lib/oyunAyarlari';
 import { ESLEME } from '../../../../lib/yasayanHarita';
 import { modelYukle } from '../../../../lib/modelYukle';
-import { rakim, sahneye, type Nokta, type Yapi } from '../tekVeri';
+import { rakim, sahneye, tabanKotu, type Nokta, type Yapi } from '../tekVeri';
 import type { SahneApi } from './sahneApi';
 import { birlestir, verininKucukleri, type Birlesik } from './birlesik';
 import { cografyaya, exAcisi, kesimeUzaklik, ondenEx, acidanEx, dikdortgen, icinde } from './geometri';
@@ -212,7 +212,7 @@ export const DuzenleModu: React.FC<Props> = ({ api, items, depo: verilenDepo, on
     const yapilar = api.temel.yapilar.map(y => {
       const r = Math.ceil(Math.max(y.en, y.boy) / 2 / z.b.hucre) + 1;
       if (!degisenYakin(z, degisen, y.merkez[0], y.merkez[1], r)) return y;
-      return { ...y, kot: Math.min(rakim(z, y.merkez[0], y.merkez[1]), ...y.taban.map(([x, sz]) => rakim(z, x, sz))) };
+      return { ...y, ...tabanKotu(z, y) };
     });
     const features = api.temel.yollar.features.map(f => {
       if (f.geometry.type !== 'LineString' || (f.properties.katman !== 'yol' && f.properties.katman !== 'kopru')) return f;
