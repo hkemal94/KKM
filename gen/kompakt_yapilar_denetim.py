@@ -118,7 +118,18 @@ def main():
         degen = [P[j]["id"] for j in agac_y.query(g) if G[j].intersection(g).area > 0.05]
         yaz(f"{f['properties']['id']} suyun üstünde (karada en çok %15), yapıya değmez", karada <= 0.15 and not degen,
             f"karada %{100 * karada:.0f}" + (f", değen: {degen}" if degen else ""))
-    isk = next((Y.gm(f["geometry"]).buffer(0) for f in DZ if f["properties"]["katman"] == "iskele"), None)
+    isk = next((Y.gm(f["geometry"]).buffer(0) for f in DZ if f["properties"]["id"] == "iskele_dondurmaci"), None)
+    # eski feribot iskelesi (Kemal, 24 Kasım; yer tahmini): taş, kökü kıyıda, Eski Kilise hizasında
+    fer = next((f for f in DZ if f["properties"]["id"] == "iskele_eski_feribot"), None)
+    if fer is None:
+        yaz("İskele'de eski feribot iskelesi", False, "yok")
+    else:
+        kok = Point(Y.m(fer["properties"]["hat"][0]))
+        hiza = Point(Y.IS.tasi(*Y.IS.FERIBOT_HIZA))
+        yaz("İskele'de eski feribot iskelesi (taş, kökü kıyıda, Eski Kilise hizasında)",
+            fer["properties"]["tur"] == "taş" and Y.KIYI.distance(kok) <= Y.IS.FERIBOT_KARAYA + 0.5
+            and Y.KIYI.distance(hiza) + 1.0 >= kok.distance(hiza) - Y.IS.FERIBOT_KARAYA,
+            f"{fer['properties']['uzunlukM']} m, kökü kıyıya {Y.KIYI.distance(kok):.1f} m, kiliseye {kok.distance(hiza):.0f} m")
     dk = next((g for g, p in zip(G, P) if p["id"] == "bina_liman_kafe"), None)
     if isk is not None and dk is not None:
         yaz("Dondurmacı Kızlar iskelenin dibinde (en çok 10 m)", dk.distance(isk) <= 10.0, f"{dk.distance(isk):.1f} m")
@@ -138,6 +149,17 @@ def main():
             hedef_u = Y.LM.ORAN * eski_u
             yaz(f"{e['ad']} Dondurmacı Kızlar'a eski uzaklığının {Y.LM.ORAN:.2f} katında (en çok %20 fark)",
                 abs(yeni_u - hedef_u) <= 0.2 * hedef_u, f"eski {eski_u:.0f} m, hedef {hedef_u:.0f} m, yeni {yeni_u:.0f} m")
+
+    # İskele köyünde boş ada yok (Kemal, 24 Kasım: "daha az ev olabilir ama dolu olsun"): köyün yollarının çevrelediği
+    # her adada en az bir yapı
+    from shapely.ops import polygonize
+    alan_ = Y.IS.kumsal_dar_alan()
+    yl_ = [Y.gm(f["geometry"]) for f in json.load(open(Y.YOLLAR, encoding="utf-8"))["features"]
+           if f["properties"].get("katman") == "yol" and f["geometry"]["type"] == "LineString"]
+    adalar_ = [p for p in polygonize(unary_union([g for g in yl_ if g.intersects(alan_.buffer(200))]))
+               if 300 < p.area < 80000 and alan_.contains(p.centroid)]
+    bos_ = [f"({p.centroid.x:.0f}, {p.centroid.y:.0f})" for p in adalar_ if not any(p.contains(g.centroid) for g in G)]
+    yaz("İskele köyünde boş ada yok", not bos_, f"{len(adalar_)} ada" + (f", boş: {', '.join(bos_)}" if bos_ else ""))
 
     # kararlı
     a = json.dumps(Y.uret(), ensure_ascii=False, separators=(",", ":"))

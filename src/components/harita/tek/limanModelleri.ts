@@ -14,7 +14,7 @@ import type { UzakModel } from './uzakModeller';
  *   `deniz/ahsap-iskele-duz` parçalarıyla döşenir, parçalar dikdörtgene uyacak kadar
  *   uzar ya da daralır.
  * - Mendirek: orta çizgisi (`hat`) boyunca `deniz/mendirek-duz` parçaları; genişlik
- *   veriden (`genislik`).
+ *   veriden (`genislik`). Taş iskele (`tur: 'taş'`, `hat` var) de böyle çizilir.
  * Modeller deniz seviyesinde (kendi başlangıç noktası y = 0). Yakında asıl model,
  * uzakta ve hafif modda az üçgenli kopyası (`uzakModeller.ts`). Yalnız okur.
  */
@@ -49,7 +49,11 @@ export class LimanModelleri {
   constructor(b: ZeminBasligi, koleksiyonlar: Koleksiyon[], private uzak: Map<string, UzakModel> | null, private onDegisti: () => void) {
     for (const k of koleksiyonlar) for (const f of k.features) {
       const p = f.properties;
-      if (p.katman === 'iskele' && f.geometry.type === 'Polygon') {
+      if (p.katman === 'iskele' && p.tur === 'taş' && Array.isArray(p.hat)) {
+        // Taş iskele (İskele'nin eski feribot iskelesi, 24 Kasım): mendirek gibi taş parçalarla, orta çizgisi boyunca
+        const hat = (p.hat as number[][]).map(c => sahneye(b, c));
+        if (hat.length > 1) this.mendirekler.push({ hat, genislik: Number(p.genislik) || 8 });
+      } else if (p.katman === 'iskele' && f.geometry.type === 'Polygon') {
         const halka = (f.geometry.coordinates as number[][][])[0].map(c => sahneye(b, c));
         this.iskeleler.push(...dikdortgenler(halka));
       } else if (p.katman === 'mendirek' && Array.isArray(p.hat)) {

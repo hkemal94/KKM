@@ -6,7 +6,7 @@
    "dosya": "yer_ciftlik-A.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 682467,
+   "bayt": 682326,
    "yazilar": [
     {
      "tur": "yol",
@@ -133,7 +133,7 @@
    "dosya": "yer_ciftlik-B.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 1025610,
+   "bayt": 1026459,
    "yazilar": [
     {
      "tur": "yol",
@@ -197,16 +197,11 @@
    "dosya": "yer_iskele-A.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 597105,
+   "bayt": 580281,
    "yazilar": [
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "pencere"
     },
     {
@@ -236,12 +231,12 @@
     },
     {
      "tur": "yol",
-     "metin": "Sahil Yolu",
-     "yer": "ana"
+     "metin": "Güney Sırt Yolu",
+     "yer": "pencere"
     },
     {
      "tur": "yol",
-     "metin": "Güney Sırt Yolu",
+     "metin": "Sahil Yolu",
      "yer": "ana"
     },
     {
@@ -258,11 +253,6 @@
     {
      "tur": "yol",
      "metin": "Otel Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Sahil Merdiveni",
      "yer": "ana"
     },
     {
@@ -349,16 +339,11 @@
    "dosya": "yer_iskele-B.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 887527,
+   "bayt": 870457,
    "yazilar": [
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "pencere"
     },
     {
@@ -388,12 +373,12 @@
     },
     {
      "tur": "yol",
-     "metin": "Sahil Yolu",
-     "yer": "ana"
+     "metin": "Güney Sırt Yolu",
+     "yer": "pencere"
     },
     {
      "tur": "yol",
-     "metin": "Güney Sırt Yolu",
+     "metin": "Sahil Yolu",
      "yer": "ana"
     },
     {
@@ -410,11 +395,6 @@
     {
      "tur": "yol",
      "metin": "Otel Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Sahil Merdiveni",
      "yer": "ana"
     },
     {
@@ -438,7 +418,7 @@
    "dosya": "yer_liman-A.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 448697,
+   "bayt": 440801,
    "yazilar": [
     {
      "tur": "yol",
@@ -478,11 +458,6 @@
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "ana"
     },
     {
@@ -591,7 +566,7 @@
    "dosya": "yer_liman-B.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 714103,
+   "bayt": 714754,
    "yazilar": [
     {
      "tur": "yol",
@@ -631,11 +606,6 @@
     {
      "tur": "yol",
      "metin": "Sahil Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
      "yer": "ana"
     },
     {
@@ -685,7 +655,7 @@
    "dosya": "yer_merkez-A.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 897189,
+   "bayt": 901738,
    "yazilar": [
     {
      "tur": "yol",
@@ -741,16 +711,6 @@
      "tur": "yapi",
      "metin": "Düzada Sağlık Ocağı",
      "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "ana"
     },
     {
      "tur": "yol",
@@ -863,7 +823,7 @@
    "dosya": "yer_merkez-B.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 1484164,
+   "bayt": 1482474,
    "yazilar": [
     {
      "tur": "yol",
@@ -922,16 +882,6 @@
     },
     {
      "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yol",
-     "metin": "Güney Sırt Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
      "metin": "Merkez Bağlantısı",
      "yer": "ana"
     },
@@ -982,7 +932,7 @@
    "dosya": "yer_stadyum-A.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 427131,
+   "bayt": 427446,
    "yazilar": [
     {
      "tur": "yol",
@@ -1120,7 +1070,7 @@
    "dosya": "yer_stadyum-B.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 724362,
+   "bayt": 724224,
    "yazilar": [
     {
      "tur": "yol",

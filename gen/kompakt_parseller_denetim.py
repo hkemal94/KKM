@@ -139,7 +139,8 @@ def main():
     ic = prepared.prep(ada.buffer(-O["kiyiSeridiM"] + 0.5))
     yaz(f"kıyı şeridinin ({O['kiyiSeridiM']:.0f} m) içinde", all(ic.contains(g) for g in P),
         sum(1 for g in P if not ic.contains(g)))
-    kumsal = prepared.prep(unary_union([k.buffer(O["kiyiSeridiM"] + O["kumsalPayM"] - 0.5) for k in kum]))
+    import kompakt_iskele as IS   # İskele köyünün önünde şerit dar (24 Kasım)
+    kumsal = prepared.prep(IS.kumsal_seridi(kum, O["kiyiSeridiM"] - 0.5, O["kumsalPayM"]))
     yaz("kumsal şeridinde parsel yok", not any(kumsal.intersects(g) for g in P), sum(1 for g in P if kumsal.intersects(g)))
     disari = sum(1 for g, p in zip(P, pr) if p["yerlesim"] not in alanlar or
                  alanlar[p["yerlesim"]].buffer(O["kosePayM"] + 40).disjoint(g.centroid))
