@@ -30,7 +30,7 @@ const degistir = (s: string, eski: string, yeni: string) =>
   s.replace(new RegExp(`(?<![\\p{L}\\p{N}])${kacis(eski)}(?![\\p{L}\\p{N}])`, 'gu'), yeni);
 
 /** Değiştirilmeyecek alanlar: görseller, eski adlar, bağlar, kimlikler */
-const DOKUNMA = new Set(['brandKit', 'eskiAdlar', 'aliases', 'relations', 'images', 'moodboard', 'haritaKonum']);
+const DOKUNMA = new Set(['brandKit', 'eskiAdlar', 'aliases', 'relations', 'images', 'moodboard']);
 
 function derin(x: unknown, eski: string, yeni: string): unknown {
   if (typeof x === 'string') return degistir(x, eski, yeni);

@@ -618,9 +618,6 @@ export default function App() {
     } else if (item.type === 'aday') {
       // Stüdyo kalktı (3 Kasım): öneriler Onay bekleyenler'de
       setActiveTab('onay');
-    } else if (item.type === 'map_pin') {
-      // Harita notu (5. gece): Harita sayfasına (tek harita notları göstermez; 23 Kasım)
-      yonlendir('harita');
     } else if (item.type === 'fikir') {
       /*
        * Brainstorm sekmesi kalktı (28 Eylül kararı). Fikirler köşedeki
@@ -652,7 +649,7 @@ export default function App() {
     sablonuUygula(sablonuOku(items.find(i => i.type === 'kkm_ayar')?.metadata?.vikiSablonu));
   }, [items]);
 
-  const SAYILMAZ_TIP = new Set(['map_settings', 'map_pin', 'tuval', 'channel', 'aday']);
+  const SAYILMAZ_TIP = new Set(['map_settings', 'tuval', 'channel', 'aday']);
   const varlikSayisi = useMemo(
     () => items.filter(
       i => !i.archived && !i.isProposal

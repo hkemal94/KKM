@@ -4,7 +4,6 @@ import type { Item, UserSettings } from '../types';
 import { driveYedekYukle, YEDEK_KLASORU } from '../lib/googleApi';
 import { driveIzniniYenile, getCachedAccessToken, izinEksikMi, signInWithGoogle } from '../lib/firebase';
 import { gorselYedegi, gorselleriGeriYaz } from '../lib/gorselDeposu';
-import { haritaDuzeniniYedektenYaz } from '../lib/haritaDuzeni';
 
 /**
  * Yedekleme (K2).
@@ -42,8 +41,6 @@ interface YedekDosyasi {
   items: Item[];
   /** Galeri görselleri (21 Ekim): { görsel kimliği: data adresi }; kayıtlarda yalnız başvuru durur */
   gorseller?: Record<string, string>;
-  /** Eski haritanın kaydı: 23 Kasım'a kadarki yedeklerde (tek harita 11. adım); yenisine girmez, eskisi geri yüklenir */
-  haritaDuzeni?: unknown;
 }
 
 function sonYedekZamani(): number | null {
@@ -181,9 +178,8 @@ export const Yedekleme: React.FC<YedeklemeProps> = ({ items, settings, onKayit, 
         await onKayit(kayit);
         yazilan++;
       }
-      if (veri.haritaDuzeni) {
-        await haritaDuzeniniYedektenYaz(veri.haritaDuzeni);
-      }
+      // Eski harita kaydı (23 Kasım'a kadarki yedeklerde `haritaDuzeni`) geri yazılmaz:
+      // eski harita silindi (tek harita 11. adım, KKM-C); yalnız kayıtlar ve görseller döner
       // Galeri görselleri (21 Ekim): olmayan görsel belgeleri yazılır
       const gorselSayisi = veri.gorseller ? await gorselleriGeriYaz(veri.gorseller) : 0;
       setDurum(`${yazilan} kayıt geri yüklendi${gorselSayisi ? `, ${gorselSayisi} galeri görseli yazıldı` : ''}.`);

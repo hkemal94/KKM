@@ -13,6 +13,7 @@ export type KitapStatus = 'taslak' | 'yazıldı' | 'düzeltildi';
 
 export type ItemType = 
   // Düzada types
+  // map_pin: eski haritanın notu; yalnız Temizlik'in silinecekler listesi tanır (24 Kasım)
   | 'kulüp' | 'dükkân' | 'karakter' | 'mekân' | 'ürün' | 'olay' | 'map_settings' | 'map_pin'
   | 'marka' | 'kisi' | 'yer' | 'oda' | 'aile'
   // Yer türleri (8 Ekim): 'yer' yalnız mahalle; cadde, meydan, doğa adı ve ada ayrı kart
@@ -102,7 +103,6 @@ export interface Item {
     [key: string]: any;
     // Düzada specific
     region?: string; // kuzey / liman / orman etc.
-    haritaKonum?: { x: number; y: number } | null;
     wikiSections?: WikiSection[];
     brandKit?: BrandKit;
     date?: string; // for olay type

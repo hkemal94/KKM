@@ -90,6 +90,8 @@ export function silinecekler(items: Item[]): SilmeNedeni[] {
     // 2 Kasım (yol haritası 1. adım, Kemal'in "Kalkanlar"ı): Tuval ve Site ekranları kalktı
     else if (i.type === 'tuval') cikti.push({ item: i, neden: 'Tuval panosu (ekran kalktı)' });
     else if (i.type === 'site_ayar') cikti.push({ item: i, neden: 'site ayarı (Site kalktı)' });
+    // 24 Kasım (tek harita 11. adım, KKM-C): harita notları eski haritada duruyordu; tek harita göstermez
+    else if (i.type === 'map_pin') cikti.push({ item: i, neden: 'harita notu (eski harita kalktı)' });
   }
   return cikti;
 }
@@ -115,8 +117,14 @@ export function silmeOzeti(liste: SilmeNedeni[]): string {
  *     Kems Company'de `kurulus` (görünen kuruluş yılı `profile.founded`),
  *     Düzada'da `activeEra` (etkin dönem kalktı, 28 Eylül kararı). Hiçbir
  *     ekran okumuyor; yalnız bu iki maddede aranır.
+ *   - eski harita alanları (24 Kasım, tek harita 11. adım, KKM-C; Kemal, 23
+ *     Kasım): `haritaKonum` (eski haritadaki boylam / enlem), `haritaTur`,
+ *     `haritaIsareti`. Eski haritalar silindi, tek harita okumaz. Kalanlar:
+ *     `rakim` (Kemal 23 Kasım'da tek haritaya göre güncelletti), `haritaBinaId`,
+ *     `haritaWikiId`, `haritaEvi`. Harita yedeğinde yedekleri duruyor.
  */
-const ESKI_ALANLAR = ['eskiMetin', 'oyunArsivi', 'proposalsSeeded', 'sitede', 'sitedeGizli'];
+const HARITA_ALANLARI = ['haritaKonum', 'haritaTur', 'haritaIsareti'];
+const ESKI_ALANLAR = ['eskiMetin', 'oyunArsivi', 'proposalsSeeded', 'sitede', 'sitedeGizli', ...HARITA_ALANLARI];
 const SIMULASYON_ALANLARI = ['operations', 'occupancy', 'weather', 'morningNote', 'memoText', 'memoFrom', 'expectedCheckouts'];
 const KUNYE_ALANLARI = ['kurulus', 'activeEra'];
 const KEMS_KIMLIKLERI = ['kems_company', 'marka_kems'];
@@ -149,6 +157,7 @@ export function eskiAlanOzeti(liste: EskiAlan[]): string {
     [say(a => a === 'proposalsSeeded'), 'kayıtta eski öneri işareti'],
     [say(a => a === 'sitede' || a === 'sitedeGizli'), 'kayıtta site işareti'],
     [say(a => SIMULASYON_ALANLARI.includes(a)), 'kitap bölümünde otel simülasyonu günü'],
-    [say(a => KUNYE_ALANLARI.includes(a)), 'maddede eski künye alanı (kurulus, activeEra)']
+    [say(a => KUNYE_ALANLARI.includes(a)), 'maddede eski künye alanı (kurulus, activeEra)'],
+    [say(a => HARITA_ALANLARI.includes(a)), 'maddede eski harita alanı (harita konumu, türü, işareti)']
   ].filter(([n]) => n).map(([n, ad]) => `${n} ${ad}`).join(' · ');
 }

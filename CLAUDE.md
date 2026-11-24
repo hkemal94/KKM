@@ -74,10 +74,14 @@ terimsiz olur. Kodu değil, **ekranda ne değiştiğini** anlat.
 - **Firestore:** iç içe dizi yasak. Bir alana `undefined` yazmak bütün
   kaydı reddettirir — alanı silmek için anahtarı nesneden çıkar.
   (`src/lib/firebase.ts` ayrıca temizliyor ama buna güvenme.)
-- **Eski harita kaydı** (`duzada/haritaDuzeni`, 23 Kasım'dan beri tek harita okumaz): yalnız Harita yedeği
-  (Durum → Eksikler → Harita yedeği), Drive'a harita yedeği ve evde oturanların göç kartı okur
-  (`src/lib/haritaDuzeni.ts`, biçimi `components/harita/duzenTipi.ts`). Kendiliğinden yazan kod yok; yedekten
-  geri yükleme yalnız Kemal basınca, sayacı (`kurucuSayac`) bir artırarak yazar.
+- **Eski harita kaydı** (`duzada/haritaDuzeni`, 23 Kasım'dan beri tek harita okumaz): Kemal'in kararıyla (23 Kasım)
+  harita yedeğinden sonra Durum → Eksikler → "Eski harita kaydını sil" düğmesiyle silinir (kart yalnız kayıt varken
+  görünür; bulutta harita yedeği yoksa düğme kapalı). Kayda yazan kod yok, kural da yalnız okumaya ve silmeye izin
+  verir; yedekten geri yükleme 24 Kasım'da kalktı (git geçmişinde). Harita yedeği kartı yedekleri gösterir, indirir,
+  Drive'a yükler (`src/lib/haritaDuzeni.ts`, biçimi `components/harita/duzenTipi.ts`).
+- **Eski harita alanları** (24 Kasım): maddelerdeki `haritaKonum`, `haritaTur`, `haritaIsareti` ve `map_pin`
+  (harita notu) kayıtları Temizlik'le silinir; yazılmaz. `metadata.rakim`, `haritaBinaId`, `haritaWikiId`,
+  `haritaEvi` kalır.
 - **Tek harita taslağı** (22 Kasım, 7. adım): Düzenle modunun taslağı ayrı belgede, `duzada/tekHaritaTaslak`
   (`{ surum, guncelleme, sayac, veri }`; `veri` yalnız değişikliklerin JSON yazısı, en çok 400 bin harf). Yalnız Kemal
   düzenledikçe, 20 sn biriktirilip yazılır; `sayac` açık kalmış eski sekmenin üstüne yazmasını durdurur.

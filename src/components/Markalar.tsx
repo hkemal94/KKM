@@ -445,7 +445,6 @@ export default function Markalar({
         brandId: activeBrandId === 'unassigned' ? undefined : activeBrandId,
         placeId: newEntityPlaceId || undefined,
         wikiSections: [],
-        haritaKonum: null,
         region: 'merkez'
       }
     };

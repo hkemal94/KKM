@@ -26,8 +26,8 @@ const SINIR_BAYT = 1_000_000;
 /** `lib/bagKurallari.ts` içindeki viki türleri (oda dahil, kural tablosuyla aynı) */
 const VIKI_TURLERI: ItemType[] = ['kisi', 'karakter', 'aile', 'mekân', 'dükkân', 'kulüp', 'marka', 'yer', 'cadde', 'meydan', 'yer_adi', 'ada', 'olay', 'ürün', 'oda'];
 
-/** Dosyaya girmeyen alanlar: görsel, harita, yerleşim ve bağlar (bağlar ayrı yazılır) */
-const ATLANAN = new Set(['brandKit', 'eskiAdlar', 'aliases', 'relations', 'images', 'moodboard', 'haritaKonum', 'wikiSections']);
+/** Dosyaya girmeyen alanlar: görsel, yerleşim ve bağlar (bağlar ayrı yazılır) */
+const ATLANAN = new Set(['brandKit', 'eskiAdlar', 'aliases', 'relations', 'images', 'moodboard', 'wikiSections']);
 
 const metinMi = (d: unknown): d is string => typeof d === 'string' && !d.startsWith('data:') && !d.startsWith('gorsel:');
 

@@ -17,7 +17,7 @@ const TUR_ADI: Record<string, string> = {
   olay: 'Olay', 'ürün': 'Eşya', oda: 'Oda', kitap_bolum: 'Kitap bölümü', kitap_proje: 'Kitap', ilham_gorsel: 'Galeri görseli',
   gdd_bolum: 'Oyun belgesi', oyun_tanitim: 'Oyun', oyun_is: 'Oyun işi', oyun_fikir: 'Oyun fikri', merch_urun: 'Merch ürünü', drop: 'Drop',
   blog_post: 'Yazı', aday: 'Öneri', fikir: 'Not', kkm_ayar: 'KKM ayarları', site_ayar: 'Site ayarları', gece_hazirlik: 'Gece önerileri',
-  channel: 'Kanal', map_pin: 'Harita işareti', tuval: 'Tuval panosu', map_settings: 'Harita ayarı', ilham_kaynak: 'İlham kaynağı'
+  channel: 'Kanal', tuval: 'Tuval panosu', map_settings: 'Harita ayarı', ilham_kaynak: 'İlham kaynağı'
 };
 
 /** Tek dizi büyüklük çubuğu: lacivert, ince, uçları yuvarlak */

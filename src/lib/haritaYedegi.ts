@@ -17,9 +17,11 @@ import type { HaritaDuzeni, KurucuBelge } from '../components/harita/duzenTipi';
  *   - Yedek bir kez yazılır, değişmez (kural güncellemeye izin vermez).
  *     En çok 3 yedek durur; dördüncüde en eskisi yalnız Kemal onaylarsa
  *     silinir.
- *   - Geri yükleme önce ne değişeceğini gösterir; Kemal onaylayınca harita
- *     kaydını tek yazmada yazar. Viki alanları ayrıca işaretlenirse yazılır.
- *   - Drive'a yükleme bu adımda yok (sonra).
+ *   - Geri yükleme 24 Kasım'da kalktı (tek harita 11. adım, KKM-C): eski
+ *     harita silindi, kaydı da Eksikler'deki düğmeyle silinir. Yedekler
+ *     görülür, bilgisayara indirilir, Drive'a yüklenir; geri yükleme kodu git
+ *     geçmişinde.
+ *   - Drive'a yükleme `haritaDrive.ts` (19 Kasım).
  *
  * Bu dosyadaki hesaplar saf iştir; ağ yalnız en alttaki işlevlerde.
  */
@@ -30,7 +32,11 @@ export const PARCA_BOYU = 300_000;
 /** Bir yedekte en çok parça (kuralla aynı) */
 export const EN_COK_PARCA = 10;
 
-/** Haritaya bağlı viki alanları (metadata içinde) */
+/**
+ * Haritaya bağlı viki alanları (metadata içinde). `haritaKonum`, `haritaTur`,
+ * `haritaIsareti` 24 Kasım'da Temizlik'le maddelerden silinir (KKM-C); eski
+ * yedeklerde durdukları için liste aynı kalır.
+ */
 export const VIKI_HARITA_ALANLARI = [
   'rakim', 'haritaKonum', 'haritaIsareti', 'konum', 'haritaBinaId', 'haritaTur', 'haritaWikiId'
 ] as const;
@@ -146,7 +152,7 @@ export function yedekIcerigi(ham: Record<string, unknown> | null, items: Item[],
     surum: 1,
     tarih: zaman.toISOString(),
     olusturma: zaman.getTime(),
-    aciklama: 'Harita yedeği: harita kaydı (duzada/haritaDuzeni) olduğu gibi ve haritaya bağlı viki alanları (rakım, harita konumu, işaret, bağlı yapı, ilgili not satırı). KKM → Durum → Eksikler → Harita yedeği kartından geri yüklenir.',
+    aciklama: 'Harita yedeği: harita kaydı (duzada/haritaDuzeni) olduğu gibi ve haritaya bağlı viki alanları (rakım, harita konumu, işaret, bağlı yapı, ilgili not satırı). KKM → Durum → Eksikler → Harita yedeği kartında durur.',
     sayilar: { madde: 0 },
     items: [],
     haritaDuzeni: ham,
@@ -165,99 +171,6 @@ export function yedekMi(x: unknown): x is HaritaYedegi {
   const y = x as Partial<HaritaYedegi>;
   return y.tur === 'harita-yedegi' && Array.isArray(y.vikiAlanlari)
     && (y.haritaDuzeni === null || (typeof y.haritaDuzeni === 'object' && !Array.isArray(y.haritaDuzeni)));
-}
-
-// ---- geri yükleme özeti ------------------------------------------------------
-
-export interface FarkSatiri {
-  ad: string;
-  simdi: number;
-  yedekte: number;
-  /** Yedekte olup şimdi olmayan: geri gelir */
-  gelecek: number;
-  /** Şimdi olup yedekte olmayan: kalkar */
-  gidecek: number;
-  /** İkisinde de olan ama farklı: eski hâline döner */
-  degisecek: number;
-}
-
-const kayitFarki = (ad: string, simdi: unknown, yedekte: unknown): FarkSatiri => {
-  const a = (simdi && typeof simdi === 'object' ? simdi : {}) as Record<string, unknown>;
-  const b = (yedekte && typeof yedekte === 'object' ? yedekte : {}) as Record<string, unknown>;
-  let gelecek = 0, gidecek = 0, degisecek = 0;
-  for (const k of Object.keys(b)) {
-    if (!(k in a)) gelecek++;
-    else if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) degisecek++;
-  }
-  for (const k of Object.keys(a)) if (!(k in b)) gidecek++;
-  return { ad, simdi: Object.keys(a).length, yedekte: Object.keys(b).length, gelecek, gidecek, degisecek };
-};
-
-const kumeFarki = (ad: string, simdi: string[] = [], yedekte: string[] = []): FarkSatiri => {
-  const a = new Set(simdi), b = new Set(yedekte);
-  return {
-    ad, simdi: a.size, yedekte: b.size, degisecek: 0,
-    gelecek: [...b].filter(x => !a.has(x)).length,
-    gidecek: [...a].filter(x => !b.has(x)).length
-  };
-};
-
-export interface GeriYuklemeOzeti {
-  satirlar: FarkSatiri[];
-  /** Haritaya işlenmiş hâl (3B'de görünen) de değişiyor mu */
-  islenenDegisir: boolean;
-  /** Harita kaydında hiçbir fark yok */
-  ayni: boolean;
-}
-
-/** Şimdiki kayıt → yedekteki kayıt: ne değişecek (saf iş) */
-export function geriYuklemeOzeti(simdiHam: unknown, yedekHam: unknown): GeriYuklemeOzeti {
-  const s = haritaKaydiniCoz(simdiHam), y = haritaKaydiniCoz(yedekHam);
-  const st = taslagi(s), yt = taslagi(y);
-  const satirlar = [
-    kayitFarki("Kurucu'da konan yapı", st?.yeniBinalar, yt?.yeniBinalar),
-    kayitFarki('Özel yapı', st?.ozelYapilar, yt?.ozelYapilar),
-    kayitFarki("Kurucu'da çizilen yol", st?.yeniYollar, yt?.yeniYollar),
-    kayitFarki('Yapı → madde bağı', st?.baglar, yt?.baglar),
-    kayitFarki('İçinde oturan olan ev', st?.oturanlar, yt?.oturanlar),
-    kayitFarki('Doğa alanı', st?.doga, yt?.doga),
-    kayitFarki('Elle düzeltilen yol', st?.yolDuzeni, yt?.yolDuzeni),
-    kayitFarki('Taşınan haritadaki yapı', st?.binaDuzeni, yt?.binaDuzeni),
-    kayitFarki('Tür değişikliği', st?.turDegisikligi, yt?.turDegisikligi),
-    kumeFarki('Kaldırılan haritadaki öğe', st?.gizlenen, yt?.gizlenen),
-    kayitFarki('Mekân düzeltmesi', s?.mekanlar, y?.mekanlar),
-    kayitFarki('Sınır hattı', s?.hatlar, y?.hatlar),
-    kayitFarki('Eski düzenleyicinin yolu', s?.yollar, y?.yollar)
-  ];
-  const islenenDegisir = JSON.stringify(s?.kurucuIslenen ?? null) !== JSON.stringify(y?.kurucuIslenen ?? null);
-  const ayni = !islenenDegisir && JSON.stringify(st ?? null) === JSON.stringify(yt ?? null)
-    && satirlar.every(r => !r.gelecek && !r.gidecek && !r.degisecek);
-  return { satirlar, islenenDegisir, ayni };
-}
-
-/**
- * Viki alanlarını yedekteki hâline döndürecek kayıtlar (saf iş). Yalnız
- * farklı olan maddeler; yedekte olmayan alan maddeden çıkarılır (tanımsız
- * yazılmaz). Yedekten sonra açılan ya da silinen maddeye dokunulmaz.
- */
-export function vikiGeriYuklemeleri(items: Item[], yedekte: VikiHaritaAlani[], zaman = Date.now()): Item[] {
-  const kimlik = new Map(items.map(i => [i.id, i]));
-  const cikti: Item[] = [];
-  for (const v of yedekte) {
-    const i = kimlik.get(v.id);
-    if (!i) continue;
-    const m: Record<string, unknown> = { ...(i.metadata || {}) };
-    for (const a of VIKI_HARITA_ALANLARI) {
-      if (v.metadata[a] !== undefined) m[a] = v.metadata[a];
-      else delete m[a];
-    }
-    const notes = v.notes !== undefined ? v.notes : i.notes;
-    const eskiM = (i.metadata || {}) as Record<string, unknown>;
-    const degisti = notes !== i.notes
-      || VIKI_HARITA_ALANLARI.some(a => JSON.stringify(eskiM[a] ?? null) !== JSON.stringify(m[a] ?? null));
-    if (degisti) cikti.push({ ...i, metadata: m as Item['metadata'], ...(notes !== undefined ? { notes } : {}), updatedAt: zaman });
-  }
-  return cikti;
 }
 
 /** İçeriği parçalara böler (saf iş) */
