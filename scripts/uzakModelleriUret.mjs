@@ -20,8 +20,8 @@
  * (santim). Başlık: { modeller: { dosya: { cx, cz, w, d, seviyeler: [[{ renk, cift, bas, adet }]] } } }
  * (`bas`, `adet`: köşe sırası; her üç köşe bir üçgen).
  *
- * - Kendi kıyısıyla gelen model (The Imperial, 25 Kasım; `modelEsleme.ts` → `KENDI_KIYILI`) haritadaki gibi
- *   kayalığı, kum cebi ve iskelesiyle hazırlanır (yalnız kendi denizi atılır).
+ * - Kaidesiz model (The Imperial, 25 Kasım; `modelEsleme.ts` → `KAIDESIZ`) haritadaki gibi yalnız sahanlık
+ *   üstüyle hazırlanır (kayalık kaidesi, kumu, iskelesi, denizi, çimeni atılır).
  *
  * Kayda yazmaz; yalnız depodaki dosyayı yazar.
  * Kullanım:  npx tsx scripts/uzakModelleriUret.mjs
@@ -36,7 +36,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier.js';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { hazirla } from '../src/components/harita/modelHazirla.ts';
-import { MODEL_ESLEME, KENDI_KIYILI } from '../src/components/harita/tek/modelEsleme.ts';
+import { MODEL_ESLEME, KAIDESIZ } from '../src/components/harita/tek/modelEsleme.ts';
 
 const KOK = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CIKTI = join(KOK, 'public', 'harita', 'uzak-modeller.bin');
@@ -194,7 +194,7 @@ async function main() {
   const rapor = [];
   for (const dosya of sirali) {
     const g = await modelOku(dosya);
-    const m = hazirla(g.scene, KENDI_KIYILI[dosya]);
+    const m = hazirla(g.scene, KAIDESIZ[dosya]);
     const merkez = new THREE.Vector3(m.cx, 0, m.cz);
     const kayit = { cx: +m.cx.toFixed(3), cz: +m.cz.toFixed(3), w: +m.w.toFixed(3), d: +m.d.toFixed(3), seviyeler: [] };
     const satir = [dosya, m.ucgen];

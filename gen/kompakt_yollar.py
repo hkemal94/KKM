@@ -103,6 +103,9 @@ ZIRVE = {f["properties"]["id"]: dict(f["properties"], xy=m(f["geometry"]["coordi
          for f in F if f["properties"]["katman"] == "zirve"}
 IMP = {f["properties"]["tur"]: f for f in F if f["properties"]["katman"] == "imperial"}
 SAHANLIK = geom_m(IMP["sahanlik"]["geometry"])
+# otelin sahanlığı ve dönen binanın önündeki teras (25 Kasım) birlikte: yola kapalı, zemine dokunulmaz, içinde biten yollar
+# birbirine bağlı (Otel Yolu eskisi gibi sahanlığın kenarına çıkar)
+SAHANLIK_TUM = SAHANLIK.union(geom_m(IMP["teras"]["geometry"])) if "teras" in IMP else SAHANLIK
 OTEL = geom_m(IMP["otel"]["geometry"])
 MERDIVEN = geom_m(IMP["merdiven-hatti"]["geometry"])
 IMP_ALAN = geom_m(IMP["alan"]["geometry"])
@@ -211,10 +214,7 @@ ZR = ndimage.gaussian_filter(ndimage.grey_closing(Z, size=(5, 5)), 1.0)
 _sk = ndimage.binary_dilation(maske(SEKI), iterations=6)
 ZR = np.where(_sk, ndimage.gaussian_filter(Z, 1.0), ZR)
 ZR[maske(SEKI)] = SEKI_KOT
-# otelin eski yeri (25 Kasım'dan beri otel kıyıda): eskisi gibi yola kapalı, Sahil Yolu ve yol ağı aynı kalsın
-ESKI_YER = geom_m(IMP["eski-yer"]["geometry"]) if "eski-yer" in IMP else None
-YASAK_TEMEL = (D_KARA < 22) | maske(STAT, 6) | maske(OTEL, 8) | maske(SAHANLIK, 4) \
-    | (maske(ESKI_YER, 4) if ESKI_YER is not None else False)
+YASAK_TEMEL = (D_KARA < 22) | maske(STAT, 6) | maske(OTEL, 8) | maske(SAHANLIK_TUM, 4)
 # yan yamaç cezası: yol dik yamaca oturursa büyük kazı / dolgu ister; aramada pahalıdır
 _yan = ndimage.maximum_filter(np.hypot(*np.gradient(ndimage.gaussian_filter(Z, 1.0), H)), size=3)
 YAN_CEZA = 1.0 + 6.0 * np.clip(_yan - 0.18, 0, None) + 3.0 * np.clip((40.0 - D_KARA) / 18.0, 0, 1)
@@ -774,8 +774,7 @@ for yid in KOY_KIYI:
     duraklar = [d_ for d_ in duraklar if min(abs(d_[0] - s), kiyi.length - abs(d_[0] - s)) > 650]
     duraklar.append((s, q))
 duraklar.sort()
-# otelin eski yerinin ortası (esnek alanın merkezi; 25 Kasım'dan beri otel aşağıda, kıyıda): Sahil Yolu eskisi gibi
-_imp = Point(IMP_ALAN.centroid)
+_imp = Point(OTEL.centroid)
 carpan_sahil = np.where(D_KARA > 160, 1 + ((D_KARA - 160) / 140) ** 2,
                         np.where(D_KARA < 70, 1 + ((70 - D_KARA) / 20) ** 2, 1.0))
 carpan_sahil = carpan_sahil * np.where(np.hypot(GX - _imp.x, GY - _imp.y) < 230, 4.0, 1.0)
@@ -1803,17 +1802,13 @@ print("The Imperial ...")
 # Otel Yolu: sahanlığın kara yanındaki kenarından ağa (≤ %10)
 isk = YERLESIM["yerlesim_iskele"]["xy"]
 kenar = SAHANLIK.exterior
-# 25 Kasım: otel kıyıda; yol sahanlığın kara yanından (arkadan) çıkar: kenarın kıyıdan en az 60 m içerideki kesiminde
-# İskele'ye en yakın nokta
-_kn_ = [kenar.interpolate(t) for t in np.arange(0, kenar.length, 2.0)]
-_kn_ = [q for q in _kn_ if float(ornek(D_KARA, np.array([q.x]), np.array([q.y]))[0]) >= 60.0] or _kn_
-s_bas = min(_kn_, key=lambda q: q.distance(Point(isk)))
+s_bas = kenar.interpolate(kenar.project(Point(isk)))
 yasak_otel = (D_KARA < 15) | maske(STAT, 6) | maske(OTEL, 6)
 otel = baglanti((s_bas.x, s_bas.y), ag_maske(turler={"ana", "ara", "sokak"}) & ~maske(IMP_ALAN.buffer(-60)),
                 "ara", "Otel Yolu", yasak=yasak_otel, pay=900, ters=True, cikmaz=(False, False))
-# Sahil Merdiveni: The Imperial modelinin taş merdiveninin üstünden (sahanlıktan kum cebine; 25 Kasım). Merdivenin
-# kendisi modelde; zemin modelin altında kaldığı için çizgi görünmez, yalnız adı ve vikisi için
-ekle(MERDIVEN, "merdiven", "Sahil Merdiveni", cikmaz=(False, True))
+# Sahil Merdiveni: otelin önündeki terastan kayalık yardan dip terasa zikzak (25 Kasım; zemin üreteci çizer). 3,5 m en
+# (DENEME): uzaktan da taş merdiven olarak okunsun
+ekle(MERDIVEN, "merdiven", "Sahil Merdiveni", cikmaz=(False, True), genislik=3.5)
 
 # ================================================================== 5. patikalar ve tarla yolları
 print("Patika ve tarla yolları ...")
@@ -1867,7 +1862,7 @@ def bilesenler():
         for j_ in agac.query(g, predicate="dwithin", distance=0.5):
             ata[bul(i_)] = bul(int(j_))
     # sahanlık bir kavşak sayılır: içinde biten yollar birbirine bağlı
-    ic = [i_ for i_, g in enumerate(geoms) if SAHANLIK.buffer(3).intersects(g)]
+    ic = [i_ for i_, g in enumerate(geoms) if SAHANLIK_TUM.buffer(3).intersects(g)]
     for a_ in ic[1:]:
         ata[bul(a_)] = bul(ic[0])
     return [bul(i_) for i_ in range(len(geoms))]
@@ -1893,7 +1888,7 @@ for _tur in range(6):
 print("Yol yatağı ...")
 SIRA = {k: i for i, k in enumerate(KADEMELER)}
 YOLLAR.sort(key=lambda y: (SIRA[y["tur"]], 0 if y["ad"] else 1, -y["geom"].length))
-SAHIP = maske(SAHANLIK, 2) | maske(SEKI) | maske(MEYDAN)   # bunlara dokunulmaz
+SAHIP = maske(SAHANLIK_TUM, 2) | maske(SEKI) | maske(MEYDAN)   # bunlara dokunulmaz
 CEKIRDEK = {"ana": 9.0, "ara": 8.0, "sokak": 7.0, "gecit": 5.0, "toprak": 7.0}
 KENAR = {"ana": 26.0, "ara": 24.0, "sokak": 20.0, "gecit": 14.0, "toprak": 16.0}
 KENAR_EN_COK = 60.0

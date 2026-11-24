@@ -76,16 +76,6 @@ def main():
     imp_f = [f for f in geo["features"] if f["properties"]["katman"] == "imperial"
              and f["properties"]["tur"] == "alan"]
     imp = _alan(imp_f[0]) if imp_f else np.zeros(Z.shape, bool)
-    # The Imperial modelinin altı (25 Kasım): model kayalığını ve kum cebini kendi getirir; zemin onun altında,
-    # görünmez (yamaç denetimi ve kıyı sıçraması burada bilgi). Önü: sahanlığın kıyı yanındaki şerit (çimenin altı).
-    mdl_f = [f for f in geo["features"] if f["properties"]["katman"] == "imperial" and f["properties"]["tur"] == "model"]
-    model_alti = ndimage.binary_dilation(_alan(mdl_f[0]), iterations=1) if mdl_f else np.zeros(Z.shape, bool)
-    model_onu = np.zeros(Z.shape, bool)
-    if mdl_f:
-        mp = mdl_f[0]["properties"]
-        ox = (mp["baslangic"][0] - b["lng0"]) * b["mPerLng"]; oy = (mp["baslangic"][1] - b["lat0"]) * b["mPerLat"]
-        lz = (GX - ox) * mp["on"][0] + (GY - oy) * mp["on"][1]
-        model_onu = model_alti & (lz > 21.0 - 2 * h)        # sahanlığın önü (yerel z 21, modelden) ve iki hücre
     # Kıyı türü: her hücre için en yakın kıyı parçasının türü
     from scipy.spatial import cKDTree
     kn, kt = [], []
@@ -127,11 +117,8 @@ def main():
         f"{egim[dis].max():.1f}° (sınır {EGIM_SINIRI:.0f}°); 30°'yi geçen kara "
         f"{(egim[dis] > 30).mean() * 100:.2f} %")
     if imp.any():
-        yaz("En dik yamaç (The Imperial tepesi)", egim[kara & imp & ~model_alti].max() <= EGIM_SINIRI_IMPERIAL,
-            f"{egim[kara & imp & ~model_alti].max():.1f}° (sınır {EGIM_SINIRI_IMPERIAL:.0f}°; modelin altı hariç)")
-    if model_alti.any():
-        print(f"  [bilgi] The Imperial modelinin altında zemin görünmez: {int((kara & model_alti).sum())} hücre, "
-              f"en dik {egim[kara & model_alti].max():.1f}°")
+        yaz("En dik yamaç (The Imperial tepesi)", egim[kara & imp].max() <= EGIM_SINIRI_IMPERIAL,
+            f"{egim[kara & imp].max():.1f}° (sınır {EGIM_SINIRI_IMPERIAL:.0f}°)")
 
     yaz("Deniz seviyesinin altında kara hücresi", int((Z[kara] <= 0).sum()) == 0,
         f"{int((Z[kara] <= 0).sum())} hücre; en alçak kara {Z[kara].min():.1f} m")
@@ -170,7 +157,7 @@ def main():
     for dj, di in ((0, 1), (1, 0)):
         a, c = kara[:B - dj, :E - di], kara[dj:, di:]
         za, zc = Z[:B - dj, :E - di], Z[dj:, di:]
-        m = (a != c) & ~(elle[:B - dj, :E - di] | elle[dj:, di:]) & ~(model_alti[:B - dj, :E - di] | model_alti[dj:, di:])
+        m = (a != c) & ~(elle[:B - dj, :E - di] | elle[dj:, di:])
         fark = np.abs(za - zc)
         sn = tur_sinir[:B - dj, :E - di]
         im_ = imp[:B - dj, :E - di]
@@ -208,7 +195,7 @@ def main():
     for f in geo["features"]:
         p = f["properties"]
         if p["katman"] == "imperial" and p["tur"] in ("sahanlik", "dip-teras"):
-            m_ = ndimage.binary_erosion(_alan(f) & kara, iterations=1) & ~model_onu
+            m_ = ndimage.binary_erosion(_alan(f) & kara, iterations=1)
             yaz(f"Imperial {p['tur']} düz", float(np.ptp(Z[m_])) <= 0.5,
                 f"kot {p['kotM']} m, içinde fark {np.ptp(Z[m_]):.2f} m")
 

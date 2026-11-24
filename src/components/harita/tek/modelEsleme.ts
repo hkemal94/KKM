@@ -1,3 +1,4 @@
+import type { KaideAyari } from '../modelHazirla';
 /**
  * Tek harita: veride modeli olmayan (`dosya: null`) yapılara kodda bağlanan model
  * (6b, 22 Kasım). Veri dosyası (`duzada-yapilar.geojson`) değişmez; yapının
@@ -31,12 +32,12 @@ export const YAMAC_MODELLERI = new Set([
 ]);
 
 /**
- * Kendi kıyısıyla gelen model (25 Kasım, Kemal: Oyunlar'daki "Otel kalıbı" haritaya): The Imperial
- * kayalık yamacı, zikzak taş merdiveni, dipteki kum cebi, taş terası ve ahşap iskelesiyle bir bütün.
- * Haritada bütün parçaları çizilir (zemin altı kuralı uygulanmaz); yalnız modelin kendi denizi
- * (`deniz`) atılır, deniz haritanınki. Yeri ve kotu veride (`modelBaslangic`, `modelKot`):
- * modelin başlangıç noktası oraya, ölçeksiz oturur (`yapiKatmani.ts` → `modelMatrisi`).
+ * Kaidesiz çizilen model (25 Kasım, Kemal: Oyunlar'daki "Otel kalıbı" haritaya; "20 m yükseklikte bu tipte olmalıydı"):
+ * The Imperial modelinin yalnız sahanlık üstü (bina, avlu) çizilir. Modelin kendi kayalık kaidesi, kumu, merdiveni,
+ * iskelesi ve denizi (sahanlığın 0,5 m altında kalan bütün üçgenler) ve çimeni atılır: önündeki yamaç, merdiven, teras
+ * ve iskele adanın kendi zemini ve yapıları. Yeri ve kotu veride (`modelBaslangic`, `modelKot`): modelin başlangıç
+ * noktası oraya, ölçeksiz oturur (`yapiKatmani.ts` → `modelMatrisi`).
  */
-export const KENDI_KIYILI: Record<string, ReadonlySet<string>> = {
-  'binalar/the-imperial-kemskoy.glb': new Set(['deniz'])
+export const KAIDESIZ: Record<string, KaideAyari> = {
+  'binalar/the-imperial-kemskoy.glb': { atla: new Set(['deniz', 'cimen']), altSinir: -0.5 }
 };

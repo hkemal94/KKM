@@ -147,7 +147,7 @@ def main():
         eski = float(z.ham_rakim(hx, hz).min())
         yamac = dosya in YAMAC_MODELLERI
         yeni = eski if yamac else max(dort, dmax - GOMME_SINIRI)
-        if isinstance(p.get("modelKot"), (int, float)):     # kendi kıyısıyla gelen model (The Imperial, 25 Kasım)
+        if isinstance(p.get("modelKot"), (int, float)):     # kaidesiz model (The Imperial, 25 Kasım)
             yamac, yeni = True, float(p["modelKot"])
         kaide = 0.0 if yamac else max(0.0, yeni - dmin)
         satirlar.append(dict(id=p["id"], ad=p.get("ad"), tur=p.get("tur"), mahalle=p.get("mahalle"), dosya=dosya,
