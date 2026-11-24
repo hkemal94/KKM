@@ -1,3 +1,4 @@
+import { gercekYerMi } from '../../lib/vikipediKaynagi';
 import { Item, ItemType } from '../../types';
 import { ESKI_ALAN_ADLARI } from './kunyeSorulari';
 import { semaAlanlari, takmaAdlar } from '../../lib/alanSablonu';
@@ -162,7 +163,7 @@ function readPath(item: Item, path: string): unknown {
  * yalnız Türkçe ek farkına izin verir ("Yer" ~ "Yeri", "Tür" ~ "Türü");
  * "Kat" "Kategori"yi, "Kuruluş" "Kuruluş amacı"nı tutmaz.
  */
-function basliklarEslesir(a: string, b: string): boolean {
+export function basliklarEslesir(a: string, b: string): boolean {
   const x = a.toLocaleLowerCase('tr').trim().split(/\s+/);
   const y = b.toLocaleLowerCase('tr').trim().split(/\s+/);
   if (x.length !== y.length) return false;
@@ -285,6 +286,18 @@ export function renkKodlari(metin: string): string[] {
 }
 
 /**
+ * Doluluk gerçeği göstersin (24 Kasım, Kemal: viki madde standardı): "Bilinmiyor"
+ * yazılmış alan dolu sayılmaz.
+ */
+export const kunyeDolu = (v: string): boolean => !!v.trim() && !/^\s*bilinmiyor\W*$/i.test(v);
+
+/**
+ * Boş kalınca eksik sayılmayan alan (24 Kasım, Kemal): gerçek dünya yerinin
+ * (Küçükkuyu, Assos…) Düzada'da mahallesi yoktur; Mahalle alanı boş kalır.
+ */
+export const eksikSayilmaz = (item: Item, alanId: string): boolean => alanId === 'region' && gercekYerMi(item);
+
+/**
  * Künyenin ne kadarının dolu olduğu — yönetim yüzündeki olgunluk göstergesi.
  * Yalnızca şema alanları sayılır; ayrıştırmadan gelen ek alanlar bonusdur.
  */
@@ -298,8 +311,8 @@ export function kunyeCompleteness(item: Item): { filled: number; total: number; 
       .map(f => f.id)
   );
 
-  const all = getKunyeFields(item, { includeEmpty: true }).filter(f => schemaIds.has(f.id));
-  const filled = all.filter(f => f.value.length > 0).length;
+  const all = getKunyeFields(item, { includeEmpty: true }).filter(f => schemaIds.has(f.id) && !eksikSayilmaz(item, f.id));
+  const filled = all.filter(f => kunyeDolu(f.value)).length;
   const total = all.length;
   return { filled, total, pct: total === 0 ? 0 : Math.round((filled / total) * 100) };
 }

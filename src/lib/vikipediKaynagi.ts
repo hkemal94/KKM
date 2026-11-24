@@ -14,8 +14,23 @@ import type { Item } from '../types';
 
 export const WIKIPEDIA_KAYNAGI = 'wikipedia';
 
-/** Madde Wikipedia'dan diye işaretli mi */
-export const wikipediadanMi = (item: Item): boolean => item.metadata?.kaynak === WIKIPEDIA_KAYNAGI;
+/**
+ * Gerçek yer (24 Kasım, Kemal: viki madde standardı). "Wikipedia'dan" işaretinin
+ * yerine geçer: `metadata.kaynak = 'gercek'`, isteğe bağlı `metadata.kaynakAdi`
+ * (rozetin ipucunda görünür, ör. "Vikipedi: Küçükkuyu") ve `metadata.kaynakUrl`.
+ * Başlığın yanında "Gerçek yer" rozeti çıkar, tıklanınca kaynak yeni sekmede açılır.
+ * Eski `'wikipedia'` işaretli madde de gerçek yer sayılır. İşareti Kemal madde
+ * düzenleyicisinde koyar ya da ajansın `gercekYer` kararını uygular.
+ */
+export const GERCEK_YER = 'gercek';
+
+/** Madde gerçek dünya yeri diye işaretli mi (eski "Wikipedia'dan" işareti dahil) */
+export const gercekYerMi = (item: Item): boolean =>
+  item.metadata?.kaynak === GERCEK_YER || item.metadata?.kaynak === WIKIPEDIA_KAYNAGI;
+
+/** Kaynağın adı ("Vikipedi: Küçükkuyu"); yoksa boş */
+export const kaynakAdi = (item: Item): string =>
+  (typeof item.metadata?.kaynakAdi === 'string' ? item.metadata.kaynakAdi.trim() : '');
 
 /** Kaynak bağlantısı; yalnız http(s) adresi geçerli sayılır, yoksa boş */
 export function kaynakAdresi(item: Item): string {
