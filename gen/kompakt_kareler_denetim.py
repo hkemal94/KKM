@@ -132,11 +132,12 @@ def main():
     yaz("arsa tam karelerden oluşur (kare çizgisine oturur, 1 m² pay)", tam_degil == 0, f"{tam_degil} arsa")
     yaz("arsa ölçüsü kare boyunun katı ve kare sayısıyla uyuşuyor", sayi == 0, f"{sayi} arsa")
     tablo = {t: {tuple(x) for x in v} for t, v in O["arsaKare"].items()}
-    # Liman'da sığ arsa da var (gen/kompakt_parseller.py → LIMAN_SIG, 22 Kasım)
+    # Liman'da (22 Kasım) ve İskele'de (24 Kasım) sığ arsa da var (gen/kompakt_parseller.py → LIMAN_SIG, SIG_YERLESIMLER)
     liman_t = {t: {tuple(x) for x in v} for t, v in O.get("limanArsaKare", {}).items()}
     disi = sum(1 for f in parsel.values() if (round(f["properties"]["cepheM"] / K), round(f["properties"]["derinlikM"] / K))
                not in tablo[f["properties"]["tur"]] | (liman_t.get(f["properties"]["tur"], set())
-                                                     if f["properties"].get("yerlesim") == "yerlesim_liman" else set()))
+                                                     if f["properties"].get("yerlesim") in O.get("sigArsaYerlesimleri", ["yerlesim_liman"])
+                                                     else set()))
     yaz("arsa ölçüsü tür tablosunda (DENEME)", disi == 0, f"{disi} arsa")
     # avlulu: aynı şeritte önünde ve arkasında en az 1 boş sütun
     yanyana = 0
@@ -154,7 +155,8 @@ def main():
     ic = prepared.prep(ada.buffer(-O["kiyiSeridiM"] + 0.5))
     yaz(f"kare kıyı şeridinin ({O['kiyiSeridiM']:.0f} m) içinde", all(ic.contains(g) for g in P),
         sum(1 for g in P if not ic.contains(g)))
-    kumsal = prepared.prep(unary_union([k.buffer(O["kiyiSeridiM"] + O["kumsalPayM"] - 0.5) for k in kum]))
+    import kompakt_iskele as IS   # İskele köyünün önünde şerit dar (24 Kasım)
+    kumsal = prepared.prep(IS.kumsal_seridi(kum, O["kiyiSeridiM"] - 0.5, O["kumsalPayM"]))
     yaz("kumsal şeridinde kare yok", not any(kumsal.intersects(g) for g in P), sum(1 for g in P if kumsal.intersects(g)))
     serit = [transform(mt, shape(f["geometry"])).buffer(f["properties"]["genislik"] / 2,
                                                        cap_style=2 if f["properties"]["kademe"] != "patika" else 1)

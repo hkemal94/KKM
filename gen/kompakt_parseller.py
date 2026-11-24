@@ -61,8 +61,10 @@ ARSA = {   # DENEME
     "buyuk": [(4, 4), (3, 4), (3, 3)],                     # 32 x 32 m ya da 24 x 32 m
 }
 # Liman eski sokaklarıyla (Kemal, 22 Kasım; 0,70 ile küçülünce sokak araları ~35 m): yolun iki yanından gelen kareler
-# ortada buluşur, 3 kare derin arsa sığmaz. Yalnız Liman'da 2 kare derin (16 m) avlulu arsa da denenir. DENEME.
+# ortada buluşur, 3 kare derin arsa sığmaz. Liman'da (ve 24 Kasım'dan beri İskele'de) 2 kare derin (16 m) avlulu arsa da denenir. DENEME.
 LIMAN_SIG = {"avlulu": [(3, 2), (2, 2)]}
+# İskele de eski sokaklarıyla (Kemal, 24 Kasım): eski ızgaranın sokak araları 0,70'te ~25–35 m; aynı sığ arsa orada da
+SIG_YERLESIMLER = ("yerlesim_liman", "yerlesim_iskele")
 BUYUK_UC_ORANI = 0.5    # DENEME: büyük arsaların bu kadarı 3 kare cepheyle başlar (çeşitlilik; kararlı)
 ARA_KARE = {"bitisik": 0, "avlulu": 1, "buyuk": 0}   # DENEME: aynı sırada arsadan sonra boş kalan kare; avlulu en az 1 (≈ 8 m)
 KALDIRIM = 1.0          # DENEME: yol kenarı ile ilk sıra karenin önü arası (m)
@@ -137,7 +139,9 @@ SERIT_AGAC = STRtree(YOL_SERIT)
 
 # ------------------------------------------------------------------ yasak alanlar
 _kiyi_bant = ADA.exterior.buffer(KIYI_SERIDI)
-_kumsal = unary_union([k.buffer(KIYI_SERIDI + KUMSAL_PAY) for k in KUM]) if KUM else Polygon()
+# İskele köyünün önünde kumsal şeridi dar (Kemal, 24 Kasım: "boş ada kalmasın"; gen/kompakt_iskele.py → kumsal_seridi)
+import kompakt_iskele as IS  # noqa: E402
+_kumsal = IS.kumsal_seridi(KUM, KIYI_SERIDI, KUMSAL_PAY)
 _korunan = unary_union([g.buffer(KORUNAN_PAY) for g in KORUNAN.values()] + [g.buffer(KORUNAN_PAY) for g in IMP]
                        + [g.buffer(KORUNAN_PAY) for _, g in MEYDANCIK] + KOPRU)
 YASAK = unary_union([_kiyi_bant, _kumsal, _korunan])
@@ -224,10 +228,10 @@ def sade_indis(p, tol):
     return np.flatnonzero(tut)
 
 
-# Sahil Yolu (Kemal, 22 Kasım: Liman eski sokaklarıyla gelince öbür köylerin arsaları yeniden dizilmesin): yolun Liman
-# dışındaki noktaları ana daldakiyle aynıdır (gen/kompakt-sahil-ana.json, gen/kompakt_yollar.py); orada kesimler ana
+# Sahil Yolu (Kemal, 22 Kasım: Liman eski sokaklarıyla gelince öbür köylerin arsaları yeniden dizilmesin): yolun değişen
+# kesimi dışındaki noktaları ana daldakiyle aynıdır (gen/kompakt-sahil-ana.json, gen/kompakt_yollar.py); orada kesimler ana
 # daldaki sadeleştirmenin köşeleriyle, ana daldaki sırasıyla ve yol başından ana daldaki uzaklıkla kurulur. Yalnız
-# değişen Liman kesimi kendi içinde sadeleşir.
+# değişen kesim (22 Kasım Liman, 24 Kasım İskele; Liman'ın hâli artık dosyada) kendi içinde sadeleşir.
 SAHIL_ANA = json.load(open(os.path.join(BURASI, "kompakt-sahil-ana.json"), encoding="utf-8"))
 for y in YOLLISTE:
     if y["id"] != SAHIL_ANA["id"]:
@@ -261,7 +265,7 @@ for y in YOLLISTE:
             no.append(100000 + k_); sira.append(ka.index(a_) + (k_ + 1) / 1000.0)
     y["kesimNo"], y["kesimSira"], y["anaKesim"] = no, sira, {k_ for k_, n_ in enumerate(no) if n_ < 100000}
     y["anaCizgi"] = LineString(pa)
-    print(f"Sahil Yolu: Liman dışında {len(y['anaKesim'])} kesim ana daldakiyle aynı, Liman kesiminde "
+    print(f"Sahil Yolu: değişen kesim dışında {len(y['anaKesim'])} kesim ana daldakiyle aynı, değişen kesimde "
           f"{len(no) - len(y['anaKesim'])} kesim yeni")
 
 
@@ -438,7 +442,7 @@ for sr in sorted(SERITLER, key=lambda sr: (oncelik[sr["y"]["id"]], sr["taraf"], 
         olcu = ARSA[tur]
         if tur == "buyuk" and rng.random() < BUYUK_UC_ORANI:
             olcu = olcu[1:]
-        if st["yerlesim"] == "yerlesim_liman":
+        if st["yerlesim"] in SIG_YERLESIMLER:
             olcu = olcu + LIMAN_SIG.get(tur, [])
         sonuc, neden = None, "sigmadi"
         for w, d in olcu:
@@ -494,13 +498,14 @@ ALANLAR = {
 OLCULER = {"not": "Hepsi DENEME (Kemal onaylamadı)", "kareM": KARE, "derinlikKare": DERINLIK_KARE,
            "sadelestirmeM": SADELESTIRME,
            "arsaKare": {t: [list(x) for x in v] for t, v in ARSA.items()},
-           "limanArsaKare": {t: [list(x) for x in v] for t, v in LIMAN_SIG.items()},   # yalnız Liman'da ek (sığ) arsa
+           "limanArsaKare": {t: [list(x) for x in v] for t, v in LIMAN_SIG.items()},   # yalnız Liman'da ve İskele'de ek (sığ) arsa
+           "sigArsaYerlesimleri": list(SIG_YERLESIMLER),
            # eski denetimle uyum: tür ve kademeye göre en büyük ölçü (m)
            "olcu": {t: {k: {"cepheM": max(w for w, _ in ARSA[t]) * KARE, "derinlikM": max(d for _, d in ARSA[t]) * KARE}
                         for k in TUR_KADEME[t]} for t in ARSA},
            "cepheOynama": {t: 0.0 for t in ARSA}, "araKare": ARA_KARE, "buyukUcOrani": BUYUK_UC_ORANI,
            "kaldirimM": KALDIRIM, "kosePayM": KOSE_PAY,
-           "egimSiniri": EGIM_SINIRI, "kiyiSeridiM": KIYI_SERIDI, "kumsalPayM": KUMSAL_PAY,
+           "egimSiniri": EGIM_SINIRI, "kiyiSeridiM": KIYI_SERIDI, "kumsalPayM": KUMSAL_PAY, "iskeleKumsalPayM": IS.ISKELE_KUMSAL_PAY,
            "yerlesimKusagiM": YERLESIM_KUSAGI, "yerlesimCarpan": YERLESIM_CARPAN,
            "bitisikMeydanM": BITISIK_MEYDAN, "bitisikMeydancikM": BITISIK_MEYDANCIK}
 ozellik = []
