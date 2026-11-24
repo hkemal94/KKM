@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { BookOpen, Feather, Image as GorselSimgesi, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, Pencil, X } from 'lucide-react';
+import { BookOpen, Feather, Globe2, Image as GorselSimgesi, ImageOff, Map as HaritaSimgesi, Maximize2, Minimize2, Mountain, Pencil, X } from 'lucide-react';
 import type { Item } from '../../types';
 import { ESLEME, kisaGiris } from '../../lib/yasayanHarita';
 import { maddeGorseli } from '../../lib/maddeGorseli';
@@ -18,6 +18,7 @@ import { uzakModelleriOku } from './tek/uzakModeller';
 import { LimanModelleri } from './tek/limanModelleri';
 import { AgacKatmani, agaclariOku } from './tek/agacKatmani';
 import { BahceKatmani } from './tek/bahceKatmani';
+import { EgeKatmani, type CevreEtiketi } from './tek/egeKatmani';
 import { TaslakKatmani } from './tek/duzenle/taslakKatmani';
 import { birlestir, GIZLI_HUCRE, verininKucukleri, type Birlesik, type Kucuk } from './tek/duzenle/birlesik';
 import { bosTaslak } from './tek/duzenle/taslak';
@@ -49,6 +50,10 @@ const DuzenleModu = lazy(() => import('./tek/duzenle/DuzenleModu'));
  * - Oturanlar (23 Kasım, 11. adım): evinde oturan olan eve dokununca kart açılır; "Oturanlar" kişilerin
  *   maddesindeki ev bağından okunur (`lib/oturanGocu.ts`, Eksikler'deki tek seferlik taşımayla gelir).
  *
+ * - Ege'de (24 Kasım, Kemal: "Ege'deki konum geri gelsin"): uzaklaşınca eski haritanın çevresi görünür
+ *   (komşu kıyılar, kumsal şeridi, sığlıklar, gerçek yer adları; `tek/egeKatmani.ts`). "Ege'de" düğmesi
+ *   adayı anakara, Küçükkuyu, Bozcaada ve Edremit Körfezi ile birlikte gösterir.
+ *
  * Görünüm kısmı yalnız okur: harita kaydına ve Kurucu taslağına hiçbir şey yazılmaz;
  * Kurucu kayıtları da okunmaz. Viki maddeleri yalnız kart için okunur. Düzenle modunun
  * taslağı ayrı bir belgede (`duzada/tekHaritaTaslak`), yalnız Kemal düzenledikçe yazılır.
@@ -70,6 +75,13 @@ type Olcum = { yuklemeMs: number; mb: number; ucgen: number; modelli: number; fp
 
 const HAFIF_ANAHTARI = 'kems_tek_harita_hafif';
 const EGIM_3B = THREE.MathUtils.degToRad(52);
+/** "Ege'de" görünümü daha dik bakar (eski 2B haritaya yakın) */
+const EGIM_EGE = THREE.MathUtils.degToRad(32);
+/** "Ege'de" görünümünün içine aldığı yer adları (ada ile birlikte) */
+const EGE_CERCEVESI = ['Küçükkuyu Limanı', 'Bozcaada', 'Edremit Körfezi', 'Babakale'];
+/** Komşu kıyıların adları bu uzaklıktan sonra, Düzada'nın adı daha uzakta (mahalle adlarının yerine) */
+const CEVRE_ADI_UZAKLIGI = 9000;
+const ADA_ADI_UZAKLIGI = 22000;
 
 /** Telefon mu (dokunmatik ve dar ekran): hafif mod buna göre açılır */
 const telefonMu = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900;
@@ -77,6 +89,8 @@ const telefonMu = () => typeof window !== 'undefined' && window.matchMedia('(poi
 export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslakDeposu, duzenleIlk, seciliIlk }) => {
   const kap = useRef<HTMLDivElement>(null);
   const etiketKabi = useRef<HTMLDivElement>(null);
+  const cevreKabi = useRef<HTMLDivElement>(null);
+  const [cevreEtiketleri, setCevreEtiketleri] = useState<CevreEtiketi[]>([]);
   const [hata, setHata] = useState('');
   const [hazir, setHazir] = useState(false);
   // Açılış hızı (Durum → Boyut ve hız): Harita'ya girişten haritanın çizilmesine
@@ -87,6 +101,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
     return telefonMu();
   });
   const [tamEkran, setTamEkran] = useState(false);
+  const [egeHazir, setEgeHazir] = useState(false);
   const [secili, setSecili] = useState<string | null>(seciliIlk ?? null);
   const [olcum, setOlcum] = useState<Olcum>({ yuklemeMs: 0, mb: 0, ucgen: 0, modelli: 0, fps: 0 });
   const [etiketler, setEtiketler] = useState<Etiket[]>([]);
@@ -98,7 +113,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
   duzenleRef.current = duzenle;
 
   // Sahneye dışarıdan erişim (düğmeler): kurulunca dolar
-  const sahneRef = useRef<{ tepeden: (a: boolean) => void; hafif: (a: boolean) => void; adaya: () => void; yapiyaUc: (y: Yapi) => void } | null>(null);
+  const sahneRef = useRef<{ tepeden: (a: boolean) => void; hafif: (a: boolean) => void; adaya: () => void; egeye: () => void; yapiyaUc: (y: Yapi) => void } | null>(null);
   // Telefonda kartın görseli dokununca açılır (21 Kasım, Kemal)
   const [gorselAcik, setGorselAcik] = useState(false);
   const [mahalleAdlari, setMahalleAdlari] = useState<Map<string, string>>(new Map());
@@ -148,7 +163,8 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
     kontrol.dampingFactor = 0.08;
     kontrol.screenSpacePanning = false;
     kontrol.minDistance = 25;
-    kontrol.maxDistance = 22000;
+    // Ege'de görünümü (24 Kasım): telefonda dikey ekranda Küçükkuyu da sığsın
+    kontrol.maxDistance = 260000;
     kontrol.maxPolarAngle = THREE.MathUtils.degToRad(80);
 
     sahne.add(new THREE.HemisphereLight('#F4F1EA', '#8a7a5c', 1.15));
@@ -160,10 +176,10 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
     sahne.add(gunes, gunes.target);
 
     // Deniz: saydam yüzey (sığ dip görünür) ve altında koyu düzlem
-    const denizYuzu = new THREE.Mesh(new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2),
+    const denizYuzu = new THREE.Mesh(new THREE.PlaneGeometry(900000, 900000).rotateX(-Math.PI / 2),
       new THREE.MeshLambertMaterial({ color: '#5C9DBE', transparent: true, opacity: 0.72, depthWrite: false }));
     denizYuzu.renderOrder = 10;
-    const denizDibi = new THREE.Mesh(new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#3B7BA3' }));
+    const denizDibi = new THREE.Mesh(new THREE.PlaneGeometry(900000, 900000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#3B7BA3' }));
     denizDibi.position.y = -30;
     sahne.add(denizDibi, denizYuzu);
 
@@ -172,6 +188,8 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
     let zemin: ZeminKatmani | null = null, yol: YolKatmani | null = null, yapi: YapiKatmani | null = null, sinir: SinirKatmani | null = null;
     let liman: LimanModelleri | null = null;
     let bahce: BahceKatmani | null = null;
+    let ege: EgeKatmani | null = null;
+    let cevreListesi: CevreEtiketi[] = [];
     let elle: TaslakKatmani | null = null;
     let uzakVeri: Awaited<ReturnType<typeof uzakModelleriOku>> = null;
     let temel: { yapilar: Yapi[]; yollar: Koleksiyon; yapiVerisi: Koleksiyon; sinirlar: Koleksiyon; kucukler: Kucuk[] } | null = null;
@@ -185,10 +203,12 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
     const derinlikAyari = () => {
       const u = kamera.position.distanceTo(kontrol.target);
       kamera.near = THREE.MathUtils.clamp(u / 400, 1, 40);
-      kamera.far = u + 40000;
+      kamera.far = u * 3 + 40000;
       kamera.updateProjectionMatrix();
-      sis.near = u * 1.6;
-      sis.far = u * 1.6 + Math.max(9000, u * 3);
+      // Uzaklaştıkça (Ege'de) sis yaklaşır: çevre verisinin kenarı ufukta görünmesin
+      const f = THREE.MathUtils.clamp((u - 20000) / 40000, 0, 1);
+      sis.near = u * (1.6 - 0.5 * f);
+      sis.far = sis.near + Math.max(9000, u * (3 - 1.6 * f));
     };
     const golgeAcik = () => !hafifRef.current && kamera.position.distanceTo(kontrol.target) < 2600;
     const golgeAyari = () => {
@@ -213,9 +233,16 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       liman?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
     };
     const kayma = new THREE.Vector3();
+    const genisAlt = new THREE.Vector3(), genisUst = new THREE.Vector3();
+    const egeAlt = new THREE.Vector3(), egeUst = new THREE.Vector3();
     kontrol.addEventListener('change', () => {
       if (zv) {
-        kayma.copy(kontrol.target).clamp(sinirAlt, sinirUst).sub(kontrol.target);
+        // Uzaklaştıkça kamera adanın dışına da kayabilir (Ege'de görünümü); komşu kıyıların ötesine geçmez
+        const pay = Math.max(0, kamera.position.distanceTo(kontrol.target) - 12000) * 1.2;
+        genisAlt.set(sinirAlt.x - pay, sinirAlt.y, sinirAlt.z - pay);
+        genisUst.set(sinirUst.x + pay, sinirUst.y, sinirUst.z + pay);
+        if (ege) { genisAlt.max(egeAlt); genisUst.min(egeUst); genisAlt.min(sinirAlt); genisUst.max(sinirUst); }
+        kayma.copy(kontrol.target).clamp(genisAlt, genisUst).sub(kontrol.target);
         // Hedef zeminde dursun (tepede yakınlaşınca kamera yamaca girmesin)
         kayma.y = Math.max(0, rakim(zv, kontrol.target.x, kontrol.target.z)) - kontrol.target.y;
         if (kayma.lengthSq() > 0.25) { kontrol.target.add(kayma); kamera.position.add(kayma); }
@@ -224,6 +251,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       }
       derinlikAyari();
       golgeAyari();
+      ege?.guncelle(kamera.position.distanceTo(kontrol.target));
       if (bekleme) clearTimeout(bekleme);
       bekleme = setTimeout(guncelle, 120);
     });
@@ -240,12 +268,27 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
     };
     let adaMerkezi = new THREE.Vector3(), adaUzakligi = 12000;
     const adaya = () => bak(adaMerkezi.x, adaMerkezi.z, adaUzakligi, tepedenMi ? 0.0001 : EGIM_3B);
+    // Ege'de: ada ve çevresindeki yer adları (Küçükkuyu, Bozcaada, Edremit Körfezi, Babakale) birlikte
+    // ekrana sığar; kamera oraya yumuşakça uçar. Bakış kuzeye döner, eğim daha dik.
+    const egeye = () => {
+      if (!ege) return;
+      const xs = [sinirAlt.x, sinirUst.x], zs = [sinirAlt.z, sinirUst.z];
+      for (const e of cevreListesi) if (EGE_CERCEVESI.includes(e.ad)) { xs.push(e.x); zs.push(e.z); }
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs);
+      const egim = tepedenMi ? 0.0001 : EGIM_EGE;
+      const dy = THREE.MathUtils.degToRad(kamera.fov / 2), dx = Math.atan(Math.tan(dy) * kamera.aspect);
+      // Kenarda yazılara pay: genişlikte %45 (Küçükkuyu Limanı'nın yazısı sağa uzanır), derinlikte %35
+      const u = Math.min(kontrol.maxDistance, Math.max(((z1 - z0) * 1.35 / 2) / Math.tan(dy) * Math.cos(egim * 0.6), ((x1 - x0) * 1.45 / 2) / Math.tan(dx)));
+      const t1 = new THREE.Vector3((x0 + x1) / 2, 0, (z0 + z1) / 2);
+      const p1 = t1.clone().add(new THREE.Vector3(0, u * Math.cos(egim), u * Math.sin(egim)));
+      ucus = { bas: performance.now(), t0: kontrol.target.clone(), t1, p0: kamera.position.clone(), p1, sure: 1600 };
+    };
 
     // Tepeden bakış: eğim kilitlenir, tek parmak kaydırır
     let tepedenMi = false;
     let gecis: { bas: number; e0: number; e1: number } | null = null;
     // Yapıya uçuş: hedef ve kamera birlikte kayar, bakış yönü korunur
-    let ucus: { bas: number; t0: THREE.Vector3; t1: THREE.Vector3; p0: THREE.Vector3; p1: THREE.Vector3 } | null = null;
+    let ucus: { bas: number; t0: THREE.Vector3; t1: THREE.Vector3; p0: THREE.Vector3; p1: THREE.Vector3; sure?: number } | null = null;
     const yapiyaUc = (y: Yapi) => {
       const t1 = new THREE.Vector3(y.merkez[0], Math.max(0, y.kot), y.merkez[1]);
       const fark = kamera.position.clone().sub(kontrol.target);
@@ -430,6 +473,18 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
           sahne.add(agac.grup);
           guncelle();
         }).catch(e => { if (!(e instanceof DOMException && e.name === 'AbortError')) console.warn('[tek harita] ağaçlar inmedi', e); });
+        // Adanın Ege'deki yeri (24 Kasım) ayrı iner; inmezse yalnız "Ege'de" düğmesi kapalı kalır
+        geoOku('ege-cevresi.json', durdur.signal).then(v => {
+          if (kapandi) return;
+          ege = new EgeKatmani(z.b, v);
+          egeAlt.set(ege.alt.x, 0, -ege.ust.y);
+          egeUst.set(ege.ust.x, 800, -ege.alt.y);
+          ege.guncelle(kamera.position.distanceTo(kontrol.target));
+          sahne.add(ege.grup);
+          cevreListesi = [...ege.etiketler, { ad: 'Düzada', tur: 'duzada', x: adaMerkezi.x, z: adaMerkezi.z }];
+          setCevreEtiketleri(cevreListesi);
+          setEgeHazir(true);
+        }).catch(e => { if (!(e instanceof DOMException && e.name === 'AbortError')) console.warn('[tek harita] Ege çevresi inmedi', e); });
         setOlcum(o => ({ ...o, yuklemeMs: performance.now() - basla, mb: indirme.bayt / 1e6 }));
         setHazir(true);
       })
@@ -442,6 +497,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       tepeden: tepedenAyarla,
       hafif: (a: boolean) => { hafifRef.current = a; renderer.setPixelRatio(pikselOrani()); golgeAyari(); guncelle(); },
       adaya,
+      egeye,
       yapiyaUc
     };
 
@@ -463,7 +519,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       adaylar.length = 0;
       for (let n = 0; n < etiketListesi.length && n < ogeler.length; n++) {
         const e = etiketListesi[n];
-        const goster = e.tur === 'mahalle' ? u > 1400 : e.tur === 'zirve' ? u > 900 && u < 16000
+        const goster = e.tur === 'mahalle' ? u > 1400 && u < ADA_ADI_UZAKLIGI : e.tur === 'zirve' ? u > 900 && u < 16000
           : u < 3000 && Math.hypot(e.x - kontrol.target.x, e.z - kontrol.target.z) < Math.max(700, u * 0.9);
         v.set(e.x, e.y, e.z).project(kamera);
         if (!goster || v.z > 1 || v.x < -1.1 || v.x > 1.1 || v.y < -1.1 || v.y > 1.1) continue;
@@ -492,12 +548,30 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
         el.style.transform = `translate(${a.x}px, ${a.y}px) translate(-50%, -100%)`;
       }
       for (let n = 0; n < ogeler.length; n++) if (!acik.has(n)) (ogeler[n] as HTMLElement).style.display = 'none';
+      // Ege'deki gerçek yer adları ve Düzada'nın adı: yalnız uzakken (eski haritadaki gibi)
+      const cevre = cevreKabi.current?.children;
+      if (cevre) for (let n = 0; n < cevreListesi.length && n < cevre.length; n++) {
+        const e = cevreListesi[n], el = cevre[n] as HTMLElement;
+        v.set(e.x, 0, e.z).project(kamera);
+        const goster = u > (e.tur === 'duzada' ? ADA_ADI_UZAKLIGI : CEVRE_ADI_UZAKLIGI) && v.z <= 1 && v.x > -1.1 && v.x < 1.1 && v.y > -1.1 && v.y < 1.1;
+        el.style.display = goster ? '' : 'none';
+        if (!goster) continue;
+        const ex = ((v.x + 1) / 2) * w, ey = ((1 - v.y) / 2) * hh;
+        // Liman adı noktanın sağında; ekranın sağ kenarına taşarsa soluna geçer
+        let kay = '-50%';
+        if (e.tur === 'liman') {
+          const sola = ex + el.offsetWidth > w - 6;
+          el.style.flexDirection = sola ? 'row-reverse' : 'row';
+          kay = sola ? 'calc(-100% + 4px)' : '-4px';
+        }
+        el.style.transform = `translate(${ex}px, ${ey}px) translate(${kay}, -50%)`;
+      }
     };
 
     let kare = 0, son = performance.now();
     renderer.setAnimationLoop(() => {
       if (ucus) {
-        const t = Math.min(1, (performance.now() - ucus.bas) / 900);
+        const t = Math.min(1, (performance.now() - ucus.bas) / (ucus.sure ?? 900));
         const k = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
         kontrol.target.lerpVectors(ucus.t0, ucus.t1, k);
         kamera.position.lerpVectors(ucus.p0, ucus.p1, k);
@@ -557,7 +631,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       renderer.setAnimationLoop(null);
       kontrol.dispose();
       setApi(null);
-      agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose(); elle?.dispose(); bahce?.dispose();
+      ege?.dispose(); agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose(); elle?.dispose(); bahce?.dispose();
       denizYuzu.geometry.dispose(); denizDibi.geometry.dispose();
       sahne.clear();
       renderer.dispose();
@@ -604,6 +678,22 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
         ))}
       </div>
 
+      {/* Ege'deki yer adları (24 Kasım): eski haritanın yazıları; ada adları aralıklı, kıyı ve su eğik */}
+      <div ref={cevreKabi} lang="tr" className="absolute inset-0 pointer-events-none overflow-hidden">
+        {cevreEtiketleri.map(e => (
+          <span key={e.ad} style={{ display: 'none' }}
+            className={`absolute left-0 top-0 whitespace-nowrap select-none ${e.tur === 'duzada'
+              ? 'text-[13px] font-bold uppercase tracking-[0.22em] text-[#0E1C4F] [text-shadow:0_0_3px_#F3EFE8,0_0_6px_#F3EFE8]'
+              : e.tur === 'ada'
+                ? 'text-[11px] font-semibold uppercase tracking-[0.22em] text-[#F3EFE8] [text-shadow:0_1px_3px_rgba(14,28,79,0.85)]'
+                : e.tur === 'su'
+                  ? 'text-[12px] italic tracking-[0.3em] text-[#EBF4FA]/80'
+                  : `${e.tur === 'liman' ? 'inline-flex items-center gap-1 ' : ''}text-[11px] italic font-medium tracking-[0.08em] text-[#F3EFE8] [text-shadow:0_1px_2px_rgba(14,28,79,0.8)]`}`}>
+            {e.tur === 'liman' ? <><span className="not-italic text-[9px]">●</span><span>{e.ad}</span></> : e.ad}
+          </span>
+        ))}
+      </div>
+
       <div className="absolute left-3 right-3 top-3 flex flex-wrap items-start gap-1.5 pointer-events-none">
         <button type="button" onClick={tepedenDegistir} className={tepeden ? dolu : bos} aria-pressed={tepeden} title={tepeden ? '3B eğik bakışa dön' : 'Üstten bak (mahalle haritası)'}>
           {tepeden ? <Mountain className="w-3.5 h-3.5" /> : <HaritaSimgesi className="w-3.5 h-3.5" />} {tepeden ? '3B' : 'Tepeden'}
@@ -613,6 +703,10 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
         </button>
         <button type="button" onClick={() => sahneRef.current?.adaya()} className={bos} title="Bütün adayı göster">
           Bütün ada
+        </button>
+        <button type="button" onClick={() => sahneRef.current?.egeye()} className={bos} disabled={!egeHazir}
+          title="Adanın Ege'deki yeri: anakara, Küçükkuyu, Bozcaada ve Edremit Körfezi ile birlikte">
+          <Globe2 className="w-3.5 h-3.5" /> Ege'de
         </button>
         <button type="button" onClick={() => setTamEkran(t => !t)} className={bos} title={tamEkran ? 'Tam ekrandan çık (Esc)' : 'Tam ekran'}>
           {tamEkran ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
