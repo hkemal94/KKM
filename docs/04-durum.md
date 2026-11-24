@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 24 Kasım 2026 (aile sayfası: kuşak ağacı, monogram, eski fotoğraf); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 24 Kasım 2026 (aile maddesi "Albüm": kuşak bandı, kuşak ağacı, yan kartlar); önceki: 24 Kasım 2026 (ajansın kararlarına başlık değiştirme); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -9,18 +9,37 @@
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
 
-## 24 Kasım: aile sayfası, monogram, eski fotoğraf
+## 24 Kasım: aile maddesi "Albüm" (B1), monogram, eski fotoğraf
 
-Kemal'in 24 Kasım kararları. Yalnız ekran; kayda bir şey yazılmaz, görsel dosyası üretilmez.
+Kemal'in 24 Kasım kararları ("genel bir soy ağacı istiyorum; bunları aile maddelerinde kullanabilirsin"; B1 seçildi).
+Yalnız ekran; kayda bir şey yazılmaz, görsel dosyası üretilmez.
 
-- **Üyeler kuşak ağacında:** aile sayfasındaki "Üyeler" artık portreli kuşak ağacı: en eski kuşak üstte, eşler yan
-  yana (çift çizgi), çocuklar altta. Kutuda portre (yoksa yüzsüz silüet), ad, yıllar, meslek; "doğduğu aile" ve
-  "evlilikle" küçük etiket. Hesap soy ağacınınki (`lib/aileAgaci.ts`, `lib/soyAgaci.ts` → `diz`). Eski yazılı kutular kalktı.
-- **Aile monogramı yer tutucu:** ailenin görseli yokken başlığın yanında ve soy ağacındaki aile çerçevesinin başlığında
-  soyadının baş harfiyle monogram (5 Kasım Örnek A: daire, krem zemin, lacivert harf, küçük kiremit çizgi). Görsel
-  gelince gizlenir (silüet görsel sayılmaz).
-- **Eski fotoğraf:** Yaşam'da ölüm yılı ya da aralığı yazılı kişinin künyesinde portrenin yanında aynı görsel siyah-beyaz,
-  eski fotoğraf çerçevesinde. "1951–", "1950'ler başı–" gibi açık uçlu yaşam hayatta sayılır.
+- **Aile bandı:** aile maddesinin en üstünde üyeler kuşak kuşak, en eski solda: tam boy görseli (`/viki/tamboy-…`)
+  olan görseliyle, olmayan silüetle; hayatta olmayan eski fotoğraf çerçevesinde sepya. Altta onyıl şeridi.
+- **Başlık:** büyük monogram (ailenin görseli yokken; yalnız harf, ayraç içi atlanır), ad, "N kuşak", "N kişi", Mahalle.
+- **Kuşaklar:** metnin altında büyük kartlı kuşak ağacı (portre, ad, yıllar, rol); eşler yan yana çift çizgiyle,
+  çocuklar ortalı altta. Sütuna sığmayan ağaç biraz küçülür; telefonda kuşak kuşak girintili liste, eşler tek kutuda.
+  Yerleşim ve çizgiler `lib/soyAgaci.ts` → `agacDiz`, `agacCizgileri` (Görünümler → Soy ağacı da kullanacak).
+- **Başka aileler:** uzun çizgi yok; kartta kısa ok ("↗ Demir Ailesi"), basınca o aile açılır. Evlilikle gelen
+  "evlilikle geldi · doğumda X", buradan doğup soyadı değişen "doğumda Ercan"; onun çocuğu (torun) da ağaçta,
+  eşi girmez.
+- **Adsız kişi:** "[ad: Kemal]" hiç görünmez; yalnız soyadı, önünde soluk "—".
+- **Sağdaki kartlar:** Yaşadığı yer (ailenin Mahalle'si, yoksa üyelerin künyesinde en çok geçen; görseliyle),
+  Aile evi (üyelerin "Evi" alanından, en çok iki), Evlilikle gelenler, Bu aileden doğanlar (başka soyadıyla),
+  Üyelerin bağlı yerleri (kişilerin mekân, kulüp, marka bağları ve "Çalıştığı yer"). Bilgi yoksa kart çıkmaz.
+- **Eski fotoğraf:** Yaşam'da ölüm yılı ya da aralığı yazılı kişinin künyesinde portrenin yanında aynı görsel
+  siyah-beyaz, eski fotoğraf çerçevesinde. "1951–", "1950'ler başı–" gibi açık uçlu yaşam hayatta sayılır.
+- Rol: metinden yanlış ayrılmış, harfle başlamayan rol ("), Stadyum…") kartlarda gösterilmez.
+
+## 24 Kasım: ajansın kararlarına başlık değiştirme
+
+Kemal (24 Kasım): "Feriha (Ercan)" maddesinin başlığı "Feriha Yıldız" olsun; ajansın başlık değiştiren karar türü
+yoktu. Yeni tür `baslikDegistir` (`lib/baslikKarari.ts`, saf iş ve `npm test` denemesi): madde kimliği ya da
+başlığı, `eski` bugünkü başlık birebir, `yeni`. Başlık zaten yeniyse yapılmış; başka bir başlıktaysa ya da yeni
+başlıkta başka canlı madde varsa çakışma, uygulanmaz. Eski başlık ekrandan ad değiştirmedeki gibi `eskiAdlar` ve
+`adYayilacak`a girer: madde eski adıyla da bulunur, metindeki eski ad bağlantı kalır; bağlar kimlikle tutulur.
+Öbür maddelerin metninde eski ad geçiyorsa Durum → Eksikler'deki "Ad değişikliği" kartı çıkar (ekrandan ad
+değiştirmedeki gibi). Onay bekleyenler'de "Başlık: eski → yeni" görünür; kayıt Kemal "Uygula"ya basınca değişir.
 
 ## 24 Kasım: tek harita: zikzak yollar düzeldi
 

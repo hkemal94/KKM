@@ -1,183 +1,220 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Item } from '../../types';
-import { aileAgaci, type AileAgaciKisisi } from '../../lib/aileAgaci';
+import { aileAgaci, type AileAgaci as AileAgaciVerisi, type AileAgaciKisisi } from '../../lib/aileAgaci';
+import { adParcalari, agacCizgileri, kisiHarfi, type AgacOlcu } from '../../lib/soyAgaci';
 import { maddeGorseli, siluetMi } from '../../lib/maddeGorseli';
 import { useGorselSurumu } from '../../lib/gorselOnbellek';
 import { soyDegeri } from './soyDegeri';
 
 /**
- * Aile sayfasında "Üyeler": portreli kuşak ağacı (24 Kasım, Kemal: "en eski kuşak
- * üstte, eşler yan yana, çocuklar altta; yıllar ve meslek kutuda").
- * Eski düz yazılı kutuların yerine geldi. Üyelik `lib/aileUyeligi.ts`'ten,
- * kuşaklar soy ağacının hesabından (`lib/aileAgaci.ts`). Portresi olmayan
- * kişide yüzsüz silüet çizilir. Kutuya basınca kişinin maddesi açılır.
+ * Aile maddesinde "Kuşaklar" (24 Kasım, Kemal: B1 "Albüm"; kartlar A1 gibi büyük).
+ * En eski kuşak üstte, eşler yan yana (çift çizgi), çocuklar ortalı altta.
+ * Başka aileye geçiş uzun çizgiyle değil kartta kısa okla gösterilir
+ * ("↗ Demir Ailesi"; basınca o aile açılır). Adı konmamış kişi yalnız soyadıyla,
+ * önünde soluk "—" ile yazılır. Dar ekranda kuşak kuşak girintili liste olur.
  * Bu ekran kayda bir şey yazmaz.
  */
 
-interface Olcu { en: number; boy: number; araX: number; araY: number; r: number }
-/** Geniş ekran ve telefon ölçüleri (telefonda yatay kaydırma olmasın diye dar) */
-const GENIS: Olcu = { en: 118, boy: 162, araX: 22, araY: 46, r: 31 };
-const DAR: Olcu = { en: 96, boy: 156, araX: 10, araY: 40, r: 27 };
+export const AILE_OLCU: AgacOlcu = { en: 206, boy: 132, araX: 20, araY: 46, esAra: 26 };
 
-const LACIVERT = '#0E1C4F';
+/** Onyılın Türkçe eki: 1890'lar, 1950'ler, 2000'ler */
+export const onyil = (yil: number) => {
+  const o = Math.floor(yil / 10) * 10;
+  const ek: Record<number, string> = { 0: 'ler', 10: 'lar', 20: 'ler', 30: 'lar', 40: 'lar', 50: 'ler', 60: 'lar', 70: 'ler', 80: 'ler', 90: 'lar' };
+  return `${o}'${ek[o % 100] ?? 'ler'}`;
+};
 
-/** Adı en çok iki satıra böler (kelime kelime) */
-function satirlara(ad: string, sinir: number): string[] {
-  const satirlar: string[] = [];
-  for (const k of ad.split(/\s+/).filter(Boolean)) {
-    const son = satirlar[satirlar.length - 1];
-    if (son !== undefined && (son + ' ' + k).length <= sinir) satirlar[satirlar.length - 1] = son + ' ' + k;
-    else satirlar.push(k);
-  }
-  if (satirlar.length <= 2) return satirlar.map(s => kisalt(s, sinir + 2));
-  return [satirlar[0], kisalt(satirlar.slice(1).join(' '), sinir)];
-}
-const kisalt = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
-/** Kutuya sığmayan yazı (uzun yıl aralığı) yatayda sıkıştırılır */
-const sigdir = (metin: string, boyut: number, enCok: number) =>
-  (metin.length * boyut * 0.56 > enCok ? { textLength: enCok, lengthAdjust: 'spacingAndGlyphs' as const } : {});
+/** Yıllar: "1951 –", "1928 – 1999" */
+export const yilYazisi = (k: { yasamMetni?: string }) => (k.yasamMetni ? k.yasamMetni.replace(/\s*[–—-]\s*/, ' – ').trim() : '');
 
-export const AileAgaci: React.FC<{ aile: Item; allItems: Item[]; onNavigate: (id: string) => void }> = ({ aile, allItems, onNavigate }) => {
+/** Kişinin adı: adsızda soluk "—" ve soyadı (Kemal, 24 Kasım: "[ad: Kemal]" görünmez) */
+export const KisiAdi: React.FC<{ ad: string; className?: string }> = ({ ad, className }) => {
+  const p = adParcalari(ad);
+  return (
+    <span className={className}>
+      {p.adsiz && <span className="opacity-40 font-normal mr-1" title="Adı henüz konmadı (ad Kemal'in)">—</span>}
+      {p.ad}
+    </span>
+  );
+};
+
+/** Portre dairesi: görsel, yoksa yüzsüz silüet; hayatta olmayanda eski fotoğraf tonu */
+export const KisiPortresi: React.FC<{ gorsel?: string; ad: string; olmus?: boolean; boyut?: number; harf?: boolean }> = ({ gorsel, ad, olmus, boyut = 52, harf }) => (
+  <span className={`relative shrink-0 rounded-full overflow-hidden grid place-items-center border-2 ${olmus ? 'border-[#B9A27E] bg-[#EFE6D4]' : 'border-[#0E1C4F]/85 dark:border-[#A6B0C9] bg-[#F3EFE8] dark:bg-[#2C3C72]'}`}
+    style={{ width: boyut, height: boyut }}>
+    {gorsel ? (
+      <img src={gorsel} alt="" className={`w-full h-full object-cover object-top ${olmus ? '[filter:grayscale(1)_sepia(0.45)_contrast(1.05)]' : ''}`} />
+    ) : harf ? (
+      <span className="font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]" style={{ fontSize: boyut * 0.38 }}>{kisiHarfi(ad)}</span>
+    ) : (
+      <svg viewBox="0 0 40 40" className="w-full h-full" aria-hidden>
+        <g className={olmus ? 'fill-[#8C7350]' : 'fill-[#0E1C4F] dark:fill-[#F3EFE8]'} fillOpacity={0.28}>
+          <circle cx={20} cy={16} r={7.2} />
+          <ellipse cx={20} cy={37} rx={14} ry={11} />
+        </g>
+      </svg>
+    )}
+  </span>
+);
+
+/** Kişinin portresi (silüet yer tutucusu sayılmaz) */
+export const portreBul = (i: Item | undefined, items: Item[]) => {
+  const g = i ? maddeGorseli(i, items) : undefined;
+  return g && !siluetMi(g) ? g : undefined;
+};
+
+/** Kartın altındaki etiket: nereden geldi, nereye geçti */
+export const yerEtiketi = (k: AileAgaciKisisi): string => {
+  if (k.yer === 'gelen') return k.dogumSoyadi ? `evlilikle geldi · doğumda ${k.dogumSoyadi}` : 'evlilikle geldi';
+  if (k.yer === 'dogan') return k.dogumSoyadi ? `doğumda ${k.dogumSoyadi}` : 'bu aileden doğdu';
+  return '';
+};
+
+/** Başka aileye kısa ok; basınca o aile açılır */
+export const AileOku: React.FC<{ ad: string; onClick: () => void }> = ({ ad, onClick }) => (
+  <button type="button" onClick={e => { e.stopPropagation(); onClick(); }}
+    className="inline-flex items-center gap-0.5 max-w-full px-1.5 py-0.5 rounded-full text-[11px] leading-tight bg-[#F26B6F]/10 text-[#B4474B] dark:text-[#F26B6F] hover:bg-[#F26B6F]/20 cursor-pointer">
+    <span aria-hidden>↗</span><span className="truncate">{ad}</span>
+  </button>
+);
+
+const Kart: React.FC<{ k: AileAgaciKisisi; portre?: string; onNavigate: (id: string) => void; style?: React.CSSProperties; className?: string }> = ({ k, portre, onNavigate, style, className = '' }) => {
+  const etiket = yerEtiketi(k);
+  const yil = yilYazisi(k);
+  return (
+    <div role="link" tabIndex={0} aria-label={adParcalari(k.ad).ad} onClick={() => onNavigate(k.id)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate(k.id); } }}
+      style={style}
+      className={`flex items-start gap-3 p-3 rounded-2xl border cursor-pointer outline-none text-left transition-colors
+        ${k.olmus ? 'bg-[#FBF8F1] dark:bg-[#1A2550] border-[#D9CCB3] dark:border-[#3A4A7E]' : 'bg-white dark:bg-[#13204A] border-[#E2D9CA] dark:border-[#2C3C72]'}
+        hover:border-[#F26B6F] focus-visible:border-[#F26B6F] ${className}`}>
+      <KisiPortresi gorsel={portre} ad={k.ad} olmus={k.olmus} />
+      <div className="min-w-0 flex-1">
+        <div className="text-[15px] font-semibold leading-snug text-[#0E1C4F] dark:text-[#F3EFE8] line-clamp-2"><KisiAdi ad={k.ad} /></div>
+        {yil && <div className="text-[13px] text-[#4F4636] dark:text-[#C9D0E0] leading-snug">{yil}</div>}
+        {k.rol && <div className="text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9] leading-snug truncate">{k.rol.split(/[;(]/)[0].trim()}</div>}
+        {(etiket || k.baglar.length > 0) && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {etiket && <span className={`px-1.5 py-0.5 rounded-full text-[11px] leading-tight ${k.yer === 'gelen' ? 'bg-[#0E1C4F]/8 text-[#0E1C4F] dark:bg-[#F3EFE8]/10 dark:text-[#F3EFE8]' : 'bg-[#C99A2E]/15 text-[#6B5320] dark:text-[#E9CF8E]'}`}>{etiket}</span>}
+            {k.baglar.map(b => <AileOku key={b.aileId} ad={b.ad} onClick={() => onNavigate(b.aileId)} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const AileAgaci: React.FC<{ aile: Item; allItems: Item[]; onNavigate: (id: string) => void; agac?: AileAgaciVerisi }> = ({ aile, allItems, onNavigate, agac: verilen }) => {
   const gorselSurumu = useGorselSurumu();
   const kap = useRef<HTMLDivElement>(null);
-  const [dar, setDar] = useState(false);
+  const [genislik, setGenislik] = useState(0);
   useEffect(() => {
     const el = kap.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(() => setDar(el.clientWidth < 520));
+    const ro = new ResizeObserver(() => setGenislik(el.clientWidth));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const o = dar ? DAR : GENIS;
-  const agac = useMemo(() => aileAgaci(aile, allItems, soyDegeri, o.en, o.boy, o.araX, o.araY), [aile, allItems, o]);
+  const o = AILE_OLCU;
+  const agac = useMemo(() => verilen ?? aileAgaci(aile, allItems, soyDegeri, o), [verilen, aile, allItems, o]);
+  // Ağaç sütuna sığmazsa biraz küçülür; çok küçülecekse (ya da telefonda) kuşak listesi olur
+  const olcek = genislik && agac.en > genislik ? genislik / agac.en : 1;
+  const dar = genislik > 0 && (genislik < 520 || olcek < 0.74);
   const madde = useMemo(() => new Map(allItems.map(i => [i.id, i])), [allItems]);
-  const portreler = useMemo(() => new Map(agac.kisiler.map(k => {
-    const i = madde.get(k.id);
-    const g = i ? maddeGorseli(i, allItems) : undefined;
-    return [k.id, g && !siluetMi(g) ? g : undefined] as const;
-  })), [agac, madde, allItems, gorselSurumu]); // gorselSurumu: galeri görselleri çözülünce yenilenir
+  const portreler = useMemo(() => new Map(agac.kisiler.map(k => [k.id, portreBul(madde.get(k.id), allItems)] as const)),
+    [agac, madde, allItems, gorselSurumu]); // gorselSurumu: galeri görselleri çözülünce yenilenir
+  const cizgiler = useMemo(() => agacCizgileri(agac.konum, agac.kenarlar, o), [agac, o]);
 
-  const { kisiler, baglar, konum, en, boy } = agac;
-  const PAY = 6;
-  const pcy = 8 + o.r; // portrenin merkezi (kutunun üstünden)
+  // Kuşaklar (dar ekrandaki liste için)
+  const kusaklar = useMemo(() => {
+    const m = new Map<number, AileAgaciKisisi[]>();
+    for (const k of agac.kisiler) { const n = agac.kusak.get(k.id) ?? 0; m.set(n, [...(m.get(n) || []), k]); }
+    return [...m.entries()].sort((a, b) => a[0] - b[0]).map(([n, l], sira) => {
+      const yillar = l.map(k => k.yasam?.bas).filter((y): y is number => y !== undefined);
+      return { n, sira, kisiler: l.sort((a, b) => (agac.konum.get(a.id)?.x ?? 0) - (agac.konum.get(b.id)?.x ?? 0)), onyil: yillar.length ? onyil(Math.min(...yillar)) : '' };
+    });
+  }, [agac]);
+  const esi = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const k of agac.kenarlar) if (k.tur === 'eşi') { m.set(k.a, [...(m.get(k.a) || []), k.b]); m.set(k.b, [...(m.get(k.b) || []), k.a]); }
+    return m;
+  }, [agac]);
 
-  const esler = new Set(baglar.filter(b => b.tur === 'eşi').map(b => [b.a, b.b].sort().join('|')));
-  const ebeveynleri = new Map<string, string[]>();
-  for (const b of baglar) if (b.tur === 'ebeveyni') ebeveynleri.set(b.a, [...(ebeveynleri.get(b.a) || []), b.b]);
-
-  /** Ebeveyn → çocuk: iki eş ebeveynse aralarındaki çizginin ortasından iner */
-  const cocukYolu = (cocuk: string, ps: string[]) => {
-    const c = konum.get(cocuk)!;
-    const cx = c.x + o.en / 2;
-    const varolan = ps.filter(p => konum.has(p));
-    if (!varolan.length) return '';
-    const iki = varolan.length === 2 && esler.has([...varolan].sort().join('|'));
-    const a = konum.get(varolan[0])!;
-    const ax = iki ? (a.x + konum.get(varolan[1])!.x) / 2 + o.en / 2 : a.x + o.en / 2;
-    const ay = iki ? a.y + pcy : a.y + o.boy;
-    const orta = c.y - o.araY / 2;
-    return `M${ax},${ay} V${orta} H${cx} V${c.y}`;
-  };
-
-  const kutu = (k: AileAgaciKisisi) => {
-    const p = konum.get(k.id);
-    if (!p) return null;
-    const g = portreler.get(k.id);
-    const adSatirlari = satirlara(k.ad, dar ? 13 : 16);
-    const ilkY = pcy + o.r + 16;
-    const satirAra = 14;
-    const yilY = ilkY + adSatirlari.length * satirAra + 1;
-    const etiket = k.etiket === 'dogum' ? 'doğduğu aile' : k.etiket === 'evlilik' ? 'evlilikle' : '';
-    const yillar = k.yasamMetni ? k.yasamMetni.replace(/-$/, '–') : '—';
-    const etiketY = yilY + (k.rol ? 39 : 26);
-    const ac = () => onNavigate(k.id);
+  if (!agac.kisiler.length) {
     return (
-      <g key={k.id} transform={`translate(${p.x} ${p.y})`} role="link" tabIndex={0} aria-label={k.ad} className="cursor-pointer group outline-none"
-        onClick={ac} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ac(); } }}>
-        <rect width={o.en} height={o.boy} rx={12}
-          className="fill-white dark:fill-[#13204A] stroke-[#CFC5B4] dark:stroke-[#2C3C72] group-hover:stroke-[#F26B6F] group-focus-visible:stroke-[#F26B6F]" strokeWidth={1.1} />
-        <g transform={`translate(${o.en / 2} ${pcy})`}>
-          <circle r={o.r + 2} fill={LACIVERT} fillOpacity={0.9} />
-          <circle r={o.r} className="fill-[#F3EFE8] dark:fill-[#2C3C72]" />
-          {g ? (
-            <image href={g} x={-o.r} y={-o.r} width={o.r * 2} height={o.r * 2} preserveAspectRatio="xMidYMin slice" clipPath={`url(#aile-portre-${o.r})`} />
-          ) : (
-            // Yüzsüz silüet: portre gelene kadar yer tutucu
-            <g clipPath={`url(#aile-portre-${o.r})`} className="fill-[#0E1C4F] dark:fill-[#F3EFE8]" fillOpacity={0.28}>
-              <circle cy={-o.r * 0.22} r={o.r * 0.36} />
-              <ellipse cy={o.r * 0.82} rx={o.r * 0.7} ry={o.r * 0.55} />
-            </g>
-          )}
-        </g>
-        {adSatirlari.map((s, n) => (
-          <text key={n} x={o.en / 2} y={ilkY + n * satirAra} textAnchor="middle" fontSize={dar ? 11.5 : 12.5} fontWeight={600}
-            className="fill-[#0E1C4F] dark:fill-[#F3EFE8]">{s}</text>
-        ))}
-        <text x={o.en / 2} y={yilY + 12} textAnchor="middle" fontSize={dar ? 10 : 10.5} className="fill-[#6A5E4C] dark:fill-[#A6B0C9]"
-          {...sigdir(yillar, dar ? 10 : 10.5, o.en - 12)}>
-          {yillar}
-        </text>
-        {k.rol && (
-          <text x={o.en / 2} y={yilY + 25} textAnchor="middle" fontSize={dar ? 9.5 : 10} className="fill-[#6A5E4C] dark:fill-[#A6B0C9]">
-            {kisalt(k.rol.split(/[;,(]/)[0].trim(), dar ? 17 : 21)}
-          </text>
-        )}
-        {etiket && (
-          <text x={o.en / 2} y={etiketY} textAnchor="middle" fontSize={9} fontStyle="italic" className="fill-[#B4474B] dark:fill-[#F26B6F]">{etiket}</text>
-        )}
-        <title>{[k.ad, k.yasamMetni, k.rol, etiket].filter(Boolean).join(' · ')}</title>
-      </g>
+      <section className="mb-8" ref={kap}>
+        <h2 className="font-sans text-xl text-lacivert dark:text-krem mb-3 tracking-tight">Kuşaklar</h2>
+        <p className="text-[13px] text-gri dark:text-bej/80">Henüz üye yok. Bir kişinin künyesinde "Aile" ya da "Soyadı" alanına bu ailenin adı yazılınca burada görünür.</p>
+      </section>
     );
-  };
+  }
 
   return (
     <section className="mb-8" ref={kap}>
-      <h2 className="font-sans text-[20px] mb-3">Üyeler</h2>
-      {kisiler.length === 0 ? (
-        <p className="text-[13px] text-gri dark:text-bej/80">Henüz üye yok. Bir kişinin künyesinde "Aile" ya da "Soyadı" alanına bu ailenin adı yazılınca burada görünür.</p>
+      <h2 className="font-sans text-xl text-lacivert dark:text-krem mb-3 tracking-tight">Kuşaklar</h2>
+      {dar ? (
+        // Telefon: kuşak kuşak girintili liste; eşler tek kutuda "evli" ayracıyla
+        <ol className="space-y-3">
+          {kusaklar.map(g => {
+            const gorulen = new Set<string>();
+            return (
+              <li key={g.n} style={{ marginLeft: Math.min(g.sira, 4) * 12 }} className={g.sira ? 'pl-3 border-l-2 border-[#0E1C4F]/70 dark:border-[#A6B0C9]/70' : ''}>
+                <div className="mb-1.5 text-[11px] font-semibold tracking-[0.12em] uppercase text-[#6A5E4C] dark:text-[#A6B0C9]">
+                  {g.sira + 1}. kuşak{g.onyil ? ` · ${g.onyil}` : ''}
+                </div>
+                <div className="space-y-2">
+                  {g.kisiler.map(k => {
+                    if (gorulen.has(k.id)) return null;
+                    gorulen.add(k.id);
+                    const eslar = (esi.get(k.id) || []).map(id => g.kisiler.find(x => x.id === id)).filter((x): x is AileAgaciKisisi => !!x && !gorulen.has(x.id));
+                    eslar.forEach(e => gorulen.add(e.id));
+                    if (!eslar.length) return <Kart key={k.id} k={k} portre={portreler.get(k.id)} onNavigate={onNavigate} />;
+                    return (
+                      <div key={k.id} className="rounded-2xl border border-[#E2D9CA] dark:border-[#2C3C72] bg-[#FAF8F5] dark:bg-[#0E1733] p-1.5 space-y-1">
+                        <Kart k={k} portre={portreler.get(k.id)} onNavigate={onNavigate} className="!border-transparent" />
+                        {eslar.map(e => (
+                          <React.Fragment key={e.id}>
+                            <div className="flex items-center gap-2 px-3 text-[10px] tracking-[0.14em] uppercase text-[#6A5E4C] dark:text-[#A6B0C9]">
+                              <span className="h-px flex-1 bg-[#CFC5B4] dark:bg-[#2C3C72]" />evli<span className="h-px flex-1 bg-[#CFC5B4] dark:bg-[#2C3C72]" />
+                            </div>
+                            <Kart k={e} portre={portreler.get(e.id)} onNavigate={onNavigate} className="!border-transparent" />
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
       ) : (
-        <>
-          <div className="rounded-lg border border-bej/50 dark:border-lacivert-600/50 bg-krem-acik/70 dark:bg-lacivert-800/40 px-2 py-3 sm:px-4 sm:py-4">
-            <svg viewBox={`${-PAY} ${-PAY} ${en + PAY * 2} ${boy + PAY * 2}`} role="img" aria-label={`${aile.title}: ${kisiler.length} kişi, kuşak ağacı`}
-              className="block mx-auto w-full h-auto" style={{ maxWidth: en + PAY * 2 }}>
-              <defs>
-                <clipPath id={`aile-portre-${o.r}`}><circle cx={0} cy={0} r={o.r} /></clipPath>
-              </defs>
-              {/* Kardeşler (ortak ebeveyni görünmüyorsa): noktalı */}
-              {baglar.filter(b => b.tur === 'kardeşi').map(b => {
-                const ortak = (ebeveynleri.get(b.a) || []).some(x => (ebeveynleri.get(b.b) || []).includes(x));
-                const a = konum.get(b.a), c = konum.get(b.b);
-                if (ortak || !a || !c) return null;
-                const ax = a.x + o.en / 2, cx = c.x + o.en / 2, ust = Math.min(a.y, c.y) - Math.min(14, o.araY / 3);
-                return <path key={b.id} d={`M${ax},${a.y} V${ust} H${cx} V${c.y}`} fill="none" className="stroke-[#8C7B63] dark:stroke-[#A6B0C9]" strokeWidth={1.6} strokeDasharray="3 4" />;
-              })}
-              {/* Ebeveyn → çocuk */}
-              {[...ebeveynleri.entries()].map(([c, ps]) => (
-                <path key={`c-${c}`} d={cocukYolu(c, ps)} fill="none" className="stroke-[#0E1C4F] dark:stroke-[#A6B0C9]" strokeWidth={1.6} />
+        <div style={{ height: agac.boy * olcek }}>
+          <div className="relative mx-auto origin-top-left" style={{ width: agac.en, height: agac.boy, transform: olcek < 1 ? `scale(${olcek})` : undefined }}>
+            <svg width={agac.en} height={agac.boy} className="absolute inset-0 overflow-visible" aria-hidden>
+              {cizgiler.map(c => c.tur === 'eşi' ? (
+                <g key={c.id}>
+                  <path d={c.d} fill="none" className="stroke-[#0E1C4F] dark:stroke-[#A6B0C9]" strokeWidth={6} />
+                  <path d={c.d} fill="none" className="stroke-[#F3EFE8] dark:stroke-[#0E1733]" strokeWidth={2.2} />
+                </g>
+              ) : (
+                <path key={c.id} d={c.d} fill="none" className="stroke-[#0E1C4F] dark:stroke-[#A6B0C9]" strokeWidth={1.8}
+                  strokeDasharray={c.tur === 'kardeşi' ? '3 4' : undefined} />
               ))}
-              {/* Eşler: portre hizasında çift çizgi */}
-              {baglar.filter(b => b.tur === 'eşi').map(b => {
-                const [sol, sag] = [konum.get(b.a), konum.get(b.b)].sort((p, q) => (p?.x ?? 0) - (q?.x ?? 0));
-                if (!sol || !sag) return null;
-                const d = Math.abs(sol.y - sag.y) < 1
-                  ? `M${sol.x + o.en},${sol.y + pcy} H${sag.x}`
-                  : `M${sol.x + o.en / 2},${sol.y + o.boy} L${sag.x + o.en / 2},${sag.y}`;
-                return (
-                  <g key={b.id}>
-                    <path d={d} fill="none" className="stroke-[#0E1C4F] dark:stroke-[#A6B0C9]" strokeWidth={5} />
-                    <path d={d} fill="none" className="stroke-[#FAF8F5] dark:stroke-[#16295F]" strokeWidth={2} />
-                  </g>
-                );
-              })}
-              {kisiler.map(kutu)}
             </svg>
+            {agac.kisiler.map(k => {
+              const p = agac.konum.get(k.id);
+              if (!p) return null;
+              return <Kart key={k.id} k={k} portre={portreler.get(k.id)} onNavigate={onNavigate}
+                className="absolute" style={{ left: p.x, top: p.y, width: o.en, height: o.boy }} />;
+            })}
           </div>
-          <p className="mt-2 text-[11px] text-gri dark:text-bej/80 leading-relaxed">
-            En eski kuşak üstte. Çift çizgi eş, dik çizgi ebeveyn → çocuk. Kutuya basınca kişinin maddesi açılır.
-            Üyeler kişilerin künyesinden ("Aile", "Soyadı", "Doğduğu aile") ve bağlarından gelir.
-          </p>
-        </>
+        </div>
       )}
+      <p className="mt-2 text-[11px] text-gri dark:text-bej/80 leading-relaxed">
+        En eski kuşak üstte. Çift çizgi evli, dik çizgi çocuğu; sepya portreli soluk kart hayatta olmayan.
+        ↗ başka bir aileye geçişi gösterir, basınca o aile açılır. Adı henüz konmamış kişi "— Soyadı" diye yazılır.
+      </p>
     </section>
   );
 };

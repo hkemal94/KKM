@@ -1,7 +1,7 @@
 import type { Item } from '../types';
 import { aileUyeleri } from './aileUyeligi';
 import { maddeGorselleri, siluetMi } from './maddeGorseli';
-import { diz, soyVerisi, yasamOku, type SoyBagi, type SoyKisi } from './soyAgaci';
+import { agacDiz, anaAileId, soyVerisi, yasamOku, type AgacKenari, type AgacOlcu, type SoyKisi } from './soyAgaci';
 
 /**
  * Aile sayfası (24 Kasım, Kemal'in kararları):
@@ -16,7 +16,8 @@ import { diz, soyVerisi, yasamOku, type SoyBagi, type SoyKisi } from './soyAgaci
 
 /** Monogramın harfi: soyadının baş harfi ("Ercan Ailesi" → "E", "Öztürk Ailesi" → "Ö") */
 export function aileBasHarfi(ad: string): string {
-  const soyadi = ad.replace(/\s+ailesi\s*$/i, '').trim();
+  // Köşeli ve normal ayraç içi atlanır ("[ad: Kemal]" gibi yer tutucu harf vermez)
+  const soyadi = ad.replace(/\[[^\]]*\]/g, ' ').replace(/\([^)]*\)/g, ' ').replace(/\s+ailesi\s*$/i, '').trim();
   const harf = soyadi.match(/\p{L}/u)?.[0] || '';
   return harf.toLocaleUpperCase('tr');
 }
@@ -36,14 +37,30 @@ export function hayattaDegil(dogumHam: string, yasamHam: string): boolean {
   return !!yasam && typeof yasam.bit === 'number' && !!yasamMetni && /[–—-]\s*\d/.test(yasamMetni);
 }
 
-export type AileEtiketi = 'dogum' | 'evlilik';
-export interface AileAgaciKisisi extends SoyKisi { etiket?: AileEtiketi }
+/**
+ * Kişinin bu ailedeki yeri (24 Kasım, B1 "Albüm"):
+ *  - 'uye': ailenin soyadını taşıyan, burada doğan
+ *  - 'gelen': evlilikle gelen (doğduğu soyadı ya da aile başka)
+ *  - 'dogan': burada doğup başka soyadına geçen
+ *  - 'soy': burada doğup ayrılanın çocuğu (başka soyadıyla)
+ */
+export type AileYeri = 'uye' | 'gelen' | 'dogan' | 'soy';
+
+export interface AileAgaciKisisi extends SoyKisi {
+  yer: AileYeri;
+  /** Doğumdaki soyadı (künyeden; ailesi yoksa da yazılır) */
+  dogumSoyadi?: string;
+  /** Kısa ok: başka bir aileye geçiş ("↗ Demir Ailesi"), basınca o aile açılır */
+  baglar: Array<{ aileId: string; ad: string; neden: 'dogum' | 'ev' }>;
+  /** Hayatta değil (Yaşam'da ölüm yılı ya da aralığı yazılı) */
+  olmus: boolean;
+}
 
 export interface AileAgaci {
   kisiler: AileAgaciKisisi[];
-  /** Yalnız ebeveyni, eşi ve kardeşi bağları (iki ucu da ailede) */
-  baglar: SoyBagi[];
-  /** Kutunun sol üst köşesi; en soldaki kutu x = 0, en üstteki y = 0 */
+  /** Yalnız ebeveyni, eşi ve kardeşi bağları (iki ucu da ağaçta) */
+  kenarlar: AgacKenari[];
+  kusak: Map<string, number>;
   konum: Map<string, { x: number; y: number }>;
   en: number;
   boy: number;
@@ -51,26 +68,62 @@ export interface AileAgaci {
 
 /**
  * Ailenin kuşak ağacı: üyeler `aileUyeleri`'nden (üye, doğduğu aile, evlilikle),
- * kuşaklar ve sıra soy ağacının `diz`'inden.
+ * bu aileden doğup başka soyadına geçenlerin çocukları da (bir kuşak) girer.
+ * Yerleşim soy ağacının `agacDiz`'i: eşler yan yana, çocuklar ortalı altta.
  */
-export function aileAgaci(aile: Item, items: Item[], degerOku: (i: Item, alanId: string) => string,
-  kutuEn: number, kutuBoy: number, araX: number, araY: number): AileAgaci {
+export function aileAgaci(aile: Item, items: Item[], degerOku: (i: Item, alanId: string) => string, o: AgacOlcu): AileAgaci {
   const uyeler = aileUyeleri(aile, items);
-  const yol = new Map(uyeler.map(u => [u.kisi.id, u.yol]));
   const veri = soyVerisi(items, degerOku);
-  const kisiler: AileAgaciKisisi[] = veri.kisiler.filter(k => yol.has(k.id)).map(k => {
-    const etiket: AileEtiketi | undefined = yol.get(k.id) === 'evlilik' ? 'evlilik'
-      : k.dogumAileId === aile.id && k.aileId !== aile.id ? 'dogum' : undefined;
-    return etiket ? { ...k, etiket } : k;
+  const sk = new Map(veri.kisiler.map(k => [k.id, k]));
+  const aileAdi = new Map(veri.aileler.map(a => [a.id, a.ad]));
+  const madde = new Map(items.map(i => [i.id, i]));
+  const ic = new Map<string, AileYeri>();
+  const kucuk = (x: string) => x.trim().toLocaleLowerCase('tr');
+  const aileSoyadi = kucuk(aile.title.replace(/\s+ailesi\s*$/i, ''));
+  for (const u of uyeler) {
+    const k = sk.get(u.kisi.id);
+    if (!k) continue;
+    const ana = anaAileId(k);
+    const dogumda = kucuk(degerOku(u.kisi, 'dogumSoyadi'));
+    const soyadi = kucuk(degerOku(u.kisi, 'soyadi'));
+    const buradaDogdu = k.dogumAileId === aile.id || (!!dogumda && dogumda === aileSoyadi);
+    const yer: AileYeri = buradaDogdu
+      ? ((ana && ana !== aile.id) || (soyadi && soyadi !== aileSoyadi) ? 'dogan' : 'uye')
+      : u.yol === 'evlilik' || (k.dogumAileId && k.dogumAileId !== aile.id) || (dogumda && dogumda !== aileSoyadi) ? 'gelen'
+      : u.yol === 'dogum' ? 'dogan' : 'uye';
+    ic.set(k.id, yer);
+  }
+  // Buradan ayrılanın eşi bu ailede görünmez (Ercan'da doğup Özdemir'e gelin gidenin eşi)
+  for (const u of uyeler) {
+    if (u.yol !== 'evlilik' || !ic.has(u.kisi.id)) continue;
+    const buradakiEsler = veri.baglar.filter(b => b.tur === 'eşi' && (b.a === u.kisi.id || b.b === u.kisi.id))
+      .map(b => (b.a === u.kisi.id ? b.b : b.a)).filter(id => ic.has(id) && id !== u.kisi.id);
+    if (buradakiEsler.length && buradakiEsler.every(id => ic.get(id) === 'dogan')) ic.delete(u.kisi.id);
+  }
+  // Burada doğup ayrılanın çocukları (ör. kızının kızı)
+  for (const b of veri.baglar) {
+    if (b.tur === 'ebeveyni' && ic.get(b.b) === 'dogan' && !ic.has(b.a) && sk.has(b.a)) ic.set(b.a, 'soy');
+  }
+  const kisiler: AileAgaciKisisi[] = [...ic.entries()].map(([id, yer]) => {
+    const k = sk.get(id)!;
+    const i = madde.get(id)!;
+    const ana = anaAileId(k);
+    const baglar: AileAgaciKisisi['baglar'] = [];
+    if (ana && ana !== aile.id) baglar.push({ aileId: ana, ad: aileAdi.get(ana) || '', neden: 'ev' });
+    if (k.dogumAileId && k.dogumAileId !== aile.id && k.dogumAileId !== ana) baglar.push({ aileId: k.dogumAileId, ad: aileAdi.get(k.dogumAileId) || '', neden: 'dogum' });
+    const dogumSoyadi = degerOku(i, 'dogumSoyadi').trim();
+    return {
+      ...k, yer, baglar,
+      ...(dogumSoyadi ? { dogumSoyadi } : {}),
+      olmus: hayattaDegil(degerOku(i, 'dogumYili'), degerOku(i, 'yasam'))
+    };
   });
-  const ic = new Set(kisiler.map(k => k.id));
-  const baglar = veri.baglar.filter(b => ic.has(b.a) && ic.has(b.b)
-    && (b.tur === 'ebeveyni' || b.tur === 'eşi' || b.tur === 'kardeşi'));
-  const ham = diz(kisiler, baglar, kutuEn, kutuBoy, new Map(), araX, araY);
-  const xs = [...ham.values()].map(p => p.x), ys = [...ham.values()].map(p => p.y);
-  const mx = xs.length ? Math.min(...xs) : 0, my = ys.length ? Math.min(...ys) : 0;
-  const konum = new Map([...ham.entries()].map(([id, p]) => [id, { x: p.x - mx, y: p.y - my }]));
-  const en = xs.length ? Math.max(...xs) - mx + kutuEn : 0;
-  const boy = ys.length ? Math.max(...ys) - my + kutuBoy : 0;
-  return { kisiler, baglar, konum, en, boy };
+  const kenarlar: AgacKenari[] = veri.baglar
+    .filter(b => ic.has(b.a) && ic.has(b.b) && (b.tur === 'ebeveyni' || b.tur === 'eşi' || b.tur === 'kardeşi'))
+    .map(b => ({ a: b.a, b: b.b, tur: b.tur as AgacKenari['tur'] }));
+  const y = agacDiz(kisiler.map(k => ({ id: k.id, ad: k.ad, ...(k.yasam ? { dogum: k.yasam.bas } : {}) })), kenarlar, o);
+  return { kisiler, kenarlar, ...y };
 }
+
+/** Kuşak sayısı */
+export const kusakSayisi = (a: AileAgaci) => new Set(a.kusak.values()).size;

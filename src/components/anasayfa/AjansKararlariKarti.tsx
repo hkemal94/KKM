@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 import type { Item } from '../../types';
-import { gecerliIslemler, kararlariOku, kararlariUygula, kitapBolumuOnizleme, maddeTuru, oyunKarariOnizleme, vikiKarariOnizleme, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
+import { gecerliIslemler, kararlariOku, kararlariUygula, kitapBolumuOnizleme, maddeTuru, oyunKarariOnizleme, vikiKarariOnizleme, baslikKarariOnizleme, makbuzYaz, MARKA_KARTI_ALANLARI, type KararDosyasi, type Uygulama } from '../../lib/ajansKararlari';
 import { TYPE_LABELS } from '../wiki/wikiSchema';
 import { donemleriOku } from '../../lib/zamanCizgisi';
 import { donemOnizleme } from '../../lib/donemKarari';
@@ -25,7 +25,7 @@ interface Props {
 }
 
 /** Listede her işin başındaki kısa ad */
-export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', bagSil: 'Bağ sil', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', yeniOyun: 'Yeni oyun', kitapBolumu: 'Kitap bölümü', oyunKarti: 'Oyun kartı', gddBolumu: 'Tasarım belgesi', donem: 'Dönem', bolumYaz: 'Bölüm yaz', bolumSil: 'Bölüm sil', gercekYer: 'Gerçek yer', alaniBosalt: 'Alanı boşalt' };
+export const ISLEM_ADI: Record<string, string> = { sil: 'Sil', alanaYaz: 'Yaz', bagKur: 'Bağ', bagSil: 'Bağ sil', takmaAdEkle: 'Takma ad', metneEkle: 'Ekle', gorselEkle: 'Görsel', metniDegistir: 'Düzelt', takmaAdSil: 'Takma ad sil', alaniDegistir: 'Alanı değiştir', metindenSil: 'Metinden sil', eskiAlan: 'Eski alan', markaKarti: 'Marka kartı', yeniMadde: 'Yeni madde', yeniOyun: 'Yeni oyun', kitapBolumu: 'Kitap bölümü', oyunKarti: 'Oyun kartı', gddBolumu: 'Tasarım belgesi', donem: 'Dönem', bolumYaz: 'Bölüm yaz', bolumSil: 'Bölüm sil', gercekYer: 'Gerçek yer', alaniBosalt: 'Alanı boşalt', baslikDegistir: 'Başlık' };
 
 /**
  * Kararları okur ve uygular (2 Kasım, 3. adım). Kart ve Onay bekleyenler'in
@@ -143,6 +143,7 @@ export const AjansKararlariKarti: React.FC<Props> = (props) => {
                     {(i.tur === 'oyunKarti' || i.tur === 'gddBolumu') && <> → <span className="font-semibold">{oyunKarariOnizleme(props.items, i)}</span></>}
                     {i.tur === 'donem' && <> → <span className="font-semibold">{donemOnizleme(donemleriOku(props.items), i)}</span></>}
                     {(i.tur === 'bolumYaz' || i.tur === 'bolumSil' || i.tur === 'gercekYer' || i.tur === 'alaniBosalt') && <> → <span className="font-semibold">{vikiKarariOnizleme(props.items, i)}</span></>}
+                    {i.tur === 'baslikDegistir' && <> → <span className="font-semibold">{baslikKarariOnizleme(props.items, i)}</span></>}
                     <span className={`block text-[12px] ${IKINCIL}`}>{i.neden}</span>
                   </li>
                 ))}
