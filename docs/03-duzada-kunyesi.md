@@ -201,8 +201,10 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
   bir kooperatifin işi. Telefon ve internet normal.
 - **Stadyum Mahallesi** — çekirdeği eski: toprak saha çevresinde 1950'lerden
   beri küçük bir yerleşim; stat (1980'ler) onu büyüttü.
-- **Mübadele** — 1923'te kilisenin Rum cemaati gitti; gelen aileler
-  İskele'deki boşalan evlere yerleşti. Kilise o zamandan beri boş.
+- **Mübadele** — kilisenin Rum cemaati 1923 mübadelesinin dışında kaldı;
+  yıllar içinde, kendi istekleriyle yavaş yavaş adadan ayrıldı (Kemal,
+  16 Kasım). 1923'te mübadeleyle gelen aileler İskele'ye yerleşti; Rum
+  evleri zamanla boşaldı. Kilise, cemaat ayrıldıktan sonra boş kaldı.
 - **Merkez** — belediye 1980 sonrası yeni bir binada; adanın tek okulu
   Merkez'de, çocuklar dolmuşla gelir.
 - **Küçükçetmi Sürek Kulübü** — adını Küçükkuyu'nun bir köyünden adaya
@@ -285,8 +287,9 @@ Aralıklar kanon; kesin yıl yoksa uydurulmaz. Ayrıntı `docs/soru-cevap/w3.md`
 
 Ayrıntı ve bölüm iskeletleri: `docs/soru-cevap/metin-1.md`.
 
-- **Mübadele ve Merkez** — 1923'te Merkez'deki Rum aileler de ayrıldı
-  (yalnız İskele değil).
+- **Mübadele ve Merkez** — Merkez'deki Rum aileler de 1923 mübadelesinin
+  dışında kaldı; yıllar içinde, kendi istekleriyle yavaş yavaş adadan
+  ayrıldılar (yalnız İskele değil; Kemal, 16 Kasım).
 - **Merkez çarşısı** — kahvehane, bakkal, fırın, eczanenin yanında terzi,
   kasap, berber (adsız, tarihsiz).
 - **Taş çeşme** — sözlü anlatı: antik bir kaynağın üstüne yapıldığı

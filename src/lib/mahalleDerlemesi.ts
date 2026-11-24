@@ -23,7 +23,7 @@ export const DERLEMELER: Array<{ id: string; ad: string; bolumler: Bolum[] }> = 
         title: 'Tarihçe',
         content: `Yerleşimin kökeni antik döneme uzanır; Ada Tepesi'nde antik yerleşim duvarları bulunur.
 
-Düzada Köyü döneminde yerleşim meydan, taş çeşme ve yaşlı çınar çevresinde şekillendi. Sözlü anlatıya göre taş çeşme antik bir kaynağın üstüne yapılmıştır. Jandarma karakolu köy döneminden kalmadır; okul 1920–1940'lar arasında açıldı. 1923 mübadelesinde Merkez'deki Rum aileler adadan ayrıldı. Kahvehane 1950–1970'ler arasında açıldı. Otelden (1954) sonra İskele'deki mübadele aileleri evlerini yazlıkçılara satıp Merkez'e geçti.
+Düzada Köyü döneminde yerleşim meydan, taş çeşme ve yaşlı çınar çevresinde şekillendi. Sözlü anlatıya göre taş çeşme antik bir kaynağın üstüne yapılmıştır. Jandarma karakolu köy döneminden kalmadır; okul 1920–1940'lar arasında açıldı. Merkez'deki Rum aileler 1923 mübadelesinin dışında kaldı; yıllar içinde, kendi istekleriyle yavaş yavaş adadan ayrıldılar. Kahvehane 1950–1970'ler arasında açıldı. Otelden (1954) sonra İskele'deki mübadele aileleri evlerini yazlıkçılara satıp Merkez'e geçti.
 
 1980 sonrasında belediye kuruldu ve köy Merkez Mahallesi adını aldı. Belediye yeni bir binaya geçti, cami yenilendi; belediye itfaiyesi ve sağlık ocağı bu dönemde kuruldu. Mahallede apartman yoktur; evler müstakildir.`
       },
@@ -57,7 +57,7 @@ Fener 1970'lerde otomatiğe geçti; bekçi evi sahil güvenliğin kullanımına 
     bolumler: [
       {
         title: 'Tarihçe',
-        content: `Kemsköy, Düzada Köyü'nün dışında kalan iskele ve birkaç balıkçı evinden oluşuyordu. Burada 18. yüzyıldan kalma küçük bir kilise ve yanında eski bir Rum mezarlığı bulunur. 1923 mübadelesinde kilisenin Rum cemaati adadan ayrıldı; mübadeleyle gelen aileler boşalan evlere yerleşti. Kilise o zamandan beri boştur.
+        content: `Kemsköy, Düzada Köyü'nün dışında kalan iskele ve birkaç balıkçı evinden oluşuyordu. Burada 18. yüzyıldan kalma küçük bir kilise ve yanında eski bir Rum mezarlığı bulunur. Kilisenin Rum cemaati 1923 mübadelesinin dışında kaldı; yıllar içinde, kendi istekleriyle yavaş yavaş adadan ayrıldı. 1923'te mübadeleyle gelen aileler İskele'ye yerleşti; Rum evleri zamanla boşaldı. Kilise, cemaat ayrıldıktan sonra boş kaldı.
 
 1954'te devlet misafirhanesi olarak açılan yapı, 1960'larda İstanbul merkezli bir şirkete geçerek otel oldu. Otelle adada yaz turizmi başladı; İskele'ye otelciler ve varlıklı yazlıkçılar yerleşti, mübadele aileleri evlerini satıp Merkez'e geçti. Halk 1954 sonrasında buraya "mahalle" dedi; resmî mahalle olması belediyeyle (1980 sonrası) oldu.
 
