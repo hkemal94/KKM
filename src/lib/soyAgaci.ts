@@ -34,6 +34,8 @@ export interface SoyKisi {
   rol?: string;
   /** Künyedeki "Soyadı"nın karşılığı olan aile (24 Kasım; şimdi kullandığı soyadı) */
   soyadiAileId?: string;
+  /** Doğduğu aile ya da doğumdaki soyadı yazılı ama vikide o aile yok (24 Kasım; ör. "Atabey") */
+  dogumAilesiYok?: boolean;
 }
 
 /** a → b: ebeveyni'de a çocuk, b ebeveyn; ötekilerde yönsüz */
@@ -99,6 +101,7 @@ export function soyVerisi(items: Item[], degerOku: (i: Item, alanId: string) => 
       ...(aile ? { aileId: aile.id } : {}),
       ...(soyadiAile ? { soyadiAileId: soyadiAile.id } : {}),
       ...(dogumAile ? { dogumAileId: dogumAile.id } : {}),
+      ...(bilinen(dogumAdi) && !dogumAile ? { dogumAilesiYok: true } : {}),
       ...(yasam ? { yasam } : {}),
       ...(yasamMetni ? { yasamMetni } : {}),
       ...(rolOku(i, degerOku) ? { rol: rolOku(i, degerOku) } : {})
@@ -463,175 +466,483 @@ export function agacCizgileri(konum: Map<string, { x: number; y: number }>, kena
   return cizgiler;
 }
 
+
 // ---------------------------------------------------------------------------
-// Genel soy ağacı (24 Kasım, Kemal: "bütün adanın tek genel ağacı, tuvalde;
-// bağlar viki verisinden otomatik ve doğru; aileler kümelenir, evlilikle
-// aileler arası bağ kısa ve doğru").
+// Tek soy ağacı (24 Kasım akşam, Kemal: "Aile gruplandırmalarını kaldır,
+// yalnızca doğduğu ailenin rengi kartın solunda ince bir şerit olarak
+// duruyor ya, o kalsın").
 //
-// Her kişi kendi ailesinin çerçevesinde (`anaAileId`: şimdi kullandığı soyadı)
-// tek gerçek kartla durur. Başka bir ailede de yeri varsa (doğduğu aile,
-// ebeveynlerinin ailesi, eşinin ailesi) orada kesik kenarlı bir "yansıma"
-// kartı olur; iki kart birbirine kısa okla bağlanır ("↗ Ercan Ailesi'nde").
-// Böylece çerçeveler arasında hiç uzun çizgi çizilmez, eş eşinin yanında,
-// çocuk ebeveynlerinin altında durur.
+// Bütün ada tek ağaç: aile çerçevesi ve kopya kart yok, her kişi tek kartta.
+// Kuşaklar yukarıdan aşağı, eşler yan yana, çocuklar anne-babasının ortasının
+// altında. Çizgiler yalnız kuşaklar arasındaki boşlukta yürür; kartın üstünden
+// geçmez. Ebeveyni ağaçta olmayan kardeşler küçük bir köşeli çizgiyle birleşir.
+// Akraba bağı çizilmez (seçili kişinin kartında yazar). Yalnız ekranda
+// hesaplanır; kayda bir şey yazılmaz.
 // ---------------------------------------------------------------------------
 
-export interface GenelDugum {
-  /** Tuvaldeki kimlik: gerçek kartta kişinin kimliği, yansımada `aile~kişi` */
-  id: string;
-  kisiId: string;
-  cerceve: string;
-  yansima: boolean;
-  /** Tuvaldeki sol üst köşe */
-  x: number; y: number;
+/** Kartın solundaki şeridin ailesi: doğduğu aile; doğduğu aile yazılı ama vikide yoksa hiçbiri */
+export const dogduguAile = (k: SoyKisi): string | undefined =>
+  k.dogumAileId ?? (k.dogumAilesiYok ? undefined : k.aileId ?? k.soyadiAileId);
+
+export interface TekAgacCizgisi {
+  id: string; d: string;
+  tur: 'eşi' | 'çocuk' | 'kardeşi';
+  /** Çizginin bağladığı kişiler (seçili kişide vurgulanır) */
+  kisiler: string[];
 }
 
-export interface GenelCerceve {
-  id: string; ad: string;
-  x: number; y: number; en: number; boy: number;
-  /** Çerçevenin içindeki ağacın sol üst köşesi (tuvalde) */
-  icX: number; icY: number;
-  kenarlar: AgacKenari[];
-  /** Çerçeve içi konumlar (`icX`, `icY`'ye göre) */
+export interface TekAgac {
+  /** Kartın sol üst köşesi; en sol ve en üst 0 */
   konum: Map<string, { x: number; y: number }>;
-  kisiSayisi: number;
+  kusak: Map<string, number>;
+  cizgiler: TekAgacCizgisi[];
+  /** Birbirine kan ya da evlilikle bağlı kişi kümeleri, soldan sağa (ilk ekran için) */
+  kumeler: Array<{ x: number; en: number; kisiler: string[] }>;
+  en: number; boy: number;
+  /** Ağaçta doğru gösterilemeyen bağlar (ör. ebeveynleri evli görünmeyen çocuk) */
+  notlar: string[];
 }
 
-export interface GenelAgac {
-  cerceveler: GenelCerceve[];
-  dugumler: GenelDugum[];
-  /** Kişinin bütün kartları (önce gerçeği) */
-  kartlari: Map<string, GenelDugum[]>;
+interface Birim {
+  no: number;
+  /** Soldan sağa kartlar; kardeş kümesinin sanal biriminde boş */
+  uyeler: string[];
+  kusak: number;
+  sanal: boolean;
+  /** Ağaçtaki yeri: üst birim (yalnız bir tane) */
+  ust?: number;
+  altlar: number[];
+  /** Evlilikle ikinci bir aileye bağlı birim: eşin ailesi */
+  misafir?: { uye: string; birim: number };
+  /** Ağacın kenarına yaslanması gereken yol: 'sol' ya da 'sag' */
+  kenar?: 'sol' | 'sag';
+  x: number;
 }
 
-export const CERCEVE_PAY = 26;
-export const CERCEVE_BASLIK = 48;
-const CERCEVE_ARA = 56;
-
-const AILE_TURLERI = new Set(['ebeveyni', 'eşi', 'kardeşi']);
-
-export function genelAgac(kisiler: SoyKisi[], baglar: SoyBagi[], aileler: Array<{ id: string; ad: string }>, o: AgacOlcu, oran = 1.6): GenelAgac {
+export function tekAgac(kisiler: SoyKisi[], baglar: SoyBagi[], o: AgacOlcu): TekAgac {
   const kisi = new Map(kisiler.map(k => [k.id, k]));
-  const aileVar = new Set(aileler.map(a => a.id));
-  const aileBaglari = baglar.filter(b => AILE_TURLERI.has(b.tur) && kisi.has(b.a) && kisi.has(b.b));
-  const ebeveynleri = new Map<string, string[]>();
-  const esleri = new Map<string, string[]>();
-  for (const b of aileBaglari) {
-    if (b.tur === 'ebeveyni') ebeveynleri.set(b.a, [...(ebeveynleri.get(b.a) || []), b.b]);
-    if (b.tur === 'eşi') { esleri.set(b.a, [...(esleri.get(b.a) || []), b.b]); esleri.set(b.b, [...(esleri.get(b.b) || []), b.a]); }
-  }
-
-  // Kişinin çerçevesi: kendi ailesi; yoksa ebeveyninin, o da yoksa eşinin; hiçbiri yoksa "Ailesiz"
-  const ana = new Map<string, string>();
-  for (const k of kisiler) { const a = anaAileId(k); if (a && aileVar.has(a)) ana.set(k.id, a); }
-  for (let tur = 0; tur < 6; tur++) for (const k of kisiler) {
-    if (ana.has(k.id)) continue;
-    const p = (ebeveynleri.get(k.id) || []).find(x => ana.has(x)) ?? (esleri.get(k.id) || []).find(x => ana.has(x));
-    if (p) ana.set(k.id, ana.get(p)!);
-  }
-  for (const k of kisiler) if (!ana.has(k.id)) ana.set(k.id, '~');
-
-  // Çerçevelerin kartları: gerçekler ve yansımalar
-  const cerceveDugumu = new Map<string, Map<string, string>>(); // çerçeve → kişi → düğüm kimliği
-  const ekle = (c: string, kisiId: string) => {
-    if (!cerceveDugumu.has(c)) cerceveDugumu.set(c, new Map());
-    const m = cerceveDugumu.get(c)!;
-    if (!m.has(kisiId)) m.set(kisiId, ana.get(kisiId) === c ? kisiId : `${c}~${kisiId}`);
+  const ids = kisiler.map(k => k.id);
+  const notlar: string[] = [];
+  const ad = (id: string) => adParcalari(kisi.get(id)?.ad || '').ad;
+  const listeEkle = (m: Map<string, string[]>, a: string, b: string) => {
+    const l = m.get(a) || [];
+    if (!l.includes(b)) m.set(a, [...l, b]);
   };
-  for (const k of kisiler) ekle(ana.get(k.id)!, k.id);
-  for (const k of kisiler) {
-    const m = ana.get(k.id)!;
-    const yer = new Set<string>();
-    if (k.dogumAileId && aileVar.has(k.dogumAileId)) yer.add(k.dogumAileId);
-    for (const p of ebeveynleri.get(k.id) || []) yer.add(ana.get(p)!);
-    for (const e of esleri.get(k.id) || []) yer.add(ana.get(e)!);
-    for (const c of yer) if (c !== m && c !== '~') ekle(c, k.id);
+  const ebeveynleri = new Map<string, string[]>(), cocuklari = new Map<string, string[]>();
+  const esleri = new Map<string, string[]>(), kardesleri = new Map<string, string[]>(), akrabalari = new Map<string, string[]>();
+  for (const b of baglar) {
+    if (!kisi.has(b.a) || !kisi.has(b.b) || b.a === b.b) continue;
+    if (b.tur === 'ebeveyni') {
+      // Ters yönde de ebeveyn yazılmışsa (döngü) ikincisi alınmaz
+      if ((ebeveynleri.get(b.b) || []).includes(b.a)) continue;
+      listeEkle(ebeveynleri, b.a, b.b); listeEkle(cocuklari, b.b, b.a);
+    } else if (b.tur === 'eşi') { listeEkle(esleri, b.a, b.b); listeEkle(esleri, b.b, b.a); }
+    else if (b.tur === 'kardeşi') { listeEkle(kardesleri, b.a, b.b); listeEkle(kardesleri, b.b, b.a); }
+    else if (b.tur === 'akrabası') { listeEkle(akrabalari, b.a, b.b); listeEkle(akrabalari, b.b, b.a); }
+  }
+  const dogum = (id: string) => kisi.get(id)?.yasam?.bas;
+  const dogumSirasi = (a: string, b: string) => {
+    const da = dogum(a), db = dogum(b);
+    if (da !== undefined && db !== undefined && da !== db) return da - db;
+    if (da === undefined && db !== undefined) return 1;
+    if (db === undefined && da !== undefined) return -1;
+    return ad(a).localeCompare(ad(b), 'tr');
+  };
+
+  // ---- Kuşaklar: çocuk ebeveynin bir altında; eşler ve kardeşler aynı sırada;
+  // ebeveyni olmayan kişi en genç çocuğunun bir üstüne iner (gelinin anne-babası gibi)
+  const kusak = new Map<string, number>(ids.map(id => [id, 0]));
+  const yatay = [...esleri, ...kardesleri].flatMap(([a, l]) => l.map(b => [a, b] as const));
+  for (let tur = 0; tur < 80; tur++) {
+    let degisti = false;
+    const koy = (id: string, k: number) => { if (k > kusak.get(id)! && k < 60) { kusak.set(id, k); degisti = true; } };
+    for (const [c, ps] of ebeveynleri) for (const p of ps) koy(c, kusak.get(p)! + 1);
+    for (const [a, b] of yatay) { const k = Math.max(kusak.get(a)!, kusak.get(b)!); koy(a, k); koy(b, k); }
+    for (const [p, cs] of cocuklari) koy(p, Math.min(...cs.map(c => kusak.get(c)!)) - 1);
+    if (!degisti) break;
   }
 
-  // Çerçeve sırası: kalabalık aile başta, ardından ona kartla bağlı olanlar (komşu dursun)
-  const komsu = new Map<string, Set<string>>();
-  for (const [c, m] of cerceveDugumu) for (const kisiId of m.keys()) {
-    const g = ana.get(kisiId)!;
-    if (g === c) continue;
-    komsu.set(c, (komsu.get(c) || new Set()).add(g));
-    komsu.set(g, (komsu.get(g) || new Set()).add(c));
-  }
-  const kalan = [...cerceveDugumu.keys()].filter(c => c !== '~')
-    .sort((a, b) => cerceveDugumu.get(b)!.size - cerceveDugumu.get(a)!.size || (aileler.find(x => x.id === a)?.ad || '').localeCompare(aileler.find(x => x.id === b)?.ad || '', 'tr'));
-  const sira: string[] = [];
-  while (kalan.length) {
-    // Önce son eklenenin, yoksa daha öncekilerin komşusu
-    let n = -1;
-    for (let i = sira.length - 1; i >= 0 && n < 0; i--) n = kalan.findIndex(c => komsu.get(sira[i])?.has(c));
-    sira.push(kalan.splice(n >= 0 ? n : 0, 1)[0]);
-  }
-  if (cerceveDugumu.has('~')) sira.push('~');
-
-  // Her çerçeve kendi içinde dizilir
-  const ham = sira.map(c => {
-    const m = cerceveDugumu.get(c)!;
-    const kenarlar: AgacKenari[] = [];
-    for (const b of aileBaglari) {
-      const a = m.get(b.a), d = m.get(b.b);
-      if (a && d) kenarlar.push({ a, b: d, tur: b.tur as AgacKenari['tur'] });
-    }
-    const dugumler: AgacDugumu[] = [...m.entries()].map(([kisiId, id]) => {
-      const k = kisi.get(kisiId)!;
-      return { id, ad: k.ad, ...(k.yasam ? { dogum: k.yasam.bas } : {}) };
-    });
-    const y = agacDiz(dugumler, kenarlar, o);
-    const baslikEn = 120 + (aileler.find(a => a.id === c)?.ad.length || 8) * 11;
-    return {
-      c, m, kenarlar, y,
-      en: Math.max(y.en, baslikEn) + CERCEVE_PAY * 2,
-      boy: y.boy + CERCEVE_PAY * 2 + CERCEVE_BASLIK,
-      gercek: [...m.keys()].filter(id => ana.get(id) === c).length
-    };
-  });
-
-  // Çerçeveler tuvale yerleşir: her biri sığdığı en üst, en sol boşluğa (alçak ailenin altı boş kalmaz).
-  // Tuval genişliği adaylar arasından ekranın oranına en yakın ve en az boşluk bırakan seçilir.
-  const yerlestir = (sinir: number) => {
-    const konan: Array<{ x: number; y: number; en: number; boy: number }> = [];
-    for (const b of ham) {
-      const xler = [0, ...konan.map(k => k.x + k.en + CERCEVE_ARA)].filter(x => x === 0 || x + b.en <= sinir);
-      let en: { x: number; y: number } | null = null;
-      for (const x of xler) {
-        const y = konan.filter(k => k.x < x + b.en && x < k.x + k.en).reduce((m, k) => Math.max(m, k.y + k.boy + CERCEVE_ARA), 0);
-        if (!en || y < en.y || (y === en.y && x < en.x)) en = { x, y };
+  // ---- Kümeler: kan ve evlilik bağıyla birbirine ulaşılan kişiler
+  const kumeNo = new Map<string, number>();
+  const kumeler: string[][] = [];
+  for (const id of [...ids].sort(dogumSirasi)) {
+    if (kumeNo.has(id)) continue;
+    const n = kumeler.length, kume: string[] = [], yigin = [id];
+    kumeNo.set(id, n);
+    while (yigin.length) {
+      const x = yigin.pop()!;
+      kume.push(x);
+      for (const y of [...(ebeveynleri.get(x) || []), ...(cocuklari.get(x) || []), ...(esleri.get(x) || []), ...(kardesleri.get(x) || [])]) {
+        if (!kumeNo.has(y)) { kumeNo.set(y, n); yigin.push(y); }
       }
-      konan.push({ ...en!, en: b.en, boy: b.boy });
     }
-    const en = Math.max(0, ...konan.map(k => k.x + k.en)), boy = Math.max(0, ...konan.map(k => k.y + k.boy));
-    return { konan, en, boy };
-  };
-  const toplamEn = ham.reduce((t, b) => t + b.en + CERCEVE_ARA, 0);
-  const enGenis = Math.max(0, ...ham.map(b => b.en));
-  const adaylar: number[] = [];
-  for (let n = 0; n <= 24; n++) adaylar.push(enGenis + ((toplamEn - enGenis) * n) / 24);
-  const puan = (w: number) => {
-    const l = yerlestir(w);
-    const dolu = ham.reduce((t, b) => t + b.en * b.boy, 0) / Math.max(1, l.en * l.boy);
-    return Math.abs(Math.log(l.en / Math.max(1, l.boy) / Math.max(0.3, oran))) + (1 - dolu) * 1.5;
-  };
-  const enIyi = adaylar.length ? adaylar.reduce((en, a) => (puan(a) < puan(en) ? a : en), adaylar[0]) : 0;
-  const yer = yerlestir(enIyi).konan;
+    kumeler.push(kume);
+  }
 
-  const cerceveler: GenelCerceve[] = [];
-  const dugumler: GenelDugum[] = [];
-  ham.forEach((b, n) => {
-    const { x: x0, y: y0 } = yer[n];
-    const icX = x0 + CERCEVE_PAY + (b.en - CERCEVE_PAY * 2 - b.y.en) / 2, icY = y0 + CERCEVE_BASLIK + CERCEVE_PAY;
-    cerceveler.push({
-      id: b.c, ad: b.c === '~' ? 'Ailesiz' : (aileler.find(a => a.id === b.c)?.ad || 'Aile'),
-      x: x0, y: y0, en: b.en, boy: b.boy, icX, icY, kenarlar: b.kenarlar, konum: b.y.konum, kisiSayisi: b.gercek
-    });
-    for (const [kisiId, id] of b.m) {
-      const p = b.y.konum.get(id)!;
-      dugumler.push({ id, kisiId, cerceve: b.c, yansima: id !== kisiId, x: icX + p.x, y: icY + p.y });
+  // Ayrı kümeler doğum yıllarına göre aynı kuşak sırasına oturur: en kalabalık
+  // kümenin kuşak–yıl doğrusuna en yakın kaydırma
+  const sira = kumeler.map((_, n) => n).sort((a, b) => kumeler[b].length - kumeler[a].length || dogumSirasi(kumeler[a][0], kumeler[b][0]));
+  const yilli = (n: number) => kumeler[n].filter(id => dogum(id) !== undefined).map(id => [kusak.get(id)!, dogum(id)!] as const);
+  const ref = sira.length ? yilli(sira[0]) : [];
+  if (ref.length) {
+    const ks = new Set(ref.map(r => r[0]));
+    const ok = ref.reduce((t, r) => t + r[0], 0) / ref.length, oy = ref.reduce((t, r) => t + r[1], 0) / ref.length;
+    const egim = ks.size > 1
+      ? ref.reduce((t, r) => t + (r[0] - ok) * (r[1] - oy), 0) / ref.reduce((t, r) => t + (r[0] - ok) ** 2, 0)
+      : 25;
+    const beklenen = (k: number) => oy + egim * (k - ok);
+    for (const n of sira.slice(1)) {
+      const l = yilli(n);
+      if (!l.length) continue;
+      let enIyi = 0, enAz = Infinity;
+      for (let d = -12; d <= 12; d++) {
+        const hata = l.reduce((t, r) => t + Math.abs(beklenen(r[0] + d) - r[1]), 0) + Math.abs(d) * 1e-6;
+        if (hata < enAz) { enAz = hata; enIyi = d; }
+      }
+      for (const id of kumeler[n]) kusak.set(id, kusak.get(id)! + enIyi);
     }
-  });
-  const kartlari = new Map<string, GenelDugum[]>();
-  for (const d of dugumler) kartlari.set(d.kisiId, [...(kartlari.get(d.kisiId) || []), d].sort((a, b) => Number(a.yansima) - Number(b.yansima)));
-  return { cerceveler, dugumler, kartlari };
+  }
+
+  // ---- Birimler: aynı kuşaktaki eşler bir arada
+  const birimler: Birim[] = [];
+  const birimi = new Map<string, number>();
+  for (const id of [...ids].sort(dogumSirasi)) {
+    if (birimi.has(id)) continue;
+    const grup: string[] = [], yigin = [id];
+    while (yigin.length) {
+      const x = yigin.pop()!;
+      if (grup.includes(x)) continue;
+      grup.push(x);
+      for (const e of esleri.get(x) || []) if (kusak.get(e) === kusak.get(id) && !birimi.has(e)) yigin.push(e);
+    }
+    const n = birimler.length;
+    birimler.push({ no: n, uyeler: grup.sort(dogumSirasi), kusak: kusak.get(id)!, sanal: false, altlar: [], x: 0 });
+    for (const x of grup) birimi.set(x, n);
+  }
+  for (const [a, l] of esleri) for (const b of l) {
+    if (a < b && birimi.get(a) !== birimi.get(b)) notlar.push(`${ad(a)} ile ${ad(b)} eş, ama farklı kuşakta duruyor; eş çizgisi çizilmedi`);
+  }
+
+  // Ebeveyni ağaçta olmayan kardeşler: kartsız bir "kardeş birimi" altında toplanır
+  const ebeveynVar = (id: string) => (ebeveynleri.get(id) || []).length > 0;
+  const kardesBirimi = new Map<string, number>();
+  for (const id of [...ids].sort(dogumSirasi)) {
+    if (kardesBirimi.has(id) || ebeveynVar(id) || !(kardesleri.get(id) || []).length) continue;
+    const grup: string[] = [], yigin = [id];
+    while (yigin.length) {
+      const x = yigin.pop()!;
+      if (grup.includes(x)) continue;
+      grup.push(x);
+      for (const y of kardesleri.get(x) || []) {
+        if (ebeveynVar(y)) notlar.push(`${ad(x)} ile ${ad(y)} kardeş, ama yalnız ${ad(y)} için ebeveyn bağı var; kardeşlik çizilmedi`);
+        else yigin.push(y);
+      }
+    }
+    if (grup.length < 2) continue;
+    const n = birimler.length;
+    birimler.push({ no: n, uyeler: [], kusak: kusak.get(id)! - 1, sanal: true, altlar: [], x: 0 });
+    for (const x of grup) kardesBirimi.set(x, n);
+  }
+
+  // Kişinin ağaçtaki ailesi: ebeveynlerinin birimi (ya da kardeş birimi)
+  const aileBirimi = new Map<string, number>();
+  for (const id of ids) {
+    const ps = (ebeveynleri.get(id) || []).filter(p => kusak.get(p)! < kusak.get(id)!);
+    if (ps.length) {
+      const bs = [...new Set(ps.map(p => birimi.get(p)!))];
+      aileBirimi.set(id, bs[0]);
+      if (bs.length > 1) notlar.push(`${ad(id)}: ebeveynleri (${ps.map(ad).join(', ')}) birbirine eş bağıyla bağlı değil; çizgi her birinden ayrı iner`);
+    } else if (kardesBirimi.has(id)) aileBirimi.set(id, kardesBirimi.get(id)!);
+  }
+
+  // Kan bağı birimde kalan üye ("evlenip gelen" değil): doğduğu aile yazılmamış ya da ailesiyle aynı
+  const evlenipGelen = (id: string) => {
+    const k = kisi.get(id)!;
+    return !!(k.dogumAileId && k.dogumAileId !== anaAileId(k)) || !!k.dogumAilesiYok;
+  };
+  for (const b of birimler) {
+    if (b.sanal) continue;
+    const kanli = b.uyeler.filter(u => aileBirimi.has(u));
+    if (!kanli.length) continue;
+    const ev = [...kanli].sort((x, y) => Number(evlenipGelen(x)) - Number(evlenipGelen(y)) || dogumSirasi(x, y))[0];
+    b.ust = aileBirimi.get(ev)!;
+    const misafir = kanli.find(u => u !== ev && aileBirimi.get(u) !== b.ust);
+    if (misafir) b.misafir = { uye: misafir, birim: aileBirimi.get(misafir)! };
+  }
+  // Döngüye düşen (olmamalı) üst bağı kopar
+  for (const b of birimler) {
+    const yol = new Set<number>([b.no]);
+    let u = b.ust;
+    while (u !== undefined) {
+      if (yol.has(u)) { b.ust = undefined; break; }
+      yol.add(u); u = birimler[u].ust;
+    }
+  }
+  for (const b of birimler) if (b.ust !== undefined) birimler[b.ust].altlar.push(b.no);
+  const kokBul = (n: number): number => (birimler[n].ust === undefined ? n : kokBul(birimler[n].ust!));
+
+  // ---- Ağaçların sırası: evlilikle bağlı ağaçlar yan yana (gelinin ailesi damadın ailesinin yanında)
+  const agacKumesi = (k: number) => {
+    const b = birimler[k];
+    const ilk = b.uyeler[0] ?? birimler.find(x => x.ust === k)?.uyeler[0];
+    return ilk !== undefined ? kumeNo.get(ilk)! : -1;
+  };
+  const kokler = birimler.filter(b => b.ust === undefined).map(b => b.no);
+  const kavsaklar = birimler.filter(b => b.misafir).map(b => ({ birim: b.no, misafir: b.misafir!.birim, a: kokBul(b.no), b: kokBul(b.misafir!.birim) }))
+    .filter(k => k.a !== k.b);
+  const enYasli = (k: number): number => {
+    const l: string[] = [];
+    const topla = (n: number) => { l.push(...birimler[n].uyeler); birimler[n].altlar.forEach(topla); };
+    topla(k);
+    return l.sort(dogumSirasi).map(dogum).find(y => y !== undefined) ?? 99999;
+  };
+  // Kümeler arası yakınlık: akraba bağı ya da aynı aile
+  const kumeKomsu = new Map<number, Set<number>>();
+  const komsuEkle = (a: number, b: number) => { if (a !== b) { kumeKomsu.set(a, (kumeKomsu.get(a) || new Set()).add(b)); kumeKomsu.set(b, (kumeKomsu.get(b) || new Set()).add(a)); } };
+  for (const [a, l] of akrabalari) for (const b of l) komsuEkle(kumeNo.get(a)!, kumeNo.get(b)!);
+  const aileUyeleri = new Map<string, string[]>();
+  for (const k of kisiler) for (const a of new Set([k.aileId, k.soyadiAileId, k.dogumAileId])) if (a) aileUyeleri.set(a, [...(aileUyeleri.get(a) || []), k.id]);
+  for (const l of aileUyeleri.values()) for (let i = 1; i < l.length; i++) komsuEkle(kumeNo.get(l[0])!, kumeNo.get(l[i])!);
+  const kumeSirasi: number[] = [];
+  const kalanKume = [...sira];
+  while (kalanKume.length) {
+    let n = -1;
+    for (let i = kumeSirasi.length - 1; i >= 0 && n < 0; i--) n = kalanKume.findIndex(k => kumeKomsu.get(kumeSirasi[i])?.has(k));
+    kumeSirasi.push(kalanKume.splice(n >= 0 ? n : 0, 1)[0]);
+  }
+
+  // Her kümenin ağaçları: en yaşlı kökten başlayarak kavşaklarla sağa ve sola
+  const kumeAgaclari = new Map<number, number[]>();
+  for (const k of kokler) {
+    const n = agacKumesi(k);
+    kumeAgaclari.set(n, [...(kumeAgaclari.get(n) || []), k]);
+  }
+  const kenarIsaretle = (n: number, kenar: 'sol' | 'sag') => {
+    for (let u: number | undefined = n; u !== undefined; u = birimler[u].ust) if (!birimler[u].kenar) birimler[u].kenar = kenar;
+  };
+  /** Kavşak biriminde misafir üye hangi yanda (misafir ağacın yanı) */
+  const misafirYani = new Map<number, 'sol' | 'sag'>();
+  const agacSirasi: Array<{ kok: number; kume: number }> = [];
+  for (const n of kumeSirasi) {
+    const agaclar = (kumeAgaclari.get(n) || []).sort((a, b) => enYasli(a) - enYasli(b));
+    if (!agaclar.length) continue;
+    const dizi: number[] = [agaclar[0]];
+    const kalan = new Set(agaclar.slice(1));
+    let ilerledi = true;
+    while (kalan.size && ilerledi) {
+      ilerledi = false;
+      for (const kv of kavsaklar) {
+        const [ic, dis] = kalan.has(kv.b) && dizi.includes(kv.a) ? [kv.a, kv.b] : kalan.has(kv.a) && dizi.includes(kv.b) ? [kv.b, kv.a] : [-1, -1];
+        if (ic < 0) continue;
+        // Sağ uçtaki ağaca bağlıysa sağa, sol uçtakine bağlıysa sola; ortadakine sağa (çizgi uzar, not düşülür)
+        const uzak = dizi[0] !== ic && dizi[dizi.length - 1] !== ic;
+        const sagda = dizi[0] !== ic || dizi.length === 1;
+        if (sagda) dizi.push(dis); else dizi.unshift(dis);
+        if (uzak) notlar.push(`${birimler[kv.birim].uyeler.map(ad).join(' ile ')} evliliği yan yana durmayan iki ağacı bağlıyor; çizgi uzun`);
+        kalan.delete(dis);
+        // Kavşağın iki yanı birbirine bakar
+        const birimIc = kv.a === ic ? kv.birim : kv.misafir, birimDis = kv.a === ic ? kv.misafir : kv.birim;
+        kenarIsaretle(birimIc, sagda ? 'sag' : 'sol');
+        kenarIsaretle(birimDis, sagda ? 'sol' : 'sag');
+        // Misafir üye misafir ağaca bakar
+        misafirYani.set(kv.birim, kv.a === ic ? (sagda ? 'sag' : 'sol') : (sagda ? 'sol' : 'sag'));
+        ilerledi = true;
+      }
+    }
+    dizi.push(...[...kalan].sort((a, b) => enYasli(a) - enYasli(b)));
+    for (const k of dizi) agacSirasi.push({ kok: k, kume: n });
+  }
+
+  // ---- Çocukların sırası ve birim içi sıra
+  const birimDogumu = (n: number) => {
+    const b = birimler[n];
+    const kan = b.uyeler.filter(u => aileBirimi.get(u) === b.ust);
+    return (kan.length ? kan : b.uyeler).sort(dogumSirasi)[0];
+  };
+  for (const b of birimler) {
+    b.altlar.sort((x, y) => {
+      const r = (k?: 'sol' | 'sag') => (k === 'sol' ? 0 : k === 'sag' ? 2 : 1);
+      return r(birimler[x].kenar) - r(birimler[y].kenar) || dogumSirasi(birimDogumu(x), birimDogumu(y));
+    });
+  }
+  for (const b of birimler) {
+    if (b.sanal || b.uyeler.length < 2) continue;
+    if (b.uyeler.length > 2) {
+      // Üç ve daha çok eş: en çok eşi olan ortada
+      const merkez = [...b.uyeler].sort((x, y) => (esleri.get(y)?.length || 0) - (esleri.get(x)?.length || 0))[0];
+      const kalan = b.uyeler.filter(x => x !== merkez);
+      b.uyeler = [...kalan.filter((_, n) => n % 2 === 1), merkez, ...kalan.filter((_, n) => n % 2 === 0)];
+      continue;
+    }
+    const kan = b.ust !== undefined ? b.uyeler.find(u => aileBirimi.get(u) === b.ust) : undefined;
+    const diger = b.uyeler.find(u => u !== kan);
+    if (b.misafir && kan) {
+      // Misafir üye kendi ailesinin ağacına bakar
+      b.uyeler = misafirYani.get(b.no) === 'sol' ? [b.misafir.uye, kan] : [kan, b.misafir.uye];
+    } else if (kan && diger) {
+      // Kan bağı olan kardeşlerine bakar: ilk çocuksa sağda, değilse solda
+      const kardes = birimler[b.ust!].altlar;
+      const ilk = kardes.length > 1 && kardes[0] === b.no;
+      b.uyeler = ilk ? [diger, kan] : [kan, diger];
+    }
+  }
+
+  // ---- Ağaç içi yerleşim
+  const adim = o.en + o.esAra;
+  const kendiEni = (b: Birim) => (b.sanal ? 0 : b.uyeler.length * o.en + (b.uyeler.length - 1) * o.esAra);
+  /** Birimin çocuklara indiği nokta (birimin solundan) */
+  const inis = (b: Birim) => (b.sanal ? 0 : b.uyeler.length === 2 ? o.en + o.esAra / 2 : kendiEni(b) / 2);
+  /** Kişinin kartının ortası (yerleşimden sonra) */
+  const orta = (id: string) => birimler[birimi.get(id)!].x + birimler[birimi.get(id)!].uyeler.indexOf(id) * adim + o.en / 2;
+  // Her alt ağacın kutusu birimin sol kenarına göre: çocuklar yan yana, birim
+  // çocuklarının (kan bağı olanların) ortasının üstünde; geniş birimin altında çocuklar ortalanır
+  const kutu = new Map<number, { sol: number; sag: number }>();
+  const cocukX = new Map<number, number>();
+  const hesapla = (n: number) => {
+    const b = birimler[n];
+    let x = 0;
+    const yer: Array<[number, number]> = [];
+    const capalar: number[] = [];
+    for (const c of b.altlar) {
+      hesapla(c);
+      const k = kutu.get(c)!;
+      const cx = x - k.sol;
+      yer.push([c, cx]);
+      birimler[c].uyeler.forEach((u, i) => { if (aileBirimi.get(u) === n) capalar.push(cx + i * adim + o.en / 2); });
+      x += k.sag - k.sol + o.araX;
+    }
+    const toplam = Math.max(0, x - o.araX);
+    const ke = kendiEni(b);
+    const ux = capalar.length ? (Math.min(...capalar) + Math.max(...capalar)) / 2 - inis(b) : (toplam - ke) / 2;
+    for (const [c, cx] of yer) cocukX.set(c, cx - ux);
+    kutu.set(n, b.altlar.length ? { sol: Math.min(0, -ux), sag: Math.max(ke, toplam - ux) } : { sol: 0, sag: ke });
+  };
+  const konumla = (n: number, x: number) => {
+    birimler[n].x = x;
+    for (const c of birimler[n].altlar) konumla(c, x + cocukX.get(c)!);
+  };
+  const yerlestir = (kok: number) => { hesapla(kok); konumla(kok, -kutu.get(kok)!.sol); };
+
+  // ---- Ağaçlar soldan sağa: kavşakla bağlı ağaçlar satır satır birbirine yaslanır,
+  // ayrı kümeler arasında geniş boşluk ve üst üste binmeyen kutular
+  const satirY = (k: number) => k * (o.boy + o.araY);
+  const kumeArasi = Math.max(o.araX * 3, o.en / 2);
+  const sagUc = new Map<number, number>(); // kuşak bandı → o kümede en sağdaki nokta
+  let genelSag = -Infinity;
+  let oncekiKume = -1;
+  const kumeKutulari: Array<{ kume: number; x: number; sag: number }> = [];
+  const agacBirimleri = (k: number) => { const l: number[] = []; const t = (n: number) => { l.push(n); birimler[n].altlar.forEach(t); }; t(k); return l; };
+  for (const { kok, kume } of agacSirasi) {
+    yerlestir(kok);
+    const bl = agacBirimleri(kok);
+    // Bant uçları: kartlar kendi kuşağında; çocuk çizgisi çocuğun kuşağında
+    const solUc = new Map<number, number>(), sagYeni = new Map<number, number>();
+    const uc = (k: number, a: number, b: number) => {
+      solUc.set(k, Math.min(solUc.get(k) ?? Infinity, a));
+      sagYeni.set(k, Math.max(sagYeni.get(k) ?? -Infinity, b));
+    };
+    for (const n of bl) {
+      const b = birimler[n];
+      if (!b.sanal) uc(b.kusak, b.x, b.x + kendiEni(b));
+      const cocuklar = b.altlar.flatMap(c => birimler[c].uyeler.filter(u => aileBirimi.get(u) === n).map(u => [u, birimler[c].kusak] as const));
+      if (!cocuklar.length) continue;
+      const xs = [...cocuklar.map(([u]) => orta(u)), ...(b.sanal ? [] : [b.x + inis(b)])];
+      for (let k = b.kusak + 1; k <= Math.max(...cocuklar.map(c => c[1])); k++) uc(k, Math.min(...xs), Math.max(...xs));
+    }
+    let dx: number;
+    if (kume === oncekiKume) {
+      dx = -Infinity;
+      for (const [k, s] of solUc) if (sagUc.has(k)) dx = Math.max(dx, sagUc.get(k)! + o.araX - s);
+      if (dx === -Infinity) dx = genelSag + o.araX - Math.min(...solUc.values());
+    } else {
+      dx = genelSag === -Infinity ? -Math.min(...solUc.values()) : genelSag + kumeArasi - Math.min(...solUc.values());
+      sagUc.clear();
+      kumeKutulari.push({ kume, x: Math.min(...solUc.values()) + dx, sag: -Infinity });
+    }
+    for (const n of bl) birimler[n].x += dx;
+    for (const [k, s] of sagYeni) sagUc.set(k, Math.max(sagUc.get(k) ?? -Infinity, s + dx));
+    genelSag = Math.max(genelSag, ...[...sagYeni.values()].map(s => s + dx));
+    kumeKutulari[kumeKutulari.length - 1].sag = genelSag;
+    oncekiKume = kume;
+  }
+
+  // ---- Konumlar
+  const konum = new Map<string, { x: number; y: number }>();
+  for (const b of birimler) b.uyeler.forEach((id, i) => konum.set(id, { x: b.x + i * adim, y: satirY(b.kusak) }));
+
+  // ---- Çizgiler: yalnız kuşak aralarındaki boşlukta
+  const cizgiler: TekAgacCizgisi[] = [];
+  const yanyana = (a: string, b: string) => {
+    const p = konum.get(a)!, q = konum.get(b)!;
+    return Math.abs(p.y - q.y) < 1 && Math.abs(Math.abs(p.x - q.x) - adim) < 1;
+  };
+  for (const [a, l] of esleri) for (const b of l) {
+    if (a > b || !yanyana(a, b)) continue;
+    const [s, g] = konum.get(a)!.x < konum.get(b)!.x ? [konum.get(a)!, konum.get(b)!] : [konum.get(b)!, konum.get(a)!];
+    cizgiler.push({ id: `e-${a}-${b}`, tur: 'eşi', kisiler: [a, b], d: `M${s.x + o.en},${s.y + o.boy / 2} H${g.x}` });
+  }
+  // Aileler: aynı ebeveyn takımının çocukları tek çizgide
+  const aileler = new Map<string, { ebeveyn: string[]; cocuk: string[] }>();
+  for (const id of ids) {
+    const ps = (ebeveynleri.get(id) || []).filter(p => kusak.get(p)! < kusak.get(id)!).sort();
+    if (!ps.length) continue;
+    const anahtar = ps.join('|');
+    if (!aileler.has(anahtar)) aileler.set(anahtar, { ebeveyn: ps, cocuk: [] });
+    aileler.get(anahtar)!.cocuk.push(id);
+  }
+  const yuvarla = (v: number) => Math.round(v * 10) / 10;
+  for (const [anahtar, { ebeveyn, cocuk }] of aileler) {
+    const ustKusak = Math.max(...ebeveyn.map(p => kusak.get(p)!));
+    const hatY = satirY(ustKusak) + o.boy + o.araY / 2;
+    const parcalar: string[] = [];
+    const xs: number[] = [];
+    const cift = ebeveyn.length === 2 && yanyana(ebeveyn[0], ebeveyn[1]);
+    if (cift) {
+      const [a, b] = ebeveyn.map(p => konum.get(p)!);
+      const x = (Math.min(a.x, b.x) + o.en + Math.max(a.x, b.x)) / 2;
+      parcalar.push(`M${yuvarla(x)},${a.y + o.boy / 2} V${hatY}`);
+      xs.push(x);
+    } else for (const p of ebeveyn) {
+      const q = konum.get(p)!;
+      parcalar.push(`M${yuvarla(q.x + o.en / 2)},${q.y + o.boy} V${hatY}`);
+      xs.push(q.x + o.en / 2);
+    }
+    for (const c of cocuk) {
+      const q = konum.get(c)!;
+      parcalar.push(`M${yuvarla(q.x + o.en / 2)},${hatY} V${q.y}`);
+      xs.push(q.x + o.en / 2);
+    }
+    if (Math.max(...xs) - Math.min(...xs) > 0.5) parcalar.push(`M${yuvarla(Math.min(...xs))},${hatY} H${yuvarla(Math.max(...xs))}`);
+    cizgiler.push({ id: `c-${anahtar}`, tur: 'çocuk', kisiler: [...ebeveyn, ...cocuk], d: parcalar.join(' ') });
+  }
+  // Ebeveyni ağaçta olmayan kardeşler: üstlerinde kısa köşeli çizgi
+  for (const b of birimler) {
+    if (!b.sanal) continue;
+    const kardes = b.altlar.flatMap(c => birimler[c].uyeler.filter(u => aileBirimi.get(u) === b.no));
+    if (kardes.length < 2) continue;
+    const y = satirY(b.kusak + 1) - o.araY / 3;
+    const xs = kardes.map(u => orta(u));
+    cizgiler.push({
+      id: `k-${b.no}`, tur: 'kardeşi', kisiler: kardes,
+      d: [`M${yuvarla(Math.min(...xs))},${yuvarla(y)} H${yuvarla(Math.max(...xs))}`, ...kardes.map(u => `M${yuvarla(orta(u))},${yuvarla(y)} V${konum.get(u)!.y}`)].join(' ')
+    });
+  }
+
+  // ---- Sol üst köşe 0
+  const xs = [...konum.values()].map(p => p.x), ys = [...konum.values()].map(p => p.y);
+  const mx = xs.length ? Math.min(...xs) : 0, my = ys.length ? Math.min(...ys) : 0;
+  for (const [id, p] of konum) konum.set(id, { x: p.x - mx, y: p.y - my });
+  const kaydir = (d: string) => d.replace(/([MLH])(-?[\d.]+)(?:,(-?[\d.]+))?|V(-?[\d.]+)/g, (_m, h, x, y, v) =>
+    v !== undefined ? `V${yuvarla(Number(v) - my)}` : h === 'H' ? `H${yuvarla(Number(x) - mx)}` : `${h}${yuvarla(Number(x) - mx)},${yuvarla(Number(y) - my)}`);
+  for (const c of cizgiler) c.d = kaydir(c.d);
+  const kusakSon = new Map<string, number>();
+  const minKusak = Math.min(...ids.map(id => kusak.get(id)!));
+  for (const id of ids) kusakSon.set(id, kusak.get(id)! - minKusak);
+  return {
+    konum, kusak: kusakSon, cizgiler,
+    kumeler: kumeKutulari.map(k => ({ x: k.x - mx, en: k.sag - k.x, kisiler: kumeler[k.kume] })),
+    en: xs.length ? Math.max(...xs) - mx + o.en : 0,
+    boy: ys.length ? Math.max(...ys) - my + o.boy : 0,
+    notlar: [...new Set(notlar)]
+  };
 }
