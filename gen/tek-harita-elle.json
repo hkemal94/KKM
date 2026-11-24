@@ -7,12 +7,12 @@
     "tur": "dukkanli",
     "dosya": "binalar/dukkanli-ev.glb",
     "m": [
-     25.8189329,
-     39.5849764
+     25.8184023,
+     39.5832177
     ],
     "ex": [
-     0.5519,
-     -0.8339
+     0.9875,
+     0.1574
     ],
     "en": 8.0,
     "boy": 13.5,
@@ -1509,6 +1509,20 @@
     "yeniYapi": 7,
     "yol": 0,
     "yeniYol": 2,
+    "kare": 0,
+    "grup": 0,
+    "zemin": 0
+   }
+  },
+  {
+   "olusturuldu": "2026-11-24T12:00:00.000Z",
+   "not": "İskele eski sokaklarıyla (24 Kasım): Kems Company dükkânı Kemsköy Caddesi'nin yeni (eski haritadaki) hattında, köyün ortasındaki kavşağın yanında boş yere taşındı; eski yeri artık bir sokağın üstündeydi (DENEME)",
+   "sayilar": {
+    "tasinan": 1,
+    "silinen": 0,
+    "yeniYapi": 0,
+    "yol": 0,
+    "yeniYol": 0,
     "kare": 0,
     "grup": 0,
     "zemin": 0

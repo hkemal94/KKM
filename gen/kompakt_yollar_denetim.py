@@ -377,7 +377,34 @@ def main():
         f"hattından kayan: {', '.join(kayip) or '-'}")
     lm_u = unary_union([LineString([LM.tasi(*c) for c in hat_]) for _, hat_ in lm_sokak.values()])
     yaz("Liman sokakları kıyıya 20 m'den yaklaşmaz", kiyi.distance(lm_u) >= 20.0, f"en yakın {kiyi.distance(lm_u):.0f} m")
-    # Sahil Yolu'nun Liman dışındaki noktaları ana daldakiyle aynı (gen/kompakt-sahil-ana.json)
+    # 12) İskele köyü: eski haritadaki sokaklar, gen/kompakt_iskele.py'nin taşımasıyla (Kemal, 24 Kasım)
+    import kompakt_iskele as IS
+    is_sokak, _, is_sahil = IS.eski_iskele()
+    sap, kayip = [], []
+    for k_, (ad_, kd_, hat_) in is_sokak.items():
+        g_ = LineString([IS.tasi(*c) for c in hat_])
+        uc = 5.0 if g_.length > 12 else 0.0
+        ds = [agu.distance(g_.interpolate(t)) for t in np.arange(uc, g_.length - uc + 0.01, 4.0)]
+        if ds and max(ds) > 4.0:
+            kayip.append(k_)
+        sap.append(max(ds) if ds else 0.0)
+    yaz("İskele sokakları eski haritadakiyle aynı hat (oran 0,70, kara yönüne kayma)", not kayip,
+        f"{len(is_sokak)} sokak, {len(is_sokak) - len(kayip)} tanesi taşınmış eski hattan en çok "
+        f"{max(s_ for s_, k_ in zip(sap, is_sokak) if k_ not in kayip):.2f} m sapmayla; hattından kayan: {', '.join(kayip) or '-'}")
+    is_u = unary_union([LineString([IS.tasi(*c) for c in hat_]) for _, _, hat_ in is_sokak.values()])
+    yaz("İskele sokakları kıyıya 20 m'den yaklaşmaz", kiyi.distance(is_u) >= IS.KIYI_EN_AZ, f"en yakın {kiyi.distance(is_u):.0f} m")
+    kc_ = next((y["g"] for y in G if y["p"].get("ad") == "Kemsköy Caddesi"), None)
+    yaz("Kemsköy Caddesi eski haritadaki hattıyla", kc_ is not None and kc_.hausdorff_distance(
+        LineString([IS.tasi(*c) for c in is_sokak["yol_kemskoy"][2]])) <= 4.0,
+        f"taşınmış eski hattan en çok {kc_.hausdorff_distance(LineString([IS.tasi(*c) for c in is_sokak['yol_kemskoy'][2]])):.2f} m"
+        if kc_ is not None else "yok")
+    sy_g = next((y["g"] for y in G if y["p"].get("ad") == "Sahil Yolu"), None)
+    es_ = LineString([IS.tasi(*c) for c in is_sahil]).intersection(is_u.convex_hull)
+    es_ = max(getattr(es_, "geoms", [es_]), key=lambda g: g.length)
+    ds_ = [sy_g.distance(es_.interpolate(t)) for t in np.arange(0, es_.length + 0.01, 4.0)] if sy_g is not None else [99.0]
+    yaz("Sahil Yolu İskele'nin içinde eski haritadaki hattından", max(ds_) <= 1.0,
+        f"köyün içindeki {es_.length:.0f} m'de taşınmış eski hattan en çok {max(ds_):.2f} m")
+    # Sahil Yolu'nun Liman ve İskele dışındaki noktaları ana daldakiyle aynı (gen/kompakt-sahil-ana.json)
     sa_ = json.load(open(os.path.join(BURASI, "kompakt-sahil-ana.json"), encoding="utf-8"))["koordinatlar"]
     sy_ = next((f["geometry"]["coordinates"] for f in yollar if f["properties"].get("ad") == "Sahil Yolu"), [])
     nl = 0
@@ -387,9 +414,9 @@ def main():
     while nr < min(len(sa_), len(sy_)) - nl and sa_[-1 - nr] == sy_[-1 - nr]:
         nr += 1
     disari = [mt(*c[:2]) for c in sa_[nl:len(sa_) - nr]]
-    uzak = max((Point(q).distance(lm_u) for q in disari), default=0.0)
-    yaz("Sahil Yolu Liman dışında ana daldakiyle aynı nokta nokta", uzak <= 1200.0,
-        f"{nl + nr} / {len(sa_)} nokta aynı; değişenlerin Liman sokaklarına en uzağı {uzak:.0f} m")
+    uzak = max((Point(q).distance(is_u) for q in disari), default=0.0)
+    yaz("Sahil Yolu Liman ve İskele dışında ana daldakiyle aynı nokta nokta (Liman kesimi dosyada)", uzak <= 1200.0,
+        f"{nl + nr} / {len(sa_)} nokta aynı; değişenlerin İskele sokaklarına en uzağı {uzak:.0f} m")
     print("Zemin denetimi (yol yatağıyla):")
     sorun += zd.main()
     print("Sonuç:", "hepsi temiz" if sorun == 0 else f"{sorun} sorun")

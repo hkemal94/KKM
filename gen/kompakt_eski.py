@@ -109,3 +109,18 @@ def liman():
     sokak = {k: (ad, [tuple(c) for c in hat]) for k, ad, hat in _V["liman"]["sokaklar"]}
     meydan = [[tuple(c) for c in p] for p in _V["liman"]["meydancik"]]
     return sokak, meydan, _ciftler(SAHIL_YOLU)
+
+
+def iskele():
+    """Eski haritadaki İskele köyü: sokaklar {kimlik: (ad, kademe, [(boylam, enlem)…])}, meydancıklar
+    [[(boylam, enlem)…]], Sahil Yolu [(boylam, enlem)…] (Kemal'in Kurucu'daki son hâli; gen/kompakt_iskele.py →
+    eski_iskele; 24 Kasım'da eklendi)."""
+    sokak = {k: (ad, kademe, [tuple(c) for c in hat]) for k, ad, kademe, hat in _V["iskele"]["sokaklar"]}
+    meydan = [[tuple(c) for c in p] for p in _V["iskele"]["meydancik"]]
+    return sokak, meydan, _ciftler(SAHIL_YOLU)
+
+
+def iskele_sahile_kadar():
+    """Eski haritada İskele köyünden çıkan, tek haritada yalnız Sahil Yolu'na kadarki başı kullanılan yollar:
+    [(kimlik, kademe, [(boylam, enlem)…])] (Kemsköy Caddesi'nin doğu ucundan The Imperial'e inen yol; 24 Kasım)."""
+    return [(k, kademe, [tuple(c) for c in hat]) for k, kademe, hat in _V["iskele"].get("sahileKadar", [])]

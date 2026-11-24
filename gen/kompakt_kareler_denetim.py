@@ -132,11 +132,12 @@ def main():
     yaz("arsa tam karelerden oluşur (kare çizgisine oturur, 1 m² pay)", tam_degil == 0, f"{tam_degil} arsa")
     yaz("arsa ölçüsü kare boyunun katı ve kare sayısıyla uyuşuyor", sayi == 0, f"{sayi} arsa")
     tablo = {t: {tuple(x) for x in v} for t, v in O["arsaKare"].items()}
-    # Liman'da sığ arsa da var (gen/kompakt_parseller.py → LIMAN_SIG, 22 Kasım)
+    # Liman'da (22 Kasım) ve İskele'de (24 Kasım) sığ arsa da var (gen/kompakt_parseller.py → LIMAN_SIG, SIG_YERLESIMLER)
     liman_t = {t: {tuple(x) for x in v} for t, v in O.get("limanArsaKare", {}).items()}
     disi = sum(1 for f in parsel.values() if (round(f["properties"]["cepheM"] / K), round(f["properties"]["derinlikM"] / K))
                not in tablo[f["properties"]["tur"]] | (liman_t.get(f["properties"]["tur"], set())
-                                                     if f["properties"].get("yerlesim") == "yerlesim_liman" else set()))
+                                                     if f["properties"].get("yerlesim") in O.get("sigArsaYerlesimleri", ["yerlesim_liman"])
+                                                     else set()))
     yaz("arsa ölçüsü tür tablosunda (DENEME)", disi == 0, f"{disi} arsa")
     # avlulu: aynı şeritte önünde ve arkasında en az 1 boş sütun
     yanyana = 0

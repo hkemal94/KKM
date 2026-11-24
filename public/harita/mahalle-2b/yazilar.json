@@ -6,7 +6,7 @@
    "dosya": "yer_ciftlik-A.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 682467,
+   "bayt": 682365,
    "yazilar": [
     {
      "tur": "yol",
@@ -133,7 +133,7 @@
    "dosya": "yer_ciftlik-B.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 1025610,
+   "bayt": 1026428,
    "yazilar": [
     {
      "tur": "yol",
@@ -197,7 +197,7 @@
    "dosya": "yer_iskele-A.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 597105,
+   "bayt": 579302,
    "yazilar": [
     {
      "tur": "yol",
@@ -235,6 +235,21 @@
      "yer": "pencere"
     },
     {
+     "tur": "yapi",
+     "metin": "The Imperial Kemsköy",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Otel Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Merdiveni",
+     "yer": "pencere"
+    },
+    {
      "tur": "yol",
      "metin": "Sahil Yolu",
      "yer": "ana"
@@ -245,24 +260,9 @@
      "yer": "ana"
     },
     {
-     "tur": "yapi",
-     "metin": "The Imperial Kemsköy",
-     "yer": "ana"
-    },
-    {
      "tur": "zirve",
      "metin": "Güney Burnu",
      "rakim": 96,
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Otel Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Sahil Merdiveni",
      "yer": "ana"
     },
     {
@@ -349,7 +349,7 @@
    "dosya": "yer_iskele-B.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 887527,
+   "bayt": 895585,
    "yazilar": [
     {
      "tur": "yol",
@@ -387,6 +387,21 @@
      "yer": "pencere"
     },
     {
+     "tur": "yapi",
+     "metin": "The Imperial Kemsköy",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Otel Yolu",
+     "yer": "pencere"
+    },
+    {
+     "tur": "yol",
+     "metin": "Sahil Merdiveni",
+     "yer": "pencere"
+    },
+    {
      "tur": "yol",
      "metin": "Sahil Yolu",
      "yer": "ana"
@@ -397,24 +412,9 @@
      "yer": "ana"
     },
     {
-     "tur": "yapi",
-     "metin": "The Imperial Kemsköy",
-     "yer": "ana"
-    },
-    {
      "tur": "zirve",
      "metin": "Güney Burnu",
      "rakim": 96,
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Otel Yolu",
-     "yer": "ana"
-    },
-    {
-     "tur": "yol",
-     "metin": "Sahil Merdiveni",
      "yer": "ana"
     },
     {
@@ -438,7 +438,7 @@
    "dosya": "yer_liman-A.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 448697,
+   "bayt": 445193,
    "yazilar": [
     {
      "tur": "yol",
@@ -591,7 +591,7 @@
    "dosya": "yer_liman-B.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 714103,
+   "bayt": 713782,
    "yazilar": [
     {
      "tur": "yol",
@@ -685,7 +685,7 @@
    "dosya": "yer_merkez-A.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 897189,
+   "bayt": 897471,
    "yazilar": [
     {
      "tur": "yol",
@@ -863,7 +863,7 @@
    "dosya": "yer_merkez-B.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 1484164,
+   "bayt": 1483671,
    "yazilar": [
     {
      "tur": "yol",
@@ -982,7 +982,7 @@
    "dosya": "yer_stadyum-A.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 427131,
+   "bayt": 426697,
    "yazilar": [
     {
      "tur": "yol",
@@ -1120,7 +1120,7 @@
    "dosya": "yer_stadyum-B.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 724362,
+   "bayt": 723834,
    "yazilar": [
     {
      "tur": "yol",
