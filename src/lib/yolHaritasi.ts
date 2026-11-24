@@ -487,6 +487,8 @@ export const YOL_HARITASI: YolIsi[] = [
     ad: 'Zaman çizgisi okunur: satırlar türe göre gruplu (mekânların faaliyeti, ailelerin adaya gelişi, kişilerin yaşamı; kişiler açılıp kapanan katman, kapalı başlar), grup içinde yıla göre; eksen parçalı (boş yüzyıllar "≈" kesikli dar şerit, 1900 sonrası geniş); "18. yüzyıl–" gibi değerler açık uçlu, yaklaşık başlangıç soluk; okunamayan değer satırda "tarih belirsiz"', not: 'Yalnız ekranda; kayda bir şey yazılmaz. Parantez içi açıklama tarih sayılmaz. Kurum, olay ve yer maddelerinin tarihleri çizgide görünmez (Kemal\'in seçtiği üç grup); "Eksen" seçici ve "Çizgiye konamayan tarihler" listesi kalktı.' },
   // sırası belli değil
   { id: 'teknik-foy', uzak: true, paket: 'M', ad: 'Ürünlere teknik föy (tech pack): ölçü tablosu, malzeme, renk, etiket', nereden: '1 Ekim', kimde: 'kemal', not: 'Kemal isterse; 3B stüdyo kaldırıldı (1 Ekim gece).' },
+  { id: 'kunye-mubadele', paket: 'K', kimde: 'claude', nereden: '16 Kasım · Kemal', bitti: true,
+    ad: 'Künye: Düzada Rumları 1923 mübadelesinin dışında kaldı, yıllar içinde kendi istekleriyle yavaş yavaş ayrıldı (vikiyle aynı söz)', not: 'Künye ve mahalle derleme metinleri; viki kısmı 16 Kasım\'da uygulandı.' },
   { id: 'kunye-aile-sagligi', paket: 'K', kimde: 'claude', nereden: '16 Kasım · Kemal', bitti: true,
     ad: 'Künye: sağlık ocağı 2010\'larda aile sağlığı merkezi oldu; adalılar aile hekimi için Küçükkuyu\'ya gitmez', not: 'Yalnız belge; vikideki karşılığı ajansın 16 Kasım kararlarıyla Onay bekleyenler\'de.' },
   { id: 'merch-kisa-liste', paket: 'K', kimde: 'claude', nereden: '3 Kasım · Kemal', bitti: true,
