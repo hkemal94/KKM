@@ -9,7 +9,8 @@ aynı; yeni sokak yok. Numaralı adlar taşınmaz.
 Oran: adanın küçültmesinin kendisi (0,70, aynı odak), döndürme ve kayma yok: stat da aynı küçültmeyle yerinde (ölçüsü
 aynı), köy statın batısında eskisi gibi. Eski ızgaranın adaları 0,70'te ~55 m; köy küçülür, evler yakın.
 Tepeler aynı yükseklikte kaldığı için yamaç dikleşti: eğim sınırını (%15) aşan sokak basamaklı geçit olur
-(gen/kompakt_yollar.py; zemin düzlenmez, İskele'deki gibi). Seyreltme aşağıda (GIDEN). Ölçüler DENEME.
+(gen/kompakt_yollar.py; zemin düzlenmez, İskele'deki gibi). Seyreltme aşağıda (GIDEN; Kemal onayladı, 25 Kasım).
+Öbür ölçüler DENEME.
 
 Üreteçler bunu okur: gen/kompakt_yollar.py (sokaklar), gen/kompakt_yollar_denetim.py, gen/kompakt_yapilar_denetim.py.
 """
@@ -40,7 +41,8 @@ def tasi(lng, lat):
 
 
 # Seyreltme (Kemal: "daha az sokak"): aşağıdaki hatlar kaldırılır, kalanlar aynı hatta (yeni sokak, birleştirme yok).
-# Seçim bir kez hesaplanıp donduruldu (DENEME, Kemal onaylamadı); gerekçesi her satırda.
+# Seçim bir kez hesaplanıp donduruldu (Kemal onayladı, 25 Kasım: "Stadyum'un uzun yolları böyle kalsın"); gerekçesi
+# her satırda.
 # Izgaranın kuzeydoğu-güneybatı yönündeki uzun paralel sokaklarından (8 tane, aralarında ~40 m) üçü gider: kalanlar
 # arasında ~80 m kalır, iki yandan dört sıra ev (8 m kare) adayı doldurur, boş ada kalmaz. Kısa çapraz sokaklar aynı hatta
 # kalır, gidenin yerinde iki ucu birbirine değer (eskisinde de öyleydi).

@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 25 Kasım 2026 (toplu: The Imperial'in cep plajı kayalık, koyda sığlık lekeleri kalktı; Stadyum eski sokaklarıyla; Çiftlik sıklaştı; kullanılmayan modeller silindi; taş kaide; hafif sürümler ve üçgen tavanı); önceki: 25 Kasım 2026 gece (tek harita: The Imperial Otel kalıbı modeliyle kıyıda); önceki: 24 Kasım 2026 gece (tek harita: adanın Ege'deki yeri); önceki: 24 Kasım 2026 akşam (soy ağacı tek ağaç: aile çerçeveleri kalktı); önceki: 24 Kasım 2026 (tek harita: İskele, Kemal'in son cevapları: mendirek B, iskeleye inen yol); önceki: 24 Kasım 2026 (genel soy ağacı: bütün ada tek tuvalde); önceki: 24 Kasım 2026 (aile maddesi "Albüm": kuşak bandı, kuşak ağacı, yan kartlar); önceki: 24 Kasım 2026 (künyede bozuk Rol satırı düzeldi); önceki: 24 Kasım 2026 (ajansın kararlarına başlık değiştirme); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 25 Kasım 2026 akşam (tek harita: mavi şerit düzeldi; mendireğin hafif sürümü; Kemal'in onayladığı harita ölçüleri); önceki: 25 Kasım 2026 (toplu: The Imperial'in cep plajı kayalık, koyda sığlık lekeleri kalktı; Stadyum eski sokaklarıyla; Çiftlik sıklaştı; kullanılmayan modeller silindi; taş kaide; hafif sürümler ve üçgen tavanı); önceki: 25 Kasım 2026 gece (tek harita: The Imperial Otel kalıbı modeliyle kıyıda); önceki: 24 Kasım 2026 gece (tek harita: adanın Ege'deki yeri); önceki: 24 Kasım 2026 akşam (soy ağacı tek ağaç: aile çerçeveleri kalktı); önceki: 24 Kasım 2026 (tek harita: İskele, Kemal'in son cevapları: mendirek B, iskeleye inen yol); önceki: 24 Kasım 2026 (genel soy ağacı: bütün ada tek tuvalde); önceki: 24 Kasım 2026 (aile maddesi "Albüm": kuşak bandı, kuşak ağacı, yan kartlar); önceki: 24 Kasım 2026 (künyede bozuk Rol satırı düzeldi); önceki: 24 Kasım 2026 (ajansın kararlarına başlık değiştirme); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -8,6 +8,40 @@
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 25 Kasım akşam: tek harita: mavi şerit düzeldi
+
+Kemal: hafif modda The Imperial'e yakından bakınca karanın üstünden mavi bir şerit geçiyor. Sebep su, dere ya da kıyı verisi
+değil (verideki kara hep deniz seviyesinin üstünde; orada 6 m'lik vadi ve düzlük): deniz yüzü 900 km'lik tek dörtgendi (iki
+üçgen), bu kadar büyük üçgende ekran kartı derinliği kaba hesaplıyor ve saydam deniz alçak karanın önüne geçiyordu. Normal
+modda da vardı; Liman'da mendirek ve T iskele de suyun altında gibi görünüyordu. Şimdi deniz yüzü ve dibi kameranın altında
+duran, ortası 25 m, dışa doğru her halkada iki katı aralıklı ızgara (`TekHarita.tsx` → `denizIzgarasi`, 1.800 üçgen). Kayda
+bir şey yazılmaz. Resimler: `docs/gorseller/imperial-mavi-serit/`. Telefonda denenmedi (bilgisayarda, ekran kartsız tarayıcıda
+aynı hata görünüyordu ve düzeldi; telefonun ekran kartında ayrıca denenmeli).
+
+## 25 Kasım akşam: tek harita: mendireğin hafif sürümü
+
+Kemal (25 Kasım: "yapılsın, ayrı iş"). `tek/limanModelleri.ts`:
+- **Hafif sürüm** (`public/modeller/deniz/mendirek-duz-hafif.glb`): mendirek parçası sadeleştirildi (meshoptimizer, Imperial
+  ve Sürek'teki yol; parça adları, renkler, taban kutusu aynı), 9.804 → 1.988 üçgen (200 → 16 KB). Normal modda asıl model
+  yalnız bakılan yere 120 m yakın parçalarda, 350 m'ye kadar hafif sürüm, ötesi uzak kopya; hafif modda 60 m yakın parçalar
+  hafif sürümle (eskiden hafif modda hepsi en kaba kopyaydı, yakından sivri taş yığını gibiydi). Uzaklıklar DENEME.
+- **Ahşap iskele** sadeleşince tahtaları delik deşik oluyor; hafif sürümü yok, eskisi gibi.
+- **Kıvrık mendirek**: İskele'nin mendireği 141 m'de 30 kısa kenar; kenar başına bir parça düşüyordu (30 sıkışık parça,
+  ~294 bin üçgen). Şimdi 10°'den az dönen kenarlar tek dizi, parçalar hat boyunca eşit aralıkla (7 parça); keskin köşede
+  bölünür (Liman mendireği hemen hemen aynı). Kıvrım birleşim yerlerinde hafif kırıklı görünür (DENEME).
+- **Ölçüm** (bilgisayar, ekran kartsız tarayıcı, ekrandaki sayaç; liman katı önce → sonra): normal mod İskele 349 → 58 bin,
+  İskele yakın 352 → 53 bin, Liman ve Liman yakın 244 → 64 bin, mendireğe 90 m'den bakınca 349 → 113 bin. Toplam tavan
+  aynı; açılan pay yapılara gider: modeliyle çizilen yapı İskele 29 → 52, İskele yakın 27 → 50, Liman 43 → 55, Liman yakın
+  43 → 54. Hafif mod: liman katı 14 → 9 bin, mendireğin yanında 23 bin. Resimler: `docs/gorseller/harita-mendirek-hafif/`.
+  Telefonda denenmedi.
+
+## 25 Kasım akşam: Kemal'in onayladığı harita ölçüleri
+
+Kemal (25 Kasım, #294'ün cevapları): toplam üçgen tavanı kalır (normal 1,6 milyon, hafif 400 bin; `tek/ucgenSiniri.ts`),
+Çiftlik'in sokak arası 60 m kalır (`gen/kompakt_yollar.py` → `CF_ARA`), Stadyum'un seyreltmesi kalır (`gen/kompakt_stadyum.py`
+→ `GIDEN`); hazır gruplardaki depo, tribün, karakol ve üç sandal kalır. Kodda bunların DENEME işareti "Kemal onayladı";
+öbür ölçüler (çapraz sokak arası, ağaç payı, orta uzaklık) DENEME kalır. Harita dosyaları değişmedi.
 
 ## 25 Kasım: toplu dal (beş işin birleşimi)
 
