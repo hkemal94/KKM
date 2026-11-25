@@ -92,6 +92,10 @@ KALDIRIM = 1.0           # parsellerle aynı (3. adım)
 YAPI_ARASI = 1.5         # DENEME: viki yapısının öbür yapılara en az uzaklığı (m)
 EGIM_VIKI = 0.20         # DENEME: viki yapısının tabanındaki en çok eğim (yükseklik farkı / köşegen)
 KIYI_EN_AZ = {"liman": 3.0, "diger": 10.0}   # DENEME: tabanın kıyı çizgisine en az uzaklığı (m)
+# Çiftlik'in sokakları sıklaşınca (25 Kasım, gen/kompakt_yollar.py → CF_ARA) Kurucu noktası köyün dışında kalan Sürek
+# Kulübü'ne daha yakın yeni yol kenarları açıldı; yapı 400 m öteye atlıyordu. Kemal'in haritada gördüğü yeri kalsın:
+# aday puanı bu noktaya (25 Kasım'a kadarki yerinin ortası) uzaklıkla; Kurucu hedefi kayıtta aynı (tasima.hedef).
+YER_SABIT = {"bina_surek": (25.9123224, 39.5835043)}
 MEYDAN_BAKAR_M = 30.0    # eski haritada Merkez Meydanı'na bu kadar yakın olan meydana bakar
 KIYI_BAGLI_M = 60.0      # eski haritada kıyıya bu kadar yakın olan kıyıda kalır
 
@@ -481,8 +485,9 @@ def yerlestir_viki(e):
     if e["id"] == "bina_fener":
         return T, ys, fener_yeri(e, T, kiyi_en_az), meydana, liman
     en_iyi = None
-    for c, on, t, yid in yol_kenari_adaylari(T, en, boy, meydana):
-        puan = math.dist(c, T)
+    Tp = m(YER_SABIT[e["id"]]) if e["id"] in YER_SABIT else T      # puanın noktası (YER_SABIT)
+    for c, on, t, yid in yol_kenari_adaylari(Tp, en, boy, meydana):
+        puan = math.dist(c, Tp)
         if liman and e["id"] not in LIMAN_KAYMASI and not eski_limanda(e) and not eski_iskelede(e):
             puan += 3.0 * max(0.0, KIYI.distance(Point(c)) - max(boy, B["olcek"] * e["eskiKiyiM"]))
         if en_iyi and puan >= en_iyi[0]:

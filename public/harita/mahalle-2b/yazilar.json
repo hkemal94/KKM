@@ -6,7 +6,7 @@
    "dosya": "yer_ciftlik-A.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 680820,
+   "bayt": 701957,
    "yazilar": [
     {
      "tur": "yol",
@@ -16,11 +16,6 @@
     {
      "tur": "yol",
      "metin": "Merkez Bağlantısı",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yapi",
-     "metin": "Küçükçetmi Sürek Kulübü",
      "yer": "pencere"
     },
     {
@@ -133,7 +128,7 @@
    "dosya": "yer_ciftlik-B.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 1027062,
+   "bayt": 1019785,
    "yazilar": [
     {
      "tur": "yol",
@@ -143,11 +138,6 @@
     {
      "tur": "yol",
      "metin": "Merkez Bağlantısı",
-     "yer": "pencere"
-    },
-    {
-     "tur": "yapi",
-     "metin": "Küçükçetmi Sürek Kulübü",
      "yer": "pencere"
     },
     {
@@ -197,7 +187,7 @@
    "dosya": "yer_iskele-A.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 575012,
+   "bayt": 574950,
    "yazilar": [
     {
      "tur": "yol",
@@ -344,7 +334,7 @@
    "dosya": "yer_iskele-B.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 869774,
+   "bayt": 869404,
    "yazilar": [
     {
      "tur": "yol",
@@ -428,7 +418,7 @@
    "dosya": "yer_liman-A.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 440658,
+   "bayt": 440818,
    "yazilar": [
     {
      "tur": "yol",
@@ -576,7 +566,7 @@
    "dosya": "yer_liman-B.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 714313,
+   "bayt": 714322,
    "yazilar": [
     {
      "tur": "yol",
@@ -665,7 +655,7 @@
    "dosya": "yer_merkez-A.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 895751,
+   "bayt": 895905,
    "yazilar": [
     {
      "tur": "yol",
@@ -833,7 +823,7 @@
    "dosya": "yer_merkez-B.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 1480312,
+   "bayt": 1480481,
    "yazilar": [
     {
      "tur": "yol",
@@ -942,7 +932,7 @@
    "dosya": "yer_stadyum-A.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 417839,
+   "bayt": 417560,
    "yazilar": [
     {
      "tur": "yol",
@@ -1080,7 +1070,7 @@
    "dosya": "yer_stadyum-B.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 686564,
+   "bayt": 686533,
    "yazilar": [
     {
      "tur": "yol",
