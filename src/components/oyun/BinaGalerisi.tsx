@@ -26,7 +26,6 @@ const GRUPLAR: Array<{ grup: ModelGrubu; baslik: string }> = [
   { grup: 'bitki', baslik: 'Bitkiler' },
   { grup: 'bahce', baslik: 'Bahçe' },
   { grup: 'deniz', baslik: 'Deniz ve liman' },
-  { grup: 'arac', baslik: 'Araçlar' },
   { grup: 'imperial', baslik: 'The Imperial Kemskoy' },
   { grup: 'dirlik', baslik: 'Dirlik Stadı' }
 ];

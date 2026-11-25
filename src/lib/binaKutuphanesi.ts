@@ -15,7 +15,7 @@
 
 import katalogMetni from '../data/binaKatalogu.json?raw';
 
-export type ModelGrubu = 'bina' | 'sokak' | 'bitki' | 'bahce' | 'deniz' | 'arac' | 'imperial' | 'dirlik';
+export type ModelGrubu = 'bina' | 'sokak' | 'bitki' | 'bahce' | 'deniz' | 'imperial' | 'dirlik';
 
 export interface BinaModeli {
   /** `public/modeller/` altındaki yol */
@@ -40,10 +40,9 @@ interface Katalog {
   bahce?: { kenar?: string[]; kapi?: string[]; ic?: string[]; bitki?: string[]; arsalar?: string[] };
   kaliplar?: Record<string, string>;
   deniz?: Record<string, string[] | string>;
-  araclar?: string[];
   /**
    * Renk takımları: katalogdaki ad → renkli dosyalar. Ajansın katalogunda adı geçen
-   * ama yerinde renkli dosyaları olan model (sedan → sedan-krem, sedan-lacivert…)
+   * ama yerinde renkli dosyaları olan model (sandal → sandal-mavi, sandal-sarı…)
    * KKM'ye kopyalanırken buraya açılır.
    */
   renkli?: Record<string, string[]>;
@@ -59,8 +58,7 @@ const BASLIKLAR: Record<string, string> = {
   'kahvehane-meyhane': 'Kahvehane / meyhane', 'koy-evi-dis-merdivenli': 'Dış merdivenli köy evi',
   belediye: 'Belediye binası', karakol: 'Karakol', okul: 'Okul', 'merkez-meydani': 'Merkez meydanı',
   cesme: 'Çeşme', cinar: 'Çınar', 'zeytin-agaci': 'Zeytin ağacı', 'bahce-duvari': 'Bahçe duvarı',
-  'yol-duz': 'Yol: düz', 'yol-kose': 'Yol: köşe', 'yol-t': 'Yol: T kavşak', 'yol-kavsak': 'Yol: dört yol',
-  'merdivenli-sokak': 'Merdivenli sokak', 'sokak-lambasi': 'Sokak lambası', bank: 'Bank',
+  'sokak-lambasi': 'Sokak lambası', bank: 'Bank',
   'pazar-tezgahi': 'Pazar tezgâhı', 'the-imperial-kemskoy': 'The Imperial Kemskoy',
   'ev-tas-tek-katli': 'Tek katlı taş ev', 'ev-tas-dis-merdivenli': 'Dış merdivenli taş ev', 'ev-tas-balkonlu': 'Balkonlu taş ev',
   'ev-badana-dam': 'Badanalı, düz damlı ev', 'ev-badana-iki-katli': 'İki katlı badanalı ev', 'ev-badana-kirma': 'Kırma çatılı badanalı ev',
@@ -78,12 +76,8 @@ const BASLIKLAR: Record<string, string> = {
   'odun-yigini': 'Odun yığını', 'oturma-kosesi': 'Oturma köşesi', 'sebze-tarhi': 'Sebze tarhı', 'tavuk-kumesi': 'Tavuk kümesi',
   'deniz-feneri': 'Deniz feneri ve bekçi evi', 'cekek-yeri': 'Çekek yeri', 'feribot-rampasi': 'Feribot rampası',
   'mendirek-duz': 'Mendirek: düz', 'mendirek-ucu': 'Mendirek: uç', rihtim: 'Rıhtım', 'yat-iskelesi': 'Yat iskelesi',
-  'ahsap-iskele-t': 'Ahşap iskele: T', 'ahsap-iskele-duz': 'Ahşap iskele: düz', 'arabali-feribot': 'Arabalı feribot',
-  'balikci-teknesi': 'Balıkçı teknesi', 'deniz-taksisi': 'Deniz taksisi', 'girgir-teknesi': 'Gırgır teknesi',
-  'sahil-guvenlik-botu': 'Sahil güvenlik botu', sandal: 'Sandal', yelkenli: 'Yelkenli', 'yolcu-motoru': 'Yolcu motoru',
-  bisiklet: 'Bisiklet', dolmus: 'Dolmuş', hatchback: 'Hatchback', motosiklet: 'Motosiklet', pikap: 'Pikap', sedan: 'Sedan',
-  taksi: 'Taksi', traktor: 'Traktör',
-  yazlik: 'Yazlık', 'depo-atolye': 'Depo / atölye', 'futbol-sahasi': 'Futbol sahası', tribun: 'Tribün',
+  'ahsap-iskele-t': 'Ahşap iskele: T', 'ahsap-iskele-duz': 'Ahşap iskele: düz', sandal: 'Sandal',
+  yazlik: 'Yazlık', 'depo-atolye': 'Depo / atölye', tribun: 'Tribün',
   'dirlik-stadi': 'Dirlik Stadı',
   'sade-meyhane': 'Sade Meyhane', 'taraftar-birahanesi': 'Taraftar Birahanesi', 'merkez-pazari': 'Merkez Pazarı',
   'liman-idare': 'Liman İdare Binası', 'merkez-camii': 'Merkez Camii', 'eski-kilise': 'Eski Kilise',
@@ -131,7 +125,7 @@ export const BAHCE = {
   arsalar: (KATALOG.bahce?.arsalar ?? []).flatMap(renkliAc)
 };
 
-/** Dosya adındaki renk eki: "araclar/sedan-krem.glb" (takımı "araclar/sedan.glb") → "krem" */
+/** Dosya adındaki renk eki: "deniz/sandal-sari.glb" (takımı "deniz/sandal.glb") → "sari" */
 const RENK_SOZCUK: Record<string, string> = { yesil: 'yeşil', kirmizi: 'kırmızı' };
 const renkAdi = (takim: string, dosya: string) => modelKimligi(dosya).slice(modelKimligi(takim).length + 1)
   .split('-').filter(Boolean).map(w => RENK_SOZCUK[w] ?? w).join(' ');
@@ -142,7 +136,7 @@ export const BINA_MODELLERI: BinaModeli[] = (() => {
   const cikti: BinaModeli[] = [];
   const grubu = (dosya: string): ModelGrubu => dosya === IMPERIAL_MODELI ? 'imperial' : dosya === DIRLIK_MODELI ? 'dirlik'
     : dosya.startsWith('sokak/') ? 'sokak' : dosya.startsWith('bitkiler/') ? 'bitki' : dosya.startsWith('bahce/') ? 'bahce'
-      : dosya.startsWith('deniz/') ? 'deniz' : dosya.startsWith('araclar/') ? 'arac' : 'bina';
+      : dosya.startsWith('deniz/') ? 'deniz' : 'bina';
   const ekle = (takim: string) => {
     if (gorulen.has(takim) || DISARIDA.includes(takim)) return;
     gorulen.add(takim);
@@ -162,10 +156,9 @@ export const BINA_MODELLERI: BinaModeli[] = (() => {
   [...BAHCE.arsalar, ...BAHCE.kenar, ...BAHCE.kapi, ...BAHCE.ic].forEach(ekle);
   Object.values(KATALOG.kaliplar ?? {}).forEach(ekle);
   Object.values(KATALOG.deniz ?? {}).forEach(l => (Array.isArray(l) ? l : [l]).forEach(d => { if (d.endsWith('.glb')) ekle(d); }));
-  (KATALOG.araclar ?? []).forEach(ekle);
   Object.values(KATALOG.ozel ?? {}).forEach(ekle);
-  // Katalogda sırası: bina, sokak, bitki, bahçe, deniz, araç; Imperial ve Dirlik Stadı en sonda
-  const sira: Record<ModelGrubu, number> = { bina: 0, sokak: 1, bitki: 2, bahce: 3, deniz: 4, arac: 5, imperial: 6, dirlik: 7 };
+  // Katalogda sırası: bina, sokak, bitki, bahçe, deniz; Imperial ve Dirlik Stadı en sonda
+  const sira: Record<ModelGrubu, number> = { bina: 0, sokak: 1, bitki: 2, bahce: 3, deniz: 4, imperial: 5, dirlik: 6 };
   return cikti.sort((a, b) => sira[a.grup] - sira[b.grup]);
 })();
 
@@ -204,7 +197,7 @@ export const ARSA_OLCULERI: Record<string, { x0: number; x1: number; z0: number;
 
 /** Kurucu türünün okunur adı (galeri etiketi) */
 export const KURUCU_TUR_ADI: Record<string, string> = {
-  ev: 'Müstakil ev', yazlik: 'Yazlık', depo: 'Depo / atölye', saha: 'Futbol sahası', tribun: 'Tribün', dukkanli: 'Dükkânlı ev', ciftlik: 'Taş çiftlik evi', kamu: 'Kamu / büyük yapı',
+  ev: 'Müstakil ev', yazlik: 'Yazlık', depo: 'Depo / atölye', tribun: 'Tribün', dukkanli: 'Dükkânlı ev', ciftlik: 'Taş çiftlik evi', kamu: 'Kamu / büyük yapı',
   meydan: 'Meydan', cesme: 'Çeşme', agac: 'Büyük ağaç', bag: 'Bağ / bahçe parseli', otel: 'Otel kalıbı', fener: 'Fener kalıbı'
 };
 
