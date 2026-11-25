@@ -175,11 +175,13 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
     gunes.shadow.normalBias = 0.6;
     sahne.add(gunes, gunes.target);
 
-    // Deniz: saydam yüzey (sığ dip görünür) ve altında koyu düzlem
-    const denizYuzu = new THREE.Mesh(new THREE.PlaneGeometry(900000, 900000).rotateX(-Math.PI / 2),
+    // Deniz: saydam yüzey (sığ dip görünür) ve altında koyu düzlem. İkisi de kameranın altında duran, ortası sık
+    // bölünmüş düzlem (`denizIzgarasi`); her karede kameranın altına taşınır
+    const denizGeo = denizIzgarasi();
+    const denizYuzu = new THREE.Mesh(denizGeo,
       new THREE.MeshLambertMaterial({ color: '#5C9DBE', transparent: true, opacity: 0.72, depthWrite: false }));
     denizYuzu.renderOrder = 10;
-    const denizDibi = new THREE.Mesh(new THREE.PlaneGeometry(900000, 900000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#3B7BA3' }));
+    const denizDibi = new THREE.Mesh(denizGeo, new THREE.MeshBasicMaterial({ color: '#3B7BA3' }));
     denizDibi.position.y = -30;
     sahne.add(denizDibi, denizYuzu);
 
@@ -595,6 +597,8 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
         }
       }
       kontrol.update();
+      denizYuzu.position.set(kamera.position.x, 0, kamera.position.z);
+      denizDibi.position.set(kamera.position.x, -30, kamera.position.z);
       renderer.render(sahne, kamera);
       etiketleriYerlestir();
       kare++;
@@ -637,7 +641,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       kontrol.dispose();
       setApi(null);
       ege?.dispose(); agac?.dispose(); zemin?.dispose(); yol?.dispose(); yapi?.dispose(); sinir?.dispose(); liman?.dispose(); elle?.dispose(); bahce?.dispose();
-      denizYuzu.geometry.dispose(); denizDibi.geometry.dispose();
+      denizGeo.dispose();
       sahne.clear();
       renderer.dispose();
       renderer.forceContextLoss();
@@ -810,3 +814,30 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
 };
 
 export default TekHarita;
+
+/**
+ * Deniz düzleminin ızgarası (25 Kasım akşam, "mavi şerit"): eskiden deniz 900 km'lik tek dörtgendi (iki üçgen).
+ * Bu kadar büyük üçgende ekran kartı derinliği kaba hesaplıyor; saydam deniz yüzü yer yer alçak karanın (The
+ * Imperial'in arkasında 6 m'lik vadi ve düzlük), mendireğin ve iskelenin önüne geçiyordu. Şimdi ortası (kameranın
+ * altı) 25 m, dışa doğru her halkada iki katı aralıklı ızgara; kenarı yine ~800 km. 1.800 üçgen.
+ */
+function denizIzgarasi(): THREE.BufferGeometry {
+  const yari = [25];
+  while (yari[yari.length - 1] < 400_000) yari.push(yari[yari.length - 1] * 2);
+  const eksen = [...yari.map(v => -v).reverse(), 0, ...yari];
+  const n = eksen.length;
+  const konum: number[] = [];
+  for (const z of eksen) for (const x of eksen) konum.push(x, 0, z);
+  const indeks: number[] = [];
+  // Yukarı bakan yüz: (a, c, b) sırası (x doğu, z güney)
+  for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) {
+    const a = j * n + i, b = a + 1, c = a + n, d = c + 1;
+    indeks.push(a, c, b, b, c, d);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(konum, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(konum.map((_, k) => (k % 3 === 1 ? 1 : 0)), 3));
+  g.setIndex(indeks);
+  g.computeBoundingSphere();
+  return g;
+}
