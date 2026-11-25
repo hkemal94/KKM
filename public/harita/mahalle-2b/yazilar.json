@@ -6,7 +6,7 @@
    "dosya": "yer_ciftlik-A.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 682326,
+   "bayt": 680820,
    "yazilar": [
     {
      "tur": "yol",
@@ -125,7 +125,7 @@
     },
     {
      "tur": "kunye",
-     "metin": "Düzada · tek harita, 24 Kasım 2026"
+     "metin": "Düzada · tek harita, 25 Kasım 2026"
     }
    ]
   },
@@ -133,7 +133,7 @@
    "dosya": "yer_ciftlik-B.png",
    "en": 1600,
    "boy": 2046,
-   "bayt": 1026459,
+   "bayt": 1027062,
    "yazilar": [
     {
      "tur": "yol",
@@ -197,7 +197,7 @@
    "dosya": "yer_iskele-A.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 575601,
+   "bayt": 575012,
    "yazilar": [
     {
      "tur": "yol",
@@ -336,7 +336,7 @@
     },
     {
      "tur": "kunye",
-     "metin": "Düzada · tek harita, 24 Kasım 2026"
+     "metin": "Düzada · tek harita, 25 Kasım 2026"
     }
    ]
   },
@@ -344,7 +344,7 @@
    "dosya": "yer_iskele-B.png",
    "en": 1600,
    "boy": 1967,
-   "bayt": 869848,
+   "bayt": 869774,
    "yazilar": [
     {
      "tur": "yol",
@@ -428,7 +428,7 @@
    "dosya": "yer_liman-A.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 440801,
+   "bayt": 440658,
    "yazilar": [
     {
      "tur": "yol",
@@ -568,7 +568,7 @@
     },
     {
      "tur": "kunye",
-     "metin": "Düzada · tek harita, 24 Kasım 2026"
+     "metin": "Düzada · tek harita, 25 Kasım 2026"
     }
    ]
   },
@@ -576,7 +576,7 @@
    "dosya": "yer_liman-B.png",
    "en": 1600,
    "boy": 1750,
-   "bayt": 714754,
+   "bayt": 714313,
    "yazilar": [
     {
      "tur": "yol",
@@ -665,7 +665,7 @@
    "dosya": "yer_merkez-A.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 901738,
+   "bayt": 895751,
    "yazilar": [
     {
      "tur": "yol",
@@ -825,7 +825,7 @@
     },
     {
      "tur": "kunye",
-     "metin": "Düzada · tek harita, 24 Kasım 2026"
+     "metin": "Düzada · tek harita, 25 Kasım 2026"
     }
    ]
   },
@@ -833,7 +833,7 @@
    "dosya": "yer_merkez-B.png",
    "en": 1600,
    "boy": 2587,
-   "bayt": 1482474,
+   "bayt": 1480312,
    "yazilar": [
     {
      "tur": "yol",
@@ -942,7 +942,7 @@
    "dosya": "yer_stadyum-A.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 427446,
+   "bayt": 417839,
    "yazilar": [
     {
      "tur": "yol",
@@ -1072,7 +1072,7 @@
     },
     {
      "tur": "kunye",
-     "metin": "Düzada · tek harita, 24 Kasım 2026"
+     "metin": "Düzada · tek harita, 25 Kasım 2026"
     }
    ]
   },
@@ -1080,7 +1080,7 @@
    "dosya": "yer_stadyum-B.png",
    "en": 1600,
    "boy": 1900,
-   "bayt": 724224,
+   "bayt": 686564,
    "yazilar": [
     {
      "tur": "yol",

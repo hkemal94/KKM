@@ -45,6 +45,7 @@ sys.path.insert(0, BURASI)
 from kompakt_zemin_denetim import oku  # noqa: E402
 import kompakt_liman as LM  # noqa: E402
 import kompakt_iskele as IS  # noqa: E402
+import kompakt_stadyum as ST  # noqa: E402
 from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)   # shapely.ops.transform (öbür üreteçlerle aynı)
@@ -374,7 +375,8 @@ def eski_iskelede(e):
 def hedef(e):
     """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması).
     Liman kasabasındakiler sokaklarla aynı taşımayla (gen/kompakt_liman.py: oran 0,70, odak Dondurmacı Kızlar);
-    İskele köyündekiler de (gen/kompakt_iskele.py: oran 0,70, köyün kara yönüne kayması)."""
+    İskele köyündekiler de (gen/kompakt_iskele.py: oran 0,70, köyün kara yönüne kayması); Stadyum köyündekiler de
+    (gen/kompakt_stadyum.py: oran 0,70, kayma yok)."""
     if eski_limanda(e):
         return LM.tasi(*e["eskiKonum"]), "yerlesim_liman"
     if eski_iskelede(e):
@@ -383,6 +385,8 @@ def hedef(e):
     k = kucult(*p)
     adaylar = MAH_YERLESIM.get(e["mahalle"], [])
     ys = min(adaylar, key=lambda y: math.dist(k, YERLESIM[y]["m"])) if adaylar else None
+    if ys == "yerlesim_stadyum" and not e.get("ozelYer"):
+        return ST.tasi(*e["eskiKonum"]), ys      # Stadyum köyündekiler sokaklarla aynı taşımayla (gen/kompakt_stadyum.py)
     d = KAYMA.get(ys, (0.0, 0.0))
     g = LIMAN_KAYMASI.get(e["id"], (0.0, 0.0))
     return (k[0] + d[0] + g[0], k[1] + d[1] + g[1]), ys
@@ -716,6 +720,7 @@ def viki_yapilari():
             yontem = ("Fener Burnu'nda, kıyıya eskisinin 0,70'i uzaklıkta" if e["id"] == "bina_fener" else
                       "eski Liman'daki yeri (sokaklarla aynı taşıma, oran 0,70)" if eski_limanda(e) else
                       "eski İskele'deki yeri (sokaklarla aynı taşıma, oran 0,70)" if eski_iskelede(e) else
+                      "eski Stadyum'daki yeri (sokaklarla aynı taşıma, oran 0,70)" if ys == "yerlesim_stadyum" else
                       "oranla karşılığı" + (", meydana bakar" if meydana else "")
                       + (", kıyıda (liman öbeği birlikte kıyıya kaydı)" if e["id"] in LIMAN_KAYMASI else ", kıyıda" if liman else ""))
         ozel["yol"] = yid

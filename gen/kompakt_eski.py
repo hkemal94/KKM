@@ -120,6 +120,12 @@ def iskele():
     return sokak, meydan, _ciftler(SAHIL_YOLU)
 
 
+def stadyum():
+    """Eski haritadaki Stadyum köyü: sokaklar {kimlik: (ad, kademe, [(boylam, enlem)…])} (Kemal'in Kurucu'daki son hâli;
+    gen/kompakt_stadyum.py → eski_stadyum; 25 Kasım'da eklendi)."""
+    return {k: (ad, kademe, [tuple(c) for c in hat]) for k, ad, kademe, hat in _V["stadyum"]["sokaklar"]}
+
+
 def iskele_sahile_kadar():
     """Eski haritada İskele köyünden çıkan, tek haritada yalnız Sahil Yolu'na kadarki başı kullanılan yollar:
     [(kimlik, kademe, [(boylam, enlem)…])] (Kemsköy Caddesi'nin doğu ucundan The Imperial'e inen yol; 24 Kasım)."""
