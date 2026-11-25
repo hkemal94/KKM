@@ -17,6 +17,9 @@ import type { UzakModel } from './uzakModeller';
  *   veriden (`genislik`). Taş iskele (`tur: 'taş'`, `hat` var) de böyle çizilir.
  * Modeller deniz seviyesinde (kendi başlangıç noktası y = 0). Yakında asıl model (yalnız bakılan yere
  * `PARCA_YAKIN` m yakın parçalar), uzakta ve hafif modda az üçgenli kopyası (`uzakModeller.ts`). Yalnız okur.
+ * - Mendireğin hafif sürümü (25 Kasım akşam, Kemal: "yapılsın"; `HAFIF_SURUM`): normal modda asıl model yalnız
+ *   `ASIL_YAKIN` m yakın parçalarda, `PARCA_YAKIN` m'ye kadar hafif sürüm; hafif modda `HAFIF_MOD_YAKIN` m yakın
+ *   parçalar hafif sürümle (eskiden hafif modda hepsi en kaba kopyaydı). İskele parçaları eskisi gibi.
  */
 
 const ISKELE = 'deniz/ahsap-iskele-duz.glb';
@@ -29,6 +32,22 @@ const COK_UZAK = 6000;
  * eskiden bir iskeleye yakın bakınca adanın bütün iskele ve mendirek parçaları asıl modelle çiziliyordu, ~565 bin üçgen; DENEME)
  */
 const PARCA_YAKIN = 350;
+
+/**
+ * Orta ayrıntılı hafif sürüm (25 Kasım akşam): asıl modelin parçaları sadeleştirildi (meshoptimizer, Imperial ve
+ * Sürek'teki yol; parça adları, renkler ve taban kutusu aynı, yerleşim asıl modelin ölçüsüyle). Mendirek 9.804 →
+ * 1.988 üçgen (200 → 16 KB). Ahşap iskele parçası (1.620 üçgen) sadeleşince tahtaları delik deşik oluyor; onun hafif
+ * sürümü yok.
+ */
+const HAFIF_SURUM: Record<string, string> = { [MENDIREK]: 'deniz/mendirek-duz-hafif.glb' };
+/** Normal modda asıl model yalnız bakılan yere bu kadar (m) yakın parçalarda; ötesi `PARCA_YAKIN`'a kadar hafif sürüm (DENEME) */
+const ASIL_YAKIN = 120;
+/** Hafif modda bakılan yere bu kadar (m) yakın parçalar hafif sürümle, öbürleri en kaba kopyayla (DENEME) */
+const HAFIF_MOD_YAKIN = 60;
+
+/** Parçanın çizildiği sürüm: asıl model, hafif sürüm ya da uzak kopyanın iki seviyesi */
+type Surum = 'asil' | 'hafif' | 'uzak0' | 'uzak1';
+type Kaynak = { anahtar: Surum; parcalar: Array<{ geo: THREE.BufferGeometry; mat: THREE.Material }>; ucgen: number };
 
 type Yerlesim = { dosya: string; matris: THREE.Matrix4 };
 
@@ -95,18 +114,30 @@ export class LimanModelleri {
     }
     const mendirek = this.olcu.get(MENDIREK);
     if (mendirek) for (const { hat, genislik } of this.mendirekler) {
-      for (let n = 1; n < hat.length; n++) {
-        const [ax, az] = hat[n - 1], [bx, bz] = hat[n];
-        const l = Math.hypot(bx - ax, bz - az);
+      // Hafif kıvrımlı kenarlar (KIRIK'tan az dönen) tek dizi: parçalar hat boyunca eşit aralıkla, her biri iki ucunu
+      // birleştiren doğruda (25 Kasım akşam: İskele'nin kıvrık mendireği 30 kısa kenardı, kenar başına bir parça
+      // düşüyordu; 141 m'ye 30 sıkışık parça, ~294 bin üçgen; şimdi 7). Keskin köşede dizi bölünür.
+      for (const dizi of diziler(hat)) {
+        const boy = [0];
+        for (let n = 1; n < dizi.length; n++) boy.push(boy[n - 1] + Math.hypot(dizi[n][0] - dizi[n - 1][0], dizi[n][1] - dizi[n - 1][1]));
+        const l = boy[boy.length - 1];
         if (l < 0.5) continue;
-        const ex: Nokta = [(bx - ax) / l, (bz - az) / l];
+        // Hat boyunca t metredeki nokta
+        const nokta = (t: number): Nokta => {
+          let n = 1;
+          while (n < boy.length - 1 && boy[n] < t) n++;
+          const k = (t - boy[n - 1]) / Math.max(1e-6, boy[n] - boy[n - 1]);
+          return [dizi[n - 1][0] + (dizi[n][0] - dizi[n - 1][0]) * k, dizi[n - 1][1] + (dizi[n][1] - dizi[n - 1][1]) * k];
+        };
         const adet = Math.max(1, Math.round(l / mendirek.w));
         const parca = l / adet;
         for (let a = 0; a < adet; a++) {
-          const t = (a + 0.5) * parca;
+          const [ax, az] = nokta(a * parca), [bx, bz] = nokta((a + 1) * parca);
+          const c = Math.max(0.5, Math.hypot(bx - ax, bz - az));
+          const ex: Nokta = [(bx - ax) / c, (bz - az) / c];
           // Kıvrımda boşluk kalmasın: parça biraz uzun
-          const m = new THREE.Matrix4().makeTranslation(ax + ex[0] * t, 0, az + ex[1] * t).multiply(donus(ex))
-            .multiply(new THREE.Matrix4().makeScale((parca + 1.5) / mendirek.w, 1, genislik / mendirek.d))
+          const m = new THREE.Matrix4().makeTranslation((ax + bx) / 2, 0, (az + bz) / 2).multiply(donus(ex))
+            .multiply(new THREE.Matrix4().makeScale((c + 1.5) / mendirek.w, 1, genislik / mendirek.d))
             .multiply(new THREE.Matrix4().makeTranslation(-mendirek.cx, 0, -mendirek.cz));
           this.yerlesimler.push({ dosya: MENDIREK, matris: m });
         }
@@ -114,35 +145,53 @@ export class LimanModelleri {
     }
   }
 
-  /** Bakılan yere göre asıl model ya da uzak kopya */
+  /** Bakılan yere göre her parça asıl model, hafif sürüm ya da uzak kopya */
   guncelle(hedef: THREE.Vector3, kameraUzakligi: number, hafif: boolean, golge: boolean) {
     if (this.bos) return;
     this.son = { x: hedef.x, z: hedef.z, u: kameraUzakligi, hafif, golge };
-    const yakin = !hafif && kameraUzakligi < 2600 && this.noktalar.some(([x, z]) => Math.hypot(hedef.x - x, hedef.z - z) < YAKIN);
-    const seviye = hafif || kameraUzakligi > COK_UZAK ? 1 : 0;
-    // Her dosya için: asıl model (yakında ve inmişse) ya da uzak kopya
-    const parcalar = (d: string) => {
-      if (yakin) {
-        const m = this.modeller.get(d);
-        if (m) return { anahtar: 'asil', parcalar: m.parcalar, ucgen: m.ucgen };
-        this.indir(d);
+    const bolge = kameraUzakligi < 2600 && this.noktalar.some(([x, z]) => Math.hypot(hedef.x - x, hedef.z - z) < YAKIN);
+    const kaba: Surum = hafif || kameraUzakligi > COK_UZAK ? 'uzak1' : 'uzak0';
+    // Parçanın istenen sürümü (bakılan yere uzaklığına göre)
+    const istenen = (y: Yerlesim): Surum => {
+      if (!bolge) return kaba;
+      const u = Math.hypot(y.matris.elements[12] - hedef.x, y.matris.elements[14] - hedef.z);
+      const yerine: Surum = HAFIF_SURUM[y.dosya] ? 'hafif' : hafif ? 'uzak1' : 'asil';
+      if (hafif) return u < HAFIF_MOD_YAKIN ? yerine : 'uzak1';
+      return u < ASIL_YAKIN ? 'asil' : u < PARCA_YAKIN ? yerine : 'uzak0';
+    };
+    // Sürüm hazırsa parçaları; inmemişse indirilir (yalnız istenen sürüm)
+    const hazir = (d: string, s: Surum, indirsin: boolean): Kaynak | null => {
+      if (s === 'asil' || s === 'hafif') {
+        const dosya = s === 'asil' ? d : HAFIF_SURUM[d];
+        if (!dosya) return null;
+        const m = this.modeller.get(dosya);
+        if (m) return { anahtar: s, parcalar: m.parcalar, ucgen: m.ucgen };
+        if (indirsin) this.indir(dosya);
+        return null;
       }
-      const u = this.uzak?.get(d);
-      if (u) return { anahtar: `uzak${seviye}`, parcalar: u.seviyeler[seviye], ucgen: u.ucgen[seviye] };
-      const m = this.modeller.get(d);
-      if (m) return { anahtar: 'asil', parcalar: m.parcalar, ucgen: m.ucgen };
-      this.indir(d);
+      const u = this.uzak?.get(d), n = s === 'uzak1' ? 1 : 0;
+      return u ? { anahtar: s, parcalar: u.seviyeler[n], ucgen: u.ucgen[n] } : null;
+    };
+    // İstenen sürüm inene kadar bir alttaki (uzak kopya yoksa asıl model)
+    const yedek: Record<Surum, Surum[]> = { asil: ['hafif', 'uzak0'], hafif: [kaba], uzak0: ['asil'], uzak1: ['asil'] };
+    const sec = (d: string, s: Surum): Kaynak | null => {
+      const k = hazir(d, s, true);
+      if (k) return k;
+      for (const y of yedek[s]) {
+        const q = hazir(d, y, y === 'asil');
+        if (q) return q;
+      }
       return null;
     };
-    // Asıl modelle çizilecekse yalnız yakın parçalar asıl, kalanı uzak kopya (seviye 0)
-    const yakinMi = (y: Yerlesim) => Math.hypot(y.matris.elements[12] - hedef.x, y.matris.elements[14] - hedef.z) < PARCA_YAKIN;
-    const secim = [ISKELE, MENDIREK].flatMap(d => {
-      const p = parcalar(d);
-      const l = this.yerlesimler.filter(y => y.dosya === d);
-      if (p?.anahtar !== 'asil' || !this.uzak?.get(d)) return [{ d, p, l }];
-      const u = this.uzak.get(d)!;
-      return [{ d, p, l: l.filter(yakinMi) }, { d, p: { anahtar: 'uzak0', parcalar: u.seviyeler[0], ucgen: u.ucgen[0] }, l: l.filter(y => !yakinMi(y)) }];
-    });
+    const gruplar = new Map<string, { d: string; p: Kaynak | null; l: Yerlesim[] }>();
+    for (const y of this.yerlesimler) {
+      const p = sec(y.dosya, istenen(y));
+      const a = `${y.dosya}:${p?.anahtar ?? '-'}`;
+      const g = gruplar.get(a) ?? { d: y.dosya, p, l: [] };
+      g.l.push(y);
+      gruplar.set(a, g);
+    }
+    const secim = [...gruplar.values()];
     const sira = new Map(this.yerlesimler.map((y, i) => [y, i] as const));
     const anahtar = secim.map(x => `${x.d}:${x.p?.anahtar ?? '-'}:${x.l.map(y => sira.get(y)).join(',')}`).join('|') + `|${this.yerlesimler.length}`;
     if (anahtar !== this.kurulan) {
@@ -176,7 +225,8 @@ export class LimanModelleri {
         if (this.kapandi) return;
         const m = hazirla(g.scene);
         this.modeller.set(d, m);
-        if (!this.olcu.has(d)) { this.olcu.set(d, m); this.yerlestir(); }
+        // Ölçü asıl modelden (hafif sürüm aynı taban kutusuyla asıl modelin yerine oturur)
+        if ((d === ISKELE || d === MENDIREK) && !this.olcu.has(d)) { this.olcu.set(d, m); this.yerlestir(); }
         const s = this.son;
         if (s) { this.guncelle(new THREE.Vector3(s.x, 0, s.z), s.u, s.hafif, s.golge); this.onDegisti(); }
       })
@@ -256,4 +306,25 @@ function icinde(h: Nokta[], x: number, y: number) {
     if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) ic = !ic;
   }
   return ic;
+}
+
+/** Mendirek hattında bu açıdan (derece) keskin dönen köşede parça dizisi bölünür (DENEME) */
+const KIRIK = 10;
+
+/** Hattı keskin köşelerinden dizilere böler (0,5 m'den kısa kenarlar atlanır) */
+function diziler(hat: Nokta[]): Nokta[][] {
+  const temiz: Nokta[] = [hat[0]];
+  for (const p of hat.slice(1)) if (Math.hypot(p[0] - temiz[temiz.length - 1][0], p[1] - temiz[temiz.length - 1][1]) >= 0.5) temiz.push(p);
+  const cikti: Nokta[][] = [[temiz[0]]];
+  for (let n = 1; n < temiz.length; n++) {
+    const d = cikti[cikti.length - 1];
+    d.push(temiz[n]);
+    if (n < temiz.length - 1) {
+      const [ax, az] = temiz[n - 1], [bx, bz] = temiz[n], [cx, cz] = temiz[n + 1];
+      const u: Nokta = [bx - ax, bz - az], v: Nokta = [cx - bx, cz - bz];
+      const aci = Math.abs(Math.atan2(u[0] * v[1] - u[1] * v[0], u[0] * v[0] + u[1] * v[1])) * 180 / Math.PI;
+      if (aci > KIRIK) cikti.push([temiz[n]]);
+    }
+  }
+  return cikti.filter(d => d.length > 1);
 }
