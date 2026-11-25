@@ -45,6 +45,7 @@ sys.path.insert(0, BURASI)
 from kompakt_zemin_denetim import oku  # noqa: E402
 import kompakt_liman as LM  # noqa: E402
 import kompakt_iskele as IS  # noqa: E402
+import kompakt_stadyum as ST  # noqa: E402
 from kompakt_taslak_uygula import elle_cikar  # noqa: E402  (KKM Düzenle'nin elle öğeleri bu üretecin girdisi değil)
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)   # shapely.ops.transform (öbür üreteçlerle aynı)
@@ -91,6 +92,10 @@ KALDIRIM = 1.0           # parsellerle aynı (3. adım)
 YAPI_ARASI = 1.5         # DENEME: viki yapısının öbür yapılara en az uzaklığı (m)
 EGIM_VIKI = 0.20         # DENEME: viki yapısının tabanındaki en çok eğim (yükseklik farkı / köşegen)
 KIYI_EN_AZ = {"liman": 3.0, "diger": 10.0}   # DENEME: tabanın kıyı çizgisine en az uzaklığı (m)
+# Çiftlik'in sokakları sıklaşınca (25 Kasım, gen/kompakt_yollar.py → CF_ARA) Kurucu noktası köyün dışında kalan Sürek
+# Kulübü'ne daha yakın yeni yol kenarları açıldı; yapı 400 m öteye atlıyordu. Kemal'in haritada gördüğü yeri kalsın:
+# aday puanı bu noktaya (25 Kasım'a kadarki yerinin ortası) uzaklıkla; Kurucu hedefi kayıtta aynı (tasima.hedef).
+YER_SABIT = {"bina_surek": (25.9123224, 39.5835043)}
 MEYDAN_BAKAR_M = 30.0    # eski haritada Merkez Meydanı'na bu kadar yakın olan meydana bakar
 KIYI_BAGLI_M = 60.0      # eski haritada kıyıya bu kadar yakın olan kıyıda kalır
 
@@ -374,7 +379,8 @@ def eski_iskelede(e):
 def hedef(e):
     """Eski yerin kompakt adadaki karşılığı: küçültme + yerleşimin kayması (+ kıyı öbeğinin kayması).
     Liman kasabasındakiler sokaklarla aynı taşımayla (gen/kompakt_liman.py: oran 0,70, odak Dondurmacı Kızlar);
-    İskele köyündekiler de (gen/kompakt_iskele.py: oran 0,70, köyün kara yönüne kayması)."""
+    İskele köyündekiler de (gen/kompakt_iskele.py: oran 0,70, köyün kara yönüne kayması); Stadyum köyündekiler de
+    (gen/kompakt_stadyum.py: oran 0,70, kayma yok)."""
     if eski_limanda(e):
         return LM.tasi(*e["eskiKonum"]), "yerlesim_liman"
     if eski_iskelede(e):
@@ -383,6 +389,8 @@ def hedef(e):
     k = kucult(*p)
     adaylar = MAH_YERLESIM.get(e["mahalle"], [])
     ys = min(adaylar, key=lambda y: math.dist(k, YERLESIM[y]["m"])) if adaylar else None
+    if ys == "yerlesim_stadyum" and not e.get("ozelYer"):
+        return ST.tasi(*e["eskiKonum"]), ys      # Stadyum köyündekiler sokaklarla aynı taşımayla (gen/kompakt_stadyum.py)
     d = KAYMA.get(ys, (0.0, 0.0))
     g = LIMAN_KAYMASI.get(e["id"], (0.0, 0.0))
     return (k[0] + d[0] + g[0], k[1] + d[1] + g[1]), ys
@@ -477,8 +485,9 @@ def yerlestir_viki(e):
     if e["id"] == "bina_fener":
         return T, ys, fener_yeri(e, T, kiyi_en_az), meydana, liman
     en_iyi = None
-    for c, on, t, yid in yol_kenari_adaylari(T, en, boy, meydana):
-        puan = math.dist(c, T)
+    Tp = m(YER_SABIT[e["id"]]) if e["id"] in YER_SABIT else T      # puanın noktası (YER_SABIT)
+    for c, on, t, yid in yol_kenari_adaylari(Tp, en, boy, meydana):
+        puan = math.dist(c, Tp)
         if liman and e["id"] not in LIMAN_KAYMASI and not eski_limanda(e) and not eski_iskelede(e):
             puan += 3.0 * max(0.0, KIYI.distance(Point(c)) - max(boy, B["olcek"] * e["eskiKiyiM"]))
         if en_iyi and puan >= en_iyi[0]:
@@ -716,6 +725,7 @@ def viki_yapilari():
             yontem = ("Fener Burnu'nda, kıyıya eskisinin 0,70'i uzaklıkta" if e["id"] == "bina_fener" else
                       "eski Liman'daki yeri (sokaklarla aynı taşıma, oran 0,70)" if eski_limanda(e) else
                       "eski İskele'deki yeri (sokaklarla aynı taşıma, oran 0,70)" if eski_iskelede(e) else
+                      "eski Stadyum'daki yeri (sokaklarla aynı taşıma, oran 0,70)" if ys == "yerlesim_stadyum" else
                       "oranla karşılığı" + (", meydana bakar" if meydana else "")
                       + (", kıyıda (liman öbeği birlikte kıyıya kaydı)" if e["id"] in LIMAN_KAYMASI else ", kıyıda" if liman else ""))
         ozel["yol"] = yid
