@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { modelYukle } from '../../../lib/modelYukle';
 import { hazirla, type HaritaModeli } from '../modelHazirla';
-import { KAIDE_ESIGI, type Yapi } from './tekVeri';
+import { KAIDE_ESIGI, type Yapi, type Zemin } from './tekVeri';
+import { KaideGeometrisi, type ZeminRengi } from './kaideGeometrisi';
 import { MODEL_KIRPMA } from './modelEsleme';
+import { AGAC_PAYI, HAFIF_SURUMLER, ORTA_UZAKLIK, TOPLAM_SINIR, YAPI_EN_AZ } from './ucgenSiniri';
 import { uzakModelleriBirak, type UzakModel } from './uzakModeller';
 
 /**
@@ -19,9 +21,12 @@ import { uzakModelleriBirak, type UzakModel } from './uzakModeller';
  *   aynı modeldeki bütün yapılar onu paylaşır. Üçgen bütçesi dolunca kalanı kutu.
  * - Viki bağlı yapılar normal modda uzaktan da modeliyle (yer imi gibi).
  * - Hafif mod: daha dar çevre, daha küçük bütçe, gölge yok.
+ * - Toplam üçgen tavanı ve hafif sürümler (25 Kasım, `ucgenSiniri.ts`): The Imperial, Sürek Kulübü ve belediye
+ *   uzakta, hafif modda ya da tavan dolunca orta ayrıntılı sürümüyle; modellerin payı tavandan kalandır.
  * - Taş kaide (24 Kasım, Kemal: "binalar havada asılı, bazıları yarı gömülü"): yapı çizilen
  *   zemine oturur (`tekVeri.ts` → `tabanKotu`); yamaçta tabanın altındaki en alçak zemin kottan
- *   aşağıdaysa yapının altında o kota kadar taş kaide (bütün yapılar tek çizimde).
+ *   aşağıdaysa yapının altında o kota kadar taş kaide (bütün yapılar tek çizimde). 25 Kasım'dan
+ *   beri taş sıralı, şevli, alt kenarı yamaca oturan ve zemin rengine geçen kaide (`kaideGeometrisi.ts`).
  * Kayda hiçbir şey yazılmaz.
  */
 
@@ -30,8 +35,6 @@ const GOVDE: Record<string, string> = {
   depo: '#CBC2B0', kamu: '#E9E2D4', ozel: '#E7DDCC', kutu: '#DDD3C2', alan: '#BFB6A2'
 };
 const CATI = '#B8735A';
-/** Yamaçtaki yapının altındaki taş kaide (DENEME) */
-const KAIDE = '#A59886';
 /** Kaide tabanın bu oranı (model kutusu saçakları da kapsar; duvarın biraz dışında kalsın) */
 const KAIDE_PAYI = 0.94;
 
@@ -68,7 +71,8 @@ export class YapiKatmani {
   modelli = 0;
   private govde: THREE.InstancedMesh;
   private cati: THREE.InstancedMesh;
-  private kaide: THREE.InstancedMesh | null = null;
+  private kaide: THREE.Mesh | null = null;
+  private kaideGeo: KaideGeometrisi | null = null;
   private kutuMatris: THREE.Matrix4[] = [];
   private catiMatris: THREE.Matrix4[] = [];
   private modeller = new Map<string, HaritaModeli>();
@@ -83,8 +87,17 @@ export class YapiKatmani {
   private uzakSeviyeler: Array<UzakSeviye | null> = [null, null];
   /** Uzak kopyaların malzemesi: köşe renkli, düz gölgeli (yüz yönü ekranda hesaplanır) */
   private uzakMalzeme = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
+  /** Son seçimde modeller dışındaki yapı üçgeni (kutu, kaide; uzak kopyalar değil): tavan hesabında */
+  private sabitUcgen = 0;
+  /** Tavana sayılan yapı üçgeni (uzak kopyalar hariç; ağaçların payı bununla hesaplanır) */
+  tavanUcgen = 0;
+  /** Son seçimde hafif sürümle çizilen yapı sayısı (ölçüm) */
+  hafifSurumlu = 0;
+  /** Son seçimde modellere ayrılan pay (ölçüm) */
+  modelPayi = 0;
 
-  constructor(private yapilar: Yapi[], private uzak: Map<string, UzakModel> | null, private onDegisti: () => void) {
+  constructor(private yapilar: Yapi[], private uzak: Map<string, UzakModel> | null, private onDegisti: () => void,
+    zemin?: { z: Zemin; renk: ZeminRengi | null }) {
     const kutu = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
     const n = yapilar.length;
     this.govde = new THREE.InstancedMesh(kutu, new THREE.MeshLambertMaterial(), n);
@@ -121,18 +134,15 @@ export class YapiKatmani {
     this.govde.computeBoundingSphere(); this.cati.computeBoundingSphere();
     this.grup.add(this.govde, this.cati, this.secim);
 
-    // Taş kaide: kottan tabanın altındaki en alçak zeminin biraz altına kadar
+    // Taş kaide: kottan aşağı, her noktada çizilen zeminin biraz altına kadar (`kaideGeometrisi.ts`)
     const kaideli = yapilar.filter(y => y.zeminAlt !== undefined && y.kot - y.zeminAlt > KAIDE_ESIGI);
-    if (kaideli.length) {
-      this.kaide = new THREE.InstancedMesh(kutu, new THREE.MeshLambertMaterial({ color: KAIDE, flatShading: true }), kaideli.length);
-      kaideli.forEach((y, n) => {
-        const alt = y.zeminAlt! - 0.4, ust = y.kot - 0.02;
-        const en = TABANA_UYAR.has(y.tur) && y.modelEn ? y.modelEn : y.en;
-        this.kaide!.setMatrixAt(n, new THREE.Matrix4().makeTranslation(y.merkez[0], alt, y.merkez[1]).multiply(donus(y.ex))
-          .multiply(new THREE.Matrix4().makeScale(en * KAIDE_PAYI, ust - alt, y.boy * KAIDE_PAYI)));
-      });
+    if (kaideli.length && zemin) {
+      this.kaideGeo = new KaideGeometrisi(zemin.z, kaideli.map(y => ({
+        yapi: y, en: (TABANA_UYAR.has(y.tur) && y.modelEn ? y.modelEn : y.en) * KAIDE_PAYI, boy: y.boy * KAIDE_PAYI, ust: y.kot - 0.02
+      })));
+      this.kaideGeo.boya(zemin.renk);
+      this.kaide = new THREE.Mesh(this.kaideGeo.geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide }));
       this.kaide.castShadow = this.kaide.receiveShadow = true;
-      this.kaide.computeBoundingSphere();
       this.grup.add(this.kaide);
     }
   }
@@ -191,31 +201,44 @@ export class YapiKatmani {
     return s;
   }
 
-  /** Bakılan yere göre hangi yapı modeliyle çizilsin */
+  /** Zemin, yol, bahçe, liman katlarının üçgeni (TekHarita verir); modellerin payı toplam tavandan kalandır */
+  digerUcgen: () => number = () => 0;
+
+  /** Bakılan yere göre hangi yapı modeliyle çizilsin (modellerin payı: `ucgenSiniri.ts`) */
   guncelle(hedef: THREE.Vector3, kameraUzakligi: number, hafif: boolean, golge: boolean) {
     this.son = { x: hedef.x, z: hedef.z, u: kameraUzakligi, hafif, golge };
+    const digerUcgen = this.digerUcgen();
     const a = hafif ? HAFIF : NORMAL;
+    const mod = hafif ? 'hafif' : 'normal';
+    const butce = Math.min(a.butce, Math.max(YAPI_EN_AZ[mod], TOPLAM_SINIR[mod] - digerUcgen - this.sabitUcgen - AGAC_PAYI[mod]));
+    this.modelPayi = butce;
     const ucgen = (d: string) => this.modeller.get(d)?.ucgen ?? TAHMIN;
     const yakin = kameraUzakligi < a.kameraEsigi;
     const adaylar = this.yapilar
       .map((y, i) => ({ y, i, u: Math.hypot(y.merkez[0] - hedef.x, y.merkez[1] - hedef.z) }))
       .filter(({ y, u }) => y.dosya && ((yakin && u < a.yaricap) || (!hafif && y.vikiId && kameraUzakligi < 9000)))
-      .sort((p, q) => (q.y.vikiId ? 1 : 0) - (p.y.vikiId ? 1 : 0) || p.u - q.u);
+      // Önce çevredekiler (yakından uzağa), sonra uzaktaki viki yapıları: tavan dolunca uzaktakiler hafif sürüme ya da kopyaya düşer
+      .sort((p, q) => (p.u < a.yaricap ? 0 : 1) - (q.u < a.yaricap ? 0 : 1) || p.u - q.u);
     let toplam = 0;
-    const secilen: typeof adaylar = [];
+    const secilen: Array<(typeof adaylar)[number] & { d: string }> = [];
     const indir = new Set<string>();
+    this.hafifSurumlu = 0;
     for (const x of adaylar) {
-      const d = x.y.dosya!;
-      const u = ucgen(d);
-      if (toplam + u > a.butce) continue;
-      toplam += u;
-      if (this.modeller.has(d)) secilen.push(x); else indir.add(d);
+      const asil = x.y.dosya!;
+      const hafifD = HAFIF_SURUMLER[asil];
+      // Hafif sürüm: hafif modda ya da uzakta; asıl sığmazsa da hafif sürüm denenir
+      const sira = hafifD ? (hafif || x.u > ORTA_UZAKLIK ? [hafifD] : [asil, hafifD]) : [asil];
+      const d = sira.find(s => toplam + ucgen(s) <= butce);
+      if (!d) continue;
+      toplam += ucgen(d);
+      if (d === hafifD) this.hafifSurumlu++;
+      if (this.modeller.has(d)) secilen.push({ ...x, d }); else indir.add(d);
     }
     for (const d of indir) {
       if (this.inenler.has(d)) continue;
       this.inenler.add(d);
       modelYukle(d)
-        .then(g => { if (!this.kapandi) { this.modeller.set(d, hazirla(g.scene, MODEL_KIRPMA[d])); this.sonra(); } })
+        .then(g => { if (!this.kapandi) { this.modeller.set(d, this.hazirlaKutulu(d, g.scene)); this.sonra(); } })
         .catch(e => console.warn('[tek harita] model inmedi', d, e))
         .finally(() => this.inenler.delete(d));
     }
@@ -225,11 +248,11 @@ export class YapiKatmani {
     this.ornekler = [];
     const matrisler = new Map<string, THREE.Matrix4[]>();
     const gizle = new Set<number>();
-    for (const { y, i } of secilen) {
-      const m = this.modeller.get(y.dosya!)!;
-      const l = matrisler.get(y.dosya!) ?? [];
+    for (const { y, i, d } of secilen) {
+      const m = this.modeller.get(d)!;
+      const l = matrisler.get(d) ?? [];
       l.push(modelMatrisi(y, m));
-      matrisler.set(y.dosya!, l);
+      matrisler.set(d, l);
       gizle.add(i);
     }
     for (const [d, l] of matrisler) {
@@ -276,7 +299,10 @@ export class YapiKatmani {
     }
     this.modelli = secilen.length;
     const kutulu = this.yapilar.length - this.uzakli.size - [...gizle].filter(i => !this.uzakli.has(i)).length;
-    this.ucgen = toplam + kutulu * 24 + uzakUcgen + (this.kaide?.count ?? 0) * 12;
+    // Tavan hesabında uzak kopyalar sayılmaz: sayaç adanın bütün karolarını sayar, ekranda yalnız görünenler çizilir
+    this.sabitUcgen = kutulu * 24 + (this.kaideGeo?.ucgen ?? 0);
+    this.tavanUcgen = toplam + this.sabitUcgen;
+    this.ucgen = this.tavanUcgen + uzakUcgen;
   }
 
   /** Uzak kopyalarda gizlenecekler (modeliyle çizilenler): değişen karonun dizini yeniden kurulur */
@@ -305,6 +331,20 @@ export class YapiKatmani {
     }, 80);
   }
 
+  /**
+   * Modeli haritaya hazırlar. Hafif sürüm asıl modelin kırpmasını ve taban kutusunu kullanır (uzak kopyanın
+   * kutusu asıl modelinkidir): sadeleştirmede kutu biraz değişse de yapı aynı yere, aynı ölçüde oturur.
+   */
+  private hazirlaKutulu(d: string, sahne: THREE.Object3D): HaritaModeli {
+    const asil = Object.keys(HAFIF_SURUMLER).find(k => HAFIF_SURUMLER[k] === d);
+    const m = hazirla(sahne, MODEL_KIRPMA[asil ?? d]);
+    const kutu = asil ? (this.modeller.get(asil) ?? this.uzak?.get(asil)) : undefined;
+    return kutu ? { ...m, cx: kutu.cx, cz: kutu.cz, w: kutu.w, d: kutu.d } : m;
+  }
+
+  /** Kaidenin zemine geçen rengi yeniden okunur (ağaç katı zemini boyayınca) */
+  kaideyiBoya(renk: ZeminRengi) { this.kaideGeo?.boya(renk); }
+
   /** Model inişi sürüyor mu (ölçüm için) */
   get iniyor() { return this.inenler.size > 0 || this.bekleyen !== 0; }
 
@@ -317,7 +357,7 @@ export class YapiKatmani {
     this.uzakMalzeme.dispose();
     if (this.uzak && uzakDa) uzakModelleriBirak(this.uzak);
     this.govde.dispose(); this.cati.dispose();
-    if (this.kaide) { this.kaide.dispose(); (this.kaide.material as THREE.Material).dispose(); }
+    if (this.kaide) { this.kaide.geometry.dispose(); (this.kaide.material as THREE.Material).dispose(); }
     this.govde.geometry.dispose(); this.cati.geometry.dispose(); (this.govde.material as THREE.Material).dispose(); (this.cati.material as THREE.Material).dispose();
   }
 }

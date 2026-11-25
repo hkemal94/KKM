@@ -99,6 +99,20 @@ sözü: "denize bakan ve cep plajı olan bir otel" (yer ve yükseklik serbest), 
   sahanlığın binadan uzak kenarına çıkar.
 - Bütün denetimler temiz. Önce / sonra: `docs/gorseller/tek-harita-imperial/`. Telefonda denenmedi.
 
+## 25 Kasım: tek harita: taş kaide
+
+Kemal (25 Kasım, harita parçaları raporu, soru 2 → a): yüksek kaideler (Deniz Feneri ~11 m, Yağ Fabrikası 6,6 m, Sade
+Meyhane 5,4 m, Eski Kilise 5,3 m) düz kahverengi kutu yerine taş dokulu, zemin rengine karışan kaideyle.
+- **Yeni kaide** (`tek/kaideGeometrisi.ts`, `yapiKatmani.ts`): duvar 0,7 m'lik taş sıralarına ve 1,5 m'lik taşlara
+  bölünür, sıralar şaşırtmalı, her taşın tonu biraz farklı (kireçtaşı rengi). Alt kenar düz değil, her noktada zeminin
+  0,4 m altına iner (yamaca oturur); duvar aşağı indikçe dışa açılır (şev, her metrede 0,12 m, en çok 0,9 m). Duvarın alt
+  kısmı (yüksekliğin %30'u, 1–3,5 m) altındaki zeminin rengine geçer: kumsalda kuma, çayırda yeşile
+  (`zeminKatmani.ts` → `renkAl`; ağaç katı zemini boyayınca yeniden okunur). 1,5 m'den alçak duvarda taşlar üç kat geniş.
+- **Bütün kaidelere uygulandı** (kaide sistemi genel; 983 yapı). Kaidenin kuralı (kot, eşik) değişmedi; denetim aynı.
+- **Ölçüm** (bilgisayar, normal mod): kaidelerin toplamı 11,8 bin → 50,4 bin üçgen (tek çizim). İndirme değişmedi
+  (kaide kodla üretilir, dosya yok). Ölçüler DENEME. Telefonda denenmedi.
+- Önce / sonra: `docs/gorseller/harita-tas-kaide/`.
+
 ## 24 Kasım gece: tek harita, adanın Ege'deki yeri
 
 Kemal (24 Kasım): Ege'deki konum geri gelsin. Eski haritada ada anakara, Küçükkuyu, Bozcaada ve Edremit Körfezi ile
@@ -118,6 +132,29 @@ birlikte görünüyordu; tek haritada yoktu.
   Limanı'nın yeri eski haritadaki değer (26,607 D · 39,548 K). Katman `src/components/harita/tek/egeKatmani.ts`.
 - Gelmeyenler: eski feribot hattı (eski Liman'dan çıkıyordu; yeni adada iskelenin yeri ayrı karar) ve denizin dalga
   dokusu. Kayda bir şey yazılmaz. Resimler: `docs/gorseller/tek-harita-ege/`. Telefonda denenmedi.
+
+## 25 Kasım: tek harita: hafif sürümler ve toplam üçgen tavanı
+
+Kemal (25 Kasım, harita parçaları raporu, soru 3 → a): Imperial, Sürek ve belediye için orta ayrıntılı sürüm; bütçe
+tek tavana bağlansın.
+- **Hafif sürümler** (`public/modeller/binalar/*-hafif.glb`; `tek/ucgenSiniri.ts` → `HAFIF_SURUMLER`): asıl modelin
+  parçaları sadeleştirildi (meshoptimizer; adlar, renkler aynı; harita asıl modelin taban kutusunu ve kırpmasını kullanır).
+  The Imperial 89 bin → 14 bin üçgen (834 → 158 KB), Sürek Kulübü 35 → 10 bin (448 → 131 KB), belediye 34 → 7 bin
+  (340 → 80 KB). Bakılan yerden 450 m'den uzakta, hafif modda ya da tavan dolunca bu sürüm çizilir. Galeride görünmez.
+- **Toplam tavan** (DENEME): normal 1,6 milyon, hafif 400 bin üçgen. Önce zemin, yol, liman, bahçe; yapı modelleri
+  ağaçlara 400 bin (hafifte 60 bin) bırakıp kalanı kullanır (en az 120 / 40 bin); ağaçlar kalanı (`agacKatmani.ts` →
+  `sahneToplam` tavandır). Önce çevredeki yapılar (yakından uzağa), sonra uzaktaki viki yapıları; sığmayan önce hafif
+  sürüme, o da sığmazsa uzak kopyaya düşer. Yapıların uzak kopyaları tavana sayılmaz (sayaç adanın bütün karolarını
+  sayar, ekranda görünenler çizilir).
+- **İskele ve mendirek** (`limanModelleri.ts`): eskiden bir iskeleye yakın bakınca adanın bütün parçaları asıl modelle
+  çiziliyordu (~565 bin üçgen; mendirek parçası 9.800 üçgen); şimdi yalnız bakılan yere 350 m yakın parçalar asıl, kalanı
+  uzak kopya (DENEME). Hâlâ İskele'de ~350 bin: mendireğin hafif sürümü ayrı iş.
+- **Ölçüm** (bilgisayar, ekran kartsız tarayıcı, ekrandaki sayaç; önce → sonra): normal mod İskele 2,08 → 1,58 milyon,
+  İskele yakın 2,07 → 1,54, Liman 1,91 → 1,47, Liman yakın 1,81 → 1,41, The Imperial 1,91 → 1,24, Merkez 1,47 → 1,47;
+  hafif mod 0,41–0,50 → 0,29–0,38 milyon. Modeliyle çizilen yapı: İskele 69 → 33, Liman 64 → 45, Merkez 66 → 53
+  (kalanı uzak kopya). Aynı gezintide inen model dosyası 2,39 → 1,63 MB; harita verisi 4,88 MB (değişmedi).
+  Telefonda denenmedi.
+- Önce / sonra: `docs/gorseller/harita-hafif-surumler/`.
 
 ## 24 Kasım akşam: soy ağacı tek ağaç (aile çerçeveleri kalktı)
 
