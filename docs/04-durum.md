@@ -35,6 +35,7 @@ Kemal (25 Kasım: "yapılsın, ayrı iş"). `tek/limanModelleri.ts`:
   aynı; açılan pay yapılara gider: modeliyle çizilen yapı İskele 29 → 52, İskele yakın 27 → 50, Liman 43 → 55, Liman yakın
   43 → 54. Hafif mod: liman katı 14 → 9 bin, mendireğin yanında 23 bin. Resimler: `docs/gorseller/harita-mendirek-hafif/`.
   Telefonda denenmedi.
+- **Karar** (Kemal, 25 Kasım, sorular 1a–4a): uzaklıklar (120 m, 350 m; hafif modda 60 m) ve 10° eşiği (7 parça) onaylandı, kodda DENEME yerine "Kemal onayladı, 25 Kasım"; ahşap iskelenin hafif sürümü yapılmayacak.
 
 ## 25 Kasım akşam: Kemal'in onayladığı harita ölçüleri
 

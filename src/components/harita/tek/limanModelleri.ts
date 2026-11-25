@@ -29,7 +29,7 @@ const YAKIN = 1500;
 const COK_UZAK = 6000;
 /**
  * Asıl model yalnız bakılan yere bu kadar (m) yakın parçalarda; öbürleri uzak kopya (25 Kasım, üçgen tavanı:
- * eskiden bir iskeleye yakın bakınca adanın bütün iskele ve mendirek parçaları asıl modelle çiziliyordu, ~565 bin üçgen; DENEME)
+ * eskiden bir iskeleye yakın bakınca adanın bütün iskele ve mendirek parçaları asıl modelle çiziliyordu, ~565 bin üçgen; Kemal onayladı, 25 Kasım)
  */
 const PARCA_YAKIN = 350;
 
@@ -37,12 +37,12 @@ const PARCA_YAKIN = 350;
  * Orta ayrıntılı hafif sürüm (25 Kasım akşam): asıl modelin parçaları sadeleştirildi (meshoptimizer, Imperial ve
  * Sürek'teki yol; parça adları, renkler ve taban kutusu aynı, yerleşim asıl modelin ölçüsüyle). Mendirek 9.804 →
  * 1.988 üçgen (200 → 16 KB). Ahşap iskele parçası (1.620 üçgen) sadeleşince tahtaları delik deşik oluyor; onun hafif
- * sürümü yok.
+ * sürümü yok ve yapılmayacak (Kemal, 25 Kasım).
  */
 const HAFIF_SURUM: Record<string, string> = { [MENDIREK]: 'deniz/mendirek-duz-hafif.glb' };
-/** Normal modda asıl model yalnız bakılan yere bu kadar (m) yakın parçalarda; ötesi `PARCA_YAKIN`'a kadar hafif sürüm (DENEME) */
+/** Normal modda asıl model yalnız bakılan yere bu kadar (m) yakın parçalarda; ötesi `PARCA_YAKIN`'a kadar hafif sürüm (Kemal onayladı, 25 Kasım) */
 const ASIL_YAKIN = 120;
-/** Hafif modda bakılan yere bu kadar (m) yakın parçalar hafif sürümle, öbürleri en kaba kopyayla (DENEME) */
+/** Hafif modda bakılan yere bu kadar (m) yakın parçalar hafif sürümle, öbürleri en kaba kopyayla (Kemal onayladı, 25 Kasım) */
 const HAFIF_MOD_YAKIN = 60;
 
 /** Parçanın çizildiği sürüm: asıl model, hafif sürüm ya da uzak kopyanın iki seviyesi */
@@ -308,7 +308,7 @@ function icinde(h: Nokta[], x: number, y: number) {
   return ic;
 }
 
-/** Mendirek hattında bu açıdan (derece) keskin dönen köşede parça dizisi bölünür (DENEME) */
+/** Mendirek hattında bu açıdan (derece) keskin dönen köşede parça dizisi bölünür (Kemal onayladı, 25 Kasım) */
 const KIRIK = 10;
 
 /** Hattı keskin köşelerinden dizilere böler (0,5 m'den kısa kenarlar atlanır) */
