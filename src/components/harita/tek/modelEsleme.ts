@@ -35,14 +35,15 @@ export const YAMAC_MODELLERI = new Set([
  * Kendi kayalığıyla gelen model (25 Kasım, Kemal: Oyunlar'daki "Otel kalıbı" haritaya; "20 m yükseklikte bu tipte
  * olmalıydı"; yar kayalık, merdiven yarın yüzünde): The Imperial modelinin binası, kayalık yarı, taş merdiveni, kum cebi
  * ve taş terası çizilir; çimeni (sahanlık adanın zemini), denizi ve suyun içindekiler (kendi iskelesi, kayıklar; yerel
- * z 33'ten ileride, sahanlığın 14 m altında) ve kendi zikzak merdiveni atılır; cep plajı deniz seviyesine iner. İskele
+ * z 36'dan ileride, sahanlığın 14 m altında) ve kendi zikzak merdiveni atılır; cep plajı deniz seviyesine iner. İskele
  * ve tek dönüşlü taş merdiven adanın (`iskele_imperial`, Sahil Merdiveni). Yeri ve kotu veride
  * (`modelBaslangic`, `modelKot`): modelin başlangıç noktası oraya, ölçeksiz oturur (`yapiKatmani.ts` → `modelMatrisi`).
  */
 export const MODEL_KIRPMA: Record<string, KirpmaAyari> = {
   'binalar/the-imperial-kemskoy.glb': {
     // tas2 / saksi: modelin kendi zikzak merdiveni ve saksıları (Kemal: merdiven tek dönüşlü; haritanın taş merdiveni)
-    atla: new Set(['deniz', 'cimen', 'tas2', 'saksi']), suIci: { z: 33, y: -14 },
+    // cep plajı kıyıdan biraz denize uzanır (Kemal, 25 Kasım: "gerçek küçük koy"); kayıklar çizilmez
+    atla: new Set(['deniz', 'cimen', 'tas2', 'saksi', 'tekne_mavi', 'tekne_beyaz']), suIci: { z: 36, y: -14 },
     // modelin merdiveninin öbür parçaları (basamak, korkuluk; yarın merdiven oyuğunda, sahanlığın 1 m altından aşağısı)
     kutu: { adlar: new Set(['demir', 'fener', 'ahsap', 'ahsap_koyu', 'kesme', 'kesme2', 'silme', 'badana', 'asma2']), x: [26, 40], z: [21.5, 34], y: -1 },
     // Sahanlık 20 m (`gen/kompakt_zemin.py` → IMP_MODEL_KOT 20,1): modelin cep plajı 3,5 m iner, deniz seviyesine

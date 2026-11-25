@@ -15,8 +15,8 @@ import type { UzakModel } from './uzakModeller';
  *   uzar ya da daralır.
  * - Mendirek: orta çizgisi (`hat`) boyunca `deniz/mendirek-duz` parçaları; genişlik
  *   veriden (`genislik`). Taş iskele (`tur: 'taş'`, `hat` var) de böyle çizilir.
- * Modeller deniz seviyesinde (kendi başlangıç noktası y = 0). Yakında asıl model,
- * uzakta ve hafif modda az üçgenli kopyası (`uzakModeller.ts`). Yalnız okur.
+ * Modeller deniz seviyesinde (kendi başlangıç noktası y = 0). Yakında asıl model (yalnız bakılan yere
+ * `PARCA_YAKIN` m yakın parçalar), uzakta ve hafif modda az üçgenli kopyası (`uzakModeller.ts`). Yalnız okur.
  */
 
 const ISKELE = 'deniz/ahsap-iskele-duz.glb';
@@ -24,6 +24,11 @@ const MENDIREK = 'deniz/mendirek-duz.glb';
 /** Bu uzaklığın içinde (bakılan yer ile en yakın iskele ya da mendirek, m) ve normal modda asıl model */
 const YAKIN = 1500;
 const COK_UZAK = 6000;
+/**
+ * Asıl model yalnız bakılan yere bu kadar (m) yakın parçalarda; öbürleri uzak kopya (25 Kasım, üçgen tavanı:
+ * eskiden bir iskeleye yakın bakınca adanın bütün iskele ve mendirek parçaları asıl modelle çiziliyordu, ~565 bin üçgen; DENEME)
+ */
+const PARCA_YAKIN = 350;
 
 type Yerlesim = { dosya: string; matris: THREE.Matrix4 };
 
@@ -129,17 +134,24 @@ export class LimanModelleri {
       this.indir(d);
       return null;
     };
-    const secim = [ISKELE, MENDIREK].map(d => ({ d, p: parcalar(d) }));
-    const anahtar = secim.map(x => `${x.d}:${x.p?.anahtar ?? '-'}`).join('|') + `|${this.yerlesimler.length}`;
+    // Asıl modelle çizilecekse yalnız yakın parçalar asıl, kalanı uzak kopya (seviye 0)
+    const yakinMi = (y: Yerlesim) => Math.hypot(y.matris.elements[12] - hedef.x, y.matris.elements[14] - hedef.z) < PARCA_YAKIN;
+    const secim = [ISKELE, MENDIREK].flatMap(d => {
+      const p = parcalar(d);
+      const l = this.yerlesimler.filter(y => y.dosya === d);
+      if (p?.anahtar !== 'asil' || !this.uzak?.get(d)) return [{ d, p, l }];
+      const u = this.uzak.get(d)!;
+      return [{ d, p, l: l.filter(yakinMi) }, { d, p: { anahtar: 'uzak0', parcalar: u.seviyeler[0], ucgen: u.ucgen[0] }, l: l.filter(y => !yakinMi(y)) }];
+    });
+    const sira = new Map(this.yerlesimler.map((y, i) => [y, i] as const));
+    const anahtar = secim.map(x => `${x.d}:${x.p?.anahtar ?? '-'}:${x.l.map(y => sira.get(y)).join(',')}`).join('|') + `|${this.yerlesimler.length}`;
     if (anahtar !== this.kurulan) {
       this.kurulan = anahtar;
       for (const o of this.ornekler) { this.grup.remove(o); o.dispose(); }
       this.ornekler = [];
       this.ucgen = 0;
-      for (const { d, p } of secim) {
-        if (!p) continue;
-        const l = this.yerlesimler.filter(y => y.dosya === d);
-        if (!l.length) continue;
+      for (const { p, l } of secim) {
+        if (!p || !l.length) continue;
         for (const q of p.parcalar) {
           const o = new THREE.InstancedMesh(q.geo, q.mat, l.length);
           l.forEach((y, k) => o.setMatrixAt(k, y.matris));

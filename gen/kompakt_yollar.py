@@ -16,6 +16,12 @@ Kurallar:
     birkaç meydancık. Sokaklar arası ~80 m: iki yanda yol kenarı parseli (3. adım) için düz şerit kalır.
   - Dirlik Stadı (132 x 100 m: 100 x 64 saha ve tribün payı) zeminde düz bir sekiye oturur (kazı ve
     dolgu 1'e 3 şevle); stat çevresi sokak sekinin üstünde, köyün sokakları ondan çıkar.
+  - Stadyum köyü (Kemal, 24 Kasım) eski haritadaki sokaklarıyla: Kurucu'nun son hâli oran 0,70 ile taşınır, seyreltilir
+    (gen/kompakt_stadyum.py); köy dokusu üretilmez. Statın içinden geçen eski yol çevre yolunda biter; ızgarada sokağın
+    düzlenen şeridi dar (ST_CEKIRDEK, ST_KENAR).
+  - Çiftlik köyü (Kemal, 24–25 Kasım: "Bugünkü kalsın, sıklaşsın") köy dokusuyla, bugünkü yerinde ve yönünde: eğime koşut
+    sokaklar ~60 m arayla (eskisi 90), sokak sokak kayan kısa geçitler yerine köyü baştan başa geçen, yamaç yönünde
+    kırıksız çapraz sokaklar (~110 m arayla; dik parçası basamaklı geçit). Ölçüler DENEME (CF_ARA, CF_CAPRAZ).
   - Kıyı köyü (Kemal, 20 Kasım akşam) bugünkü haritadaki köyün sokak hatlarıyla aynı: Kurucu'nun kalıcı
     hâlindeki dokuz yol ve birahanenin yeri adanın küçültmesiyle (0,70) taşınır; zemin değişmez (teras yok).
     Sahil Yolu köyün önünde eski hattının küçültülmüşünden geçer; hattın geri kalanı aynen kalır.
@@ -1283,9 +1289,12 @@ def ana_birlesik():
     return unary_union([y["geom"] for y in YOLLAR])
 
 
-def koy_dokusu(yid, ara=80.0, merkez=None, cikis=None, cevre=()):
+def koy_dokusu(yid, ara=80.0, merkez=None, cikis=None, cevre=(), capraz_ara=None, sabit=(), koru=()):
     """Ege köyü dokusu: eş yükselti (düzlükte kıyıya koşut) sokaklar ~ara arayla, merkezden
-    çıkan kollar, sokaklar arasında yamaç aşağı kısa geçitler ve meydancıklar."""
+    çıkan kollar, sokaklar arasında yamaç aşağı kısa geçitler ve meydancıklar.
+    capraz_ara verilirse (Çiftlik, 25 Kasım) sokaklar arası rastgele kısa geçitler yerine köyü baştan başa geçen,
+    yamaç yönünde yumuşak çapraz sokaklar ~capraz_ara arayla (capraz_sokaklar). sabit: ilk noktadan bir eğime koşut sokak
+    geçer (seviyeler birlikte kayar); koru: çapraz sokak bu alanlara girmez."""
     y = YERLESIM[yid]
     rng = np.random.default_rng(sum(map(ord, yid)))
     r = y["yaricapM"] * 1.05
@@ -1315,6 +1324,10 @@ def koy_dokusu(yid, ara=80.0, merkez=None, cikis=None, cevre=()):
             seviyeler.append((isaret * (k + 0.5), float(ornek(F, *p[i_]))))
             k += 1
     seviyeler.sort()
+    for q_ in sabit[:1]:              # bütün seviyeler kayar, en yakını bu noktanın yükseltisine gelir (sokak oradan geçer)
+        v_ = float(ornek(F, *q_))
+        d_ = v_ - min((lv_ for _, lv_ in seviyeler), key=lambda lv_: abs(lv_ - v_))
+        seviyeler = [(s_, lv_ + d_) for s_, lv_ in seviyeler]
     R = r * 1.4
     i0, i1 = max(0, int((c[0] - R - X0) / H)), min(EN, int((c[0] + R - X0) / H) + 2)
     j0, j1 = max(0, int((c[1] - R - Y0) / H)), min(BOY, int((c[1] + R - Y0) / H) + 2)
@@ -1385,7 +1398,9 @@ def koy_dokusu(yid, ara=80.0, merkez=None, cikis=None, cevre=()):
         kollar.append(g)
     # yamaç aşağı geçitler: komşu iki sokak arasında, 110–170 m arayla
     baglar = []
-    for (s1, p1), (s2, p2) in zip(hat[:-1], hat[1:]):
+    if capraz_ara:
+        baglar = capraz_sokaklar(yid, hat, kollar, alan, GR, c, r, capraz_ara, rng, koru)
+    for (s1, p1), (s2, p2) in zip(hat[:-1], hat[1:]) if not capraz_ara else ():
         if abs(s2 - s1) > 1.01:
             continue
         u2 = unary_union(p2)
@@ -1422,7 +1437,7 @@ def koy_dokusu(yid, ara=80.0, merkez=None, cikis=None, cevre=()):
                         baglar.append(g2)
     # meydancıklar: kolun sokağı kestiği, merkezden uzak iki kavşak
     kav = []
-    for g in kollar:
+    for g in kollar + (baglar if capraz_ara else []):
         for _, pp in hat:
             for q in pp:
                 for P in noktalar(g.intersection(q)):
@@ -1436,6 +1451,56 @@ def koy_dokusu(yid, ara=80.0, merkez=None, cikis=None, cevre=()):
             MEYDANCIK.append(dict(koy=yid, geom=P.buffer(9, resolution=2)))
     print(f"  {yid}: eğim %{100 * G:.0f}, {len(hat)} eğime koşut sokak, {len(kollar)} kol, "
           f"{len(baglar)} geçit ({sum(1 for b_ in baglar if b_.length < 95 and len(b_.coords) == 2)} basamaklı)")
+
+
+def capraz_sokaklar(yid, hat, kollar, alan, GR, c, r, ara_, rng, koru=()):
+    """Köyü baştan başa geçen çapraz sokaklar (Çiftlik; Kemal 24 Kasım: "çiftlik yolu sürekli zigzag; aralar çok açık…
+    evler daha yakın", 25 Kasım: "Bugünkü kalsın, sıklaşsın"). Eğime koşut sokakları dik keser: yamaç yönünde (eğimin akış
+    çizgisi, 30 m yumuşatılmış zemin) kırıksız hat. Sokak sokak kayan kısa geçitlerin yerine geçer: aşağı yukarı tek hatla
+    geçilir (zigzag yok). Izgara olmasın diye ara ±25 m oynar, her çapraz sokak en az 3 sokağı geçer ama köyün hepsini değil
+    (başı ve sonu rastgele; T kavşaklar). Eğimi %15'i aşan parçası sonra basamaklı geçit
+    olur (İskele ve Stadyum'daki gibi; zemin düzlenmez). Ara DENEME."""
+    tum = unary_union([q for _, pp in hat for q in pp])
+    if tum.is_empty:
+        return []
+    gx, gy = [float(ornek(g_, *c)) for g_ in GR]
+    n_ = math.hypot(gx, gy) or 1.0
+    yon = np.array([-gy / n_, gx / n_])          # eş yükselti yönü (köyün ortasında)
+    out = []
+    for t in np.arange(-1.4 * r, 1.4 * r + 0.1, ara_):
+        t = t + rng.uniform(-25, 25)
+        tohum = np.asarray(c, float) + t * yon
+        if not alan.contains(Point(tohum)):
+            # köyün ortasındaki hat köyün dışına düşüyorsa en yakın sokaktan başla
+            q = nearest_points(tum, Point(tohum))[0]
+            if q.distance(Point(tohum)) > 0.6 * ara_:
+                continue
+            tohum = np.array([q.x, q.y])
+        yukari, _ = egim_yonu(GR, tohum, 1, 1.6 * r)
+        asagi, _ = egim_yonu(GR, tohum, -1, 1.6 * r)
+        pts = [tuple(p_) for p_ in asagi[::-1]] + [tuple(p_) for p_ in yukari[1:]]
+        if len(pts) < 4:
+            continue
+        g = LineString(yumusat(pts, tur=2, sade=3.0))
+        kes = sorted(g.project(P) for P in noktalar(g.intersection(tum)))
+        kes = [k_ for i_, k_ in enumerate(kes) if i_ == 0 or k_ - kes[i_ - 1] > 15.0]
+        if len(kes) < 2 or kes[-1] - kes[0] < 40.0:
+            continue
+        a_, b_ = 0, len(kes) - 1
+        if len(kes) >= 5:                    # köyün hepsini değil: en az 3 sokak, başı ve sonu rastgele
+            n_ = int(rng.integers(3, len(kes) + 1))
+            a_ = int(rng.integers(0, len(kes) - n_ + 1))
+            b_ = a_ + n_ - 1
+        g = substring(g, kes[a_], kes[b_])
+        parca = [q for q in parcalar(g.intersection(alan.buffer(2))) if q.length >= 40.0]
+        for q in parca:
+            if capraz_yakin(q, kollar + out, 25.0, 0.3) or any(q.distance(o) < 20.0 for o in out) \
+                    or any(q.intersects(k_) for k_ in koru):
+                continue
+            kaynak_ekle(q, yid, "sokak", "capraz")
+            out.append(q)
+    print(f"  {yid}: {len(out)} çapraz sokak (yamaç yönünde, ~{ara_:.0f} m arayla), {sum(q.length for q in out):.0f} m")
+    return out
 
 
 def cevre_kenarlari(poligon, lim=None):
@@ -1459,10 +1524,58 @@ koy_dokusu("yerlesim_merkez", 80.0, merkez=MEYDAN_XY, cikis=disari_cikislar(MEYD
 # Stadyum köyü: sekinin üstündeki stat çevresi sokağından çıkar
 STAT_CEVRE = STAT.buffer(10, join_style=2)
 _sc = cevre_kenarlari(STAT_CEVRE)
-koy_dokusu("yerlesim_stadyum", 80.0, cikis=disari_cikislar(STAT, _sc), cevre=_sc)
+# Stadyum köyü (Kemal, 24 Kasım: "uzun düz paralel yollar; daha küçük, evler yakın, daha az sokak"): köy dokusu
+# üretilmez; statın çevre yolu ve eski haritadaki sokaklar, taşınmış hâliyle (gen/kompakt_stadyum.py)
+import kompakt_stadyum as ST  # noqa: E402
+
+ST_ID = "yerlesim_stadyum"
+if any(abs(a - b) > 1e-6 for a, b in zip(ST.ODAK + (ST.ORAN,), tuple(B["odak"]) + (B["olcek"],))):
+    sys.exit("HATA: gen/kompakt_stadyum.py'deki küçültme zeminin küçültmesiyle aynı değil")
+_st_sokak = ST.eski_stadyum()
+ST_HAT = {k: LineString([ST.tasi(*c) for c in hat]) for k, (ad, kd, hat) in _st_sokak.items()}
+ST_AD = {k: ad for k, (ad, kd, hat) in _st_sokak.items()}
+ST_KADEME = {k: kd for k, (ad, kd, hat) in _st_sokak.items()}
+# sokak uçları değdikleri yolun (ya da statın çevre yolunun) üstüne oturur (eskisinde birkaç metrelik açıklıklar)
+for _k in ST_HAT:
+    _c = list(ST_HAT[_k].coords)
+    for _ui in (0, -1):
+        _P = Point(_c[_ui])
+        _ad = [g for k2, g in ST_HAT.items() if k2 != _k] + list(_sc)
+        _g = min(_ad, key=lambda g: g.distance(_P))
+        if 0.0 < _g.distance(_P) < 6.0:
+            _q = _g.interpolate(_g.project(_P))
+            _c[_ui] = (_q.x, _q.y)
+    ST_HAT[_k] = LineString(_c)
+for _g in _sc:
+    kaynak_ekle(_g, ST_ID, "ara", "halka")
+# stat ölçüsü küçülmedi (Kemal 19 Kasım): eskisinde statın çevresini dolanan yollar statın içinden geçmesin; statın çevre
+# yolunda biter (içinde kalan kısmı atılır, 8 m'den kısa artık parça da)
+_st_kirpilan = 0
+for _k, _g in list(ST_HAT.items()):
+    if _g.intersects(STAT_CEVRE):
+        _kalan = [q for q in parcalar(_g.difference(STAT_CEVRE)) if q.length >= 8.0]
+        _st_kirpilan += 1
+        for _n, _q in enumerate(_kalan):
+            kaynak_ekle(_q, ST_ID, ST_KADEME[_k], "stadyum", ad=ST_AD[_k])
+        continue
+    kaynak_ekle(_g, ST_ID, ST_KADEME[_k], "stadyum", ad=ST_AD[_k])
+print(f"  Stadyum: statın içinden geçen {_st_kirpilan} eski yol statın çevre yolunda bitirildi")
+_st_dik = sorted(((en_buyuk_egim(g), k) for k, g in ST_HAT.items()), reverse=True)
+print(f"Stadyum: eski haritadaki {len(ST_HAT)} sokak oran {ST.ORAN:.2f} ile taşındı, en dik %{100 * _st_dik[0][0]:.1f} "
+      f"({_st_dik[0][1]}), %15'i aşan {sum(1 for e, _ in _st_dik if e > EGIM['sokak'])}")
 # Liman ve İskele köy dokusuyla üretilmez: eski haritadaki sokakları taşınır (aşağıda, Kemal 22 ve 24 Kasım)
-for _yid, _ara in (("yerlesim_ciftlik", 90.0),):
-    koy_dokusu(_yid, _ara)
+# Çiftlik (Kemal 24 Kasım: "aralar çok açık… evler daha yakın, bağlantı çok"; 25 Kasım: "Bugünkü kalsın, sıklaşsın"):
+# bugünkü düzen (eğime koşut sokaklar, aynı yer ve yön) kalır; sokaklar sıklaşır (90 → CF_ARA m), sokak sokak kayan kısa
+# geçitler yerine köyü baştan başa geçen çapraz sokaklar (CF_CAPRAZ m arayla). Ölçüler DENEME.
+CF_ID, CF_ARA, CF_CAPRAZ = "yerlesim_ciftlik", 60.0, 110.0
+# Kemal'in Kurucu'da koyduğu Yağ Fabrikası yerinde kalsın: önündeki bugünkü sokağın noktası (eski hâlde fabrikanın
+# noktasına 20 m) sabit; sıklaşan eğime koşut sokaklardan biri onun yükseltisinden geçer (fabrika eskisi gibi ona bakar).
+# Çapraz sokaklar fabrikanın noktasının (gen/kompakt_yapilar.py → hedef; yapılar dosyasında tasima.hedef) CF_KORU_R
+# m yakınından geçmez. DENEME
+CF_SABIT = [m((25.9153473, 39.5800907))]          # sokak_ciftlik_698b5e'nin fabrikaya en yakın noktası (25 Kasım'a kadar)
+CF_KORU = [m((25.9151525, 39.5801917))]           # Yağ Fabrikası (bina_zeytinyagi)
+CF_KORU_R = 30.0
+koy_dokusu(CF_ID, CF_ARA, capraz_ara=CF_CAPRAZ, sabit=CF_SABIT, koru=[Point(q).buffer(CF_KORU_R) for q in CF_KORU])
 
 # ------------------------------------------------------------------ kıyı köyü (Taraftar Birahanesi)
 # Bugünkü haritadaki köyün sokakları, taşınmış hâliyle (yukarıda KK_HAT). Birahanenin yeri: modelinin tabanı
@@ -1675,22 +1788,29 @@ if LIMAN_CADDESI is not None:
 # Liman'ın ve İskele'nin eski sokakları kendi sayı akışlarıyla; öbür köyler ana daldaki akışla: ana dalda (#266) Merkez ve
 # Stadyum'dan sonra üretilmiş Liman sokaklarının çektiği 85 sayı ve İskele'nin eski köy dokusunun çektiği 33 sayı (24 Kasım,
 # İskele eski sokaklarıyla gelmeden önceki hâl) atlanır: Çiftlik ve kıyı köyünün daralan sokakları aynı kalır.
-_rng, _lm_rng, _is_rng = np.random.default_rng(11), np.random.default_rng(22), np.random.default_rng(33)
-_atla = 85 + 33
+# Stadyum'un eski sokakları da kendi akışıyla (25 Kasım): eski köy dokusunun çektiği 51 sayı da atlanır.
+# Çiftlik de kendi akışıyla (25 Kasım: sokakları sıklaştı): eskisinde çektiği 63 sayı da atlanır, kıyı köyü aynı kalır.
+_rng, _lm_rng, _is_rng, _st_rng, _cf_rng = (np.random.default_rng(11), np.random.default_rng(22), np.random.default_rng(33),
+                                            np.random.default_rng(44), np.random.default_rng(55))
+_atla = 85 + 33 + 51 + 63
 for k in SOKAK_KENAR:
-    if _atla and k["koy"] not in ("yerlesim_merkez", "yerlesim_stadyum", LM_ID, IS_ID):
+    if _atla and k["koy"] not in ("yerlesim_merkez", ST_ID, LM_ID, IS_ID, CF_ID):
         _rng.random(_atla)
         _atla = 0
     if k["kademe"] == "sokak" and not k.get("ad") and (_lm_rng if k["koy"] == LM_ID else _is_rng if k["koy"] == IS_ID
-                                                          else _rng).random() < 0.3:
+                                                          else _st_rng if k["koy"] == ST_ID
+                                                          else _cf_rng if k["koy"] == CF_ID else _rng).random() < 0.3:
         k["genislik"] = 4.0
 # İskele'nin eski sokaklarından kıyı yamacına inen dik parçalar (kavşaktan kavşağa) basamaklı geçit olur: hattı aynı, zemin
 # düzlenmez (Kemal 24 Kasım: zemin düzleme yok); Ege köylerindeki gibi merdivenli sokak (DENEME)
-_is_bas = [k for k in SOKAK_KENAR if k["koy"] == IS_ID and k["kademe"] == "sokak" and not k.get("ad")
-           and en_buyuk_egim(k["geom"]) > 0.93 * EGIM["sokak"]]
+_is_bas = [k for k in SOKAK_KENAR if k["koy"] in (IS_ID, ST_ID, CF_ID) and k["kademe"] == "sokak" and not k.get("ad")
+           and en_buyuk_egim(k["geom"]) > 0.93 * EGIM["sokak"]]   # Stadyum'da da (25 Kasım; yamaç 0,70'te dikleşti);
+#                                                                   Çiftlik'in çapraz sokaklarında da (25 Kasım; yamaç %18-25)
 for k in _is_bas:
     k.update(kademe="gecit", yuzey="basamak", genislik=2.5)
-print(f"  İskele: {len(_is_bas)} dik sokak parçası basamaklı ({sum(k['geom'].length for k in _is_bas):.0f} m)")
+for _y in (IS_ID, ST_ID, CF_ID):
+    _l = [k for k in _is_bas if k["koy"] == _y]
+    print(f"  {_y}: {len(_l)} dik sokak parçası basamaklı ({sum(k['geom'].length for k in _l):.0f} m)")
 print(f"  köy sokağı parçası: {len(SOKAK_KENAR)}, meydancık: {len(MEYDANCIK)}")
 
 
@@ -1903,6 +2023,9 @@ SAHIP = maske(SAHANLIK_TUM, 2) | maske(SEKI) | maske(MEYDAN)   # bunlara dokunul
 CEKIRDEK = {"ana": 9.0, "ara": 8.0, "sokak": 7.0, "gecit": 5.0, "toprak": 7.0}
 KENAR = {"ana": 26.0, "ara": 24.0, "sokak": 20.0, "gecit": 14.0, "toprak": 16.0}
 KENAR_EN_COK = 60.0
+# Stadyum'un sıkı ızgarası (adalar ~40-55 m) ve Çiftlik'in sıklaşan sokakları (25 Kasım): sokağın düzlenen şeridi dar; geniş kazı / dolgu adaların içini %30'dan
+# dik yapıp evsiz bırakıyordu (Kemal 24 Kasım: "evler yakın"). Arası doğal yamaç (~%20-25) kalır. DENEME
+ST_CEKIRDEK, ST_KENAR = 3.5, 8.0
 KIYI_KORU = smooth_ = None
 KIYI_KORU = np.clip((D_KARA - 8.0) / 30.0, 0, 1) ** 0.7  # kıyının 8 m içine dokunulmaz, sonra yavaş artar
 CEKIRDEK_M = np.zeros(Z.shape, bool)
@@ -2102,6 +2225,9 @@ for y in YOLLAR:
     # zemini şerit içinde profile getir: çekirdek tam, kenar yumuşak; kenarın genişliği
     # yapılan kazı / dolgu kadar artar (şev 1'e 2,5'tan dik olmaz)
     r1, r2 = CEKIRDEK[y["tur"]], KENAR[y["tur"]]
+    _st_dar = y.get("grup") in (ST_ID, CF_ID) and y["tur"] == "sokak"   # Çiftlik de (25 Kasım: sokaklar sıklaştı)
+    if _st_dar:
+        r1, r2 = ST_CEKIRDEK, ST_KENAR
 
     x0_, y0_ = p.min(0) - KENAR_EN_COK - H
     x1_, y1_ = p.max(0) + KENAR_EN_COK + H
@@ -2117,7 +2243,7 @@ for y in YOLLAR:
     # kenar genişliği: yolun o kesimindeki en büyük kazı kadar (şev 1'e 2,5)
     kazi = ndimage.maximum_filter1d(np.abs(zg - zp), size=21) + 0.5 * r1   # yan yamaç payı
     gen_ = np.full_like(Zs, r2 - r1)
-    gen_[ic] = np.clip(np.maximum(r2 - r1, 2.5 * kazi[idx_map[ik[ic]]]), 0, KENAR_EN_COK - r1)
+    gen_[ic] = np.clip(np.maximum(r2 - r1, 2.5 * kazi[idx_map[ik[ic]]]), 0, (r2 - r1) if _st_dar else KENAR_EN_COK - r1)
     w = np.zeros_like(Zs)
     w[ic] = 1 - smooth((dk[ic] - r1) / gen_[ic])
     # köprünün altı doldurulmaz (yalnız kazılır)

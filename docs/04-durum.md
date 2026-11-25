@@ -1,6 +1,6 @@
 # Durum
 
-**Son güncelleme: 25 Kasım 2026 gece (tek harita: The Imperial Otel kalıbı modeliyle kıyıda); önceki: 24 Kasım 2026 gece (tek harita: adanın Ege'deki yeri); önceki: 24 Kasım 2026 akşam (soy ağacı tek ağaç: aile çerçeveleri kalktı); önceki: 24 Kasım 2026 (tek harita: İskele, Kemal'in son cevapları: mendirek B, iskeleye inen yol); önceki: 24 Kasım 2026 (genel soy ağacı: bütün ada tek tuvalde); önceki: 24 Kasım 2026 (aile maddesi "Albüm": kuşak bandı, kuşak ağacı, yan kartlar); önceki: 24 Kasım 2026 (künyede bozuk Rol satırı düzeldi); önceki: 24 Kasım 2026 (ajansın kararlarına başlık değiştirme); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
+**Son güncelleme: 25 Kasım 2026 (toplu: The Imperial'in cep plajı kayalık, koyda sığlık lekeleri kalktı; Stadyum eski sokaklarıyla; Çiftlik sıklaştı; kullanılmayan modeller silindi; taş kaide; hafif sürümler ve üçgen tavanı); önceki: 25 Kasım 2026 gece (tek harita: The Imperial Otel kalıbı modeliyle kıyıda); önceki: 24 Kasım 2026 gece (tek harita: adanın Ege'deki yeri); önceki: 24 Kasım 2026 akşam (soy ağacı tek ağaç: aile çerçeveleri kalktı); önceki: 24 Kasım 2026 (tek harita: İskele, Kemal'in son cevapları: mendirek B, iskeleye inen yol); önceki: 24 Kasım 2026 (genel soy ağacı: bütün ada tek tuvalde); önceki: 24 Kasım 2026 (aile maddesi "Albüm": kuşak bandı, kuşak ağacı, yan kartlar); önceki: 24 Kasım 2026 (künyede bozuk Rol satırı düzeldi); önceki: 24 Kasım 2026 (ajansın kararlarına başlık değiştirme); önceki: 24 Kasım 2026 (tek harita: zikzak yollar düzeldi); önceki: 24 Kasım 2026 (tek harita: yapılar zemine oturur); önceki: 24 Kasım 2026 (viki madde standardı: Kemal'in altı kararı, yeni karar türleri); önceki: 24 Kasım 2026 (tek harita 11. adım, KKM-C: eski harita kayıtları; 11. adım tamam); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-B: eski haritaların kodu silindi); önceki: 23 Kasım 2026 (tek harita 11. adım, KKM-A: silmeden önce taşı); önceki: 23 Kasım 2026 (tek harita: evlerin bahçeleri); önceki: 23 Kasım 2026 (tek harita eklemeleri: künyedeki sekiz öğe haritada); önceki: 23 Kasım 2026 (tek harita 10. adım: künye); önceki: 22 Kasım 2026 (tek harita 9. adım: mahalle 2B haritaları); önceki: 22 Kasım (tek harita 8. adım: zemin aracı); önceki: 22 Kasım (tek harita: üç yapıya yeni model; Kemal'in cevapları); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); önceki: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
 **Son güncelleme: 22 Kasım 2026 (tek harita 7. adım: yönetim ekranı, Düzenle modu); önceki: 22 Kasım (tek harita: Liman eski haritadaki sokaklarıyla; Kemal'in üç cevabı); daha önce: 22 Kasım (tek harita 6b: görünüş düzeltmeleri); daha önce: 22 Kasım (tek harita: Dondurmacı Kızlar iskelenin önünde; Kemal seçenek B'yi seçti); daha önce: 21 Kasım gece (tek harita 6. adım: tek harita KKM'de; Kemal'in dört cevabı); daha önce: 21 Kasım gece (tek harita 5. adım: hazır gruplar; Kemal'in dört cevabı); daha önce: 21 Kasım gece (kıyı köyü ve kıyı yarı yarıya yaklaştı; #262 geri alındı); daha önce: 21 Kasım gece (tek harita 4. adım: evler ve yapılar arsalarda); daha önce: 21 Kasım akşam (tek harita 3. adımın düzeltmesi: eşit kare ızgara); daha önce: 21 Kasım (tek harita 3. adım: kareli parseller ve mahalle sınırları); daha önce: 20 Kasım (Cuma işleri bitti: kural, yedek, giriş adresleri, AI Studio kapandı); daha da önce: 19 Kasım akşam (Kemal'in son kararları: Dirlik ölçüsü, karakol ve kahvehane, yaşayan harita, iskambil, DK Lite Sürekli Mod, pullar, Canva, iş akışı, kompakt ada, AI Studio, Mini Golf)**
 
@@ -8,6 +8,81 @@
 
 Bu belge sık değişir. Brief "bu proje nedir"i anlatır ve aylarca durur;
 burası "şu an neredeyiz"i söyler. Kısa tutulur.
+
+## 25 Kasım: toplu dal (beş işin birleşimi)
+
+The Imperial'in cep plajı ve sığlık lekeleri, Stadyum'un eski sokakları, Çiftlik'in sıklaşması, kullanılmayan modeller,
+taş kaide ve hafif sürümler tek dalda. Harita dosyaları üretim zinciriyle baştan üretildi (zemin, yollar, arsalar,
+yapılar, elle düzen, ağaçlar, mahalle 2B, viki yapıları); zemin iki işin birebir birleşimi, bütün denetimler temiz.
+Birlikte çekilen resimler: `docs/gorseller/toplu-25-11-2026/`. Telefonda denenmedi.
+
+## 25 Kasım: The Imperial'in cep plajı küçük bir koy, iki yanı kayalık
+
+Kemal (25 Kasım): cep plajının iki yanı kayalık olsun, plaj gerçek küçük bir koy gibi görünsün.
+- **Kıyı:** modelin kayalık yarı kıyıya oturur (su çizgisi modelin yerel z 29'unda; eskiden önünde 4 m'lik kum şeridi
+  vardı). Otelin 160 m çevresinde kıyı kayalık çizilir (`duzada-sinirlar` kıyı türü; zemin kurulurken değişmedi):
+  adanın kumu yok, cep plajı modelin kendi kumu, şezlong ve şemsiyeleri; kayıklar çizilmez.
+- **Burunlar:** modelin iki yanında 30 m boyunca zemin sahanlıktan kıyıya dik iner, uzaklaştıkça adanın yamacına döner.
+- **Çizim:** yarın dibinde kıyı yumuşatması yapılmaz (`duzada-zemin.bin` başlığında `kiyiYumusatmaYok`; `tekVeri.ts` →
+  `kiyiBolgesi`, `gen/kompakt_rakim_denetim.py` aynı): kara hücresi yumuşatılmaz, deniz hücresi yalnız alçak komşularla.
+  Önceden yarın 20 m'lik hücreleriyle ortalanan plaj hücreleri modelin kumunu örtüyordu.
+- Zemin yalnız otelin çevresinde değişti; Sahil Yolu, Otel Yolu, sokaklar, arsalar aynı. Bütün denetimler temiz.
+  Önce / sonra: `docs/gorseller/imperial-cep-plaji/`. Telefonda denenmedi.
+- **Sığlık lekeleri** (ayrı iş; Kemal: "ayrı küçük işte gitsin"): koyun iki yanında, yakından bakınca suyun içinde açık
+  renkli düz lekeler vardı: yarın dibinde 1-2 m derinlikte düz sığlık şeridi, saydam suyun altında 10 m'lik zemin
+  kareleriyle görünüyordu. Otelin cep plajının 160 m çevresinde deniz tabanı kıyıdan uzaklaştıkça düzgünce derinleşir
+  (en az 1,5 m + kıyıya uzaklığın %12'si; `IMP_SIG_DIP`, `IMP_SIG_EGIM`, DENEME); yalnız derinleştirir, dışa doğru eski tabana
+  yumuşakça döner (403 deniz hücresi). Kara, yollar, arsalar, yapılar aynı; koya dökülen derenin son noktası 10 m kaydı.
+  Bütün denetimler temiz. Önce / sonra: `docs/gorseller/imperial-cep-plaji/` (5 tepeden, 6 yandan). Telefonda denenmedi.
+## 25 Kasım: tek harita: Çiftlik sıklaştı, zigzag geçitler kalktı
+
+Kemal (24 Kasım): "Çiftlik: çiftlik yolu sürekli zigzag; aralar çok açık… evler daha yakın, bağlantı çok." 25 Kasım: "Bugünkü
+kalsın, sıklaşsın." Bugünkü düzen temel: köy aynı yerde, sokaklar yine yamaca koşut ve aynı yönde; eski haritaya dönülmedi.
+- **Sıklaşma:** yamaca koşut sokaklar 90 m yerine ~60 m arayla (10 → 16 sokak; `CF_ARA`, DENEME). Arsa 263 → 535, yapı
+  176 → 377 (Çiftlik mahallesi); evler birbirine yakın, aralarda boş tarla kalmadı.
+- **Zigzag:** sokakları bağlayan kısa geçitler sokak sokak kayıyordu, dik yamaçta (%18-25) eğim sınırına uymak için S
+  çiziyordu (köyde yürüyüş zigzag). Yerine köyü yamaç yönünde geçen 9 çapraz sokak (~110 m arayla, ±25 m oynar; her biri en
+  az 3 sokağı geçer, başı ve sonu farklı: ızgara olmasın; `CF_CAPRAZ`, DENEME): kırıksız, yumuşak hat. Yamaç dik olduğu
+  için çapraz sokakların dik parçaları basamaklı geçit (52 parça, 3 km; İskele ve Stadyum'daki gibi, zemin düzlenmez).
+  Köydeki en kıvrımlı yol km başına 105 derece döner (eskiden geçitlerde 1182'ye kadar).
+- **Zemin:** sıklaşan sokakların düzlenen şeridi Stadyum'daki gibi dar (adaların içi dikleşip evsiz kalmasın).
+- **Adlı yapılar yerinde:** Yağ Fabrikası'nın önündeki bugünkü sokak hattı korundu (`CF_SABIT`; sokaklardan biri oradan
+  geçer), çapraz sokaklar fabrikanın 30 m yakınından geçmez; fabrika Kurucu noktasına 5 m (eskiden 4 m). Küçükçetmi Sürek
+  Kulübü'nün Kurucu noktası köyün dışında kaldığı için yeni sokaklar onu 400 m öteye atlatıyordu; yeri haritadaki bugünkü
+  yerine sabitlendi (`gen/kompakt_yapilar.py` → `YER_SABIT`), birebir aynı.
+- Öbür köylerin yolları, arsaları ve yapıları birebir aynı (kıyı köyünün daralan sokakları için Çiftlik kendi sayı
+  akışıyla). Bütün denetimler temiz. Resimler: `docs/gorseller/tek-harita-ciftlik/` (önce / sonra: genel, yakın, tepeden).
+  Telefonda denenmedi.
+
+## 25 Kasım: tek harita: Stadyum eski haritadaki sokaklarıyla
+
+Kemal (24 Kasım, Stadyum'un önizlemesine yorum): "Stadyum çok kötü: uzun düz paralel yollar; daha küçük, evler yakın, daha
+az sokak." İskele ve Liman'daki yol izlendi.
+
+- **Sokaklar:** köy dokusu üretilmez; Kurucu'daki son hâli (57 eski sokak + Kemal'in çizdiği 21 yol) dondurulmuş girdiden
+  (`gen/kompakt-eski-girdiler.json` → `stadyum`), adanın küçültmesiyle (0,70, aynı odak, kayma yok; `gen/kompakt_stadyum.py`).
+  Adalar ~40 x 55 m. Stat aynı yerde ve ölçüde (19 Kasım); içinden geçen 6 eski yol statın çevre yolunda biter.
+- **Seyreltme** (DENEME, `GIDEN`): 8 uzun paralel sokaktan 3'ü kalktı (75 hat kaldı); adalar ~80 x 55 m, iki yandan dört
+  sıra ev. Kısa çapraz sokaklar aynı hatta.
+- **Yamaç:** tepeler aynı yükseklikte, köy küçüldüğü için yamaç dikleşti; %15'i aşan 60 sokak parçası (3 km) basamaklı
+  geçit, zemin düzlenmez. Izgarada sokağın düzlenen şeridi dar (`ST_CEKIRDEK` 3,5 m, `ST_KENAR` 8 m; DENEME): geniş kazı ve
+  dolgu adaların içini %30'dan dik yapıp evsiz bırakıyordu.
+- **Sayılar** (Stadyum mahallesi): arsa 118 → 196, yapı 76 → 127. Dirlik Spor Kulübü sokaklarla aynı taşımayla eski
+  yerinin karşılığına en yakın yerde (eski yeri stadın sekisinin altında kalıyor, 27 m öte). Öbür köylerin arsa ve yapı
+  sayıları aynı.
+- Resimler: `docs/gorseller/tek-harita-stadyum/` (önce / sonra: genel, yakın, tepeden). Telefonda denenmedi.
+## 25 Kasım: tek harita: kullanılmayan modeller silindi
+
+Kemal (25 Kasım, harita parçaları raporu, soru 1 → a): tek haritada kullanılmayan model dosyaları silinir.
+- **Silinen (46 dosya, 1,78 MB):** `public/modeller/araclar/` altındaki 27 araç (klasör kalktı); tekneler: arabalı feribot,
+  deniz taksisi, yolcu motoru, yelkenli, sahil güvenlik botu, 4 balıkçı teknesi, 3 gırgır teknesi, beyaz-mavi sandal;
+  yol karoları (`yol-duz`, `yol-kose`, `yol-t`, `yol-kavsak`, `merdivenli-sokak`); `futbol-sahasi`.
+- **Kalan (kullanılıyor):** `depo-atolye`, `tribun`, `karakol` ve mavi, sarı, yeşil sandal hazır gruplarda
+  (`public/harita/hazir-gruplar.json`; Düzenle → grup koy) geçiyor; silinmedi. Silinirse o gruplar modelsiz kalır.
+- **Katalog:** `src/data/binaKatalogu.json` ve `src/lib/binaKutuphanesi.ts`'ten çıktılar; Oyunlar → Bina kütüphanesi'nde
+  Araçlar bölümü yok, Sokak parçaları 6, Deniz ve liman 10, Binalar 44. Düzenle'nin "Bina koy" listesi aynı (araç ve yol
+  karosu zaten gösterilmiyordu). Ajansın `assetler/3b/` kopyası ayrıca temizlenecek.
+- Haritada görünen bir şey değişmedi. Önce / sonra: `docs/gorseller/harita-kullanilmayan-modeller/`.
 
 ## 25 Kasım: tek harita: The Imperial, denize bakan ve cep plajı olan otel
 
@@ -30,6 +105,20 @@ sözü: "denize bakan ve cep plajı olan bir otel" (yer ve yükseklik serbest), 
   sahanlığın binadan uzak kenarına çıkar.
 - Bütün denetimler temiz. Önce / sonra: `docs/gorseller/tek-harita-imperial/`. Telefonda denenmedi.
 
+## 25 Kasım: tek harita: taş kaide
+
+Kemal (25 Kasım, harita parçaları raporu, soru 2 → a): yüksek kaideler (Deniz Feneri ~11 m, Yağ Fabrikası 6,6 m, Sade
+Meyhane 5,4 m, Eski Kilise 5,3 m) düz kahverengi kutu yerine taş dokulu, zemin rengine karışan kaideyle.
+- **Yeni kaide** (`tek/kaideGeometrisi.ts`, `yapiKatmani.ts`): duvar 0,7 m'lik taş sıralarına ve 1,5 m'lik taşlara
+  bölünür, sıralar şaşırtmalı, her taşın tonu biraz farklı (kireçtaşı rengi). Alt kenar düz değil, her noktada zeminin
+  0,4 m altına iner (yamaca oturur); duvar aşağı indikçe dışa açılır (şev, her metrede 0,12 m, en çok 0,9 m). Duvarın alt
+  kısmı (yüksekliğin %30'u, 1–3,5 m) altındaki zeminin rengine geçer: kumsalda kuma, çayırda yeşile
+  (`zeminKatmani.ts` → `renkAl`; ağaç katı zemini boyayınca yeniden okunur). 1,5 m'den alçak duvarda taşlar üç kat geniş.
+- **Bütün kaidelere uygulandı** (kaide sistemi genel; 983 yapı). Kaidenin kuralı (kot, eşik) değişmedi; denetim aynı.
+- **Ölçüm** (bilgisayar, normal mod): kaidelerin toplamı 11,8 bin → 50,4 bin üçgen (tek çizim). İndirme değişmedi
+  (kaide kodla üretilir, dosya yok). Ölçüler DENEME. Telefonda denenmedi.
+- Önce / sonra: `docs/gorseller/harita-tas-kaide/`.
+
 ## 24 Kasım gece: tek harita, adanın Ege'deki yeri
 
 Kemal (24 Kasım): Ege'deki konum geri gelsin. Eski haritada ada anakara, Küçükkuyu, Bozcaada ve Edremit Körfezi ile
@@ -49,6 +138,29 @@ birlikte görünüyordu; tek haritada yoktu.
   Limanı'nın yeri eski haritadaki değer (26,607 D · 39,548 K). Katman `src/components/harita/tek/egeKatmani.ts`.
 - Gelmeyenler: eski feribot hattı (eski Liman'dan çıkıyordu; yeni adada iskelenin yeri ayrı karar) ve denizin dalga
   dokusu. Kayda bir şey yazılmaz. Resimler: `docs/gorseller/tek-harita-ege/`. Telefonda denenmedi.
+
+## 25 Kasım: tek harita: hafif sürümler ve toplam üçgen tavanı
+
+Kemal (25 Kasım, harita parçaları raporu, soru 3 → a): Imperial, Sürek ve belediye için orta ayrıntılı sürüm; bütçe
+tek tavana bağlansın.
+- **Hafif sürümler** (`public/modeller/binalar/*-hafif.glb`; `tek/ucgenSiniri.ts` → `HAFIF_SURUMLER`): asıl modelin
+  parçaları sadeleştirildi (meshoptimizer; adlar, renkler aynı; harita asıl modelin taban kutusunu ve kırpmasını kullanır).
+  The Imperial 89 bin → 14 bin üçgen (834 → 158 KB), Sürek Kulübü 35 → 10 bin (448 → 131 KB), belediye 34 → 7 bin
+  (340 → 80 KB). Bakılan yerden 450 m'den uzakta, hafif modda ya da tavan dolunca bu sürüm çizilir. Galeride görünmez.
+- **Toplam tavan** (DENEME): normal 1,6 milyon, hafif 400 bin üçgen. Önce zemin, yol, liman, bahçe; yapı modelleri
+  ağaçlara 400 bin (hafifte 60 bin) bırakıp kalanı kullanır (en az 120 / 40 bin); ağaçlar kalanı (`agacKatmani.ts` →
+  `sahneToplam` tavandır). Önce çevredeki yapılar (yakından uzağa), sonra uzaktaki viki yapıları; sığmayan önce hafif
+  sürüme, o da sığmazsa uzak kopyaya düşer. Yapıların uzak kopyaları tavana sayılmaz (sayaç adanın bütün karolarını
+  sayar, ekranda görünenler çizilir).
+- **İskele ve mendirek** (`limanModelleri.ts`): eskiden bir iskeleye yakın bakınca adanın bütün parçaları asıl modelle
+  çiziliyordu (~565 bin üçgen; mendirek parçası 9.800 üçgen); şimdi yalnız bakılan yere 350 m yakın parçalar asıl, kalanı
+  uzak kopya (DENEME). Hâlâ İskele'de ~350 bin: mendireğin hafif sürümü ayrı iş.
+- **Ölçüm** (bilgisayar, ekran kartsız tarayıcı, ekrandaki sayaç; önce → sonra): normal mod İskele 2,08 → 1,58 milyon,
+  İskele yakın 2,07 → 1,54, Liman 1,91 → 1,47, Liman yakın 1,81 → 1,41, The Imperial 1,91 → 1,24, Merkez 1,47 → 1,47;
+  hafif mod 0,41–0,50 → 0,29–0,38 milyon. Modeliyle çizilen yapı: İskele 69 → 33, Liman 64 → 45, Merkez 66 → 53
+  (kalanı uzak kopya). Aynı gezintide inen model dosyası 2,39 → 1,63 MB; harita verisi 4,88 MB (değişmedi).
+  Telefonda denenmedi.
+- Önce / sonra: `docs/gorseller/harita-hafif-surumler/`.
 
 ## 24 Kasım akşam: soy ağacı tek ağaç (aile çerçeveleri kalktı)
 

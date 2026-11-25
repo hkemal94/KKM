@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { TOPLAM_SINIR } from './ucgenSiniri';
 import { modelYukle } from '../../../lib/modelYukle';
 import { hazirla, type HaritaModeli } from '../modelHazirla';
 import { haritaAdresi, indirme, rakim, type Zemin } from './tekVeri';
@@ -82,15 +83,15 @@ type Ayar = {
   obekYaricap: number; obekKamera: number; siraYaricap: number;
   sahneToplam: number; agacEnCok: number; agacEnAz: number;
 };
-// Hepsi DENEME (Kemal onaylamadı)
+// Hepsi DENEME (Kemal onaylamadı). sahneToplam: haritanın toplam üçgen tavanı (25 Kasım, `ucgenSiniri.ts`)
 const NORMAL: Ayar = {
   modelYaricap: 300, modelEnCok: 900, modelKamera: 1200, obekYaricap: 1500, obekKamera: 5000, siraYaricap: 900,
-  sahneToplam: 2_000_000, agacEnCok: 1_300_000, agacEnAz: 150_000
+  sahneToplam: TOPLAM_SINIR.normal, agacEnCok: 1_300_000, agacEnAz: 150_000
 };
 // Hafif: ağaçların en az payı 40 bin (23 Kasım: bahçeler gelince sahne 400 binin altında kalsın; DENEME)
 const HAFIF: Ayar = {
   modelYaricap: 150, modelEnCok: 160, modelKamera: 700, obekYaricap: 600, obekKamera: 2500, siraYaricap: 350,
-  sahneToplam: 400_000, agacEnCok: 260_000, agacEnAz: 40_000
+  sahneToplam: TOPLAM_SINIR.hafif, agacEnCok: 260_000, agacEnAz: 40_000
 };
 const OBEK_UCGEN = 8;
 /** Ağaçlar yalnız yakından bakınca gölge düşürür (uzakta gölgeli halka öbeklerden ayrı görünmesin) */
