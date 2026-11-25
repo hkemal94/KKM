@@ -61,7 +61,16 @@ def zemin_oku():
     return b, h.reshape(b["boy"], b["en"])
 
 
-def kiyi_yumusat(h):
+def _icinde(c, x, y):
+    ic = False
+    for a in range(len(c)):
+        b = a - 1
+        if (c[a][1] > y) != (c[b][1] > y) and x < (c[b][0] - c[a][0]) * (y - c[a][1]) / (c[b][1] - c[a][1]) + c[a][0]:
+            ic = not ic
+    return ic
+
+
+def kiyi_yumusat(h, bas=None):
     """zeminKatmani.ts → kiyiBolgesi: kıyı şeridinde (5 x 5 içinde hem deniz hem kara, 4 m'den alçak) ağırlıklı ortalama"""
     R = 2
     boy, en = h.shape
@@ -77,6 +86,19 @@ def kiyi_yumusat(h):
     m = (h < 4) & (h >= -6) & kara & deniz
     m[:R, :] = m[-R:, :] = False; m[:, :R] = m[:, -R:] = False
     c[m] = (top / w.sum())[m]
+    if bas and bas.get("kiyiYumusatmaYok"):          # tekVeri.ts gibi: kara hücresi yumuşatılmaz, deniz yalnız alçak komşularla
+        for j, i in zip(*np.nonzero(m)):
+            if any(_icinde(cc, bas["x0"] + i * bas["hucre"], bas["y0"] + j * bas["hucre"]) for cc in bas["kiyiYumusatmaYok"]):
+                if h[j, i] > 0:
+                    c[j, i] = h[j, i]
+                else:
+                    t_ = a_ = 0.0
+                    for dj in range(-R, R + 1):
+                        for di in range(-R, R + 1):
+                            v = h[j + dj, i + di]
+                            if v < 4:
+                                t_ += v * w[dj + R, di + R]; a_ += w[dj + R, di + R]
+                    c[j, i] = t_ / a_
     return c
 
 
@@ -84,7 +106,7 @@ class Zemin:
     def __init__(self):
         self.b, self.ham = zemin_oku()
         # float32 değerler (KKM gibi), farklar float64 ile (KKM tarayıcıda çift duyarlıkla karşılaştırır)
-        self.cizim = kiyi_yumusat(self.ham).astype(np.float64)
+        self.cizim = kiyi_yumusat(self.ham, self.b).astype(np.float64)
         self.ham = self.ham.astype(np.float64)
 
     def sahneye(self, p):

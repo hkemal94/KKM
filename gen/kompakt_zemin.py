@@ -171,7 +171,7 @@ print(f"The Imperial   : sahanlık {IMP_KOT} m, kıyıdan {ADA.exterior.distance
 # yanlarda dik yar), modelin yarının altında aşağıda: kaya zeminle birleşir. Yer DENEME.
 IMP_MODEL_PLATFORM = (-40.0, 62.0, -42.0, 21.0)  # yerel x0, x1, z0, z1: modelin sahanlığı (modelden)
 IMP_MODEL_YAR = (-40.0, 62.3, 21.0, 33.0)        # yerel: modelin kayalık yarı ve kum cebi, sudan önce (modelden)
-IMP_MODEL_SU = 33.0                             # yerel z: cep plajının su kenarı (modelden; kayalık yarın dibi kıyıdan ~4 m içeride)
+IMP_MODEL_SU = 29.0                             # yerel z: kayaların suya indiği çizgi (modelden); cep plajı kıyıdan denize uzanır
 IMP_MODEL_KOT = IMP_KOT + 0.1                   # sahanlık 20 m (Kemal, 25 Kasım: yamaç ~20 m); zemin döşemeyle çakışmasın
 IMP_DUZ_KOT = IMP_KOT                           # sahanlığın altındaki zemin
 # Modelin cep plajı (kum, ıslak kum, şezlong, şemsiye) modelde sahanlığın 16,6 m altında; sahanlık 20 m'de olunca deniz
@@ -181,9 +181,10 @@ IMP_MODEL_PAY = 6.0                             # sahanlığın çevresinde düz
 # Sahil Merdiveni (Kemal, 25 Kasım: "tek bir dönüş"): haritanın taş merdiveni, kayalık yarın önünde iki kol ve bir
 # sahanlık; sahanlıktan cep plajına iner (yerel x, z, yükseklik; modelin kendi zikzak merdiveni çizilmez). DENEME.
 IMP_MODEL_MERDIVEN = [(14.0, 21.5, 0.0), (42.0, 26.0, -10.0), (46.0, 27.0, -10.0), (46.5, 29.0, -10.0),
-                      (30.0, 31.5, -16.6 - IMP_PLAJ_INDIR - 0.2)]
+                      (30.0, 28.0, -16.6 - IMP_PLAJ_INDIR - 0.2)]
 IMP_MODEL_KUM = (38.0, 31.0)                    # yerel: kum cebi ve taş teras (iskele buradan çıkar)
 IMP_CEP = (24.0, 52.0)                          # yerel x: cep plajı (modelden); iki yanı kayalık
+IMP_KAYALIK_R = 160.0                           # cep plajının çevresinde kıyı kayalık çizilir (m, DENEME)
 IMP_YAR_DIBI = 2.0                              # cep plajının iki yanında kayalığın altındaki zemin (m, DENEME)
 _ks = ADA.exterior.project(Point(_kq.x, _kq.y))
 _kn = np.array([ADA.exterior.interpolate((_ks + d) % ADA.exterior.length).coords[0] for d in np.linspace(-60, 60, 25)])
@@ -771,9 +772,13 @@ Z = np.where(MODEL_YARI & KARA, _YAR_DIBI, Z)
 # durmasın; yan yüzü zeminin içinde kalır
 _lx = (GX - IMP_O[0]) * IMP_A[0] + (GY - IMP_O[1]) * IMP_A[1]
 _lz = (GX - IMP_O[0]) * IMP_N[0] + (GY - IMP_O[1]) * IMP_N[1]
-_yan = (((_lx > IMP_MODEL_YAR[1]) & (_lx < IMP_MODEL_YAR[1] + 12)) | ((_lx < IMP_MODEL_YAR[0]) & (_lx > IMP_MODEL_YAR[0] - 12))) \
-    & (_lz > IMP_MODEL_PLATFORM[3]) & KARA
-_profil = IMP_DUZ_KOT * np.clip(1 - (_lz - IMP_MODEL_PLATFORM[3]) / 10.0, 0, 1)
+# Cep plajı gerçek küçük bir koy (Kemal, 25 Kasım): iki yanı kayalık burun; yanlarda IMP_BURUN m boyunca zemin
+# sahanlıktan kıyıya dik iner (kaya rengi), uzaklaştıkça yavaşça adanın yamacına döner
+IMP_BURUN = 30.0
+_yd = np.maximum(_lx - IMP_MODEL_YAR[1], IMP_MODEL_YAR[0] - _lx)          # modelin yanından uzaklık
+_yan = (_yd > 0) & (_yd < IMP_BURUN) & (_lz > IMP_MODEL_PLATFORM[2]) & KARA
+_profil = IMP_DUZ_KOT * np.clip(1 - (_lz - IMP_MODEL_PLATFORM[3]) / (IMP_MODEL_SU - IMP_MODEL_PLATFORM[3]), 0, 1) \
+    * (1 - smoothstep(IMP_BURUN * 0.4, IMP_BURUN, _yd))
 Z = np.where(_yan, np.maximum(Z, np.maximum(_profil, 0.3)), Z)
 Z = np.where(SAHANLIK & ~_DUZ_YAKIN, IMP_KOT, Z)
 Z = np.where(_DUZ, IMP_DUZ_KOT, Z)
@@ -791,6 +796,9 @@ baslik = {
     "birim": 0.1, "satirSirasi": "guneyden-kuzeye", "olcek": OLCEK,
     "odak": [round(ODAK[0], 1), round(ODAK[1], 1)],
     "not": "Kompakt ada zemini, taslak (Kemal onaylamadı). gen/kompakt_zemin.py üretir.",
+    # The Imperial'in kayalık yarı ve cep plajı (25 Kasım): çizimde kıyı yumuşatması yapılmaz (metre çokgen); yoksa
+    # yarın 20 m'lik hücreleriyle ortalanan plaj hücreleri modelin kumunu örtüyordu (KKM: tekVeri.ts → kiyiBolgesi)
+    "kiyiYumusatmaYok": [[[round(x, 1), round(y, 1)] for x, y in IMP_MODEL_YAR_ALANI.buffer(6.0, join_style=2).exterior.coords]],
 }
 _b = json.dumps(baslik, ensure_ascii=False).encode("utf-8")
 os.makedirs(CIKTI_KLASOR, exist_ok=True)
@@ -1116,7 +1124,9 @@ for (a, b), hl in SINIR_HATLARI.items():
 for h, a in DERELER:
     ozellik.append({"type": "Feature", "properties": {"katman": "dere", "alanKm2": round(a, 2)},
                     "geometry": {"type": "LineString", "coordinates": _ll_hat(h)}})
-# Kıyı türü: kum ve kayalık parçaları
+# Kıyı türü: kum ve kayalık parçaları. The Imperial'in çevresi kayalık (25 Kasım): cep plajı modelin kendi kumu; kıyı
+# boyunca adanın kumu çizilmesin (yalnız çizimdeki tür; zemin yukarıda kurulurken değişmedi)
+KUM_MI = KUM_MI & (np.hypot(KIYI_NOKTA[:, 0] - IMP_YENI_DIP[0], KIYI_NOKTA[:, 1] - IMP_YENI_DIP[1]) > IMP_KAYALIK_R)
 _sira = np.r_[KUM_MI, KUM_MI[:1]]
 _bas = 0
 for k in range(1, len(KUM_MI) + 1):
