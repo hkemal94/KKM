@@ -783,6 +783,18 @@ Z = np.where(_yan, np.maximum(Z, np.maximum(_profil, 0.3)), Z)
 Z = np.where(SAHANLIK & ~_DUZ_YAKIN, IMP_KOT, Z)
 Z = np.where(_DUZ, IMP_DUZ_KOT, Z)
 Z = cukur_doldur(Z, KARA)
+# Koyun deniz tabanı (25 Kasım; Kemal: koyun iki yanında suyun içinde açık renkli düz sığlık lekeleri, "ayrı küçük işte
+# gitsin"): yarın dibinde 1-2 m derinlikte düz bir sığlık şeridi vardı; saydam suyun altında 10 m'lik kareleriyle açık
+# renkli düz lekeler olarak görünüyordu. Otelin cep plajının IMP_KAYALIK_R çevresinde taban kıyıdan uzaklaştıkça düzgünce
+# derinleşir (en az IMP_SIG_DIP + IMP_SIG_EGIM x kıyıya uzaklık); yalnız derinleştirir, dışa doğru yumuşakça eski tabana
+# döner. Kara ve öbür kıyılar aynı. Ölçüler DENEME.
+IMP_SIG_DIP, IMP_SIG_EGIM = 1.5, 0.12
+_dd = ndimage.distance_transform_edt(~KARA) * HUCRE                      # denizde kıyıya uzaklık (m)
+_rampa = -(IMP_SIG_DIP + IMP_SIG_EGIM * _dd)
+_w = 1 - smoothstep(IMP_KAYALIK_R * 0.6, IMP_KAYALIK_R, np.hypot(GX - IMP_YENI_DIP[0], GY - IMP_YENI_DIP[1]))
+_derin = ~KARA & (_w > 0) & (_rampa < Z)
+Z = np.where(_derin, Z + _w * (_rampa - Z), Z)
+print(f"The Imperial   : koyun tabanı {int(_derin.sum())} deniz hücresinde düzgün derinleşti (sığlık lekeleri)")
 print(f"The Imperial   : sahanlık {IMP_DUZ_KOT} m düz, eğim {_tur3} tur (yalnız otelin çevresinde)")
 ALICI, ALAN = akis(Z, KARA)
 alan_km2 = ALAN * HUCRE * HUCRE / 1e6
