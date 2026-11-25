@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { rakim, sahneye, type Koleksiyon, type Zemin } from './tekVeri';
+import { cizilenRakim, rakim, sahneye, type Koleksiyon, type Zemin } from './tekVeri';
 
 /**
  * Tek harita yolları (`duzada-yollar.geojson`): her yol kendi genişliğinde bir
@@ -16,6 +16,7 @@ export const YOL_RENGI: Record<string, string> = {
   toprak: '#C9AE84',
   patika: '#BFA27A',
   merdiven: '#CFC5B4',
+  basamak: '#A89E8C',
   meydan: '#E8DFCD',
   kumsal: '#E9DBB4'
 };
@@ -30,7 +31,9 @@ const LIMAN_BLOGU: Record<string, { renk: string; ust: number; alt: number }> = 
   mendirek: { renk: '#A9A296', ust: 2.2, alt: -3 }
 };
 /** Kademe sırası: üstteki alttakinin üstüne çizilir (kavşakta ana yol görünsün) */
-const SIRA = ['patika', 'toprak', 'merdiven', 'gecit', 'sokak', 'ara', 'ana'];
+const SIRA = ['patika', 'toprak', 'merdiven', 'basamak', 'gecit', 'sokak', 'ara', 'ana'];
+/** Merdivende basamak aralığı ve basamak çizgisinin derinliği (m, DENEME) */
+const BASAMAK_ARALIGI = 1.6, BASAMAK_DERINLIK = 0.3;
 const YUKSELME = 0.25;
 
 export class YolKatmani {
@@ -51,6 +54,20 @@ export class YolKatmani {
           return [x, q.length > 2 ? q[2] : rakim(z, x, sz), sz] as const;
         });
         const sira = Math.max(0, SIRA.indexOf(kademe));
+        if (kademe === 'merdiven' && pr.tasMerdiven) {
+          // Taş merdiven (The Imperial, 25 Kasım): kayalık yarın önünde, kendi yüksekliğinde; her basamak altındaki
+          // zemine kadar dolu taş (merdiven yarın önünde duvarıyla durur)
+          tasMerdivenEkle(al('basamak'), al('merdiven'), z, c, w / 2);
+          continue;
+        }
+        if (kademe === 'merdiven') {
+          // Merdiven (25 Kasım, Kemal: "yamaçta ince kırık çizgi"): dik yamaçta da zeminin üstünde kalsın diye sık
+          // noktalarla, çizilen zeminden aşağı inmeden; üstünde basamak çizgileri
+          const m = merdivenNoktalari(z, c, w / 2);
+          seritEkle(al(kademe), m, w / 2, YUKSELME + sira * 0.04);
+          basamakEkle(al('basamak'), m, w / 2, YUKSELME + sira * 0.04 + 0.03);
+          continue;
+        }
         seritEkle(al(kademe), c, w / 2, YUKSELME + sira * 0.04 + (pr.katman === 'kopru' ? 0.1 : 0));
       } else if (f.geometry.type === 'Polygon' && (pr.katman === 'korunan' || pr.katman === 'meydancik')) {
         if (pr.katman === 'korunan' && pr.tur !== 'meydan') continue;
@@ -90,6 +107,76 @@ export class YolKatmani {
 
   dispose() {
     this.grup.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } });
+  }
+}
+
+/** Merdivenin noktaları: 0,8 m'de bir; yükseklik dosyadakinden ve şeridin enindeki çizilen zeminden aşağı inmez */
+function merdivenNoktalari(z: Zemin, c: ReadonlyArray<readonly [number, number, number]>, yari: number): Array<[number, number, number]> {
+  const out: Array<[number, number, number]> = [];
+  for (let n = 0; n < c.length - 1; n++) {
+    const a = c[n], b = c[n + 1];
+    const dx = b[0] - a[0], dz = b[2] - a[2], u = Math.hypot(dx, dz) || 1;
+    const px = -dz / u * yari, pz = dx / u * yari;
+    const adim = Math.max(1, Math.ceil(u / 0.8));
+    for (let k = 0; k < adim + (n === c.length - 2 ? 1 : 0); k++) {
+      const t = k / adim, x = a[0] + dx * t, sz = a[2] + dz * t;
+      const y = Math.max(a[1] + (b[1] - a[1]) * t, cizilenRakim(z, x, sz), cizilenRakim(z, x + px, sz + pz), cizilenRakim(z, x - px, sz - pz));
+      out.push([x, y, sz]);
+    }
+  }
+  return out;
+}
+
+/**
+ * Taş merdiven: yolun noktaları arasında 0,8 m'lik basamaklar; her basamak üstü düz (yolun o yerdeki yüksekliği),
+ * altı basamağın altındaki en alçak çizilen zemine kadar dolu taş. Üstler `ust`e, yan yüzler `yan`a.
+ */
+function tasMerdivenEkle(yan: { p: number[]; i: number[] }, ust: { p: number[]; i: number[] }, z: Zemin,
+  c: ReadonlyArray<readonly [number, number, number]>, yari: number) {
+  const DERIN = 0.8;
+  for (let n = 0; n < c.length - 1; n++) {
+    const a = c[n], b = c[n + 1];
+    const dx = b[0] - a[0], dz = b[2] - a[2], u = Math.hypot(dx, dz);
+    if (u < 0.01) continue;
+    const tx = dx / u, tz = dz / u, px = -tz * yari, pz = tx * yari;
+    const adim = Math.max(1, Math.round(u / DERIN));
+    for (let k = 0; k < adim; k++) {
+      const t0 = k / adim, t1 = (k + 1) / adim;
+      const x0 = a[0] + dx * t0, z0 = a[2] + dz * t0, x1 = a[0] + dx * t1, z1 = a[2] + dz * t1;
+      const y = a[1] + (b[1] - a[1]) * (t0 + t1) / 2;
+      const kose: Array<[number, number]> = [[x0 + px, z0 + pz], [x1 + px, z1 + pz], [x1 - px, z1 - pz], [x0 - px, z0 - pz]];
+      const alt = Math.min(...kose.map(([x, sz]) => cizilenRakim(z, x, sz))) - 0.5;
+      if (alt >= y) continue;
+      // üst yüz
+      const ki = ust.p.length / 3;
+      for (const [x, sz] of kose) ust.p.push(x, y, sz);
+      ust.i.push(ki, ki + 2, ki + 1, ki, ki + 3, ki + 2, ki, ki + 1, ki + 2, ki, ki + 2, ki + 3);
+      // dört yan yüz
+      for (let e = 0; e < 4; e++) {
+        const [xa, za] = kose[e], [xb, zb] = kose[(e + 1) % 4];
+        const kb = yan.p.length / 3;
+        yan.p.push(xa, y, za, xb, y, zb, xb, alt, zb, xa, alt, za);
+        yan.i.push(kb, kb + 1, kb + 2, kb, kb + 2, kb + 3, kb, kb + 2, kb + 1, kb, kb + 3, kb + 2);
+      }
+    }
+  }
+}
+
+/** Basamak çizgileri: merdiven boyunca BASAMAK_ARALIGI'nda bir, şeridin eninde ince koyu dörtgen */
+function basamakEkle(hedef: { p: number[]; i: number[] }, c: ReadonlyArray<readonly [number, number, number]>, yari: number, yukari: number) {
+  let birikim = 0;
+  for (let n = 1; n < c.length; n++) {
+    const a = c[n - 1], b = c[n];
+    const dx = b[0] - a[0], dz = b[2] - a[2], u = Math.hypot(dx, dz);
+    if (!u) continue;
+    birikim += u;
+    if (birikim < BASAMAK_ARALIGI) continue;
+    birikim = 0;
+    const tx = dx / u, tz = dz / u, px = -tz * yari, pz = tx * yari, y = b[1] + yukari;
+    const k = hedef.p.length / 3;
+    const ox = tx * BASAMAK_DERINLIK, oz = tz * BASAMAK_DERINLIK;
+    hedef.p.push(b[0] + px, y, b[2] + pz, b[0] - px, y, b[2] - pz, b[0] + px + ox, y, b[2] + pz + oz, b[0] - px + ox, y, b[2] - pz + oz);
+    hedef.i.push(k, k + 2, k + 1, k + 1, k + 2, k + 3);
   }
 }
 

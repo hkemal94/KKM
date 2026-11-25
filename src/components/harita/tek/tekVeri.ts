@@ -151,7 +151,9 @@ const TABANA_UYAR = new Set(['ev', 'dukkanli', 'ciftlik', 'yazlik', 'depo']);
  *   Imperial) eski kuralla: tabanın en alçak noktası, kaidesiz (zemini, temeli o kota göre yapıldı).
  * Denetimi: `gen/kompakt_rakim_denetim.py` (aynı kural).
  */
-export function tabanKotu(z: Zemin, y: Pick<Yapi, 'merkez' | 'ex' | 'en' | 'boy' | 'modelEn' | 'tur' | 'dosya' | 'taban'>): { kot: number; zeminAlt: number } {
+export function tabanKotu(z: Zemin, y: Pick<Yapi, 'merkez' | 'ex' | 'en' | 'boy' | 'modelEn' | 'tur' | 'dosya' | 'taban' | 'modelYeri'>): { kot: number; zeminAlt: number } {
+  // Kendi kayalığıyla gelen model (The Imperial): kotu veride, zemin ona göre üretildi
+  if (y.modelYeri) return { kot: y.modelYeri.kot, zeminAlt: y.modelYeri.kot };
   if (y.dosya && YAMAC_MODELLERI.has(y.dosya)) {
     const kot = Math.min(rakim(z, y.merkez[0], y.merkez[1]), ...y.taban.map(([x, sz]) => rakim(z, x, sz)));
     return { kot, zeminAlt: kot };
@@ -227,6 +229,11 @@ export interface Yapi {
   grup?: string;
   /** Evinde oturan var (yapı dosyasında `bag: "oturan"`): dokununca kartı açılır, kart oturanları gösterir */
   oturanli?: boolean;
+  /**
+   * Kendi kayalığıyla gelen model (The Imperial, 25 Kasım): modelin başlangıç noktası (sahne x, z) ve kotu
+   * veriden (`modelBaslangic`, `modelKot`). Model ölçeksiz oraya oturur; taban yalnız seçim ve ad için.
+   */
+  modelYeri?: { nokta: Nokta; kot: number };
 }
 
 export function yapilariOku(z: Zemin, k: Koleksiyon): Yapi[] {
@@ -237,10 +244,13 @@ export function yapilariOku(z: Zemin, k: Koleksiyon): Yapi[] {
     const halka = (f.geometry.coordinates as number[][][])[0].map(c => sahneye(z.b, c));
     const merkez = sahneye(z.b, p.merkez as number[]);
     const olcu = p.modelOlcusu as number[] | undefined;
+    const modelYeri = Array.isArray(p.modelBaslangic) && typeof p.modelKot === 'number'
+      ? { nokta: sahneye(z.b, p.modelBaslangic as number[]), kot: p.modelKot } : undefined;
     const temel = {
       tur: String(p.tur), dosya: (p.dosya as string | null) || MODEL_ESLEME[String(p.id)] || null,
       merkez, ex: p.ex as Nokta, en: Number(p.en) || 6, boy: Number(p.boy) || 6,
-      modelEn: typeof p.modelEn === 'number' ? p.modelEn : undefined, taban: halka
+      modelEn: typeof p.modelEn === 'number' ? p.modelEn : undefined, taban: halka,
+      ...(modelYeri ? { modelYeri } : {})
     };
     // Taban çizilen zemine oturur (24 Kasım): ortalamaya, yokuşta az gömülü, altında taş kaide
     const { kot, zeminAlt } = tabanKotu(z, temel);

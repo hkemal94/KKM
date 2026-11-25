@@ -162,6 +162,78 @@ IMP_ALAN_R = 320.0
 print(f"The Imperial   : sahanlık {IMP_KOT} m, kıyıdan {ADA.exterior.distance(IMP_SAHANLIK.buffer(-12)):.0f} m, "
       f"merdiven hattı {IMP_MERDIVEN.length:.0f} m")
 
+# The Imperial modeli (25 Kasım, Kemal: Oyunlar'daki "The Imperial Kemskoy · Otel kalıbı" haritaya; ön cephesi denize;
+# yar kayalık, merdiven yarın yüzünde, iskele dipteki teras / kum cebinden; "denize bakan ve cep plajı olan bir otel").
+# Model (public/modeller/binalar/the-imperial-kemskoy.glb; yerel eksenler metre, ön cephe +Z, başlangıç giriş katının
+# zemini) 20 m'lik tepede, eski yerinin kıyı yanında; modelin kayalık yarı (yerel z 21–30) kıyıya oturur, cep plajı
+# (iki yanı kayalık) deniz seviyesine iner. Haritada modelin çimeni, denizi ve suyun içindeki parçaları (kendi iskelesi, kayıklar) çizilmez; kayalık yar,
+# cep plajı modelden çizilir (`tek/modelEsleme.ts` → `MODEL_KIRPMA`). Zemin modelin çevresinde tepe (sahanlık 20 m,
+# yanlarda dik yar), modelin yarının altında aşağıda: kaya zeminle birleşir. Yer DENEME.
+IMP_MODEL_PLATFORM = (-40.0, 62.0, -42.0, 21.0)  # yerel x0, x1, z0, z1: modelin sahanlığı (modelden)
+IMP_MODEL_YAR = (-40.0, 62.3, 21.0, 33.0)        # yerel: modelin kayalık yarı ve kum cebi, sudan önce (modelden)
+IMP_MODEL_SU = 33.0                             # yerel z: cep plajının su kenarı (modelden; kayalık yarın dibi kıyıdan ~4 m içeride)
+IMP_MODEL_KOT = IMP_KOT + 0.1                   # sahanlık 20 m (Kemal, 25 Kasım: yamaç ~20 m); zemin döşemeyle çakışmasın
+IMP_DUZ_KOT = IMP_KOT                           # sahanlığın altındaki zemin
+# Modelin cep plajı (kum, ıslak kum, şezlong, şemsiye) modelde sahanlığın 16,6 m altında; sahanlık 20 m'de olunca deniz
+# seviyesine bu kadar indirilir (KKM: tek/modelEsleme.ts → MODEL_KIRPMA → indir; aynı değer)
+IMP_PLAJ_INDIR = IMP_MODEL_KOT - 16.6
+IMP_MODEL_PAY = 6.0                             # sahanlığın çevresinde düz pay (m, DENEME)
+# Sahil Merdiveni (Kemal, 25 Kasım: "tek bir dönüş"): haritanın taş merdiveni, kayalık yarın önünde iki kol ve bir
+# sahanlık; sahanlıktan cep plajına iner (yerel x, z, yükseklik; modelin kendi zikzak merdiveni çizilmez). DENEME.
+IMP_MODEL_MERDIVEN = [(14.0, 21.5, 0.0), (42.0, 26.0, -10.0), (46.0, 27.0, -10.0), (46.5, 29.0, -10.0),
+                      (30.0, 31.5, -16.6 - IMP_PLAJ_INDIR - 0.2)]
+IMP_MODEL_KUM = (38.0, 31.0)                    # yerel: kum cebi ve taş teras (iskele buradan çıkar)
+IMP_CEP = (24.0, 52.0)                          # yerel x: cep plajı (modelden); iki yanı kayalık
+IMP_YAR_DIBI = 2.0                              # cep plajının iki yanında kayalığın altındaki zemin (m, DENEME)
+_ks = ADA.exterior.project(Point(_kq.x, _kq.y))
+_kn = np.array([ADA.exterior.interpolate((_ks + d) % ADA.exterior.length).coords[0] for d in np.linspace(-60, 60, 25)])
+_mu = _kn.mean(0)
+_td = np.linalg.svd(_kn - _mu)[2][0]
+IMP_N = np.array([-_td[1], _td[0]])             # denize
+if ADA.contains(Point(*(_mu + 20 * IMP_N))):
+    IMP_N = -IMP_N
+IMP_A = np.array([-IMP_N[1], IMP_N[0]])         # modelin +X'i (haritadaki dönüşle aynı el: +Z denize)
+# Yer (Kemal, 25 Kasım: "denize bakan ve cep plajı olan bir otel"; yer serbest): otelin eski kum noktasının (dibindeki iskele yeri)
+# kıyısı; kıyı orada doğruya en yakın (modelin eni boyunca ±0,1 m), modelin kayalığı ve cep plajı kıyıya tam oturur.
+# Başlangıç noktası o kıyının IMP_MODEL_SU kadar gerisinde (yer DENEME).
+IMP_O = np.array([_kq.x, _kq.y]) - IMP_N * IMP_MODEL_SU
+
+
+def imp_yerel(x, z):
+    """Modelin yerel (x, z) noktası → metre (x doğu, y kuzey)"""
+    return (IMP_O[0] + IMP_A[0] * x + IMP_N[0] * z, IMP_O[1] + IMP_A[1] * x + IMP_N[1] * z)
+
+
+def _kiyi_z(x):
+    a, b = IMP_O + IMP_A * x - IMP_N * 50, IMP_O + IMP_A * x + IMP_N * 400
+    kes = LineString([a, b]).intersection(ADA.exterior)
+    zs = [float(np.dot(np.array(g.coords[0]) - IMP_O, IMP_N)) for g in getattr(kes, "geoms", [kes]) if not g.is_empty]
+    return min(zs, key=lambda v: abs(v - IMP_MODEL_SU)) if zs else IMP_MODEL_SU
+
+
+for _it in range(4):        # su çizgisi, modelin eni boyunca ortalamada kıyıya gelsin
+    _fark = np.mean([_kiyi_z(x) for x in np.linspace(IMP_MODEL_PLATFORM[0], IMP_MODEL_PLATFORM[1], 18)]) - IMP_MODEL_SU
+    IMP_O = IMP_O + IMP_N * _fark
+
+
+def _imp_dik(x0_, x1_, z0_, z1_):
+    return Polygon([imp_yerel(x0_, z0_), imp_yerel(x1_, z0_), imp_yerel(x1_, z1_), imp_yerel(x0_, z1_)])
+
+
+IMP_YENI_OTEL = _imp_dik(-40.0, 44.0, -38.0, 21.0)          # binanın kendisi (modelden): yapının tabanı
+IMP_YENI_DUZ = _imp_dik(IMP_MODEL_PLATFORM[0] - IMP_MODEL_PAY, IMP_MODEL_PLATFORM[1] + IMP_MODEL_PAY,
+                        IMP_MODEL_PLATFORM[2] - IMP_MODEL_PAY, IMP_MODEL_PLATFORM[3])
+IMP_MODEL_YAR_ALANI = _imp_dik(*IMP_MODEL_YAR)
+# Yanlarda adanın yarı: sahanlığın iki yanında kıyıya dik iner (kaya rengi); eğim sınırı IMP_YAR_EGIM
+IMP_YAR_EGIM = 66.0
+IMP_YAR_ALANI = _imp_dik(IMP_MODEL_PLATFORM[0] - 12, IMP_MODEL_PLATFORM[1] + 12, 0.0, IMP_MODEL_SU + 15)
+IMP_YENI_MERDIVEN = LineString([imp_yerel(x, z) + (IMP_MODEL_KOT + y,) for x, z, y in IMP_MODEL_MERDIVEN]).segmentize(2.0)
+IMP_YENI_DIP = imp_yerel(*IMP_MODEL_KUM)
+_kiyilar = [_kiyi_z(x) for x in np.linspace(IMP_MODEL_PLATFORM[0], IMP_MODEL_PLATFORM[1], 18)]
+print(f"The Imperial   : model önü {math.degrees(math.atan2(IMP_N[0], IMP_N[1])) % 360:.0f}° (denize), kot {IMP_MODEL_KOT} m, "
+      f"su çizgisi kıyıdan {min(_kiyilar) - IMP_MODEL_SU:+.1f} … {max(_kiyilar) - IMP_MODEL_SU:+.1f} m, "
+      f"eski yerin ortasından {np.hypot(*(np.array(imp_yerel(2.0, -8.5)) - np.array(IMP_MERKEZ))):.0f} m")
+
 # ---------------------------------------------------------------- yerleşimler
 # Kemal (20 Kasım): yerleşimler kompakt adaya göre taşınabilir; köyler sahile yaklaşır.
 # Eski yerler eski haritadaki ev kümelerinin ortası (gen/duzada.py'nin evleri; sayılar burada sabit).
@@ -656,6 +728,57 @@ Z = _Zref * (1 - _wy) + Z * _wy
 Z = np.where(KARA, np.maximum(Z, 0.3), np.minimum(Z, -0.2))
 Z = cukur_doldur(Z, KARA)
 print(f"Yerel kıyı     : plajın {KIYI_YEREL_SON:.0f} m dışında zemin kıyı içeri girmeden önceki hâliyle aynı")
+
+# ---------------------------------------------------------------- The Imperial modelinin yeri (25 Kasım)
+# Dönen binanın altı ve çevresindeki pay sahanlık kotunda düz; yalnız otelin çevresinde (50 m) eğim sınırı yeniden
+# uygulanır (sahanlık, dip teras sabit): adanın geri kalanı bayt bayt aynı kalır.
+_DUZ = _icinde(IMP_YENI_DUZ) & KARA
+_dq = ndimage.distance_transform_edt(~_DUZ) * HUCRE
+_DUZ_YAKIN = _dq < 15.0                         # eski 20 m'lik düzlük otelin sahanlığına 15 m'den yaklaşmaz
+_pencere = (_dq < 50.0) & KARA
+YAR = _icinde(IMP_YAR_ALANI) & KARA
+MODEL_YARI = _icinde(IMP_MODEL_YAR_ALANI)
+# Kayalığın dibi: cep plajında deniz seviyesinde; iki yanında kayaların bittiği kota yakın (kaya zeminden kopuk durmasın)
+_lx0 = (GX - IMP_O[0]) * IMP_A[0] + (GY - IMP_O[1]) * IMP_A[1]
+_YAR_DIBI = np.where((_lx0 > IMP_CEP[0]) & (_lx0 < IMP_CEP[1]), 0.3, IMP_YAR_DIBI)
+_tan_y = np.where(YAR, math.tan(math.radians(IMP_YAR_EGIM)) / math.sqrt(2.0), _tan)
+for _tur3 in range(800):
+    Z = np.where(KARA, np.maximum(Z, 0.3), np.minimum(Z, -0.2))
+    Z = np.where(MODEL_YARI & KARA, _YAR_DIBI, Z)    # modelin kayalık yarının altı: kaya örter
+    Z = np.where(SAHANLIK & ~_DUZ_YAKIN, IMP_KOT, Z)
+    Z = np.where(_DUZ, IMP_DUZ_KOT, Z)
+    _P = np.pad(Z, 1, mode="edge")
+    _tasi = np.zeros_like(Z)
+    _degisti = False
+    for dj, di in ((0, 1), (1, 0), (1, 1), (1, -1)):
+        _uz = HUCRE * math.hypot(dj, di)
+        _k = _P[1 + dj:1 + dj + Z.shape[0], 1 + di:1 + di + Z.shape[1]]
+        _fz = Z - _k
+        _fazla = np.abs(_fz) - _tan_y * _uz
+        _pay = np.where((_fazla > 0) & _pencere & ~MODEL_YARI, np.sign(_fz) * _fazla * 0.2, 0.0)
+        if (np.where(_pencere & (_dq < 40.0) & ~MODEL_YARI, _fazla, 0) > 0.02).any():
+            _degisti = True
+        _tasi -= _pay
+        _ek = np.zeros_like(_P)
+        _ek[1 + dj:1 + dj + Z.shape[0], 1 + di:1 + di + Z.shape[1]] += _pay
+        _tasi += _ek[1:-1, 1:-1] * _pencere * ~MODEL_YARI
+    if not _degisti:
+        break
+    Z = Z + _tasi
+Z = np.where(KARA, np.maximum(Z, 0.3), np.minimum(Z, -0.2))
+Z = np.where(MODEL_YARI & KARA, _YAR_DIBI, Z)
+# Modelin yarının iki yanı: zemin kayalığın yan yüzüyle aynı inişte (sahanlıktan suya 10 m'de), kaya ayrı blok gibi
+# durmasın; yan yüzü zeminin içinde kalır
+_lx = (GX - IMP_O[0]) * IMP_A[0] + (GY - IMP_O[1]) * IMP_A[1]
+_lz = (GX - IMP_O[0]) * IMP_N[0] + (GY - IMP_O[1]) * IMP_N[1]
+_yan = (((_lx > IMP_MODEL_YAR[1]) & (_lx < IMP_MODEL_YAR[1] + 12)) | ((_lx < IMP_MODEL_YAR[0]) & (_lx > IMP_MODEL_YAR[0] - 12))) \
+    & (_lz > IMP_MODEL_PLATFORM[3]) & KARA
+_profil = IMP_DUZ_KOT * np.clip(1 - (_lz - IMP_MODEL_PLATFORM[3]) / 10.0, 0, 1)
+Z = np.where(_yan, np.maximum(Z, np.maximum(_profil, 0.3)), Z)
+Z = np.where(SAHANLIK & ~_DUZ_YAKIN, IMP_KOT, Z)
+Z = np.where(_DUZ, IMP_DUZ_KOT, Z)
+Z = cukur_doldur(Z, KARA)
+print(f"The Imperial   : sahanlık {IMP_DUZ_KOT} m düz, eğim {_tur3} tur (yalnız otelin çevresinde)")
 ALICI, ALAN = akis(Z, KARA)
 alan_km2 = ALAN * HUCRE * HUCRE / 1e6
 
@@ -1005,6 +1128,10 @@ for k in range(1, len(KUM_MI) + 1):
                 "geometry": {"type": "LineString", "coordinates": [_ll(x, y) for x, y in p]}})
         _bas = k
 # The Imperial: sahanlık, merdiven hattı (öneri), dip teras, iskele yeri, esnek alan
+def _en_buyuk(g):
+    return max(g.geoms, key=lambda q: q.area) if g.geom_type == "MultiPolygon" else g
+
+
 def _p(g):
     return {"type": "Polygon", "coordinates": [[_ll(x, y) for x, y in g.exterior.coords]]}
 
@@ -1013,17 +1140,27 @@ ozellik += [
     {"type": "Feature", "properties": {"katman": "imperial", "tur": "alan", "yaricapM": IMP_ALAN_R,
      "not": "Eğim ve kıyı kuralı burada tepe + merdiven için esnek (Kemal, 20 Kasım)"},
      "geometry": _p(Point(*IMP_MERKEZ).buffer(IMP_ALAN_R, 32))},
+    # Eski sahanlık (20 m'lik düzlük, otelin arkasında); otelin sahanlığına 15 m'den yakını yamaç
     {"type": "Feature", "properties": {"katman": "imperial", "tur": "sahanlik", "kotM": IMP_KOT},
-     "geometry": _p(IMP_SAHANLIK)},
-    {"type": "Feature", "properties": {"katman": "imperial", "tur": "otel"}, "geometry": _p(Polygon(IMP["otel"]))},
-    {"type": "Feature", "properties": {"katman": "imperial", "tur": "merdiven-hatti", "oneri": True},
-     "geometry": {"type": "LineString", "coordinates": _ll_hat(IMP_MERDIVEN)}},
-    {"type": "Feature", "properties": {"katman": "imperial", "tur": "dip-teras", "kotM": IMP_TERAS_KOT},
-     "geometry": _p(Point(*IMP_DIP_TERAS).buffer(16, 16))},
+     "geometry": _p(_en_buyuk(IMP_SAHANLIK.difference(IMP_YENI_DUZ.buffer(15.0))))},
+    # Dönen binanın altı ve önündeki düz teras, yarın kenarına kadar (25 Kasım); sahanlıkla aynı kotta
+    {"type": "Feature", "properties": {"katman": "imperial", "tur": "teras", "kotM": IMP_DUZ_KOT},
+     "geometry": _p(IMP_YENI_DUZ)},
+    # The Imperial binası (modelin sahanlık üstü; 25 Kasım): başlangıç noktası, kotu, önünün yönü (x doğu, y kuzey)
+    {"type": "Feature", "properties": {"katman": "imperial", "tur": "otel", "dosya": "binalar/the-imperial-kemskoy.glb",
+     "modelKot": IMP_MODEL_KOT, "baslangic": _ll(*IMP_O), "on": [round(float(IMP_N[0]), 4), round(float(IMP_N[1]), 4)],
+     "not": "Modelin başlangıç noktası, kotu ve önünün yönü; yön ve yer DENEME"},
+     "geometry": _p(IMP_YENI_OTEL)},
+    {"type": "Feature", "properties": {"katman": "imperial", "tur": "merdiven-hatti", "tasMerdiven": True,
+     "not": "Üçüncü sayı merdivenin yüksekliği (m): kayalık yarın önünde taş merdiven"},
+     "geometry": {"type": "LineString", "coordinates": [_ll(x, y) + [round(z, 2)] for x, y, z in IMP_YENI_MERDIVEN.coords]}},
+    # Kayalık yar (25 Kasım): modelin kayalığı ve iki yanında adanın yarı; eğim sınırı burada IMP_YAR_EGIM
+    {"type": "Feature", "properties": {"katman": "imperial", "tur": "yar", "egimSiniri": IMP_YAR_EGIM},
+     "geometry": _p(IMP_YAR_ALANI)},
     {"type": "Feature", "properties": {"katman": "imperial", "tur": "kum-cebi"},
-     "geometry": {"type": "Point", "coordinates": _ll(*IMP_KUM_CEBI)}},
+     "geometry": {"type": "Point", "coordinates": _ll(*IMP_YENI_DIP)}},
     {"type": "Feature", "properties": {"katman": "imperial", "tur": "iskele-yeri"},
-     "geometry": {"type": "Point", "coordinates": _ll(*IMP_KUM_NOKTA)}},
+     "geometry": {"type": "Point", "coordinates": _ll(*IMP_YENI_DIP)}},
 ]
 for _y in YERLESIMLER:
     ozellik.append({"type": "Feature", "properties": {

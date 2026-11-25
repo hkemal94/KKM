@@ -188,6 +188,8 @@ def main():
     # 2) yol zemine oturuyor mu (köprü dışında)
     en, kim, top_k = 0.0, "", 0.0
     for y in G:
+        if y["p"].get("tasMerdiven"):    # The Imperial'in taş merdiveni kayalık yarın önünde (25 Kasım): bilgi
+            continue
         g3 = LineString(np.column_stack([y["xy"], y["z"]]))
         s = np.arange(0, y["g"].length + 0.01, 2.0)
         pts = np.array([g3.interpolate(t).coords[0] for t in s])
@@ -262,7 +264,7 @@ def main():
     # 5) kopuk uç
     geoms = [y["g"] for y in G]
     agac = STRtree(geoms)
-    sah = imp["sahanlik"].buffer(3)
+    sah = (imp["sahanlik"].union(imp["teras"]) if "teras" in imp else imp["sahanlik"]).buffer(3)   # teras: 25 Kasım
     kopuk = []
     cikmaz = 0
     for i, y in enumerate(G):
