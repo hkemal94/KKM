@@ -16,7 +16,18 @@ export type Nokta = [number, number];
 export interface ZeminBasligi {
   en: number; boy: number; hucre: number; x0: number; y0: number;
   lat0: number; lng0: number; mPerLat: number; mPerLng: number; birim: number;
+  /** Çizimde kıyı yumuşatması yapılmayan yerler (metre çokgenler, x doğu y kuzey): The Imperial'in yarı ve cep plajı */
+  kiyiYumusatmaYok?: number[][][];
 }
+
+/** Nokta çokgenin içinde mi (metre) */
+const icinde = (c: number[][], x: number, y: number) => {
+  let ic = false;
+  for (let a = 0, b = c.length - 1; a < c.length; b = a++) {
+    if ((c[a][1] > y) !== (c[b][1] > y) && x < ((c[b][0] - c[a][0]) * (y - c[a][1])) / (c[b][1] - c[a][1]) + c[a][0]) ic = !ic;
+  }
+  return ic;
+};
 
 export interface Zemin {
   b: ZeminBasligi;
@@ -78,7 +89,9 @@ export async function zeminOku(sinyal?: AbortSignal): Promise<Zemin> {
  * görünüyordu. Yalnız çizim için, yalnız kıyı şeridinde (2 hücre içinde hem deniz hem
  * kara olan, 4 m'den alçak hücreler) rakım çevresinin ağırlıklı ortalaması olur.
  * Kutudaki hücrelerin `z.ciz`'i `z.h`'den yeniden hesaplanır (8. adım: zemin aracı da çağırır).
- * Veri değişmez. 24 Kasım'dan beri yapılar da bu çizilen rakıma oturur (`tabanKotu`).
+ * Veri değişmez. 24 Kasım'dan beri yapılar da bu çizilen rakıma oturur (`tabanKotu`). Başlıktaki
+ * `kiyiYumusatmaYok` çokgenlerinde kara hücresi yumuşatılmaz, deniz hücresi yalnız 4 m'den alçak komşularla
+ * (25 Kasım: The Imperial'in cep plajı görünsün).
  */
 export function kiyiBolgesi(z: Zemin, i0: number, j0: number, i1: number, j1: number) {
   const { b, h, ciz } = z;
@@ -88,9 +101,13 @@ export function kiyiBolgesi(z: Zemin, i0: number, j0: number, i1: number, j1: nu
     ciz[k] = h[k];
     if (j < R || i < R || j >= b.boy - R || i >= b.en - R) continue;
     if (h[k] >= 4 || h[k] < -6) continue;
+    // Yarın dibinde (başlıktaki çokgenler): kara hücresi yumuşatılmaz, deniz hücresi yalnız alçak komşularla
+    const yar = !!b.kiyiYumusatmaYok?.some(c => icinde(c, b.x0 + i * b.hucre, b.y0 + j * b.hucre));
+    if (yar && h[k] > 0) continue;
     let deniz = false, kara = false, top = 0, agirlik = 0;
     for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++) {
       const v = h[k + dj * b.en + di];
+      if (yar && v >= 4) continue;
       if (v > 0) kara = true; else deniz = true;
       const w = (R + 1 - Math.abs(di)) * (R + 1 - Math.abs(dj));
       top += v * w; agirlik += w;
