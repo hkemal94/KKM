@@ -30,6 +30,20 @@ sözü: "denize bakan ve cep plajı olan bir otel" (yer ve yükseklik serbest), 
   sahanlığın binadan uzak kenarına çıkar.
 - Bütün denetimler temiz. Önce / sonra: `docs/gorseller/tek-harita-imperial/`. Telefonda denenmedi.
 
+## 25 Kasım: tek harita: taş kaide
+
+Kemal (25 Kasım, harita parçaları raporu, soru 2 → a): yüksek kaideler (Deniz Feneri ~11 m, Yağ Fabrikası 6,6 m, Sade
+Meyhane 5,4 m, Eski Kilise 5,3 m) düz kahverengi kutu yerine taş dokulu, zemin rengine karışan kaideyle.
+- **Yeni kaide** (`tek/kaideGeometrisi.ts`, `yapiKatmani.ts`): duvar 0,7 m'lik taş sıralarına ve 1,5 m'lik taşlara
+  bölünür, sıralar şaşırtmalı, her taşın tonu biraz farklı (kireçtaşı rengi). Alt kenar düz değil, her noktada zeminin
+  0,4 m altına iner (yamaca oturur); duvar aşağı indikçe dışa açılır (şev, her metrede 0,12 m, en çok 0,9 m). Duvarın alt
+  kısmı (yüksekliğin %30'u, 1–3,5 m) altındaki zeminin rengine geçer: kumsalda kuma, çayırda yeşile
+  (`zeminKatmani.ts` → `renkAl`; ağaç katı zemini boyayınca yeniden okunur). 1,5 m'den alçak duvarda taşlar üç kat geniş.
+- **Bütün kaidelere uygulandı** (kaide sistemi genel; 983 yapı). Kaidenin kuralı (kot, eşik) değişmedi; denetim aynı.
+- **Ölçüm** (bilgisayar, normal mod): kaidelerin toplamı 11,8 bin → 50,4 bin üçgen (tek çizim). İndirme değişmedi
+  (kaide kodla üretilir, dosya yok). Ölçüler DENEME. Telefonda denenmedi.
+- Önce / sonra: `docs/gorseller/harita-tas-kaide/`.
+
 ## 24 Kasım gece: tek harita, adanın Ege'deki yeri
 
 Kemal (24 Kasım): Ege'deki konum geri gelsin. Eski haritada ada anakara, Küçükkuyu, Bozcaada ve Edremit Körfezi ile

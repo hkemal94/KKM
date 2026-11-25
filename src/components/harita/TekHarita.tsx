@@ -390,7 +390,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       if (yol) { sahne.remove(yol.grup); yol.dispose(); }
       yol = new YolKatmani(zv, b.yollar);
       if (yapi) { sahne.remove(yapi.grup); yapi.dispose(false); }
-      yapi = new YapiKatmani(b.yapilar, uzakVeri, () => { /* model indi */ });
+      yapi = new YapiKatmani(b.yapilar, uzakVeri, () => { /* model indi */ }, { z: zv, renk: zemin ? zemin.renkAl : null });
       if (sinir) { sahne.remove(sinir.grup); sinir.dispose(); }
       sinir = new SinirKatmani(zv, temel.sinirlar, b.yapilar);
       sahne.add(yol.grup, yapi.grup, sinir.grup);
@@ -470,6 +470,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
           agac = new AgacKatmani(z, v, () => { /* model indi */ });
           if (gizliAgac) agac.gizli = { hucre: GIZLI_HUCRE, ...gizliAgac };
           agac.zemineBoya(zemin);
+          yapi?.kaideyiBoya(zemin.renkAl);
           sahne.add(agac.grup);
           guncelle();
         }).catch(e => { if (!(e instanceof DOMException && e.name === 'AbortError')) console.warn('[tek harita] ağaçlar inmedi', e); });

@@ -236,6 +236,15 @@ export class ZeminKatmani {
     this.ucgen = ucgen;
   }
 
+  /** Sahne x, z'deki zemin hücresinin rengi (taş kaide zemine bu renkle karışır; `kaideGeometrisi.ts`) */
+  renkAl = (x: number, sz: number, c: THREE.Color) => {
+    const { b } = this.z;
+    const i = Math.max(0, Math.min(b.en - 1, Math.round((x - b.x0) / b.hucre)));
+    const j = Math.max(0, Math.min(b.boy - 1, Math.round((-sz - b.y0) / b.hucre)));
+    const k = (j * b.en + i) * 3;
+    c.setRGB(this.renk[k] / 255, this.renk[k + 1] / 255, this.renk[k + 2] / 255);
+  };
+
   /** Hücre renklerine dışarıdan karışım (ağaç katı: arazi türü, 22 Kasım); kurulmuş kareler yeniden kurulur */
   renkKaristir(karistir: (k: number, renk: Uint8Array) => void) {
     this.karistir = karistir;
