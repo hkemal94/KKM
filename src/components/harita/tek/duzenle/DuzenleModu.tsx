@@ -55,9 +55,9 @@ const DONUS = (15 * Math.PI) / 180;
 
 const telefonMu = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900;
 
-/** Katalog: Bina koy'da görünen modeller (yol döşeme parçaları ve araçlar yok) */
+/** Katalog: Bina koy'da görünen modeller (deniz parçaları ve merkez meydanı yok) */
 const KATALOG: Array<{ baslik: string; modeller: BinaModeli[] }> = (() => {
-  const uygun = BINA_MODELLERI.filter(m => !['deniz', 'arac'].includes(m.grup) && !/^(yol-|merdivenli-sokak|merkez-meydani)/.test(m.kimlik));
+  const uygun = BINA_MODELLERI.filter(m => m.grup !== 'deniz' && m.kimlik !== 'merkez-meydani');
   const g = (ad: string, f: (m: BinaModeli) => boolean) => ({ baslik: ad, modeller: uygun.filter(f) });
   return [
     g('Evler ve yapılar', m => m.grup === 'bina'),

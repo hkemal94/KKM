@@ -65,6 +65,18 @@ az sokak." İskele ve Liman'daki yol izlendi.
   yerinin karşılığına en yakın yerde (eski yeri stadın sekisinin altında kalıyor, 27 m öte). Öbür köylerin arsa ve yapı
   sayıları aynı.
 - Resimler: `docs/gorseller/tek-harita-stadyum/` (önce / sonra: genel, yakın, tepeden). Telefonda denenmedi.
+## 25 Kasım: tek harita: kullanılmayan modeller silindi
+
+Kemal (25 Kasım, harita parçaları raporu, soru 1 → a): tek haritada kullanılmayan model dosyaları silinir.
+- **Silinen (46 dosya, 1,78 MB):** `public/modeller/araclar/` altındaki 27 araç (klasör kalktı); tekneler: arabalı feribot,
+  deniz taksisi, yolcu motoru, yelkenli, sahil güvenlik botu, 4 balıkçı teknesi, 3 gırgır teknesi, beyaz-mavi sandal;
+  yol karoları (`yol-duz`, `yol-kose`, `yol-t`, `yol-kavsak`, `merdivenli-sokak`); `futbol-sahasi`.
+- **Kalan (kullanılıyor):** `depo-atolye`, `tribun`, `karakol` ve mavi, sarı, yeşil sandal hazır gruplarda
+  (`public/harita/hazir-gruplar.json`; Düzenle → grup koy) geçiyor; silinmedi. Silinirse o gruplar modelsiz kalır.
+- **Katalog:** `src/data/binaKatalogu.json` ve `src/lib/binaKutuphanesi.ts`'ten çıktılar; Oyunlar → Bina kütüphanesi'nde
+  Araçlar bölümü yok, Sokak parçaları 6, Deniz ve liman 10, Binalar 44. Düzenle'nin "Bina koy" listesi aynı (araç ve yol
+  karosu zaten gösterilmiyordu). Ajansın `assetler/3b/` kopyası ayrıca temizlenecek.
+- Haritada görünen bir şey değişmedi. Önce / sonra: `docs/gorseller/harita-kullanilmayan-modeller/`.
 
 ## 25 Kasım: tek harita: The Imperial, denize bakan ve cep plajı olan otel
 

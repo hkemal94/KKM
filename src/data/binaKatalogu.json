@@ -57,9 +57,6 @@
     "depo": [
       "binalar/depo-atolye.glb"
     ],
-    "saha": [
-      "binalar/futbol-sahasi.glb"
-    ],
     "tribun": [
       "binalar/tribun.glb"
     ]
@@ -90,14 +87,7 @@
     "merkez-mezarligi": "binalar/merkez-mezarligi.glb"
   },
   "sokak": {
-    "karo_m": 10,
-    "parcalar": [
-      "sokak/yol-duz.glb",
-      "sokak/yol-kose.glb",
-      "sokak/yol-t.glb",
-      "sokak/yol-kavsak.glb",
-      "sokak/merdivenli-sokak.glb"
-    ],
+    "parcalar": [],
     "dosemeler": [
       "sokak/sokak-lambasi.glb",
       "sokak/bank.glb",
@@ -190,83 +180,14 @@
       "deniz/ahsap-iskele-duz.glb"
     ],
     "tekneler": [
-      "deniz/arabali-feribot.glb",
-      "deniz/balikci-teknesi.glb",
-      "deniz/deniz-taksisi.glb",
-      "deniz/girgir-teknesi.glb",
-      "deniz/sahil-guvenlik-botu.glb",
-      "deniz/sandal.glb",
-      "deniz/yelkenli.glb",
-      "deniz/yolcu-motoru.glb"
+      "deniz/sandal.glb"
     ]
   },
-  "araclar": [
-    "araclar/bisiklet.glb",
-    "araclar/dolmus.glb",
-    "araclar/hatchback.glb",
-    "araclar/motosiklet.glb",
-    "araclar/pikap.glb",
-    "araclar/sedan.glb",
-    "araclar/taksi.glb",
-    "araclar/traktor.glb"
-  ],
   "renkli": {
-    "deniz/balikci-teknesi.glb": [
-      "deniz/balikci-teknesi-beyaz-kirmizi.glb",
-      "deniz/balikci-teknesi-beyaz-mavi.glb",
-      "deniz/balikci-teknesi-mavi.glb",
-      "deniz/balikci-teknesi-yesil.glb"
-    ],
-    "deniz/girgir-teknesi.glb": [
-      "deniz/girgir-teknesi-beyaz.glb",
-      "deniz/girgir-teknesi-mavi.glb",
-      "deniz/girgir-teknesi-yesil.glb"
-    ],
     "deniz/sandal.glb": [
-      "deniz/sandal-beyaz-mavi.glb",
       "deniz/sandal-mavi.glb",
       "deniz/sandal-sari.glb",
       "deniz/sandal-yesil.glb"
-    ],
-    "araclar/bisiklet.glb": [
-      "araclar/bisiklet-deniz-mavisi.glb",
-      "araclar/bisiklet-hardal.glb",
-      "araclar/bisiklet-kiremit.glb",
-      "araclar/bisiklet-yesil.glb"
-    ],
-    "araclar/dolmus.glb": [
-      "araclar/dolmus-beyaz.glb"
-    ],
-    "araclar/hatchback.glb": [
-      "araclar/hatchback-beyaz.glb",
-      "araclar/hatchback-bordo.glb",
-      "araclar/hatchback-deniz-mavisi.glb",
-      "araclar/hatchback-hardal.glb",
-      "araclar/hatchback-zeytin.glb"
-    ],
-    "araclar/motosiklet.glb": [
-      "araclar/motosiklet-kiremit.glb",
-      "araclar/motosiklet-lacivert.glb",
-      "araclar/motosiklet-zeytin.glb"
-    ],
-    "araclar/pikap.glb": [
-      "araclar/pikap-beyaz.glb",
-      "araclar/pikap-gri.glb",
-      "araclar/pikap-kiremit.glb",
-      "araclar/pikap-yesil.glb"
-    ],
-    "araclar/sedan.glb": [
-      "araclar/sedan-beyaz.glb",
-      "araclar/sedan-deniz-mavisi.glb",
-      "araclar/sedan-kiremit.glb",
-      "araclar/sedan-krem.glb",
-      "araclar/sedan-lacivert.glb",
-      "araclar/sedan-zeytin.glb"
-    ],
-    "araclar/traktor.glb": [
-      "araclar/traktor-deniz-mavisi.glb",
-      "araclar/traktor-kiremit.glb",
-      "araclar/traktor-yesil.glb"
     ]
   }
 }
