@@ -21,7 +21,7 @@ Kurallar:
     düzlenen şeridi dar (ST_CEKIRDEK, ST_KENAR).
   - Çiftlik köyü (Kemal, 24–25 Kasım: "Bugünkü kalsın, sıklaşsın") köy dokusuyla, bugünkü yerinde ve yönünde: eğime koşut
     sokaklar ~60 m arayla (eskisi 90), sokak sokak kayan kısa geçitler yerine köyü baştan başa geçen, yamaç yönünde
-    kırıksız çapraz sokaklar (~110 m arayla; dik parçası basamaklı geçit). Ölçüler DENEME (CF_ARA, CF_CAPRAZ).
+    kırıksız çapraz sokaklar (~110 m arayla; dik parçası basamaklı geçit). CF_ARA Kemal onayladı, 25 Kasım; CF_CAPRAZ DENEME.
   - Kıyı köyü (Kemal, 20 Kasım akşam) bugünkü haritadaki köyün sokak hatlarıyla aynı: Kurucu'nun kalıcı
     hâlindeki dokuz yol ve birahanenin yeri adanın küçültmesiyle (0,70) taşınır; zemin değişmez (teras yok).
     Sahil Yolu köyün önünde eski hattının küçültülmüşünden geçer; hattın geri kalanı aynen kalır.
@@ -1566,7 +1566,8 @@ print(f"Stadyum: eski haritadaki {len(ST_HAT)} sokak oran {ST.ORAN:.2f} ile taş
 # Liman ve İskele köy dokusuyla üretilmez: eski haritadaki sokakları taşınır (aşağıda, Kemal 22 ve 24 Kasım)
 # Çiftlik (Kemal 24 Kasım: "aralar çok açık… evler daha yakın, bağlantı çok"; 25 Kasım: "Bugünkü kalsın, sıklaşsın"):
 # bugünkü düzen (eğime koşut sokaklar, aynı yer ve yön) kalır; sokaklar sıklaşır (90 → CF_ARA m), sokak sokak kayan kısa
-# geçitler yerine köyü baştan başa geçen çapraz sokaklar (CF_CAPRAZ m arayla). Ölçüler DENEME.
+# geçitler yerine köyü baştan başa geçen çapraz sokaklar (CF_CAPRAZ m arayla). CF_ARA (60 m) Kemal onayladı, 25 Kasım
+# ("sokak arası 60 m kalsın"); CF_CAPRAZ DENEME.
 CF_ID, CF_ARA, CF_CAPRAZ = "yerlesim_ciftlik", 60.0, 110.0
 # Kemal'in Kurucu'da koyduğu Yağ Fabrikası yerinde kalsın: önündeki bugünkü sokağın noktası (eski hâlde fabrikanın
 # noktasına 20 m) sabit; sıklaşan eğime koşut sokaklardan biri onun yükseltisinden geçer (fabrika eskisi gibi ona bakar).

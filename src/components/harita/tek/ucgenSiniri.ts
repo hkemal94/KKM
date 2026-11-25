@@ -8,9 +8,10 @@
  * - Ağaçlar kalanı kullanır (`agacKatmani.ts` → `sahneToplam` bu tavandır).
  * Yapıların uzak kopyaları tavana sayılmaz (sayaç adanın bütün karolarını sayar, ekranda yalnız görünenler çizilir;
  * normal modda ~200 bin).
- * Bütün değerler DENEME (Kemal onaylamadı; telefonda ölçülmedi).
+ * Toplam tavan Kemal onayladı, 25 Kasım ("şimdiki gibi kalsın"); öbür değerler DENEME (Kemal onaylamadı; telefonda
+ * ölçülmedi).
  */
-export const TOPLAM_SINIR = { normal: 1_600_000, hafif: 400_000 };
+export const TOPLAM_SINIR = { normal: 1_600_000, hafif: 400_000 };   // Kemal onayladı, 25 Kasım
 
 /** Yapı modelleri seçilirken ağaçlara bırakılan pay (DENEME) */
 export const AGAC_PAYI = { normal: 400_000, hafif: 60_000 };
