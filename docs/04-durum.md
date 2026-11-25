@@ -64,6 +64,29 @@ birlikte görünüyordu; tek haritada yoktu.
 - Gelmeyenler: eski feribot hattı (eski Liman'dan çıkıyordu; yeni adada iskelenin yeri ayrı karar) ve denizin dalga
   dokusu. Kayda bir şey yazılmaz. Resimler: `docs/gorseller/tek-harita-ege/`. Telefonda denenmedi.
 
+## 25 Kasım: tek harita: hafif sürümler ve toplam üçgen tavanı
+
+Kemal (25 Kasım, harita parçaları raporu, soru 3 → a): Imperial, Sürek ve belediye için orta ayrıntılı sürüm; bütçe
+tek tavana bağlansın.
+- **Hafif sürümler** (`public/modeller/binalar/*-hafif.glb`; `tek/ucgenSiniri.ts` → `HAFIF_SURUMLER`): asıl modelin
+  parçaları sadeleştirildi (meshoptimizer; adlar, renkler aynı; harita asıl modelin taban kutusunu ve kırpmasını kullanır).
+  The Imperial 89 bin → 14 bin üçgen (834 → 158 KB), Sürek Kulübü 35 → 10 bin (448 → 131 KB), belediye 34 → 7 bin
+  (340 → 80 KB). Bakılan yerden 450 m'den uzakta, hafif modda ya da tavan dolunca bu sürüm çizilir. Galeride görünmez.
+- **Toplam tavan** (DENEME): normal 1,6 milyon, hafif 400 bin üçgen. Önce zemin, yol, liman, bahçe; yapı modelleri
+  ağaçlara 400 bin (hafifte 60 bin) bırakıp kalanı kullanır (en az 120 / 40 bin); ağaçlar kalanı (`agacKatmani.ts` →
+  `sahneToplam` tavandır). Önce çevredeki yapılar (yakından uzağa), sonra uzaktaki viki yapıları; sığmayan önce hafif
+  sürüme, o da sığmazsa uzak kopyaya düşer. Yapıların uzak kopyaları tavana sayılmaz (sayaç adanın bütün karolarını
+  sayar, ekranda görünenler çizilir).
+- **İskele ve mendirek** (`limanModelleri.ts`): eskiden bir iskeleye yakın bakınca adanın bütün parçaları asıl modelle
+  çiziliyordu (~565 bin üçgen; mendirek parçası 9.800 üçgen); şimdi yalnız bakılan yere 350 m yakın parçalar asıl, kalanı
+  uzak kopya (DENEME). Hâlâ İskele'de ~350 bin: mendireğin hafif sürümü ayrı iş.
+- **Ölçüm** (bilgisayar, ekran kartsız tarayıcı, ekrandaki sayaç; önce → sonra): normal mod İskele 2,08 → 1,58 milyon,
+  İskele yakın 2,07 → 1,54, Liman 1,91 → 1,47, Liman yakın 1,81 → 1,41, The Imperial 1,91 → 1,24, Merkez 1,47 → 1,47;
+  hafif mod 0,41–0,50 → 0,29–0,38 milyon. Modeliyle çizilen yapı: İskele 69 → 33, Liman 64 → 45, Merkez 66 → 53
+  (kalanı uzak kopya). Aynı gezintide inen model dosyası 2,39 → 1,63 MB; harita verisi 4,88 MB (değişmedi).
+  Telefonda denenmedi.
+- Önce / sonra: `docs/gorseller/harita-hafif-surumler/`.
+
 ## 24 Kasım akşam: soy ağacı tek ağaç (aile çerçeveleri kalktı)
 
 Kemal (canlıda gördü): "Elif Kübra'nın kızı gibi duruyor. Aile gruplandırmalarını kaldır, yalnızca doğduğu ailenin

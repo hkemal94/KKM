@@ -226,12 +226,15 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       if (kapandi || !zemin || !yapi) return;
       const u = kamera.position.distanceTo(kontrol.target);
       zemin.guncelle(kamera.position, hafifRef.current, golgeAcik());
-      yapi.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
-      // Bahçeler ağaçlardan önce: ağaçların payı öbür katların üçgeninden hesaplanır (hafif modda sahne ~400 bin)
-      bahce?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
-      agac?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik(), zemin.ucgen + (yol?.ucgen ?? 0) + yapi.ucgen + (bahce?.ucgen ?? 0));
+      // Toplam üçgen tavanı (`tek/ucgenSiniri.ts`): önce liman ve bahçeler, sonra yapı modelleri öbür katlardan
+      // kalanı, en son ağaçlar kalanı kullanır (hafif modda sahne ~400 bin)
       liman?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
+      bahce?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
+      yapi.guncelle(kontrol.target, u, hafifRef.current, golgeAcik());
+      agac?.guncelle(kontrol.target, u, hafifRef.current, golgeAcik(), digerUcgen() + yapi.tavanUcgen);
     };
+    // Yapı ve ağaç dışındaki katların üçgeni (yapı katı model inince de yeniden okur)
+    const digerUcgen = () => (zemin?.ucgen ?? 0) + (yol?.ucgen ?? 0) + (bahce?.ucgen ?? 0) + (liman?.ucgen ?? 0);
     const kayma = new THREE.Vector3();
     const genisAlt = new THREE.Vector3(), genisUst = new THREE.Vector3();
     const egeAlt = new THREE.Vector3(), egeUst = new THREE.Vector3();
@@ -391,6 +394,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
       yol = new YolKatmani(zv, b.yollar);
       if (yapi) { sahne.remove(yapi.grup); yapi.dispose(false); }
       yapi = new YapiKatmani(b.yapilar, uzakVeri, () => { /* model indi */ }, { z: zv, renk: zemin ? zemin.renkAl : null });
+      yapi.digerUcgen = digerUcgen;
       if (sinir) { sahne.remove(sinir.grup); sinir.dispose(); }
       sinir = new SinirKatmani(zv, temel.sinirlar, b.yapilar);
       sahne.add(yol.grup, yapi.grup, sinir.grup);
@@ -600,7 +604,7 @@ export const TekHarita: React.FC<Props> = ({ className, items, onMaddeAc, taslak
         const fps = (kare * 1000) / (simdi - son);
         setOlcum(o => ({ ...o, ucgen, fps, modelli: yapi?.modelli ?? 0, mb: indirme.bayt / 1e6 }));
         if (import.meta.env.DEV) (window as unknown as { __tekHarita?: unknown }).__tekHarita = {
-          hazir: !!zemin, iniyor: (yapi?.iniyor ?? true) || !!liman?.iniyor || !!bahce?.iniyor, bahce: bahce ? { ucgen: bahce.ucgen, bahceli: bahce.bahceli, esyali: bahce.esyali } : null, ucgen, fps, modelli: yapi?.modelli ?? 0,
+          hazir: !!zemin, iniyor: (yapi?.iniyor ?? true) || !!liman?.iniyor || !!bahce?.iniyor, bahce: bahce ? { ucgen: bahce.ucgen, bahceli: bahce.bahceli, esyali: bahce.esyali } : null, ucgen, fps, modelli: yapi?.modelli ?? 0, yapiUcgen: yapi?.ucgen ?? 0, hafifSurumlu: yapi?.hafifSurumlu ?? 0, modelPayi: yapi?.modelPayi ?? 0, limanUcgen: liman?.ucgen ?? 0,
           zeminUcgen: zemin?.ucgen ?? 0, agac: agac ? { ucgen: agac.ucgen, modelli: agac.modelli, obekli: agac.obekli } : null, yolUcgen: yol?.ucgen ?? 0, indirme: { ...indirme, dosyalar: { ...indirme.dosyalar } },
           bak, adaya, tepeden: tepedenAyarla, zemine: zemineIsin,
           // Denemede dokunma yeri için: zeminden `yukari` m yukarıdaki noktanın ekrandaki yeri (piksel)
