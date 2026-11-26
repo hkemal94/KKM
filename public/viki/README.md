@@ -152,3 +152,6 @@ Sade tarz (Kemal 26 Kasım: "bizim tarzımızda olsun", "dudaklar, kaşlar, elma
 - `portre-zeki-yilmaz.jpg`, `portre-hatice-yilmaz.jpg`, `portre-ibrahim-yilmaz.jpg`, `portre-ayse-yilmaz.jpg`, `portre-elif-yilmaz.jpg`
 - `portre-bayram-ozturk.jpg`, `portre-nurten-ozturk.jpg`, `portre-selahattin-atabey.jpg`, `portre-nurcan-atabey.jpg`, `portre-orhan-yildiz.jpg`
 Ercan, Özdemir ve Demir ailelerinin 12 portresi (yukarıda) ilk tarzda; Kemal "şimdilik alalım", sonra sade tarzda yenilenecek.
+
+26 Kasım öğleden sonra: ilk tarzdaki 12 portre (Ercan, Özdemir, Demir) sade tarzda yenilendi (Kemal: "ilk yaptıklarını da
+böyle güncellersen süper olur"). Dosya adları aynı; maddeler değişmeden yeni resmi gösterir. Artık 24 portrenin hepsi sade tarzda.
