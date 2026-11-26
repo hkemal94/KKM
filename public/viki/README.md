@@ -145,3 +145,10 @@ kanon değil; yüz tarifi kanonda yok, yaş ve dönem künyedeki yıllardan. 900
 - `portre-kadir-ozdemir.jpg`, `portre-aysel-ozdemir.jpg`, `portre-ahmet-ozdemir.jpg`, `portre-hatice-ozdemir.jpg`
 - `portre-ismail-demir.jpg` (1970'ler hâli), `portre-emine-demir.jpg` (1970'ler hâli)
 Siyah-beyaz "eski fotoğraf" hâlleri sonra (Kemal).
+
+Sade tarz (Kemal 26 Kasım: "bizim tarzımızda olsun", "dudaklar, kaşlar, elmacıklar farklı olsun"): örnek eski sade portreler
+(Eylül, Necdet, Selim, Göksel); nokta göz, gölgesiz, her kişiye kendi saçı, kıyafeti ve yüz hatları.
+- `portre-cem-alimyeri.jpg`, `portre-sibel-alimyeri.jpg`
+- `portre-zeki-yilmaz.jpg`, `portre-hatice-yilmaz.jpg`, `portre-ibrahim-yilmaz.jpg`, `portre-ayse-yilmaz.jpg`, `portre-elif-yilmaz.jpg`
+- `portre-bayram-ozturk.jpg`, `portre-nurten-ozturk.jpg`, `portre-selahattin-atabey.jpg`, `portre-nurcan-atabey.jpg`, `portre-orhan-yildiz.jpg`
+Ercan, Özdemir ve Demir ailelerinin 12 portresi (yukarıda) ilk tarzda; Kemal "şimdilik alalım", sonra sade tarzda yenilenecek.
