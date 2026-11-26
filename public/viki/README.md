@@ -140,4 +140,8 @@ kanon değil; yüz tarifi kanonda yok, yaş ve dönem künyedeki yıllardan. 900
 - `portre-huseyin.jpg` → Hüseyin (1920'lerin sonu hâli)
 - `portre-saadet-ercan.jpg` → Saadet Ercan
 - `portre-feriha-yildiz.jpg` → Feriha Yıldız
+
+Özdemir ve Demir aileleri (Kemal 26 Kasım: "Özdemir ailesine geç"; aynı yol):
+- `portre-kadir-ozdemir.jpg`, `portre-aysel-ozdemir.jpg`, `portre-ahmet-ozdemir.jpg`, `portre-hatice-ozdemir.jpg`
+- `portre-ismail-demir.jpg` (1970'ler hâli), `portre-emine-demir.jpg` (1970'ler hâli)
 Siyah-beyaz "eski fotoğraf" hâlleri sonra (Kemal).
