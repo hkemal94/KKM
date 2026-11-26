@@ -21,7 +21,7 @@ import type { HaritaDuzeni, KurucuBelge } from '../components/harita/duzenTipi';
  *     harita silindi, kaydı da Eksikler'deki düğmeyle silinir. Yedekler
  *     görülür, bilgisayara indirilir, Drive'a yüklenir; geri yükleme kodu git
  *     geçmişinde.
- *   - Drive'a yükleme `haritaDrive.ts` (19 Kasım).
+ *   - Drive'a yükleme `driveYedek.ts` (19 Kasım; 26 Kasım'dan beri bütün yedekler).
  *
  * Bu dosyadaki hesaplar saf iştir; ağ yalnız en alttaki işlevlerde.
  */

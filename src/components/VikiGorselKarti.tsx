@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Bot, Download, ImageOff, ImagePlus, Trash2 } from 'lucide-react';
+import { Bot, ImageOff, ImagePlus, Trash2 } from 'lucide-react';
 import type { Item } from '../types';
 import { GorselImg } from './GorselImg';
 import { gorselOku } from '../lib/gorselDeposu';
@@ -9,6 +9,7 @@ import {
 } from '../lib/vikiGorselTemizligi';
 import { anahtariOku } from '../lib/oyunAyarlari';
 import { istekEkle } from '../lib/kemalIstekleri';
+import { useIslemOncesiYedek, yedekNotu } from './IslemOncesiYedek';
 
 /**
  * Durum → Eksikler (3 Kasım, Kemal: "Görselleri galeriden sildim ama vikide kaldı,
@@ -30,7 +31,6 @@ const KART = 'mb-2.5 px-4 py-3 rounded-xl border border-[#F26B6F]/40 bg-[#FAF8F5
 const BASLIK = 'text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]';
 const ACIKLAMA = 'mt-0.5 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]';
 const DOLU = 'shrink-0 min-h-9 px-3 rounded-lg bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8] text-[12px] font-semibold disabled:opacity-40 cursor-pointer';
-const BOS = 'flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer';
 
 /** Silinmiş galeri görsellerinin ortak durumu (kart ve alttaki "Denetle" satırı) */
 export function useSilinmisGaleri(items: Item[], onUpdateItem?: (item: Item) => Promise<void>) {
@@ -47,7 +47,7 @@ export function useSilinmisGaleri(items: Item[], onUpdateItem?: (item: Item) => 
   const [secim, setSecim] = useState<Record<string, boolean>>({});
   const [calisiyor, setCalisiyor] = useState(false);
   const [rapor, setRapor] = useState<string | null>(null);
-  const [yedeklendi, setYedeklendi] = useState(false);
+  const yedek = useIslemOncesiYedek('Viki görselleri', 'kaldırma');
 
   /** Vikide galeriden gelmiş olabilecek görsel var mı (kart yalnız o zaman görünür) */
   const isVar = useMemo(() => vikiMaddeleri(items).some(i => (i.images || []).some(kopyaOlabilir)), [items]);
@@ -74,26 +74,21 @@ export function useSilinmisGaleri(items: Item[], onUpdateItem?: (item: Item) => 
     }
   };
 
-  const yedekIndir = () => {
-    const kayitlar = [...new Map(secilen.map(a => [a.item.id, a.item])).values()];
-    const dosya = new Blob([JSON.stringify({
-      uygulama: 'Kems Komuta Merkezi', tur: 'viki-gorsel-temizligi-oncesi-yedek',
-      tarih: new Date().toISOString(), items: kayitlar
-    }, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(dosya);
-    a.download = `kkm-viki-gorsel-yedegi-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    setYedeklendi(true);
-  };
-
   const kaldir = async () => {
     if (calisiyor || !secilen.length || !onUpdateItem) return;
     const maddeSayisi = new Set(secilen.map(a => a.item.id)).size;
-    if (!window.confirm(`${secilen.length} görsel ${maddeSayisi} viki maddesinden kaldırılacak. Geri alınmaz (yedek indirdiysen oradan dönebilir). Devam edilsin mi?`)) return;
+    // Drive izni onay sorusundan önce (Google penceresi basışın hemen ardından açılır)
+    if (!(await yedek.izinAl())) return;
+    if (!window.confirm(`${secilen.length} görsel ${maddeSayisi} viki maddesinden kaldırılacak. Önce bu maddelerin yedeği Drive'a kaydedilir. Geri alınmaz (yedekten dönebilirsin). Devam edilsin mi?`)) return;
     setCalisiyor(true);
     setRapor(null);
+    // Önce seçilen maddelerin yedeği Drive'a; olmazsa hiçbir görsel kaldırılmaz
+    const kayitlar = [...new Map(secilen.map(a => [a.item.id, a.item])).values()];
+    const y = await yedek.al(() => ({
+      uygulama: 'Kems Komuta Merkezi', tur: 'viki-gorsel-temizligi-oncesi-yedek',
+      tarih: new Date().toISOString(), items: kayitlar
+    }));
+    if (!y) { setCalisiyor(false); return; }
     let yazilan = 0;
     try {
       for (const k of temizlenmisKayitlar(secilen)) {
@@ -101,7 +96,7 @@ export function useSilinmisGaleri(items: Item[], onUpdateItem?: (item: Item) => 
         yazilan++;
       }
       setSecim({});
-      setRapor(`${secilen.length} görsel ${yazilan} maddeden kaldırıldı.`);
+      setRapor(`${secilen.length} görsel ${yazilan} maddeden kaldırıldı.${yedekNotu(y)}`);
     } catch (e) {
       setRapor(`Yarıda kaldı (${yazilan} madde yazıldı): ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -113,7 +108,7 @@ export function useSilinmisGaleri(items: Item[], onUpdateItem?: (item: Item) => 
   const kartGorunur = kesin.length > 0 || belirsiz.length > 0 || !!rapor;
   return {
     kesin, belirsiz, hepsi, secilen, seciliMi, setSecim, galeriKimlikleri, okunamayan, denetleniyor,
-    calisiyor, rapor, yedeklendi, isVar, kartGorunur, denetle, yedekIndir, kaldir
+    calisiyor, rapor, yedekUyarisi: yedek.uyari, isVar, kartGorunur, denetle, kaldir
   };
 }
 
@@ -122,7 +117,7 @@ type SilinmisGaleri = ReturnType<typeof useSilinmisGaleri>;
 export const SilinmisGaleriKarti: React.FC<{ sg: SilinmisGaleri; onMaddeAc?: (id: string) => void }> = ({ sg, onMaddeAc }) => {
   const {
     kesin, belirsiz, hepsi, secilen, seciliMi, setSecim, galeriKimlikleri, okunamayan, denetleniyor,
-    calisiyor, rapor, yedeklendi, kartGorunur, denetle, yedekIndir, kaldir
+    calisiyor, rapor, yedekUyarisi, kartGorunur, denetle, kaldir
   } = sg;
   if (!kartGorunur) return null;
 
@@ -183,11 +178,10 @@ export const SilinmisGaleriKarti: React.FC<{ sg: SilinmisGaleri; onMaddeAc?: (id
             className="flex items-center gap-1.5 min-h-9 px-3 rounded-lg bg-[#F26B6F] text-white text-[12px] font-semibold disabled:opacity-40 cursor-pointer">
             <Trash2 className="w-3.5 h-3.5" /> {calisiyor ? 'Kaldırılıyor…' : `Seçilenleri vikiden kaldır (${secilen.length})`}
           </button>
-          <button type="button" disabled={!secilen.length} onClick={yedekIndir} className={BOS}>
-            <Download className="w-3.5 h-3.5" /> {yedeklendi ? 'Yedek indi ✓' : 'Seçilenlerin yedeğini indir · isteğe bağlı'}
-          </button>
+          <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Önce seçilenlerin yedeği Drive'a kaydedilir.</span>
         </div>
       )}
+      {yedekUyarisi}
     </div>
   );
 };

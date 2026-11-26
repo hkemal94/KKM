@@ -1,24 +1,26 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { DatabaseBackup } from 'lucide-react';
 import type { Item } from '../types';
-import { auth, driveDosyaIzni, driveIzniniUnut, driveIzniVarMi, sunucuyaUlas } from '../lib/firebase';
+import { auth, driveIzniVarMi, sunucuyaUlas } from '../lib/firebase';
 import { buluttakiHaritaKaydi } from '../lib/haritaDuzeni';
 import {
   EN_COK_YEDEK, kuralHatasiMi, yedegiBulutaYaz, yedegiIndir,
   yedegiOku, yedekIcerigi, yedekleriListele, yedekMi, type YedekBasi
 } from '../lib/haritaYedegi';
 import {
-  DRIVE_KLASORU, DriveHatasi, drivedanOku, driveaYukle, driveYedekleri, izinPenceresiHatasi, klasorAdresi, klasoruBul,
+  DRIVE_KLASORU, DriveHatasi, drivedanOku, driveaYukle, driveYedekleri, klasorAdresi, klasoruBul,
   type DriveBaglami, type DriveYedegi
-} from '../lib/haritaDrive';
+} from '../lib/driveYedek';
+import { driveBaglami, driveHataMetni } from '../lib/driveOturumu';
 
 /**
  * Harita yedeği kartı (18 Kasım, kompakt ada A adımı). Durum → Eksikler.
  *
  * "Yedeği al": buluttaki harita kaydını ve haritaya bağlı viki alanlarını
- * bilgisayara indirir, Kemal'in Drive'ında "KKM Yedekleri" klasörüne yükler
- * (19 Kasım; yalnız drive.file izni, Google penceresi düğmeyle açılır) ve
- * buluttaki yedeklere yazar. Bulutta en çok 3 yedek; dördüncüde en eskisini
+ * Kemal'in Drive'ında "KKM Yedekleri" klasörüne yükler (19 Kasım; yalnız
+ * drive.file izni, Google penceresi düğmeyle açılır) ve buluttaki yedeklere
+ * yazar. Bilgisayara inmez (26 Kasım, Kemal: "direkt Drive'a kaydolmalı");
+ * indirmek isteyen listeden "İndir"e basar. Bulutta en çok 3 yedek; dördüncüde en eskisini
  * silmek için Kemal'in onayı istenir. Drive'da hiçbir yedek silinmez: 3'ten
  * fazlası olursa kart yalnız söyler.
  *
@@ -42,8 +44,6 @@ const hataYaz = (e: unknown) => kuralHatasiMi(e)
   ? 'veritabanı kuralı henüz yayımlanmamış (firestore.rules)'
   : e instanceof Error && e.message === 'zaman-asimi' ? 'bağlantı yok ya da çok yavaş' : e instanceof Error ? e.message : String(e);
 
-/** Drive hatası Türkçe ve sade */
-const driveHataYaz = (e: unknown) => e instanceof DriveHatasi ? e.metin : `Drive'a ulaşılamadı: ${hataYaz(e)}.`;
 
 const dugme = 'shrink-0 min-h-9 px-3 rounded-lg text-[12px] font-semibold disabled:opacity-40 cursor-pointer';
 const koyu = `${dugme} bg-[#0E1C4F] dark:bg-[#2C3C72] text-[#F3EFE8]`;
@@ -86,21 +86,13 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
     return () => { iptal = true; };
   }, [uid]);
 
-  /** Drive bağlamı: izin yoksa `pencere` ile Google penceresi açılır */
-  const driveBaglami = async (pencere: boolean): Promise<DriveBaglami | null> => {
-    if (!pencere && !driveIzniVarMi()) return null;
-    try { return { belirtec: await driveDosyaIzni() }; } catch (e) { throw izinPenceresiHatasi(e); }
-  };
   /** Süresi dolan izin bellekten atılır; sonraki basışta yeniden sorulur */
-  const driveHatasiniIsle = (e: unknown) => {
-    if (e instanceof DriveHatasi && e.durum === 401) driveIzniniUnut();
-    return driveHataYaz(e);
-  };
+  const driveHatasiniIsle = driveHataMetni;
 
   const driveListele = async (b: DriveBaglami) => {
     const klasor = await klasoruBul(b);
     setDriveKlasor(klasor);
-    setDriveListe(klasor ? await driveYedekleri(b, klasor) : []);
+    setDriveListe(klasor ? await driveYedekleri(b, klasor, 'harita-yedegi') : []);
     setDriveListeHatasi(null);
   };
   /** Sayfa açılınca: yalnız izin bu oturumda verilmişse okunur */
@@ -119,7 +111,7 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
     try { const b = await driveBaglami(true); if (b) await driveListele(b); } catch (e) { setDriveListeHatasi(driveHatasiniIsle(e)); } finally { setCalisiyor(null); }
   };
 
-  /** Yedeği al: indir, buluta yaz. `sil` yalnız Kemal onaylayınca verilir */
+  /** Yedeği al: Drive'a ve buluta yaz (bilgisayara inmez). `sil` yalnız Kemal onaylayınca verilir */
   const yedekAl = async (sil?: YedekBasi) => {
     if (calisiyor || !uid) return;
     if (!sil && liste && liste.length >= EN_COK_YEDEK) { setSilOnayi(liste[liste.length - 1]); return; }
@@ -130,22 +122,21 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
       // İzin penceresi önce: tarayıcı pencereyi yalnız basışın hemen ardından açar
       let b: DriveBaglami | null = null;
       let driveHata: string | null = null;
-      try { b = await driveBaglami(true); } catch (e) { driveHata = driveHataYaz(e); }
+      try { b = await driveBaglami(true); } catch (e) { driveHata = driveHatasiniIsle(e); }
 
       const ham = await sunucuyaUlas(buluttakiHaritaKaydi());
       if (!ham) { setRapor({ metin: 'Bulutta harita kaydı yok; yedeklenecek bir şey bulunmadı.', hata: true }); return; }
       const yedek = yedekIcerigi(ham, items);
-      yedegiIndir(yedek);
       const ne = `(${tarihYaz(yedek.olusturma)})`;
 
       let driveTamam = false;
       if (b) {
         try {
           const klasor = await klasoruBul(b, true);
-          await driveaYukle(b, klasor, yedek.olusturma, JSON.stringify(yedek));
+          await driveaYukle(b, klasor, { tur: 'harita-yedegi', olusturma: yedek.olusturma, icerik: JSON.stringify(yedek) });
           driveTamam = true;
           setDriveKlasor(klasor);
-          try { setDriveListe(await driveYedekleri(b, klasor)); setDriveListeHatasi(null); } catch { /* liste sonra */ }
+          try { setDriveListe(await driveYedekleri(b, klasor, 'harita-yedegi')); setDriveListeHatasi(null); } catch { /* liste sonra */ }
         } catch (e) { driveHata = driveHatasiniIsle(e); }
       }
 
@@ -163,11 +154,11 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
       const silindi = bulut === 'tamam' && sil ? ` Buluttaki en eski yedek (${tarihYaz(sil.olusturma)}) silindi.` : '';
       const bulutNotu = bulut === 'tamam' ? '' : bulut === 'kural' ? ' Bulut yedeği kural yayımlanınca.' : ` Buluta yazılamadı: ${bulut} (bulutta yarım yedek kalmaz).`;
       if (driveTamam) {
-        setRapor({ metin: `Yedek Drive'a yazıldı ${ne}: "${DRIVE_KLASORU}" klasöründe; bilgisayarına da indi.${bulut === 'tamam' ? ' Buluta da yazıldı.' : bulutNotu}${silindi}` });
+        setRapor({ metin: `Yedek Drive'a yazıldı ${ne}: "${DRIVE_KLASORU}" klasöründe.${bulut === 'tamam' ? ' Buluta da yazıldı.' : bulutNotu}${silindi}` });
       } else {
         setRapor({
-          metin: `Yedek bilgisayarına indi ${ne}, ama Drive'a yazılamadı: ${driveHata ?? 'bilinmeyen hata'}${bulut === 'tamam' ? ' Buluta yazıldı.' : bulutNotu}${silindi}${bulut === 'tamam' ? '' : ' İnen dosyayı sakla.'}`,
-          hata: bulut !== 'tamam'
+          metin: `Yedek Drive'a yazılamadı ${ne}: ${driveHata ?? 'bilinmeyen hata'}${bulut === 'tamam' ? ' Buluta yazıldı.' : bulutNotu}${silindi}${bulut === 'tamam' ? '' : ' Yedek hiçbir yere yazılamadı; yeniden dene.'}`,
+          hata: true
         });
       }
       await listele();
@@ -211,9 +202,9 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
       if (!b) throw new DriveHatasi('izin', 'Drive izni verilmedi.');
       const y = await yedegiOku(uid, bas);
       const klasor = await klasoruBul(b, true);
-      await driveaYukle(b, klasor, y.olusturma, JSON.stringify(y));
+      await driveaYukle(b, klasor, { tur: 'harita-yedegi', olusturma: y.olusturma, icerik: JSON.stringify(y) });
       setDriveKlasor(klasor);
-      try { setDriveListe(await driveYedekleri(b, klasor)); setDriveListeHatasi(null); } catch { /* liste sonra */ }
+      try { setDriveListe(await driveYedekleri(b, klasor, 'harita-yedegi')); setDriveListeHatasi(null); } catch { /* liste sonra */ }
       setRapor({ metin: `${tarihYaz(bas.olusturma)} yedeği Drive'a yazıldı: "${DRIVE_KLASORU}" klasöründe.` });
     } catch (e) {
       setRapor({ metin: `Drive'a yazılamadı: ${driveHatasiniIsle(e)}`, hata: true });
@@ -232,8 +223,8 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
           <p className="text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">Harita yedeği</p>
           <p className="mt-0.5 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]">
             Eski haritanın bütün kaydı (Kurucu'da konan yapılar, yollar, bağlar, evde oturanlar) ve haritaya bağlı viki alanları
-            (rakım, harita konumu, işaretler). Her yedek bilgisayarına indirilebilir; buluttaki yedek Drive'ında "{DRIVE_KLASORU}"
-            klasörüne de yüklenir. Drive için ilk basışta Google izin sorar (yalnız KKM'nin açtığı dosyalar).
+            (rakım, harita konumu, işaretler). "Yedeği al" Drive'ında "{DRIVE_KLASORU}" klasörüne yazar, bilgisayarına bir şey
+            inmez; istersen listeden tek tek indirirsin. Drive için ilk basışta Google izin sorar (yalnız KKM'nin açtığı dosyalar).
             {kayitVar === false
               ? ' Eski harita kaydı silindi: yeni yedek alınmaz, geri yükleme yok (kodu git geçmişinde).'
               : ` Bulutta en çok ${EN_COK_YEDEK} yedek durur. Geri yükleme yok: eski harita silindi (kodu git geçmişinde).`}
@@ -247,7 +238,7 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
       {silOnayi && (
         <div className="mt-2.5 ml-7 flex flex-wrap items-center gap-2 text-[12px] text-[#0E1C4F] dark:text-[#F3EFE8]">
           <span className="min-w-0 flex-1">
-            {EN_COK_YEDEK} yedek var. Yenisi için en eskisi ({tarihYaz(silOnayi.olusturma)}) silinsin mi? Bilgisayarına inen dosyalara dokunulmaz.
+            {EN_COK_YEDEK} yedek var. Yenisi için buluttaki en eskisi ({tarihYaz(silOnayi.olusturma)}) silinsin mi? Drive'daki yedeklere dokunulmaz.
           </span>
           <button type="button" onClick={() => setSilOnayi(null)} className={bos}>Vazgeç</button>
           <button type="button" disabled={!!calisiyor} onClick={() => void yedekAl(silOnayi)} className={`${dugme} bg-[#F26B6F] text-white`}>Eskisini sil, yedeği al</button>
@@ -256,13 +247,13 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
 
       {kuralYok && (
         <p className="mt-2 ml-7 text-[12px] text-[#6A5E4C] dark:text-[#A6B0C9]">
-          Bulut yedeği veritabanı kuralı yayımlanınca açılır. O zamana kadar "Yedeği al" bilgisayarına indirir ve Drive'a yazar;
+          Bulut yedeği veritabanı kuralı yayımlanınca açılır. O zamana kadar "Yedeği al" yalnız Drive'a yazar;
           buluta hiçbir şey (yarım bile) yazılmaz.
         </p>
       )}
       {listeHatasi && (
         <p className="mt-2 ml-7 text-[12px] text-[#D6484C] dark:text-[#F26B6F]">
-          Buluttaki yedekler okunamadı: {listeHatasi}. "Yedeği al" yine bilgisayarına indirir.
+          Buluttaki yedekler okunamadı: {listeHatasi}. "Yedeği al" yine Drive'a yazar.
         </p>
       )}
 
@@ -313,6 +304,7 @@ export const HaritaYedegiKarti: React.FC<Props> = ({ items }) => {
                   <span className="block text-[12px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">{tarihYaz(d.olusturma)}</span>
                   <span className="block truncate text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{d.ad}</span>
                 </span>
+                <a href={d.adres} target="_blank" rel="noreferrer" className="text-[12px] underline text-[#0E1C4F] dark:text-[#F3EFE8]">Drive'da aç</a>
                 <button type="button" disabled={!!calisiyor} onClick={() => void drivedanIndir(d)} className={bos}>
                   {calisiyor === `drive-${d.id}` ? 'İniyor…' : 'İndir'}
                 </button>

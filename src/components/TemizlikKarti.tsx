@@ -1,16 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Download, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import type { Item } from '../types';
 import { silinecekler, silmeOzeti, eskiAlanlar, eskiAlanOzeti } from '../lib/temizlik';
 import { gorselYedegi } from '../lib/gorselDeposu';
+import { useIslemOncesiYedek, yedekNotu } from './IslemOncesiYedek';
 
 /**
  * Temizlik kartı (29 Eylül). Kemal: "Arka tarafta kullanmadığımız ne varsa
  * sil, arşiv işi beni sinirlendirdi." Silinecekler `lib/temizlik.ts`'de.
  *
- * Silme geri alınamaz; "Sil"e basınca önce onay sorulur. Yedek (bütün
- * kayıtlar, bir .json dosyası) isteğe bağlı (Kemal, 30 Eylül). İkinci
- * basışta silinecek bir şey kalmaz, kart kendini gizler.
+ * Silme geri alınamaz; "Sil"e basınca önce onay sorulur. "Evet, sil"e basınca
+ * önce bütün kayıtların yedeği Drive'a ("KKM Yedekleri", işlem öncesi) yüklenir,
+ * sonra silinir; Drive'a yüklenemezse silme yapılmaz (26 Kasım, Kemal: "direkt
+ * Drive'a kaydolmalı"; bilgisayara bir şey inmez). İkinci basışta silinecek bir
+ * şey kalmaz, kart kendini gizler.
  */
 
 interface Props {
@@ -20,37 +23,30 @@ interface Props {
 
 export const TemizlikKarti: React.FC<Props> = ({ items, onDeleteItem }) => {
   const liste = useMemo(() => silinecekler(items), [items]);
-  const [yedeklendi, setYedeklendi] = useState(false);
   const [onay, setOnay] = useState(false);
   const [calisiyor, setCalisiyor] = useState(false);
   const [rapor, setRapor] = useState<string | null>(null);
   const [acik, setAcik] = useState(false);
-
-  const yedekIndir = async () => {
-    // Galeri görselleri kayıtların dışında durur (21 Ekim): yedeğe onlar da girer
-    const gorseller = await gorselYedegi(items);
-    const dosya = new Blob([JSON.stringify({
-      uygulama: 'Kems Komuta Merkezi',
-      tur: 'temizlik-oncesi-yedek',
-      tarih: new Date().toISOString(),
-      items,
-      gorseller
-    }, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(dosya);
-    a.download = `kems-temizlik-oncesi-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    setYedeklendi(true);
-  };
+  const yedek = useIslemOncesiYedek('Temizlik', 'silme');
 
   const sil = async () => {
     setOnay(false);
     setCalisiyor(true);
+    setRapor(null);
+    // Önce yedek Drive'a; olmazsa hiçbir şey silinmez
+    // Galeri görselleri kayıtların dışında durur (21 Ekim): yedeğe onlar da girer
+    const y = await yedek.al(async () => ({
+      uygulama: 'Kems Komuta Merkezi',
+      tur: 'temizlik-oncesi-yedek',
+      tarih: new Date().toISOString(),
+      items,
+      gorseller: await gorselYedegi(items)
+    }));
+    if (!y) { setCalisiyor(false); return; }
     let n = 0;
     try {
       for (const s of liste) { await onDeleteItem(s.item.id); n++; }
-      setRapor(`${n} kayıt silindi.`);
+      setRapor(`${n} kayıt silindi.${yedekNotu(y)}`);
     } catch (e) {
       setRapor(`${n} kayıt silindi, sonra hata: ${e instanceof Error ? e.message : 'bilinmeyen'}. Kalanlar için tekrar bas.`);
     } finally {
@@ -71,7 +67,7 @@ export const TemizlikKarti: React.FC<Props> = ({ items, onDeleteItem }) => {
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">kullanılmayan kayıt silinecek</span>
           <span className="block mt-0.5 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9] leading-snug">
-            {silmeOzeti(liste)}. Önce bütün kayıtların yedeği iner, sonra silinir. Silinen geri gelmez.
+            {silmeOzeti(liste)}. Önce bütün kayıtların yedeği Drive'a kaydedilir, sonra silinir. Silinen geri gelmez.
           </span>
         </span>
       </div>
@@ -105,14 +101,11 @@ export const TemizlikKarti: React.FC<Props> = ({ items, onDeleteItem }) => {
             disabled={calisiyor}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#F26B6F] text-[#D6484C] dark:text-[#F26B6F] hover:bg-[#F26B6F]/10 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
           >
-            <Trash2 className="w-3.5 h-3.5" /> {calisiyor ? 'Siliniyor…' : 'Sil'}
+            <Trash2 className="w-3.5 h-3.5" /> {calisiyor ? 'Yedekleniyor, siliniyor…' : 'Sil'}
           </button>
         )}
-        {/* Yedek isteğe bağlı (Kemal, 30 Eylül: "sürekli veriyi indirmek istemiyorum") */}
-        <button type="button" onClick={() => void yedekIndir()} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer">
-          <Download className="w-3.5 h-3.5" /> {yedeklendi ? 'Yedek indi ✓' : 'Yedek indir · isteğe bağlı'}
-        </button>
       </div>
+      {yedek.uyari}
       {rapor && <p className="mt-2 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{rapor}</p>}
     </div>
   );
@@ -120,7 +113,8 @@ export const TemizlikKarti: React.FC<Props> = ({ items, onDeleteItem }) => {
 
 /**
  * Eski alan temizliği (2 Ekim gece): kayıtlar durur, kodun artık okumadığı
- * alanlar silinir (lib/temizlik.ts → eskiAlanlar). Yedek isteğe bağlı.
+ * alanlar silinir (lib/temizlik.ts → eskiAlanlar). Önce yedek Drive'a (26 Kasım);
+ * yüklenemezse silme yapılmaz.
  * İkinci basışta silinecek alan kalmaz, kart kendini gizler.
  */
 export const EskiAlanKarti: React.FC<{ items: Item[]; onAlanSil: (id: string, yollar: string[]) => Promise<void> }> = ({ items, onAlanSil }) => {
@@ -129,25 +123,19 @@ export const EskiAlanKarti: React.FC<{ items: Item[]; onAlanSil: (id: string, yo
   const [calisiyor, setCalisiyor] = useState(false);
   const [rapor, setRapor] = useState<string | null>(null);
   const [acik, setAcik] = useState(false);
-  const [yedeklendi, setYedeklendi] = useState(false);
-
-  const yedekIndir = () => {
-    const dosya = new Blob([JSON.stringify({ uygulama: 'Kems Komuta Merkezi', tur: 'eski-alan-oncesi-yedek', tarih: new Date().toISOString(), items }, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(dosya);
-    a.download = `kems-eski-alan-oncesi-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    setYedeklendi(true);
-  };
+  const yedek = useIslemOncesiYedek('Eski alanlar', 'silme');
 
   const sil = async () => {
     setOnay(false);
     setCalisiyor(true);
+    setRapor(null);
+    // Önce yedek Drive'a; olmazsa hiçbir alan silinmez
+    const y = await yedek.al(() => ({ uygulama: 'Kems Komuta Merkezi', tur: 'eski-alan-oncesi-yedek', tarih: new Date().toISOString(), items }));
+    if (!y) { setCalisiyor(false); return; }
     let n = 0;
     try {
       for (const e of liste) { await onAlanSil(e.item.id, e.alanlar.map(a => `metadata.${a}`)); n++; }
-      setRapor(`${n} kayıttaki eski alanlar silindi.`);
+      setRapor(`${n} kayıttaki eski alanlar silindi.${yedekNotu(y)}`);
     } catch (e) {
       setRapor(`${n} kayıt temizlendi, sonra hata: ${e instanceof Error ? e.message : 'bilinmeyen'}. Kalanlar için tekrar bas.`);
     } finally {
@@ -166,7 +154,7 @@ export const EskiAlanKarti: React.FC<{ items: Item[]; onAlanSil: (id: string, yo
         <span className="min-w-0 flex-1">
           <span className="block text-[13px] font-semibold text-[#0E1C4F] dark:text-[#F3EFE8]">kayıtta kullanılmayan eski alan silinecek</span>
           <span className="block mt-0.5 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9] leading-snug">
-            {eskiAlanOzeti(liste)}. Kayıtların kendisi, metinleri ve künyeleri kalır; yalnız bu alanlar gider. Silinen geri gelmez.
+            {eskiAlanOzeti(liste)}. Kayıtların kendisi, metinleri ve künyeleri kalır; yalnız bu alanlar gider. Önce yedek Drive'a kaydedilir. Silinen geri gelmez.
           </span>
         </span>
       </div>
@@ -194,13 +182,11 @@ export const EskiAlanKarti: React.FC<{ items: Item[]; onAlanSil: (id: string, yo
         ) : (
           <button type="button" onClick={() => setOnay(true)} disabled={calisiyor}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#F26B6F] text-[#D6484C] dark:text-[#F26B6F] hover:bg-[#F26B6F]/10 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer">
-            <Trash2 className="w-3.5 h-3.5" /> {calisiyor ? 'Siliniyor…' : 'Sil'}
+            <Trash2 className="w-3.5 h-3.5" /> {calisiyor ? 'Yedekleniyor, siliniyor…' : 'Sil'}
           </button>
         )}
-        <button type="button" onClick={yedekIndir} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer">
-          <Download className="w-3.5 h-3.5" /> {yedeklendi ? 'Yedek indi ✓' : 'Yedek indir · isteğe bağlı'}
-        </button>
       </div>
+      {yedek.uyari}
       {rapor && <p className="mt-2 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{rapor}</p>}
     </div>
   );
