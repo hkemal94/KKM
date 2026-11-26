@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Download } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Item } from '../types';
+import { useIslemOncesiYedek, yedekNotu } from './IslemOncesiYedek';
 
 /**
  * Kanon kararları ve eski otel yazıları kartı (29 Eylül akşamı).
- * Sıra Temizlik kartıyla aynı: önce değişecek kayıtların yedeği iner, sonra
- * "Vikiye işle" açılır. Yazılınca iş kalmaz, kart kendini gizler.
+ * Sıra Temizlik kartıyla aynı: "Vikiye işle"ye basınca önce değişecek kayıtların
+ * yedeği Drive'a yüklenir (26 Kasım), sonra yazılır; yüklenemezse değişiklik
+ * yapılmaz. Yazılınca iş kalmaz, kart kendini gizler.
  */
 
 interface Props {
@@ -18,7 +20,7 @@ interface Props {
   hesapla: (items: Item[]) => Array<{ item: Item; neler: string[] }>;
   baslik?: string;
   aciklama?: string;
-  /** Yedek dosyasının adı: kems-<ad>-2026-09-30.json */
+  /** Yedeğin işlem adı (Drive'daki dosya adına girer): kkm-islem-oncesi-<ad>-….json */
   yedekAdi?: string;
 }
 
@@ -30,33 +32,26 @@ export const KanonKarti: React.FC<Props> = ({
   aciklama = KANON_ACIKLAMA, yedekAdi = 'kanon-oncesi'
 }) => {
   const liste = useMemo(() => hesapla(items), [items, hesapla]);
-  const [yedeklendi, setYedeklendi] = useState(false);
   const [calisiyor, setCalisiyor] = useState(false);
   const [rapor, setRapor] = useState<string | null>(null);
   const [acik, setAcik] = useState(false);
-
-  const yedekIndir = () => {
-    const eskiler = items.filter(i => liste.some(l => l.item.id === i.id));
-    const dosya = new Blob([JSON.stringify({
-      uygulama: 'Kems Komuta Merkezi',
-      tur: `${yedekAdi}-yedek`,
-      tarih: new Date().toISOString(),
-      items: eskiler
-    }, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(dosya);
-    a.download = `kems-${yedekAdi}-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    setYedeklendi(true);
-  };
+  const yedek = useIslemOncesiYedek(yedekAdi, 'değişiklik');
 
   const isle = async () => {
     setCalisiyor(true);
+    setRapor(null);
+    // Önce değişecek kayıtların yedeği Drive'a; olmazsa hiçbir şey yazılmaz
+    const y = await yedek.al(() => ({
+      uygulama: 'Kems Komuta Merkezi',
+      tur: `${yedekAdi}-yedek`,
+      tarih: new Date().toISOString(),
+      items: items.filter(i => liste.some(l => l.item.id === i.id))
+    }));
+    if (!y) { setCalisiyor(false); return; }
     let n = 0;
     try {
       for (const d of liste) { await onUpdateItem(d.item); n++; }
-      setRapor(`${n} madde güncellendi.`);
+      setRapor(`${n} madde güncellendi.${yedekNotu(y)}`);
     } catch (e) {
       setRapor(`${n} madde yazıldı, sonra hata: ${e instanceof Error ? e.message : 'bilinmeyen'}. Kalanlar için tekrar bas.`);
     } finally {
@@ -102,13 +97,11 @@ export const KanonKarti: React.FC<Props> = ({
           disabled={calisiyor}
           className="px-3 py-1.5 text-[11px] font-mono rounded-lg bg-[#F26B6F] text-white hover:opacity-90 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
         >
-          {calisiyor ? 'Yazılıyor…' : 'Vikiye işle'}
+          {calisiyor ? 'Yedekleniyor, yazılıyor…' : 'Vikiye işle'}
         </button>
-        {/* Yedek isteğe bağlı (Kemal, 30 Eylül: "sürekli veriyi indirmek istemiyorum") */}
-        <button type="button" onClick={yedekIndir} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono rounded-lg border border-[#CFC5B4] dark:border-[#2C3C72] text-[#6A5E4C] dark:text-[#A6B0C9] hover:border-[#0E1C4F] cursor-pointer">
-          <Download className="w-3.5 h-3.5" /> {yedeklendi ? 'Yedek indi ✓' : 'Yedek indir · isteğe bağlı'}
-        </button>
+        <span className="text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">Önce yedek Drive'a kaydedilir.</span>
       </div>
+      {yedek.uyari}
       {rapor && <p className="mt-2 text-[11px] text-[#6A5E4C] dark:text-[#A6B0C9]">{rapor}</p>}
     </div>
   );

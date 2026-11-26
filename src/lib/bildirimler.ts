@@ -8,6 +8,7 @@ import { anahtariOku } from './oyunAyarlari';
 import { gorunum, onayKayitlari } from './onaylar';
 import { kararlariOku as oneriKararlariniOku, onayKaydinaCevir, onerileriOku } from './ajanOnerileri';
 import { gecerliIslemler, kararlariOku as ajansKararlariniOku, type KararDosyasi } from './ajansKararlari';
+import { gecenGun, useSonYedek } from './sonYedek';
 
 /**
  * Bildirimler — menüdeki kırmızı nokta (Paket 4).
@@ -66,13 +67,6 @@ export const KANON_YOKSAY = 'kanonYoksay';
 
 const KANON_TURLERI = new Set(['yer', 'cadde', 'meydan', 'yer_adi', 'ada', 'mekân', 'dükkân', 'kulüp', 'marka', 'kisi', 'karakter', 'olay', 'kitap_bolum', 'blog_post']);
 
-/** Son yedekten bu yana geçen gün (Yedekleme penceresi yazar); hiç yoksa null */
-function sonYedekGunu(): number | null {
-  try {
-    const v = Number(localStorage.getItem('kems_son_yedek'));
-    return v ? Math.floor((Date.now() - v) / 86_400_000) : null;
-  } catch { return null; }
-}
 
 /** Metninde kanonla çelişen bir tarih geçen maddeler ve cümleleri */
 export function kanonSatirlari(items: Item[]): KanonSatiri[] {
@@ -93,6 +87,7 @@ export function kanonUyarililar(items: Item[]): Item[] {
 
 export function useBildirimler(items: Item[]): Bildirim[] {
   const ajans = useAjansBekleyen();
+  const sonYedek = useSonYedek();
   return useMemo(() => {
     if (!items.length) return [];
     const liste: Bildirim[] = [];
@@ -111,11 +106,12 @@ export function useBildirimler(items: Item[]): Bildirim[] {
     if (dugme.length) liste.push({ tur: 'dugme', sayi: dugme.length, baslik: 'Tek seferlik düğme bekliyor', ayrinti: dugme.join(' · ') });
     const kanon = kanonSatirlari(items);
     if (kanon.length) liste.push({ tur: 'kanon', sayi: kanon.length, baslik: 'Kanon uyarısı', ayrinti: 'Metinde kanonla çelişen tarih', maddeler: kanonUyarililar(items).slice(0, 5), kanon: kanon.slice(0, 6) });
-    // Ayda bir yedek hatırlatması (yapisal-2, 27). İndirme yine Kemal'in düğmesiyle.
-    const son = sonYedekGunu();
+    // Ayda bir yedek hatırlatması (yapisal-2, 27). Yedek yine Kemal'in düğmesiyle (Drive'a).
+    // Drive'daki son tam yedek; Drive okunmadıysa tarayıcının bilgisi (lib/sonYedek.ts)
+    const son = gecenGun(sonYedek.zaman);
     if (son === null || son >= 30) {
       liste.push({ tur: 'yedek', sayi: 1, baslik: 'Aylık yedek', ayrinti: son === null ? 'Henüz yedek alınmadı' : `Son yedek ${son} gün önce` });
     }
     return liste;
-  }, [items, ajans]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items, ajans, sonYedek]); // eslint-disable-line react-hooks/exhaustive-deps
 }

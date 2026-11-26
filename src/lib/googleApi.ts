@@ -59,39 +59,3 @@ export async function createGoogleDoc(title: string, bodyContent: string) {
 
   return docObj;
 }
-
-/**
- * Yedeği Drive'daki "KKM yedekleri" klasörüne yükler (yapisal-2, 27;
- * küçükler). Klasör yoksa bir kez açılır. Kemal'in düğmesiyle çalışır.
- */
-export const YEDEK_KLASORU = 'KKM yedekleri';
-export async function driveYedekYukle(dosyaAdi: string, json: string): Promise<{ id: string; webViewLink?: string }> {
-  const q = encodeURIComponent(`name='${YEDEK_KLASORU}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-  const bul = await googleFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
-  let klasorId: string | undefined = bul.files?.[0]?.id;
-  if (!klasorId) {
-    const yeni = await googleFetch('https://www.googleapis.com/drive/v3/files', {
-      method: 'POST',
-      body: JSON.stringify({ name: YEDEK_KLASORU, mimeType: 'application/vnd.google-apps.folder' })
-    });
-    klasorId = yeni.id;
-  }
-  const token = getCachedAccessToken();
-  if (!token) throw new Error('Google bağlantısı yok.');
-  const sinir = 'kkm_yedek_sinir';
-  const govde =
-    `\r\n--${sinir}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
-    JSON.stringify({ name: dosyaAdi, mimeType: 'application/json', parents: [klasorId] }) +
-    `\r\n--${sinir}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
-    json + `\r\n--${sinir}--`;
-  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': `multipart/related; boundary=${sinir}` },
-    body: govde
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || 'Drive yedeği yüklenemedi.');
-  }
-  return res.json();
-}
