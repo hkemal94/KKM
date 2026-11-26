@@ -131,11 +131,13 @@ Efendi Kuruyemiş ve Merkez Eczanesi bilerek boş: haritada yerleri belli olunca
 
 ## 26 Kasım 2026 (Ercan ailesi portreleri)
 
-Kemal 26 Kasım'da onayladı ("dördü de girsin"). Canva'da referanslı üretim: vikideki `portre-hasan-ercan.jpg` ve
+Kemal 26 Kasım'da onayladı ("dördü de girsin"; Saadet ve Feriha: "ikisi de girsin"). Canva'da referanslı üretim: vikideki `portre-hasan-ercan.jpg` ve
 `portre-nermin-celik.jpg` örnek gösterildi, aynı vesikalık kalıp (karşıdan, baş-omuz, krem zemin). Yapay zekâ taslağı,
 kanon değil; yüz tarifi kanonda yok, yaş ve dönem künyedeki yıllardan. 900×1200, JPG (kalite 82).
 - `portre-gulsum-ercan.jpg` → Gülsüm Ercan (1940'lar hâli)
 - `portre-mustafa-ercan.jpg` → Mustafa Ercan (1960'lar hâli)
 - `portre-naciye-ercan.jpg` → Naciye Ercan (1960'lar hâli)
 - `portre-huseyin.jpg` → Hüseyin (1920'lerin sonu hâli)
+- `portre-saadet-ercan.jpg` → Saadet Ercan
+- `portre-feriha-yildiz.jpg` → Feriha Yıldız
 Siyah-beyaz "eski fotoğraf" hâlleri sonra (Kemal).
